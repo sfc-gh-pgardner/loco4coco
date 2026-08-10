@@ -626,11 +626,11 @@
       "mode": "checklist",
       "source": "data_sources",
       "heading": "Which of these do you actually have?",
-      "hint": "Tick everything that rings true. Add your own if I've missed it.",
+      "hint": "Tick everything that applies. Add your own if it's missing.",
       "other_label": "Something else you hold",
       "other_placeholder": "e.g. 20 years of inspection photographs",
-      "narrative": "This is your library, {first_name} - every shelf here is something {company} already holds. Most people are sitting on more than they think.",
-      "prompt": "The visitor works in {industry} at {company}. In THE LIBRARY they said they already hold: {selection}. Reply in at most 2 short sentences: reflect back the most valuable thing in that list, and name the one Snowflake capability that would unlock it. Warm, plain English, no jargon, no bullet points, no headings."
+      "narrative": "This is your library, {first_name}. Every shelf here is data {company} already holds.",
+      "prompt": "The visitor works in {industry} at {company}. In THE LIBRARY they said they already hold: {selection}. Reply in at most 2 short sentences: reflect back the most valuable thing in that list, and name the one Snowflake capability that would unlock it. Warm, plain English, no jargon, no bullet points, no headings, no em dashes."
     },
     "marketplace": {
       "tile": [
@@ -648,8 +648,8 @@
       "other_placeholder": "e.g. competitor pricing",
       "discovery": "manual",
       "_discovery_comment": "manual = the curated, verified marketplace-index.md. Swap to 'agentic' when the Agentic Marketplace Discovery PrPr lands; the panel contract does not change.",
-      "narrative": "Now the fun part. These are live datasets you can query the moment you attach them - nothing to copy, nothing to maintain.",
-      "prompt": "The visitor works in {industry} at {company} and holds: {held}. In THE MARKETPLACE they chose to join these real Snowflake Marketplace listings: {selection}. Reply in at most 2 short sentences: say what joining those lets them answer that they cannot answer today. Refer to the datasets only by the names given above - do not invent any other listing or provider name. Plain English, no bullet points."
+      "narrative": "These are live datasets you can query the moment you attach them. Nothing to copy, nothing to maintain.",
+      "prompt": "The visitor works in {industry} at {company} and holds: {held}. In THE MARKETPLACE they chose to join these real Snowflake Marketplace listings: {selection}. Reply in at most 2 short sentences: say what joining those lets them answer that they cannot answer today. Refer to the datasets only by the names given above; do not invent any other listing or provider name. Plain English, no bullet points, no em dashes."
     },
     "workshop": {
       "tile": [
@@ -661,10 +661,10 @@
       "represents": "Build the POC",
       "mode": "compose",
       "heading": "What should it actually do?",
-      "hint": "One sentence. What would make a colleague say 'finally'?",
+      "hint": "One sentence. What should the finished thing do?",
       "placeholder": "e.g. answer questions about our policies with citations",
-      "narrative": "Right - bench cleared, forge lit. Tell me what the finished thing does and I'll draw up the plan.",
-      "prompt": "The visitor is {first_name}, {industry}, at {company}. They hold: {held}. They will join: {joined}. In THE WORKSHOP they said the POC should: \"{input}\".\n\nFirst choose the archetype that matches what they are ACTUALLY trying to do. Pick exactly one of these keys:\ntalk-to-my-data (ask questions of structured data in plain English)\nask-my-documents (search or Q&A over documents and free text)\nextract-from-paperwork (pull structured fields out of forms, invoices, letters)\ntriage-and-classify (sort, route or prioritise incoming items)\nan-agent-that-acts (takes an action, not just answers)\ndashboard-that-explains-itself (a visual that narrates the why)\npredict-what-happens-next (forecasting or risk scoring)\njoin-the-silos (unify data that lives in separate systems)\nshare-without-copying (give someone else live access)\nwatch-it-live (streaming or near real-time monitoring)\n\nThe data they hold decides this. If their source is documents or free text, it is ask-my-documents or extract-from-paperwork, NOT talk-to-my-data.\n\nFor features, you MUST choose 2 to 4 names EXACTLY as spelled from this list and nothing else:\n{feature_list}\n\nReturn ONLY minified JSON, no prose and no code fence, with exactly these keys:\n{\"archetype\": one key from the list above, \"poc_name\": short name in their own language, max 8 words, \"summary\": 2 sentences on what it does and why it matters, \"features\": array of 2-4 names copied exactly from the feature list, \"first_step\": one concrete first action, \"considerations\": array of 3 or 4 short specific things they should think about or improve - gaps in their data, unknowns, governance or effort - each one sentence, concrete to THEIR situation and never generic, \"readiness\": integer 1-5, \"reply\": max 40 words, warm, spoken aloud to them, no bullet points}\n\nScore readiness strictly and privately: award points only for data they actually named. Do NOT award a 5 unless they named specific data, a specific question, and a specific user. The visitor never sees this number, so be honest rather than kind. Never claim the POC is built."
+      "narrative": "Bench cleared, forge lit. Tell me what the finished thing does and I'll draw up the plan.",
+      "prompt": "The visitor is {first_name}, {industry}, at {company}. They hold: {held}. They will join: {joined}. In THE WORKSHOP they said the POC should: \"{input}\".\n\nFirst choose the archetype that matches what they are ACTUALLY trying to do. Pick exactly one of these keys:\ntalk-to-my-data (ask questions of structured data in plain English)\nask-my-documents (search or Q&A over documents and free text)\nextract-from-paperwork (pull structured fields out of forms, invoices, letters)\ntriage-and-classify (sort, route or prioritise incoming items)\nan-agent-that-acts (takes an action, not just answers)\ndashboard-that-explains-itself (a visual that narrates the why)\npredict-what-happens-next (forecasting or risk scoring)\njoin-the-silos (unify data that lives in separate systems)\nshare-without-copying (give someone else live access)\nwatch-it-live (streaming or near real-time monitoring)\n\nThe data they hold decides this. If their source is documents or free text, it is ask-my-documents or extract-from-paperwork, NOT talk-to-my-data.\n\nFor features, you MUST choose 2 to 4 names EXACTLY as spelled from this list and nothing else:\n{feature_list}\n\nReturn ONLY minified JSON, no prose and no code fence, with exactly these keys:\n{\"archetype\": one key from the list above, \"poc_name\": short name in their own language, max 8 words, \"summary\": 2 sentences on what it does and why it matters, \"features\": array of 2-4 names copied exactly from the feature list, \"first_step\": one concrete first action, \"considerations\": array of 3 or 4 short specific things they should think about or improve - gaps in their data, unknowns, governance or effort - each one sentence, concrete to THEIR situation and never generic, \"readiness\": integer 1-5, \"reply\": max 40 words, warm, spoken aloud to them, no bullet points, no em dashes}\n\nScore readiness strictly and privately: award points only for data they actually named. Do NOT award a 5 unless they named specific data, a specific question, and a specific user. The visitor never sees this number, so be honest rather than kind. Never claim the POC is built."
     },
     "postbox": {
       "tile": [

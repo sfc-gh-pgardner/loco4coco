@@ -29,7 +29,8 @@
     "warm_up": true,
     "timeout_seconds": 180,
     "stream": true,
-    "cost_log": "cost.jsonl"
+    "cost_log": "cost.jsonl",
+    "complete_model": "mistral-large2"
   },
   "delivery": {
     "_comment": "Verified constraints: the Gmail MCP exposes create_draft only - no send tool, no attachment parameter - AND its tools do not load under `cortex exec` even with --bypass, though they work in an interactive CoCo session. snowflake.com also publishes DMARC p=reject, so third-party senders are rejected outright. So the game writes a fully-composed email to outbox/ and the operator's interactive session drains it via the loco4coco-ops skill. Swap transport to gmail_api once an OAuth client is proven against Workspace policy.",
@@ -630,7 +631,8 @@
       "other_label": "Something else you hold",
       "other_placeholder": "e.g. 20 years of inspection photographs",
       "narrative": "This is your library, {first_name}. Every shelf here is data {company} already holds.",
-      "prompt": "The visitor works in {industry} at {company}. In THE LIBRARY they said they already hold: {selection}. Reply in at most 2 short sentences: reflect back the most valuable thing in that list, and name the one Snowflake capability that would unlock it. Warm, plain English, no jargon, no bullet points, no headings, no em dashes."
+      "prompt": "The visitor works in {industry} at {company}. In THE LIBRARY they said they already hold: {selection}. Reply in at most 2 short sentences: reflect back the most valuable thing in that list, and name ONE specific, named Snowflake feature that would unlock it (for example Cortex Analyst, Cortex Search, Snowpark, Dynamic Tables, ML Classification, Snowflake Marketplace). Name the feature, not a general ability like handling large datasets. Warm, plain English, no jargon, no bullet points, no headings, no em dashes.",
+      "transport": "complete"
     },
     "marketplace": {
       "tile": [
@@ -649,7 +651,8 @@
       "discovery": "manual",
       "_discovery_comment": "manual = the curated, verified marketplace-index.md. Swap to 'agentic' when the Agentic Marketplace Discovery PrPr lands; the panel contract does not change.",
       "narrative": "These are live datasets you can query the moment you attach them. Nothing to copy, nothing to maintain.",
-      "prompt": "The visitor works in {industry} at {company} and holds: {held}. In THE MARKETPLACE they chose to join these real Snowflake Marketplace listings: {selection}. Reply in at most 2 short sentences: say what joining those lets them answer that they cannot answer today. Refer to the datasets only by the names given above; do not invent any other listing or provider name. Plain English, no bullet points, no em dashes."
+      "prompt": "The visitor works in {industry} at {company} and holds: {held}. In THE MARKETPLACE they chose to join these real Snowflake Marketplace listings: {selection}. Reply in at most 2 short sentences: say what joining those lets them answer that they cannot answer today. Refer to the datasets only by the names given above; do not invent any other listing or provider name. Plain English, no bullet points, no em dashes.",
+      "transport": "complete"
     },
     "workshop": {
       "tile": [
@@ -665,7 +668,12 @@
       "placeholder": "e.g. answer questions about our policies with citations",
       "narrative": "Bench cleared, forge lit. Tell me what the finished thing does and I'll draw up the plan.",
       "prompt": "The visitor is {first_name}, {industry}, at {company}. They hold: {held}. They will join: {joined}. In THE WORKSHOP they said the POC should: \"{input}\".\n\nFirst choose the archetype that matches what they are ACTUALLY trying to do. Pick exactly one of these keys:\ntalk-to-my-data (ask questions of structured data in plain English)\nask-my-documents (search or Q&A over documents and free text)\nextract-from-paperwork (pull structured fields out of forms, invoices, letters)\ntriage-and-classify (sort, route or prioritise incoming items)\nan-agent-that-acts (takes an action, not just answers)\ndashboard-that-explains-itself (a visual that narrates the why)\npredict-what-happens-next (forecasting or risk scoring)\njoin-the-silos (unify data that lives in separate systems)\nshare-without-copying (give someone else live access)\nwatch-it-live (streaming or near real-time monitoring)\n\nThe data they hold decides this. If their source is documents or free text, it is ask-my-documents or extract-from-paperwork, NOT talk-to-my-data.\n\nFor features, you MUST choose 2 to 4 names EXACTLY as spelled from this list and nothing else:\n{feature_list}\n\nReturn ONLY minified JSON, no prose and no code fence, with exactly these keys:\n{\"archetype\": one key from the list above, \"poc_name\": short name in their own language, max 8 words, \"summary\": 2 sentences on what it does and why it matters, \"features\": array of 2-4 names copied exactly from the feature list, \"first_step\": one concrete first action, \"considerations\": array of 3 or 4 short specific things they should think about or improve - gaps in their data, unknowns, governance or effort - each one sentence, concrete to THEIR situation and never generic, \"readiness\": integer 1-5, \"reply\": max 40 words, warm, spoken aloud to them, no bullet points, no em dashes}\n\nScore readiness strictly and privately: award points only for data they actually named. Do NOT award a 5 unless they named specific data, a specific question, and a specific user. The visitor never sees this number, so be honest rather than kind. Never claim the POC is built.",
-      "effort": "medium"
+      "effort": "medium",
+      "transport": "exec",
+      "tools": true,
+      "max_turns": 4,
+      "tool_hint": "",
+      "_tool_hint_comment": "Set to e.g. 'Use your tools to check the Snowflake docs before choosing features.' to make the tray show real tool calls. Measured cost: about 34s for one lookup, so it is off by default. The Ask stop is the budgeted place for tool use."
     },
     "postbox": {
       "tile": [
@@ -781,5 +789,20 @@
       "You have 5 minutes to explore the key aspects of building out a Proof of Concept on Snowflake with CoCo as your tour guide on our features, marketplace datasets and how enterprise-grade AI can bring your ideas to life.",
       "After 5 minutes you will have a personalised action plan (sent to you via email) to building out a project on Snowflake - be daring! This is a fun, flexible process with a very real and useful outcome!"
     ]
+  },
+  "ask": {
+    "_comment": "The one unscripted stop. Always exec (never the fast path): this is where real CoCo earns it, because nothing is injected for it to reflect back, so it has a genuine reason to use its tools. Optional and skippable so it cannot blow the five minutes.",
+    "enabled": true,
+    "transport": "exec",
+    "tools": true,
+    "max_turns": 4,
+    "effort": "medium",
+    "heading": "Ask CoCo one thing",
+    "hint": "Optional. One question about your POC and CoCo will look it up properly.",
+    "placeholder": "e.g. what would we need before we could trust the predictions?",
+    "button": "ASK COCO",
+    "skip": "SKIP THIS",
+    "prompt": "The visitor is {first_name}, {industry}, at {company}. They hold: {held}. They are joining: {joined}. Their POC is \"{poc_name}\": {poc_summary}\n\nThey have asked you one question: \"{input}\"\n\nAnswer it in at most 4 short sentences, specific to THEIR situation and their data, not generic advice. Plain English, no bullet points, no headings, no em dashes. If you are not sure, say what you would check.",
+    "tool_hint": "Use your tools to check the Snowflake documentation before you answer, so the answer is grounded rather than guessed. One lookup is enough."
   }
 }

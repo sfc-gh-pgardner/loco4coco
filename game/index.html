@@ -215,7 +215,7 @@
 
   <div id="hud" class="rail">
     <div class="tile"><div class="k">Player</div><div class="v" id="h-name">&mdash;</div></div>
-    <div class="tile"><div class="k">World</div><div class="v" id="h-ind">&mdash;</div></div>
+    <div class="tile"><div class="k">Industry</div><div class="v" id="h-ind">&mdash;</div></div>
     <div class="tile"><div class="k">Progress</div><div class="v" id="h-col">0 / 4</div></div>
     <div class="tile"><div class="k">Time</div><div class="v" id="h-time">5:00</div></div>
   </div>
@@ -231,6 +231,17 @@
       <div id="t-body" style="font-size:15px;line-height:1.6;color:#CFE6F5;text-align:left"></div>
       <div class="go" style="justify-content:center;margin-top:16px">
         <button class="primary" id="t-go">START</button></div>
+    </div></div>
+
+    <!-- The one unscripted stop. Optional and skippable, always real CoCo. -->
+    <div class="ov" id="ov-ask"><div class="card" style="border-color:var(--edge)">
+      <h2 id="a-head" style="color:var(--edge)"></h2>
+      <div class="hint" id="a-hint" style="margin-top:2px"></div>
+      <div class="fld" style="margin-top:12px">
+        <input type="text" id="a-text" autocomplete="off" spellcheck="false"></div>
+      <div class="go" style="margin-top:12px">
+        <button class="primary" id="a-go">ASK COCO</button>
+        <button id="a-skip">SKIP THIS</button></div>
     </div></div>
 
     <!-- CoCo wakes AND takes your details on one screen -->
@@ -957,6 +968,12 @@ $('trayhead').addEventListener('click',()=>{
 });
 function paintTray(s){
   const lines=s.reasoning||[];
+  // Honesty rule: the tray exists to show CoCo's REAL reasoning. The fast
+  // (non-agentic) turns have none, so the tray is hidden for them rather than
+  // filled with a decorative spinner. It belongs to the exec turns only.
+  const agentic = (s.transport||'exec')==='exec';
+  $('tray').style.display = agentic ? '' : 'none';
+  if(!agentic){ thinkSince=0; return; }
   $('trayhead').classList.toggle('live',!!s.thinking);
   if(s.thinking && !thinkSince) thinkSince=Date.now();
   if(!s.thinking) thinkSince=0;
@@ -965,9 +982,9 @@ function paintTray(s){
     // A truthful elapsed counter, because the first real reasoning line can be
     // 30 seconds away and a frozen label reads as a hang.
     const secs=thinkSince?Math.floor((Date.now()-thinkSince)/1000):0;
-    $('traynow').textContent=(last||'Processing your request...')+`  (${secs}s)`;
+    $('traynow').textContent=(last||'CoCo is working this out...')+`  (${secs}s)`;
   } else {
-    $('traynow').textContent = lines.length?`Done \u2014 ${lines.length} steps`:'Idle';
+    $('traynow').textContent = lines.length?`Done \u00b7 ${lines.length} steps`:'Idle';
   }
   if(trayOpen){
     const b=$('traybody');
@@ -1060,7 +1077,36 @@ function onState(s){
   paintTray(s);
   paintBubble(s);
   paintScenePanel(s);
+  maybeOpenAsk(s);
 }
+
+// ---------------- ask CoCo one thing ----------------
+// Opens itself once, the moment the POC exists. A booth visitor should not have
+// to find a button, and SKIP keeps it optional so it cannot eat the 5 minutes.
+let askShown=false;
+function maybeOpenAsk(s){
+  const a=CFG.ask||{};
+  if(!a.enabled || askShown || s.ask_used || !s.poc || s.thinking) return;
+  if($('ov-bp').classList.contains('on')) return;
+  askShown=true;
+  $('a-head').textContent=a.heading||'Ask CoCo one thing';
+  $('a-hint').textContent=a.hint||'';
+  $('a-text').placeholder=a.placeholder||'';
+  $('a-text').value='';
+  $('a-go').textContent=a.button||'ASK COCO';
+  $('a-skip').textContent=a.skip||'SKIP THIS';
+  $('ov-ask').classList.add('on');
+  setTimeout(()=>$('a-text').focus(),50);
+}
+$('a-skip').addEventListener('click',()=>$('ov-ask').classList.remove('on'));
+$('a-go').addEventListener('click',async()=>{
+  const text=$('a-text').value.trim(); if(!text) return;
+  $('a-go').disabled=true; $('a-go').textContent='ASKING\u2026';
+  try{ await post('/api/ask',{text}); $('ov-ask').classList.remove('on'); }
+  catch(e){ showErr('cannot reach server'); }
+  $('a-go').disabled=false; $('a-go').textContent=(CFG.ask||{}).button||'ASK COCO';
+});
+$('a-text').addEventListener('keydown',e=>{ if(e.key==='Enter') $('a-go').click(); });
 
 let typeTarget='',typeI=0;
 function setMessage(m){ if(m===typeTarget) return; typeTarget=m; typeI=0; }

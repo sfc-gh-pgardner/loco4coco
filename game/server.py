@@ -22,7 +22,6 @@ Delivery is Route A behind a transport interface. See config.delivery.
 """
 
 import argparse
-import base64
 import html
 import json
 import os
@@ -63,6 +62,7 @@ BLANK_STATE = {
     "session_id": "",
     "location": "",
     "thinking": False,
+    "transport": "",
     "reasoning": [],
     "reply": "",
     "narrative": "",
@@ -78,6 +78,7 @@ BLANK_STATE = {
     "queued": False,
     "email_sent": False,
     "logged": False,
+    "ask_used": False,
     "log_error": "",
     "coco_seconds": 0,
     "input_tokens": 0,
@@ -168,12 +169,13 @@ def write_state(patch, replace=False):
 
 # ---------------------------------------------------------------- cost logging
 
-def log_cost(cfg, kind, seconds, usage, ok):
+def log_cost(cfg, kind, seconds, usage, ok, transport="exec", model=None):
     """Append-only spend trail with the real token counts exec reports. We do
     not cap the visitor, so this is the only way spend stays visible."""
     path = os.path.join(HERE, (cfg.get("coco") or {}).get("cost_log", "cost.jsonl"))
     u = usage or {}
     rec = {"at": time.time(), "kind": kind, "seconds": round(seconds, 2),
+           "transport": transport, "model": model,
            "input_tokens": u.get("input_tokens"),
            "output_tokens": u.get("output_tokens"),
            "cache_read": u.get("cache_read_input_tokens"),
@@ -221,7 +223,7 @@ def _sentences(text, limit=3):
 
 
 def run_exec(cfg, prompt, kind, job_id=None, use_mcp=False, timeout=None,
-             effort=None):
+             effort=None, tools=None, max_turns=None, allowed=None):
     """Run `cortex exec` and stream its real reasoning into state.reasoning.
 
     Uses --format json, which emits NDJSON events including genuine `thinking`
@@ -239,6 +241,21 @@ def run_exec(cfg, prompt, kind, job_id=None, use_mcp=False, timeout=None,
         cmd.append("--bypass")
     else:
         cmd.append("--no-mcp")
+        if tools:
+            # Let CoCo actually USE its built-in tools. exec auto-rejects tool
+            # calls without --bypass, so without this the tray only ever shows
+            # thinking. MCP stays OFF: we want the built-ins, not the MCP
+            # server startup cost.
+            cmd.append("--bypass")
+    if max_turns:
+        # Safety ceiling on the agentic loop once tools are in play.
+        cmd += ["--max-turns", str(max_turns)]
+    if allowed:
+        # Optional allow-list, e.g. ["Bash(gh *)"]. Unused by default; the
+        # blueprint is clamped server-side anyway (off-list features dropped,
+        # guide choice falls back), so a wandering model cannot leak through.
+        cmd += ["--allowed", ",".join(allowed) if isinstance(allowed, list)
+                else str(allowed)]
     # Each turn is a fresh, stateless exec: --no-history skips the session save
     # and keeps one visitor's turns from bleeding into the next.
     cmd.append("--no-history")
@@ -305,11 +322,110 @@ def run_exec(cfg, prompt, kind, job_id=None, use_mcp=False, timeout=None,
     except Exception as e:                                       # noqa: BLE001
         return False, f"Something went wrong reaching CoCo: {e}"
 
-    log_cost(cfg, kind, time.time() - started, usage, ok)
-    meta = {"seconds": round(time.time() - started, 1), "usage": usage, "ok": ok}
+    log_cost(cfg, kind, time.time() - started, usage, ok, "exec", model)
+    meta = {"seconds": round(time.time() - started, 1), "usage": usage,
+            "ok": ok, "transport": "exec", "model": model}
     if not final:
         return False, "I lost my train of thought there. Try me again.", meta
     return ok, final, meta
+
+
+# --------------------------------------------------- the fast path (no agent)
+
+_conn = None
+_conn_lock = threading.Lock()
+
+
+def sf_conn(cfg):
+    """One long-lived Snowflake connection, reused for Cortex COMPLETE calls and
+    for row logging.
+
+    Reusing a connection is the whole point: a fresh `snow sql` subprocess costs
+    ~3.4s of CLI startup per statement, which is more than a COMPLETE call takes.
+    """
+    global _conn
+    with _conn_lock:
+        if _conn is not None:
+            try:
+                if not _conn.is_closed():
+                    return _conn
+            except Exception:                                    # noqa: BLE001
+                pass
+            _conn = None
+        import snowflake.connector as sc                    # lazy: booth-only dep
+        name = (cfg.get("snowflake") or {}).get("connection_name")
+        _conn = sc.connect(**({"connection_name": name} if name else {}))
+        return _conn
+
+
+def run_complete(cfg, prompt, kind, job_id=None, model=None, timeout=None):
+    """Call Cortex inference directly, in-process, with no agentic loop.
+
+    This skips the ~22-25s fixed floor that `cortex exec` pays on every call
+    (process spawn + connection + model attach), which is why the reflection
+    turns land in ~1-2s instead of ~24-34s.
+
+    There is genuinely no reasoning to stream here, so the tray is CLEARED
+    rather than filled with a decorative spinner: the app only ever shows real
+    thinking. On any failure this returns ok=False so the caller can fall back
+    to exec (Claude was unavailable via COMPLETE on this region once already).
+    """
+    c = cfg.get("coco") or {}
+    mdl = model or c.get("complete_model") or "mistral-large2"
+    started = time.time()
+    write_state({"reasoning": []})
+    reply, err = "", ""
+    try:
+        cur = sf_conn(cfg).cursor()
+        try:
+            cur.execute("SELECT SNOWFLAKE.CORTEX.COMPLETE(%s, %s)", (mdl, prompt))
+            row = cur.fetchone()
+            reply = (row[0] if row else "" or "").strip()
+        finally:
+            cur.close()
+    except Exception as e:                                       # noqa: BLE001
+        err = str(e)[:200].replace("\n", " ")
+
+    secs = time.time() - started
+    ok = bool(reply) and not err
+    log_cost(cfg, kind, secs, {}, ok, "complete", mdl)
+    meta = {"seconds": round(secs, 1), "usage": {}, "ok": ok,
+            "transport": "complete", "model": mdl}
+    if err:
+        meta["error"] = err
+    if job_id is not None:
+        cur_state = read_state()
+        if cur_state.get("job_id") not in (None, job_id):
+            return False, "", meta          # superseded by a newer message
+    if not ok:
+        return False, "", meta
+    return True, reply, meta
+
+
+def run_turn(cfg, prompt, kind, loc=None, job_id=None, use_mcp=False,
+             timeout=None):
+    """Dispatch a turn to the transport its location asks for.
+
+    location.transport == "complete" -> fast, non-agentic (reflection turns)
+    anything else                    -> real `cortex exec` (judgement + tools)
+
+    A failed COMPLETE falls back to exec so a booth can never dead-end on a
+    model or region problem.
+    """
+    loc = loc or {}
+    if (loc.get("transport") or "exec") == "complete":
+        ok, reply, meta = run_complete(cfg, prompt, kind, job_id=job_id,
+                                       model=loc.get("complete_model"))
+        if ok or meta.get("ok"):
+            return ok, reply, meta
+        if meta.get("error"):
+            print(f"[loco4coco] COMPLETE failed for {kind}, falling back to "
+                  f"exec: {meta['error']}")
+        else:
+            return ok, reply, meta          # superseded, not a failure
+    return run_exec(cfg, prompt, kind, job_id=job_id, use_mcp=use_mcp,
+                    timeout=timeout, effort=loc.get("effort"),
+                    tools=loc.get("tools"), max_turns=loc.get("max_turns"))
 
 
 def base_context(cfg, state):
@@ -321,6 +437,8 @@ def base_context(cfg, state):
         "This is a five-minute activation. Be warm, brief and concrete.",
         "Never use bullet points, headings, markdown or emoji - your words are "
         "shown in a small speech bubble.",
+        "You are already mid-conversation: do not open with a greeting and do "
+        "not start by saying their name.",
     ]
     if vis.get("first_name"):
         ctx.append(f"You are speaking to {vis['first_name']}"
@@ -882,23 +1000,26 @@ def log_session(cfg, state):
 
     sql = (f"INSERT INTO {tbl} (SESSION_TS, {', '.join(cols + arr_cols)}) "
            f"SELECT CURRENT_TIMESTAMP(), {', '.join(sel)} "
-           f"FROM (SELECT PARSE_JSON(BASE64_DECODE_STRING("
-           f"'{_json_arg(payload)}')) AS p)")
-    rows, err = snow_sql(cfg, sql)
-    return (rows is not None), err
+           f"FROM (SELECT PARSE_JSON(%s) AS p)")
+    return sf_exec(cfg, sql, (json.dumps(payload, ensure_ascii=False),))
 
 
-def _json_arg(payload):
-    """Base64 the payload so the SQL text is alphanumeric only.
+def sf_exec(cfg, sql, args=None):
+    """Run one statement on the shared connection with real bind parameters.
 
-    `snow sql` always performs client-side variable substitution, and a raw JSON
-    document reaches it full of braces, quotes and ampersands - which produced a
-    bare "SQL rendering error" with no indication of the cause. Encoding removes
-    every character the CLI or SQL parser could react to, so there is exactly
-    one way for this to be interpreted.
+    Binds are why the base64 dance is gone: the driver ships values out of band,
+    so braces, quotes and ampersands in a visitor's text cannot reach the SQL
+    parser at all. It is also faster, since there is no `snow sql` subprocess.
     """
-    raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    return base64.b64encode(raw).decode("ascii")
+    try:
+        cur = sf_conn(cfg).cursor()
+        try:
+            cur.execute(sql, args or ())
+        finally:
+            cur.close()
+        return True, ""
+    except Exception as e:                                       # noqa: BLE001
+        return False, str(e)[:300].replace("\n", " ")
 
 
 def delivery_status(state):
@@ -928,17 +1049,14 @@ def log_turn(cfg, session_id, loc_id, text, reply, meta):
         "CACHE_READ_TOKENS": int(u.get("cache_read_input_tokens") or 0),
         "SUCCEEDED": bool((meta or {}).get("ok")),
     }
-    doc = _json_arg(payload)
     sql = (f"INSERT INTO {tbl} (TURN_TS, SESSION_ID, LOCATION, VISITOR_INPUT, "
            f"REPLY, DURATION_SECONDS, INPUT_TOKENS, OUTPUT_TOKENS, "
            f"CACHE_READ_TOKENS, SUCCEEDED) SELECT CURRENT_TIMESTAMP(), "
            f"p:SESSION_ID::TEXT, p:LOCATION::TEXT, p:VISITOR_INPUT::TEXT, "
            f"p:REPLY::TEXT, p:DURATION_SECONDS::NUMBER, p:INPUT_TOKENS::NUMBER, "
            f"p:OUTPUT_TOKENS::NUMBER, p:CACHE_READ_TOKENS::NUMBER, "
-           f"p:SUCCEEDED::BOOLEAN FROM (SELECT PARSE_JSON(BASE64_DECODE_STRING("
-           f"'{doc}')) AS p)")
-    rows, err = snow_sql(cfg, sql)
-    return (rows is not None), err
+           f"p:SUCCEEDED::BOOLEAN FROM (SELECT PARSE_JSON(%s) AS p)")
+    return sf_exec(cfg, sql, (json.dumps(payload, ensure_ascii=False),))
 
 
 # ------------------------------------------------------------------- transports
@@ -1135,8 +1253,7 @@ def run_checklist(cfg, loc_id, labels, job_id):
     body = fill(loc.get("prompt", ""), cfg, state,
                 selection=", ".join(labels) or "nothing")
     prompt = "\n".join(base_context(cfg, state)) + "\n\n" + body
-    ok, reply, meta = run_exec(cfg, prompt, loc_id, job_id=job_id,
-                               effort=loc.get("effort"))
+    ok, reply, meta = run_turn(cfg, prompt, loc_id, loc=loc, job_id=job_id)
     if not ok and not reply:
         return
     finish_turn(cfg, loc_id, ", ".join(labels), reply,
@@ -1149,9 +1266,17 @@ def run_workshop(cfg, text, job_id):
     feature_list = ", ".join(sorted(load_features()))
     body = fill(loc.get("prompt", ""), cfg, state, input=text,
                 feature_list=feature_list)
+    # Optional invitation to actually USE a tool. Measured: --bypass alone
+    # produces NO tool calls, because the feature list is injected and guides
+    # are resolved server-side, so CoCo has no reason to reach for one. Inviting
+    # a docs lookup does fire a real tool but cost ~34s on its own, which would
+    # undo the time the fast path just saved. Off by default; the Ask stop is
+    # where tool use is genuinely warranted and budgeted for.
+    hint = loc.get("tool_hint")
+    if hint:
+        body += "\n\n" + str(hint)
     prompt = "\n".join(base_context(cfg, state)) + "\n\n" + body
-    ok, raw, meta = run_exec(cfg, prompt, "workshop", job_id=job_id,
-                             effort=loc.get("effort"))
+    ok, raw, meta = run_turn(cfg, prompt, "workshop", loc=loc, job_id=job_id)
     if not ok and not raw:
         return
 
@@ -1192,6 +1317,30 @@ def run_workshop(cfg, text, job_id):
 
     finish_turn(cfg, "workshop", text, reply,
                 {"poc": poc, "unlocked": unlock_next(cfg, "workshop", state)}, meta)
+
+
+def run_ask(cfg, text, job_id):
+    """The one unscripted moment: the visitor asks CoCo anything about their POC.
+
+    This is where real CoCo genuinely earns it. Unlike the other turns there is
+    no injected answer to reflect back, so CoCo has an actual reason to reach
+    for its tools, and the tray shows real work. Always exec, never the fast
+    path. Optional and skippable so it cannot blow the five minutes.
+    """
+    state = read_state()
+    a = cfg.get("ask") or {}
+    poc = state.get("poc") or {}
+    body = fill(a.get("prompt", ""), cfg, state, input=text,
+                poc_name=poc.get("poc_name") or "their POC",
+                poc_summary=poc.get("summary") or "")
+    hint = a.get("tool_hint")
+    if hint:
+        body += "\n\n" + str(hint)
+    prompt = "\n".join(base_context(cfg, state)) + "\n\n" + body
+    ok, reply, meta = run_turn(cfg, prompt, "ask", loc=a, job_id=job_id)
+    if not ok and not reply:
+        return
+    finish_turn(cfg, "ask", text, reply, {"ask_used": True}, meta)
 
 
 def run_send(cfg, job_id):
@@ -1300,6 +1449,7 @@ class Handler(BaseHTTPRequestHandler):
             "/api/intake": self._intake,
             "/api/select": self._select,
             "/api/compose": self._compose,
+            "/api/ask": self._ask,
             "/api/send": self._post_it,
             "/api/reset": self._reset,
             "/api/state": self._patch,
@@ -1354,7 +1504,9 @@ class Handler(BaseHTTPRequestHandler):
         if not labels:
             return self._json({"error": "nothing selected"}, 400)
         job = uuid.uuid4().hex
+        loc = (cfg.get("locations") or {}).get(loc_id) or {}
         write_state({"thinking": True, "reply": "", "reasoning": [],
+                     "transport": loc.get("transport") or "exec",
                      "job_id": job, "location": loc_id, "stage": loc_id})
         threading.Thread(target=run_checklist,
                          args=(cfg, loc_id, labels, job), daemon=True).start()
@@ -1369,9 +1521,32 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"error": "empty message"}, 400)
         cfg = load_config()
         job = uuid.uuid4().hex
+        wloc = (cfg.get("locations") or {}).get("workshop") or {}
         write_state({"thinking": True, "reply": "", "reasoning": [],
+                     "transport": wloc.get("transport") or "exec",
                      "job_id": job, "location": "workshop", "stage": "workshop"})
         threading.Thread(target=run_workshop, args=(cfg, text, job),
+                         daemon=True).start()
+        return self._json({"accepted": True, "job_id": job})
+
+    def _ask(self):
+        b = self._body()
+        if not isinstance(b, dict):
+            return self._json({"error": "invalid json"}, 400)
+        text = (b.get("text") or "").strip()[:300]
+        if not text:
+            return self._json({"error": "empty question"}, 400)
+        cfg = load_config()
+        if not (cfg.get("ask") or {}).get("enabled", True):
+            return self._json({"error": "ask is disabled"}, 400)
+        st = read_state()
+        if not st.get("poc"):
+            return self._json({"error": "no POC to ask about yet"}, 400)
+        job = uuid.uuid4().hex
+        write_state({"thinking": True, "reply": "", "reasoning": [],
+                     "transport": (cfg.get("ask") or {}).get("transport", "exec"),
+                     "job_id": job, "location": "ask", "stage": "ask"})
+        threading.Thread(target=run_ask, args=(cfg, text, job),
                          daemon=True).start()
         return self._json({"accepted": True, "job_id": job})
 
@@ -1384,6 +1559,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"error": "no POC to send yet"}, 400)
         job = uuid.uuid4().hex
         write_state({"thinking": True, "reply": "", "reasoning": [],
+                     "transport": "none",
                      "job_id": job, "location": "postbox", "stage": "postbox"})
         threading.Thread(target=run_send, args=(cfg, job), daemon=True).start()
         return self._json({"accepted": True, "job_id": job})
@@ -1432,6 +1608,14 @@ def main():
                 pass
         threading.Thread(target=_warm, daemon=True).start()
         print("  warm-up   : model warm-up dispatched")
+    # Open the Snowflake connection now so the first visitor's fast-path turn
+    # pays ~2s, not the ~5s that includes connection setup.
+    def _warm_conn():
+        try:
+            sf_conn(cfg)
+        except Exception:                                        # noqa: BLE001
+            pass
+    threading.Thread(target=_warm_conn, daemon=True).start()
     # Idle watchdog: if nothing hits the server for this many minutes (no browser
     # open, no test), it shuts itself down so it can never run for hours
     # unattended. Set server.idle_shutdown_minutes to 0 to disable.

@@ -220,7 +220,8 @@ def _sentences(text, limit=3):
     return out
 
 
-def run_exec(cfg, prompt, kind, job_id=None, use_mcp=False, timeout=None):
+def run_exec(cfg, prompt, kind, job_id=None, use_mcp=False, timeout=None,
+             effort=None):
     """Run `cortex exec` and stream its real reasoning into state.reasoning.
 
     Uses --format json, which emits NDJSON events including genuine `thinking`
@@ -238,14 +239,19 @@ def run_exec(cfg, prompt, kind, job_id=None, use_mcp=False, timeout=None):
         cmd.append("--bypass")
     else:
         cmd.append("--no-mcp")
-    # Booth-tunable model + effort. Set config.coco.model / config.coco.effort to
-    # switch the underlying model or trade quality for speed without code edits.
+    # Each turn is a fresh, stateless exec: --no-history skips the session save
+    # and keeps one visitor's turns from bleeding into the next.
+    cmd.append("--no-history")
+    # Booth-tunable model + effort. Global config.coco.effort is the default; a
+    # per-turn `effort` override (from the location) wins. Measured: default
+    # (null) behaves like high effort; "low" cuts ~8s off simple turns and ~17s
+    # off the workshop, and the {minimal,low,medium} spread is only ~3-4s.
     model = c.get("model")
     if model:
         cmd += ["-m", str(model)]
-    effort = c.get("effort")
-    if effort:
-        cmd += ["--effort", str(effort)]
+    eff = effort or c.get("effort")
+    if eff:
+        cmd += ["--effort", str(eff)]
 
     started = time.time()
     lines, final, usage, ok = [], "", {}, False
@@ -289,7 +295,7 @@ def run_exec(cfg, prompt, kind, job_id=None, use_mcp=False, timeout=None):
                 ok = not ev.get("is_error")
             if time.time() > deadline:
                 p.kill()
-                push("That is taking a while - I will go with what I have.")
+                push("That is taking a while. I will go with what I have.")
                 break
         p.wait(timeout=10)
         if p.returncode == 0 and final:
@@ -302,7 +308,7 @@ def run_exec(cfg, prompt, kind, job_id=None, use_mcp=False, timeout=None):
     log_cost(cfg, kind, time.time() - started, usage, ok)
     meta = {"seconds": round(time.time() - started, 1), "usage": usage, "ok": ok}
     if not final:
-        return False, "I lost my train of thought there - try me again.", meta
+        return False, "I lost my train of thought there. Try me again.", meta
     return ok, final, meta
 
 
@@ -682,8 +688,8 @@ def blueprint_html(cfg, state):
     if url:
         parts += ["<p style=\"margin-top:24px\">A Word version is here: "
                   f"<a href=\"{e(url)}\">download the document</a>. "
-                  "That link expires in seven days, but this email will not - "
-                  "everything you need is above.</p>"]
+                  "That link expires in seven days, but this email will not. "
+                  "Everything you need is above.</p>"]
     parts += ["<p style=\"margin-top:24px;color:#667\">See you next time.<br>"
               "CoCo</p>", "</div>"]
     return "\n".join(parts)
@@ -989,10 +995,10 @@ class OutboxTransport:
         write_state({"draft_created": drafted, "blueprint_url": url})
 
         if drafted:
-            reply = detail or "Drafted and ready - it will be with you shortly."
+            reply = detail or "Drafted and ready. It will be with you shortly."
         else:
             reply = (f"Wrapped, labelled and in the postbox for "
-                     f"{vis.get('email')}. It goes out shortly - I do not send "
+                     f"{vis.get('email')}. It goes out shortly. I do not send "
                      f"it myself from in here.")
         if err and not url:
             reply += " The Word version could not be attached this time."
@@ -1129,7 +1135,8 @@ def run_checklist(cfg, loc_id, labels, job_id):
     body = fill(loc.get("prompt", ""), cfg, state,
                 selection=", ".join(labels) or "nothing")
     prompt = "\n".join(base_context(cfg, state)) + "\n\n" + body
-    ok, reply, meta = run_exec(cfg, prompt, loc_id, job_id=job_id)
+    ok, reply, meta = run_exec(cfg, prompt, loc_id, job_id=job_id,
+                               effort=loc.get("effort"))
     if not ok and not reply:
         return
     finish_turn(cfg, loc_id, ", ".join(labels), reply,
@@ -1143,7 +1150,8 @@ def run_workshop(cfg, text, job_id):
     body = fill(loc.get("prompt", ""), cfg, state, input=text,
                 feature_list=feature_list)
     prompt = "\n".join(base_context(cfg, state)) + "\n\n" + body
-    ok, raw, meta = run_exec(cfg, prompt, "workshop", job_id=job_id)
+    ok, raw, meta = run_exec(cfg, prompt, "workshop", job_id=job_id,
+                             effort=loc.get("effort"))
     if not ok and not raw:
         return
 
@@ -1177,7 +1185,7 @@ def run_workshop(cfg, text, job_id):
         poc = {"poc_name": text[:60], "summary": raw[:300], "features": [],
                "readiness": 3,
                "considerations": ["We ran out of time to work through the "
-                                  "detail - start by confirming what data you "
+                                  "detail. Start by confirming what data you "
                                   "can actually get hold of."]}
         t, u = guide_for(cfg, "talk-to-my-data")
         poc["guide_title"], poc["guide_url"] = t, u

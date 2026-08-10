@@ -1,0 +1,784 @@
+{
+  "_comment": "Loco4CoCo arcade companion. Point at any account/event by editing this file only.",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 4747,
+    "poll_ms": 400,
+    "idle_shutdown_minutes": 45
+  },
+  "event": {
+    "city": "London",
+    "language": "en",
+    "region": "AWS_EU_WEST_2",
+    "_region_comment": "Marketplace listings are filtered to this region. Offering a visitor a share they cannot attach wastes the five minutes we just spent with them.",
+    "title": "LOCO 4 CoCo",
+    "subtitle": "Five minutes to your next data product",
+    "time_limit_seconds": 300
+  },
+  "snowflake": {
+    "connection_name": "PG_LONDON",
+    "database": "LOCO4COCO",
+    "schema": "BOOTH",
+    "sessions_table": "SESSIONS"
+  },
+  "coco": {
+    "_comment": "Each message spawns `cortex exec`. Deliberately UNCAPPED - no max-turns, no effort floor, history left on. Cost is managed by observation (see cost_log) not by throttling the visitor.",
+    "binary": "cortex",
+    "model": null,
+    "effort": null,
+    "warm_up": true,
+    "timeout_seconds": 180,
+    "stream": true,
+    "cost_log": "cost.jsonl"
+  },
+  "delivery": {
+    "_comment": "Verified constraints: the Gmail MCP exposes create_draft only - no send tool, no attachment parameter - AND its tools do not load under `cortex exec` even with --bypass, though they work in an interactive CoCo session. snowflake.com also publishes DMARC p=reject, so third-party senders are rejected outright. So the game writes a fully-composed email to outbox/ and the operator's interactive session drains it via the loco4coco-ops skill. Swap transport to gmail_api once an OAuth client is proven against Workspace policy.",
+    "transport": "outbox",
+    "outbox_dir": "outbox",
+    "stage": "@LOCO4COCO.BOOTH.BLUEPRINTS",
+    "presign_seconds": 604800,
+    "subject_template": "Your Snowflake POC blueprint: {poc_name}",
+    "signup_url": "https://signup.snowflake.com/",
+    "docs_base": "https://docs.snowflake.com/",
+    "guides_base": "https://www.snowflake.com/en/developers/guides/",
+    "try_draft": false
+  },
+  "intake": {
+    "_comment": "CoCo gets up and asks who the present is for. Typing is limited to these three fields plus any 'Other' answers.",
+    "opening": "",
+    "prompt": "Please enter your details:",
+    "fields": [
+      {
+        "id": "first_name",
+        "label": "Your first name",
+        "placeholder": "e.g. Priya"
+      },
+      {
+        "id": "company",
+        "label": "Where you work",
+        "placeholder": "e.g. NHS Trust, Barclays, Tesco"
+      },
+      {
+        "id": "email",
+        "label": "Where to post it",
+        "placeholder": "e.g. priya@company.com",
+        "type": "email"
+      }
+    ],
+    "industry_question": "And what world do you work in? I'll fill the library with the right shelves.",
+    "confirm_industry": "I'm guessing {industry} from {company} - have I got that right?",
+    "wake": {
+      "head": "Sending a CoCo POC to my friend",
+      "flavor": "Somewhere in the Arctic. (Yes, penguins live in Antarctica, but CoCo is special!)",
+      "line": "CoCo stirs in his igloo, he dreams of sending his friend a *CoCo POC* (proof of concept) present - *that friend is you!*"
+    }
+  },
+  "unlock_order": [
+    "library",
+    "marketplace",
+    "workshop",
+    "postbox"
+  ],
+  "industries": {
+    "healthcare": {
+      "name": "Healthcare & Life Sciences",
+      "data_sources": [
+        {
+          "id": "patient_records",
+          "label": "Patient records",
+          "note": "Structured clinical records in a PAS or EPR system"
+        },
+        {
+          "id": "clinical_notes",
+          "label": "Clinical notes & letters",
+          "note": "Free text - discharge summaries, referrals, correspondence"
+        },
+        {
+          "id": "waiting_times",
+          "label": "Referral & waiting list data",
+          "note": "Pathways, breaches, appointment scheduling"
+        },
+        {
+          "id": "trials",
+          "label": "Clinical trial data",
+          "note": "Protocols, recruitment, outcomes"
+        },
+        {
+          "id": "imaging",
+          "label": "Imaging & diagnostics",
+          "note": "Scan metadata and reports"
+        },
+        {
+          "id": "estates",
+          "label": "Estates & operations",
+          "note": "Beds, theatres, staffing rotas, supplies"
+        }
+      ],
+      "marketplace": [
+        {
+          "id": "population",
+          "label": "Population & demographics",
+          "note": "Census and small-area statistics to risk-adjust by catchment"
+        },
+        {
+          "id": "deprivation",
+          "label": "Deprivation & social determinants",
+          "note": "Index of Multiple Deprivation to explain outcome variation"
+        },
+        {
+          "id": "geo",
+          "label": "Geospatial & travel time",
+          "note": "Boundaries and drive times for access and coverage analysis"
+        },
+        {
+          "id": "weather",
+          "label": "Weather & air quality",
+          "note": "Correlate respiratory admissions with pollution and cold snaps"
+        },
+        {
+          "id": "drug_ref",
+          "label": "Drug & medical reference data",
+          "note": "Coding systems and terminologies for normalising records"
+        }
+      ]
+    },
+    "financial": {
+      "name": "Financial Services",
+      "data_sources": [
+        {
+          "id": "transactions",
+          "label": "Transaction history",
+          "note": "Card, payment and account movement"
+        },
+        {
+          "id": "customers",
+          "label": "Customer & account master",
+          "note": "KYC records, product holdings, segments"
+        },
+        {
+          "id": "positions",
+          "label": "Positions & trades",
+          "note": "Holdings, orders, execution history"
+        },
+        {
+          "id": "risk",
+          "label": "Risk & capital models",
+          "note": "Exposures, limits, stress test inputs"
+        },
+        {
+          "id": "comms",
+          "label": "Customer communications",
+          "note": "Call transcripts, complaints, chat logs"
+        },
+        {
+          "id": "regulatory",
+          "label": "Regulatory reporting",
+          "note": "Submissions and the reconciliations behind them"
+        }
+      ],
+      "marketplace": [
+        {
+          "id": "market_data",
+          "label": "Market & pricing data",
+          "note": "Prices and reference data to value positions"
+        },
+        {
+          "id": "firmographics",
+          "label": "Company financials & firmographics",
+          "note": "Counterparty and SME lending enrichment"
+        },
+        {
+          "id": "macro",
+          "label": "Macroeconomic indicators",
+          "note": "Rates, inflation and employment for scenario modelling"
+        },
+        {
+          "id": "esg",
+          "label": "ESG & climate risk",
+          "note": "Physical and transition risk against a loan book"
+        },
+        {
+          "id": "sanctions",
+          "label": "Sanctions & adverse media",
+          "note": "Screening and enhanced due diligence signals"
+        }
+      ]
+    },
+    "retail": {
+      "name": "Retail & Consumer Goods",
+      "data_sources": [
+        {
+          "id": "sales",
+          "label": "Sales & till transactions",
+          "note": "Basket-level sales by store and channel"
+        },
+        {
+          "id": "inventory",
+          "label": "Inventory & stock positions",
+          "note": "Availability, shrink, replenishment"
+        },
+        {
+          "id": "loyalty",
+          "label": "Loyalty & customer data",
+          "note": "Membership, spend history, segments"
+        },
+        {
+          "id": "ecommerce",
+          "label": "Web & app clickstream",
+          "note": "Browse, search and cart behaviour"
+        },
+        {
+          "id": "supply",
+          "label": "Supplier & logistics data",
+          "note": "Purchase orders, lead times, delivery performance"
+        },
+        {
+          "id": "reviews",
+          "label": "Reviews & customer service",
+          "note": "Free text feedback, returns reasons, contact logs"
+        }
+      ],
+      "marketplace": [
+        {
+          "id": "weather",
+          "label": "Weather observations & forecast",
+          "note": "The single biggest driver of short-term demand"
+        },
+        {
+          "id": "population",
+          "label": "Population & demographics",
+          "note": "Catchment profiling for store and range decisions"
+        },
+        {
+          "id": "footfall",
+          "label": "Mobility & footfall",
+          "note": "High street and retail park movement patterns"
+        },
+        {
+          "id": "prices",
+          "label": "Competitor & commodity prices",
+          "note": "Price positioning and input cost exposure"
+        },
+        {
+          "id": "events",
+          "label": "Holidays & events calendars",
+          "note": "Bank holidays and fixtures that move demand"
+        }
+      ]
+    },
+    "public": {
+      "name": "Public Sector & Government",
+      "data_sources": [
+        {
+          "id": "case",
+          "label": "Case management records",
+          "note": "Casework across service lines"
+        },
+        {
+          "id": "documents",
+          "label": "Policy & guidance documents",
+          "note": "Years of PDFs, circulars and statutory guidance"
+        },
+        {
+          "id": "citizen",
+          "label": "Citizen contact & correspondence",
+          "note": "Calls, emails, webforms, complaints"
+        },
+        {
+          "id": "assets",
+          "label": "Assets & estates",
+          "note": "Property, highways, fleet, maintenance"
+        },
+        {
+          "id": "spend",
+          "label": "Finance & procurement",
+          "note": "Budgets, spend over threshold, contracts"
+        },
+        {
+          "id": "performance",
+          "label": "Performance & statutory returns",
+          "note": "KPIs and central government reporting"
+        }
+      ],
+      "marketplace": [
+        {
+          "id": "census",
+          "label": "Census & population statistics",
+          "note": "Small-area demographics for needs assessment"
+        },
+        {
+          "id": "deprivation",
+          "label": "Deprivation indices",
+          "note": "Target interventions where need is greatest"
+        },
+        {
+          "id": "geo",
+          "label": "Boundaries & geospatial reference",
+          "note": "Wards, LSOAs, postcodes and lookups"
+        },
+        {
+          "id": "weather",
+          "label": "Weather & flood risk",
+          "note": "Resilience planning and winter pressures"
+        },
+        {
+          "id": "transport",
+          "label": "Transport & accessibility",
+          "note": "Public transport access to services"
+        }
+      ]
+    },
+    "manufacturing": {
+      "name": "Manufacturing & Industrial",
+      "data_sources": [
+        {
+          "id": "sensors",
+          "label": "Machine & sensor telemetry",
+          "note": "High frequency readings off the line"
+        },
+        {
+          "id": "quality",
+          "label": "Quality & defect records",
+          "note": "Inspection results, scrap, rework"
+        },
+        {
+          "id": "maintenance",
+          "label": "Maintenance logs",
+          "note": "Work orders and engineer free text"
+        },
+        {
+          "id": "erp",
+          "label": "ERP & production planning",
+          "note": "Orders, BOMs, schedules, yields"
+        },
+        {
+          "id": "supply",
+          "label": "Supplier & inbound logistics",
+          "note": "Component lead times and quality by supplier"
+        },
+        {
+          "id": "energy",
+          "label": "Energy consumption",
+          "note": "Meter data by line and site"
+        }
+      ],
+      "marketplace": [
+        {
+          "id": "commodity",
+          "label": "Commodity & input prices",
+          "note": "Raw material cost exposure"
+        },
+        {
+          "id": "weather",
+          "label": "Weather observations",
+          "note": "Ambient conditions against yield and energy use"
+        },
+        {
+          "id": "logistics",
+          "label": "Freight & shipping data",
+          "note": "Port congestion and route disruption"
+        },
+        {
+          "id": "firmographics",
+          "label": "Supplier firmographics & risk",
+          "note": "Financial health of the supply base"
+        },
+        {
+          "id": "esg",
+          "label": "Emissions & ESG factors",
+          "note": "Scope 3 reporting and carbon intensity"
+        }
+      ]
+    },
+    "energy": {
+      "name": "Energy & Utilities",
+      "data_sources": [
+        {
+          "id": "meters",
+          "label": "Smart meter readings",
+          "note": "Interval consumption at premise level"
+        },
+        {
+          "id": "network",
+          "label": "Network & asset data",
+          "note": "Substations, pipes, cables, condition"
+        },
+        {
+          "id": "outages",
+          "label": "Outage & fault records",
+          "note": "Interruptions, causes, restoration times"
+        },
+        {
+          "id": "generation",
+          "label": "Generation & dispatch",
+          "note": "Output, availability, curtailment"
+        },
+        {
+          "id": "customers",
+          "label": "Customer & billing",
+          "note": "Accounts, tariffs, arrears, vulnerability flags"
+        },
+        {
+          "id": "fieldwork",
+          "label": "Field engineer reports",
+          "note": "Free text inspection and repair notes"
+        }
+      ],
+      "marketplace": [
+        {
+          "id": "weather",
+          "label": "Weather & forecast data",
+          "note": "The primary driver of both demand and renewable output"
+        },
+        {
+          "id": "prices",
+          "label": "Energy market prices",
+          "note": "Wholesale price exposure and settlement"
+        },
+        {
+          "id": "geo",
+          "label": "Geospatial & terrain",
+          "note": "Network planning and vegetation risk"
+        },
+        {
+          "id": "population",
+          "label": "Population & property data",
+          "note": "Premise characteristics for demand modelling"
+        },
+        {
+          "id": "climate",
+          "label": "Climate projections",
+          "note": "Long-run asset resilience planning"
+        }
+      ]
+    },
+    "media": {
+      "name": "Media, Telco & Entertainment",
+      "data_sources": [
+        {
+          "id": "viewing",
+          "label": "Viewing & listening events",
+          "note": "Play, pause, completion by title and device"
+        },
+        {
+          "id": "subscribers",
+          "label": "Subscriber & account data",
+          "note": "Plans, churn, lifetime value"
+        },
+        {
+          "id": "content",
+          "label": "Content catalogue & metadata",
+          "note": "Titles, rights, genres, availability windows"
+        },
+        {
+          "id": "network",
+          "label": "Network performance",
+          "note": "Throughput, latency, coverage, faults"
+        },
+        {
+          "id": "ads",
+          "label": "Advertising & campaign data",
+          "note": "Impressions, fill rate, yield"
+        },
+        {
+          "id": "support",
+          "label": "Customer support interactions",
+          "note": "Call transcripts and chat logs"
+        }
+      ],
+      "marketplace": [
+        {
+          "id": "population",
+          "label": "Population & demographics",
+          "note": "Audience profiling and coverage gaps"
+        },
+        {
+          "id": "mobility",
+          "label": "Mobility & location",
+          "note": "Where demand sits against network build"
+        },
+        {
+          "id": "events",
+          "label": "Sports & events calendars",
+          "note": "Fixtures that drive traffic and churn"
+        },
+        {
+          "id": "social",
+          "label": "Social & sentiment signals",
+          "note": "Title buzz ahead of release"
+        },
+        {
+          "id": "weather",
+          "label": "Weather observations",
+          "note": "Weather against viewing and network load"
+        }
+      ]
+    },
+    "other": {
+      "name": "Something else",
+      "data_sources": [
+        {
+          "id": "core_records",
+          "label": "Core operational records",
+          "note": "Whatever your main system of record holds"
+        },
+        {
+          "id": "documents",
+          "label": "Documents & PDFs",
+          "note": "Years of unstructured files nobody can query"
+        },
+        {
+          "id": "customers",
+          "label": "Customer or member data",
+          "note": "Who you serve and what they have done"
+        },
+        {
+          "id": "finance",
+          "label": "Finance & billing",
+          "note": "Revenue, spend, invoices"
+        },
+        {
+          "id": "comms",
+          "label": "Emails, calls & tickets",
+          "note": "Free text interactions"
+        },
+        {
+          "id": "sensors",
+          "label": "Device or sensor data",
+          "note": "Anything machine-generated and high volume"
+        }
+      ],
+      "marketplace": [
+        {
+          "id": "population",
+          "label": "Population & demographics",
+          "note": "Context for wherever you operate"
+        },
+        {
+          "id": "weather",
+          "label": "Weather observations",
+          "note": "Surprisingly often the missing variable"
+        },
+        {
+          "id": "firmographics",
+          "label": "Company & firmographic data",
+          "note": "Enrich anything B2B"
+        },
+        {
+          "id": "geo",
+          "label": "Geospatial reference",
+          "note": "Boundaries, postcodes and lookups"
+        },
+        {
+          "id": "macro",
+          "label": "Economic indicators",
+          "note": "Trend against the wider economy"
+        }
+      ]
+    }
+  },
+  "render": {
+    "tile": 16,
+    "scale": 3,
+    "cols": 22,
+    "rows": 15,
+    "seed": 20260805
+  },
+  "theme": {
+    "sky": "#0E1A24",
+    "snow": "#3A5670",
+    "snow_alt": "#334E66",
+    "snow_bright": "#C3DEEF",
+    "ice": "#48789B",
+    "path": "#4E7392",
+    "sea": "#0C2E45",
+    "sea_deep": "#08202F",
+    "pine": "#1E5C48",
+    "pine_dark": "#164537",
+    "rock": "#56697A",
+    "accent": "#29B5E8",
+    "accent_warm": "#E8863C",
+    "text": "#EAF6FD",
+    "panel": "#101C27",
+    "panel_edge": "#29B5E8"
+  },
+  "penguin": {
+    "body": "#4AA8DC",
+    "body_dark": "#2F87BC",
+    "belly": "#F2F7FA",
+    "beak": "#E8863C",
+    "foot": "#E8863C",
+    "eye": "#16222E",
+    "start": [
+      4,
+      11
+    ]
+  },
+  "locations": {
+    "library": {
+      "tile": [
+        4,
+        4
+      ],
+      "kind": "library",
+      "name": "The Library",
+      "represents": "Data you already hold",
+      "mode": "checklist",
+      "source": "data_sources",
+      "heading": "Which of these do you actually have?",
+      "hint": "Tick everything that rings true. Add your own if I've missed it.",
+      "other_label": "Something else you hold",
+      "other_placeholder": "e.g. 20 years of inspection photographs",
+      "narrative": "This is your library, {first_name} - every shelf here is something {company} already holds. Most people are sitting on more than they think.",
+      "prompt": "The visitor works in {industry} at {company}. In THE LIBRARY they said they already hold: {selection}. Reply in at most 2 short sentences: reflect back the most valuable thing in that list, and name the one Snowflake capability that would unlock it. Warm, plain English, no jargon, no bullet points, no headings."
+    },
+    "marketplace": {
+      "tile": [
+        11,
+        4
+      ],
+      "kind": "marketplace",
+      "name": "The Marketplace",
+      "represents": "Data to enhance it",
+      "mode": "checklist",
+      "source": "marketplace_index",
+      "heading": "What shall we join to it?",
+      "hint": "Real listings from the Snowflake Marketplace, filtered to what you can actually attach in this region. No copying, no pipelines.",
+      "other_label": "Something else you'd join",
+      "other_placeholder": "e.g. competitor pricing",
+      "discovery": "manual",
+      "_discovery_comment": "manual = the curated, verified marketplace-index.md. Swap to 'agentic' when the Agentic Marketplace Discovery PrPr lands; the panel contract does not change.",
+      "narrative": "Now the fun part. These are live datasets you can query the moment you attach them - nothing to copy, nothing to maintain.",
+      "prompt": "The visitor works in {industry} at {company} and holds: {held}. In THE MARKETPLACE they chose to join these real Snowflake Marketplace listings: {selection}. Reply in at most 2 short sentences: say what joining those lets them answer that they cannot answer today. Refer to the datasets only by the names given above - do not invent any other listing or provider name. Plain English, no bullet points."
+    },
+    "workshop": {
+      "tile": [
+        17,
+        8
+      ],
+      "kind": "workshop",
+      "name": "The Workshop",
+      "represents": "Build the POC",
+      "mode": "compose",
+      "heading": "What should it actually do?",
+      "hint": "One sentence. What would make a colleague say 'finally'?",
+      "placeholder": "e.g. answer questions about our policies with citations",
+      "narrative": "Right - bench cleared, forge lit. Tell me what the finished thing does and I'll draw up the plan.",
+      "prompt": "The visitor is {first_name}, {industry}, at {company}. They hold: {held}. They will join: {joined}. In THE WORKSHOP they said the POC should: \"{input}\".\n\nFirst choose the archetype that matches what they are ACTUALLY trying to do. Pick exactly one of these keys:\ntalk-to-my-data (ask questions of structured data in plain English)\nask-my-documents (search or Q&A over documents and free text)\nextract-from-paperwork (pull structured fields out of forms, invoices, letters)\ntriage-and-classify (sort, route or prioritise incoming items)\nan-agent-that-acts (takes an action, not just answers)\ndashboard-that-explains-itself (a visual that narrates the why)\npredict-what-happens-next (forecasting or risk scoring)\njoin-the-silos (unify data that lives in separate systems)\nshare-without-copying (give someone else live access)\nwatch-it-live (streaming or near real-time monitoring)\n\nThe data they hold decides this. If their source is documents or free text, it is ask-my-documents or extract-from-paperwork, NOT talk-to-my-data.\n\nFor features, you MUST choose 2 to 4 names EXACTLY as spelled from this list and nothing else:\n{feature_list}\n\nReturn ONLY minified JSON, no prose and no code fence, with exactly these keys:\n{\"archetype\": one key from the list above, \"poc_name\": short name in their own language, max 8 words, \"summary\": 2 sentences on what it does and why it matters, \"features\": array of 2-4 names copied exactly from the feature list, \"first_step\": one concrete first action, \"considerations\": array of 3 or 4 short specific things they should think about or improve - gaps in their data, unknowns, governance or effort - each one sentence, concrete to THEIR situation and never generic, \"readiness\": integer 1-5, \"reply\": max 40 words, warm, spoken aloud to them, no bullet points}\n\nScore readiness strictly and privately: award points only for data they actually named. Do NOT award a 5 unless they named specific data, a specific question, and a specific user. The visitor never sees this number, so be honest rather than kind. Never claim the POC is built."
+    },
+    "postbox": {
+      "tile": [
+        11,
+        11
+      ],
+      "kind": "postbox",
+      "name": "The Postbox",
+      "represents": "Send the present",
+      "mode": "send",
+      "heading": "Shall I post it?",
+      "hint": "I'll write it up properly and put it in the post.",
+      "narrative": "Wrapped, labelled and ready. Say the word and it's in the post to {email}.",
+      "button": "POST IT TO ME"
+    }
+  },
+  "scenery": {
+    "pines": [
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        7
+      ],
+      [
+        7,
+        7
+      ],
+      [
+        1,
+        12
+      ],
+      [
+        6,
+        12
+      ],
+      [
+        9,
+        1
+      ],
+      [
+        14,
+        2
+      ],
+      [
+        20,
+        2
+      ],
+      [
+        21,
+        7
+      ],
+      [
+        20,
+        12
+      ],
+      [
+        15,
+        12
+      ],
+      [
+        8,
+        10
+      ],
+      [
+        19,
+        4
+      ],
+      [
+        13,
+        9
+      ],
+      [
+        16,
+        2
+      ]
+    ],
+    "rocks": [
+      [
+        6,
+        3
+      ],
+      [
+        9,
+        6
+      ],
+      [
+        14,
+        6
+      ],
+      [
+        19,
+        11
+      ],
+      [
+        3,
+        9
+      ],
+      [
+        13,
+        12
+      ]
+    ],
+    "sea_from_row": 14
+  },
+  "intro": {
+    "title": "Loco for CoCo",
+    "button": "START",
+    "body": [
+      "This is a fun way to experience the power of Cortex Code (CoCo) through the medium of an arcade game.",
+      "You have 5 minutes to explore the key aspects of building out a Proof of Concept on Snowflake with CoCo as your tour guide on our features, marketplace datasets and how enterprise-grade AI can bring your ideas to life.",
+      "After 5 minutes you will have a personalised action plan (sent to you via email) to building out a project on Snowflake - be daring! This is a fun, flexible process with a very real and useful outcome!"
+    ]
+  }
+}

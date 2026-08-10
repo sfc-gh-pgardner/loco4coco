@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Loco 4 CoCo</title>
+<style>
+  :root { --panel:#101C27; --edge:#29B5E8; --text:#EAF6FD; --warm:#E8863C;
+          --dim:#7FA8C2; --line:#1E3446; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:#0A121A; color:var(--text);
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; overflow:hidden; }
+  #wrap { height:100%; display:flex; flex-direction:column; align-items:center;
+    gap:7px; padding:8px 10px; }
+  /* The bubble/tray/hud must render at their natural height and never be squeezed
+     by the column flex - shrinking them spilled the bubble's text over the tray.
+     Only the stage flexes; fitCanvas re-runs when the bubble grows. */
+  #bubble, #tray, #hud, #stagebar { flex:0 0 auto; }
+  .rail { width:100%; max-width:1056px; }
+
+  /* ---------- CoCo's thought bubble: the ONLY place narrative appears ------- */
+  #bubble { position:relative; background:#16283A; border:3px solid var(--edge);
+    border-radius:14px; padding:11px 15px 12px; min-height:62px;
+    box-shadow:0 0 26px rgba(41,181,232,.16); }
+  #bubble:after, #bubble:before { content:''; position:absolute; left:56px;
+    width:0; height:0; border-style:solid; }
+  #bubble:before { bottom:-15px; border-width:15px 13px 0 0;
+    border-color:var(--edge) transparent transparent transparent; }
+  #bubble:after { bottom:-10px; border-width:11px 9px 0 0;
+    border-color:#16283A transparent transparent transparent; }
+  #bubble .who { color:var(--warm); font-size:10px; letter-spacing:.18em;
+    text-transform:uppercase; display:flex; justify-content:space-between; }
+  /* Long CoCo replies were clipped by a rigid box. The message now wraps and,
+     only if it is genuinely long, scrolls inside a bounded bubble instead of
+     pushing the canvas and tray off-screen. */
+  #bubble .msg { margin-top:4px; font-size:15px; line-height:1.5;
+    white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
+    max-height:24vh; overflow-y:auto; }
+  #hist { display:flex; gap:5px; align-items:center; }
+  #hist button { background:#0E1F2E; color:var(--dim); border:1px solid var(--line);
+    border-radius:4px; font:inherit; font-size:11px; padding:1px 7px; cursor:pointer; }
+  #hist button:hover:not(:disabled) { color:var(--edge); border-color:var(--edge); }
+  #hist button:disabled { opacity:.3; cursor:default; }
+  #hist .at { font-size:10px; color:var(--dim); letter-spacing:.08em; }
+  #histback { display:none; font-size:10px; color:var(--warm); margin-top:5px;
+    letter-spacing:.1em; text-transform:uppercase; }
+  #histback.on { display:block; }
+  #yousaid { display:none; margin-top:6px; padding-top:6px;
+    border-top:1px dashed #2B4A61; font-size:12px; color:var(--dim); }
+  #yousaid.on { display:block; }
+
+  /* ---------- HUD ---------- */
+  #hud { display:flex; gap:7px; }
+  .tile { flex:1; background:var(--panel); border:2px solid var(--line);
+    border-radius:6px; padding:4px 9px; }
+  .tile .k { font-size:9px; letter-spacing:.14em; color:var(--dim); text-transform:uppercase; }
+  .tile .v { font-size:15px; font-weight:700; color:var(--edge); margin-top:1px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #stagebar { display:flex; gap:4px; }
+  #stagebar div { flex:1; height:5px; background:var(--line); border-radius:3px; }
+  #stagebar div.on { background:var(--edge); }
+  #stagebar div.cur { background:var(--warm); }
+
+  #stagewrap { position:relative; }
+  canvas#cv { image-rendering:pixelated; display:block; border:3px solid var(--line);
+    border-radius:8px; box-shadow:0 14px 40px rgba(0,0,0,.6); }
+  /* The POV interior scene. Drawn procedurally in the same pixel style as the
+     map, it sits over the board while you are "inside" a location or waking. */
+  canvas#scene { image-rendering:pixelated; position:absolute; inset:0;
+    width:100%; height:100%; display:none; border:3px solid var(--warm);
+    border-radius:8px; z-index:30; }
+  canvas#scene.on { display:block; }
+
+  /* ---------- overlays ---------- */
+  /* Fixed to the viewport, not the canvas: tying the card to the board once
+     hid 40% of the panel (and the CONFIRM button) on a small window. */
+  .ov { position:fixed; inset:0; z-index:40; display:none; align-items:center;
+    justify-content:center; background:rgba(6,12,18,.9); }
+  .ov.on { display:flex; }
+  /* POV variant: the interior scene shows behind, so the backdrop is only a
+     soft vignette and the card sits low, like a surface on the desk. */
+  /* POV variant: the interior scene fills the stage and the panel docks as a
+     solid "desk" band flush at the bottom, exactly as wide as the scene (width
+     is set in JS to the canvas width) so it sits BELOW the view, not over it. */
+  .ov.pov { background:transparent; align-items:flex-end; justify-content:center; }
+  .ov.pov .card { margin:0 0 10px; width:auto; max-height:52vh;
+    background:rgba(12,22,31,.97);
+    border-color:var(--edge); box-shadow:0 -8px 40px rgba(0,0,0,.75); }
+  /* The wake igloo is the first thing a visitor sees, so let it read: a soft
+     vignette instead of the near-opaque default overlay. */
+  #ov-wake { background:linear-gradient(rgba(6,12,18,.20),rgba(6,12,18,.62)); }
+  /* CoCo's in-scene reply, embedded as a quiet quote (a left accent bar) rather
+     than a boxed border that clashed with the panel edge. */
+  .say { display:none; margin:4px 0 12px; padding:2px 0 2px 12px;
+    border-left:3px solid var(--edge); background:transparent;
+    font-size:14px; line-height:1.5; white-space:pre-wrap; word-break:break-word;
+    max-height:20vh; overflow-y:auto; }
+  .say.on { display:block; }
+  .say b { color:var(--warm); font-size:10px; letter-spacing:.16em;
+    text-transform:uppercase; display:block; margin-bottom:3px; }
+  /* sparkly / shimmer text for the phrases CoCo is proudest of */
+  .spark { background:linear-gradient(90deg,#29B5E8 0%,#EAF6FD 25%,#E8863C 50%,#EAF6FD 75%,#29B5E8 100%);
+    background-size:200% auto; -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; color:transparent; font-weight:700;
+    animation:shimmer 3.2s linear infinite; }
+  @keyframes shimmer { to { background-position:200% center; } }
+  /* roomier spacing on the combined wake + details card */
+  #ov-wake #i-prompt { margin:12px 0 12px; font-size:13px; }
+  #ov-wake .fld { margin-bottom:13px; }
+  #ov-wake .fld label { margin-bottom:5px; }
+  #ov-wake .go { margin-top:14px; }
+  .card { width:min(700px,94vw); max-height:88vh; overflow:auto; background:var(--panel);
+    border:3px solid var(--warm); border-radius:10px; padding:14px 18px 16px; }
+  .card h2 { margin:0; font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--warm); }
+  .card .sub { font-size:12px; color:var(--dim); margin-top:2px; }
+  .card .q { margin:11px 0 3px; font-size:16px; }
+  .card .hint { font-size:12px; color:var(--dim); margin-bottom:9px; }
+
+  /* checklist: the panel carries STRUCTURE, never the narrative */
+  .opts { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  @media (max-width:700px){ .opts { grid-template-columns:1fr; } }
+  .opt { display:flex; gap:8px; align-items:flex-start; background:#0A141C;
+    border:2px solid #24425A; border-radius:6px; padding:7px 9px; cursor:pointer; }
+  .opt:hover { border-color:var(--edge); }
+  .opt.sel { border-color:var(--warm); background:#17222B; }
+  .opt input { margin:2px 0 0; accent-color:var(--warm); flex:none; }
+  .opt .lb { font-size:13px; line-height:1.3; }
+  .opt .nt { font-size:11px; color:var(--dim); margin-top:2px; line-height:1.3; }
+
+  input[type=text], input[type=email], select { width:100%; background:#0A141C;
+    color:var(--text); font:inherit; font-size:14px; border:2px solid #2B4A61;
+    border-radius:6px; padding:8px 10px; }
+  input:focus, select:focus { outline:none; border-color:var(--edge); }
+  .fld { margin-bottom:8px; }
+  .fld label { display:block; font-size:11px; color:var(--dim); margin-bottom:3px;
+    letter-spacing:.08em; text-transform:uppercase; }
+  .go { margin-top:11px; display:flex; gap:9px; align-items:center; }
+  button.primary { background:var(--warm); color:#101C27; border:none; font:inherit;
+    font-weight:700; font-size:14px; letter-spacing:.06em; border-radius:6px;
+    padding:9px 18px; cursor:pointer; }
+  button.primary:hover { filter:brightness(1.12); }
+  button.primary:disabled { opacity:.45; cursor:default; filter:none; }
+  .go .keys { font-size:11px; color:#5E8399; }
+  input.invalid { border-color:#FF7A7A !important; }
+  #i-hint.err { color:#FF7A7A; }
+
+  /* ---------- reasoning tray: replaces "CoCo is thinking" ---------- */
+  #tray { background:#0C1720; border:2px solid var(--line); border-radius:6px;
+    font-size:11px; overflow:hidden; }
+  #trayhead { display:flex; gap:8px; align-items:center; padding:5px 10px;
+    cursor:pointer; color:var(--dim); }
+  #trayhead:hover { color:var(--text); }
+  #trayhead .dot { width:7px; height:7px; border-radius:50%; background:#2B4A61; flex:none; }
+  #trayhead.live .dot { background:var(--edge); animation:pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:.25;transform:scale(.8)} 50%{opacity:1;transform:scale(1.25)} }
+  #traynow { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    font-size:11px; color:var(--dim); }
+  #trayhead.live #traynow { color:var(--edge); }
+  #trayhead .chev { font-size:10px; letter-spacing:.1em; }
+  #traybody { display:none; max-height:132px; overflow:auto; padding:0 10px 8px;
+    border-top:1px solid var(--line); }
+  #traybody.on { display:block; }
+  #traybody div { color:#8FB4CB; line-height:1.45; padding:1px 0;
+    white-space:pre-wrap; word-break:break-word; }
+
+  #banner { position:absolute; inset:0; display:none; align-items:center;
+    justify-content:center; flex-direction:column; background:rgba(10,18,26,.92);
+    border-radius:8px; }
+  #banner.on { display:flex; }
+  #banner h1 { font-size:52px; margin:0; color:var(--edge); letter-spacing:.06em;
+    text-shadow:0 0 18px rgba(41,181,232,.5); }
+  #banner p { color:var(--dim); letter-spacing:.2em; }
+  #err { position:fixed; left:8px; bottom:5px; color:#FF7A7A; font-size:11px; }
+  #newv { position:fixed; right:9px; top:7px; z-index:60; background:#16283A;
+    color:var(--dim); border:1px solid var(--line); border-radius:5px; font:inherit;
+    font-size:10px; letter-spacing:.12em; padding:4px 9px; cursor:pointer; }
+  #newv:hover { color:var(--warm); border-color:var(--warm); }
+  /* blueprint reveal: the visitor must leave with the thing they built */
+  #bp { text-align:left; }
+  #bp h3 { font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--warm); margin:14px 0 4px; }
+  #bp ul { margin:4px 0; padding-left:18px; font-size:13px; line-height:1.5; }
+  #bp pre { background:#0A141C; border:2px solid #24425A; border-radius:6px;
+    padding:10px; font-size:11px; line-height:1.45; max-height:190px; overflow:auto;
+    white-space:pre-wrap; word-break:break-word; color:#CFE6F5; }
+  #bp .score { font-size:15px; color:var(--edge); }
+  #bp a { color:var(--edge); }
+</style>
+</head>
+<body>
+<div id="wrap">
+
+  <!-- CoCo's voice, at the top, in a thought bubble. No caret: nothing here
+       should read as a text input. -->
+  <div id="bubble" class="rail">
+    <div class="who"><span>CoCo</span>
+      <span id="hist">
+        <button id="h-prev" title="Previous">&#9664;</button>
+        <span class="at" id="h-at"></span>
+        <button id="h-next" title="Next">&#9654;</button>
+      </span></div>
+    <div class="msg" id="d-msg"></div>
+    <div id="yousaid"></div>
+    <div id="histback">Looking back &mdash; press &#9654; to return to now</div>
+  </div>
+
+  <!-- what CoCo is actually doing, expandable. Sits under the bubble so it never
+       collides with the POV desk panel docked at the bottom of the stage. -->
+  <div id="tray" class="rail">
+    <div id="trayhead"><span class="dot"></span>
+      <span id="traynow">Idle</span><span class="chev" id="traychev">SHOW WORK &#9662;</span></div>
+    <div id="traybody"></div>
+  </div>
+
+  <div id="hud" class="rail">
+    <div class="tile"><div class="k">Player</div><div class="v" id="h-name">&mdash;</div></div>
+    <div class="tile"><div class="k">World</div><div class="v" id="h-ind">&mdash;</div></div>
+    <div class="tile"><div class="k">Progress</div><div class="v" id="h-col">0 / 4</div></div>
+    <div class="tile"><div class="k">Time</div><div class="v" id="h-time">5:00</div></div>
+  </div>
+  <div id="stagebar" class="rail"></div>
+
+  <div id="stagewrap">
+    <canvas id="cv"></canvas>
+    <canvas id="scene"></canvas>
+
+    <!-- opening title: a plain statement of what this is, no narrative -->
+    <div class="ov" id="ov-title"><div class="card" style="text-align:center;border-color:var(--edge);width:min(640px,94vw)">
+      <div id="t-title" class="spark" style="font-size:34px;font-weight:800;letter-spacing:.03em;margin:2px 0 12px"></div>
+      <div id="t-body" style="font-size:15px;line-height:1.6;color:#CFE6F5;text-align:left"></div>
+      <div class="go" style="justify-content:center;margin-top:16px">
+        <button class="primary" id="t-go">START</button></div>
+    </div></div>
+
+    <!-- CoCo wakes AND takes your details on one screen -->
+    <div class="ov" id="ov-wake"><div class="card" style="border-color:var(--edge)">
+      <h2 id="w-head" style="color:var(--edge)"></h2>
+      <div class="hint" id="w-flavor" style="margin-top:2px"></div>
+      <div class="q" id="w-line" style="margin-top:8px"></div>
+      <div class="q" id="i-open" style="font-size:14px"></div>
+      <div class="hint" id="i-prompt"></div>
+      <div class="fld"><label>Your first name</label>
+        <input type="text" id="i-first" autocomplete="off" spellcheck="false"></div>
+      <div class="fld"><label>Where you work</label>
+        <input type="text" id="i-company" autocomplete="off" spellcheck="false"></div>
+      <div class="fld"><label>Where to post it</label>
+        <input type="email" id="i-email" autocomplete="off" spellcheck="false"></div>
+      <div class="fld"><label>Your industry (optional - I'll guess)</label>
+        <select id="i-industry"></select></div>
+      <div class="go"><button class="primary" id="w-go">WAKE UP COCO</button>
+        <span class="keys" id="i-hint">ENTER to continue</span></div>
+    </div></div>
+
+    <!-- per-location panel -->
+    <div class="ov" id="ov-loc"><div class="card">
+      <h2 id="c-loc"></h2>
+      <div class="sub" id="c-rep"></div>
+      <div class="say" id="c-say"></div>
+      <div class="q" id="c-head"></div>
+      <div class="hint" id="c-hint"></div>
+      <div id="c-recap" style="display:none"></div>
+      <div class="opts" id="c-opts"></div>
+      <div class="fld" id="c-otherwrap" style="margin-top:8px">
+        <label id="c-otherlab"></label>
+        <input type="text" id="c-other" autocomplete="off" spellcheck="false"></div>
+      <div class="fld" id="c-composewrap" style="display:none">
+        <input type="text" id="c-compose" autocomplete="off" spellcheck="false"></div>
+      <div class="go"><button class="primary" id="c-go">CONFIRM</button>
+        <span class="keys">ESC to step away</span></div>
+    </div></div>
+
+    <div id="banner"><h1 id="b-title">LOCO 4 CoCo</h1><p id="b-sub">PRESS START</p></div>
+  </div>
+
+  <!-- the finished blueprint, on screen: the email depends on an operator
+       draining the outbox, so the visitor must be able to read it here -->
+  <!-- The final window: a short, link-free summary of the POC that will be
+       emailed. Demo laptops keep nothing local, so the brief, the Cortex Code
+       prompt and the Word document all travel by email, not by download. -->
+  <div class="ov" id="ov-bp"><div class="card">
+    <h2 id="bp-h2">Ready to post</h2>
+    <div class="sub" id="bp-sub"></div>
+    <div id="bp"></div>
+    <div class="go"><button class="primary" id="bp-send">SEND MY POC</button>
+      <span class="keys" id="bp-keys">CoCo drafts it to your inbox</span></div>
+  </div></div>
+
+</div>
+<div id="err"></div>
+<button id="newv" title="Clear this visitor and start fresh">NEW VISITOR</button>
+
+<script>
+const $ = id => document.getElementById(id);
+const showErr = m => { $('err').textContent = m || ''; };
+const esc = s => String(s==null?'':s);
+
+let CFG=null, ST={}, OPTS={}, T=16, S=3, COLS=22, ROWS=15, map=[], ctx=null, tick=0;
+let nearId=null, panelOpen=false, panelLoc=null, visited=new Set();
+let histIdx=null;            // null = live; otherwise an index into ST.turns
+let sel=new Set();
+let nudgeMsg='', nudgeUntil=0, overNudged=false;
+// A short-lived line in the bubble for things that are not a CoCo turn.
+function nudge(m,ms){ nudgeMsg=m; nudgeUntil=Date.now()+(ms||3200); }
+
+const rng = seed => { let s=seed>>>0; return () => (s=(s*1664525+1013904223)>>>0)/4294967296; };
+const inb = (x,y) => x>=0 && y>=0 && x<COLS && y<ROWS;
+const walkable = (x,y) => inb(x,y) && ![4,5,6,7].includes(map[y][x]);
+const unlocked = id => (ST.unlocked||['library']).includes(id);
+const haveVisitor = () => !!(ST.visitor && ST.visitor.first_name);
+
+// 0 snow 1 snow_alt 2 ice 3 path 4 sea 5 pine 6 rock 7 structure
+function buildMap(){
+  const r=rng(CFG.render.seed); map=[];
+  for(let y=0;y<ROWS;y++){ const row=[];
+    for(let x=0;x<COLS;x++){
+      if(y>=CFG.scenery.sea_from_row) row.push(4);
+      else if(x===0||y===0||x===COLS-1) row.push(6);
+      else { const n=r(); row.push(n<0.10?2:n<0.30?1:0); }
+    } map.push(row);
+  }
+  CFG.scenery.pines.forEach(([x,y])=>{ if(inb(x,y)) map[y][x]=5; });
+  CFG.scenery.rocks.forEach(([x,y])=>{ if(inb(x,y)) map[y][x]=6; });
+  const ids=Object.keys(CFG.locations);
+  for(let i=0;i<ids.length-1;i++) carve(CFG.locations[ids[i]].tile, CFG.locations[ids[i+1]].tile);
+  carve(CFG.penguin.start, CFG.locations[ids[0]].tile);
+  Object.values(CFG.locations).forEach(l=>{ const [x,y]=l.tile; if(inb(x,y)) map[y][x]=7; });
+}
+function carve(a,b){ let [x,y]=a;
+  const soft=()=>{ if(inb(x,y)&&map[y][x]!==7&&map[y][x]!==4) map[y][x]=3; };
+  while(x!==b[0]){ x+=Math.sign(b[0]-x); soft(); }
+  while(y!==b[1]){ y+=Math.sign(b[1]-y); soft(); }
+}
+
+// ---------------- penguin ----------------
+const P={ x:11,y:11,px:11,py:11,dir:'down',frame:0,moving:0,fromX:11,fromY:11 };
+const keys={};
+let reopenLock=0;
+const blocking = () => panelOpen || $('ov-title').classList.contains('on')
+  || $('ov-wake').classList.contains('on')
+  || $('ov-bp').classList.contains('on');
+addEventListener('keydown',e=>{
+  if(blocking()){
+    if(e.key==='Escape'){ if(panelOpen) closePanel(); else closeBp(); }
+    return;
+  }
+  const k=e.key.toLowerCase();
+  if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){ keys[k]=true; e.preventDefault(); }
+  if((k==='e'||k==='enter')&&nearId) openPanel(nearId);
+  if(k==='[') stepHist(-1);
+  if(k===']') stepHist(1);
+});
+addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+
+function wanted(){
+  if(keys['w']||keys['arrowup'])    return [0,-1,'up'];
+  if(keys['s']||keys['arrowdown'])  return [0, 1,'down'];
+  if(keys['a']||keys['arrowleft'])  return [-1,0,'left'];
+  if(keys['d']||keys['arrowright']) return [1, 0,'right'];
+  return null;
+}
+function stepMovement(){
+  if(P.moving>0){
+    P.moving--; const t=1-P.moving/7;
+    P.px=P.fromX+(P.x-P.fromX)*t; P.py=P.fromY+(P.y-P.fromY)*t;
+    if(P.moving===0){ P.px=P.x; P.py=P.y; }
+    return;
+  }
+  const w=wanted();
+  if(w){
+    const [dx,dy,dir]=w; P.dir=dir;
+    const nx=P.x+dx, ny=P.y+dy;
+    if(walkable(nx,ny)){ P.fromX=P.x; P.fromY=P.y; P.x=nx; P.y=ny; P.moving=7; P.frame++; }
+  }
+  let found=null;
+  for(const [id,l] of Object.entries(CFG.locations)){
+    if(Math.abs(l.tile[0]-P.x)<=1 && Math.abs(l.tile[1]-P.y)<=1) found=id;
+  }
+  nearId=found;
+}
+
+function drawPenguin(g,sx,sy){
+  const c=CFG.penguin,u=S;
+  const px=(x,y,w,h,col)=>{ g.fillStyle=col; g.fillRect(sx+x*u,sy+y*u,w*u,h*u); };
+  const o=(P.moving>0&&P.frame%2)?1:0;
+  const fs=P.moving>0?(P.frame%2?1:-1):0;
+  px(3+fs,14,3,2,c.foot); px(10-fs,14,3,2,c.foot);
+  px(3,2+o,10,12,c.body); px(2,4+o,12,9,c.body); px(4,1+o,8,1,c.body);
+  px(1,6+o,2,5,c.body_dark); px(13,6+o,2,5,c.body_dark);
+  if(P.dir==='up'){ px(4,3+o,8,10,c.body_dark); return; }
+  px(5,7+o,6,7,c.belly);
+  if(P.dir==='down'){
+    px(5,4+o,2,2,c.eye); px(9,4+o,2,2,c.eye); px(7,6+o,2,2,c.beak);
+  } else {
+    const f=P.dir==='left'?-1:1, cx=8+f*2;
+    px(cx-1,4+o,2,2,c.eye); px(cx+f,6+o,3,2,c.beak);
+  }
+}
+
+function drawStructure(g,kind,tx,ty,done){
+  const th=CFG.theme,u=S,X=tx*T*S,Y=ty*T*S,w=T*S;
+  const r=(x,y,ww,hh,col)=>{ g.fillStyle=col; g.fillRect(X+x*u,Y+y*u,ww*u,hh*u); };
+  if(kind==='library'){
+    r(1,4,14,12,'#6E5A8A');
+    r(2,6,12,1,'#8A74A8');
+    g.fillStyle=th.snow_bright; g.beginPath();
+    g.moveTo(X-1.5*u,Y+5*u); g.lineTo(X+w/2,Y-1*u); g.lineTo(X+w+1.5*u,Y+5*u);
+    g.closePath(); g.fill();
+    r(3,8,3,4,th.accent); r(10,8,3,4,th.accent);
+    r(6,10,4,6,'#2A2138');
+    r(5,9,6,1,th.snow_bright);
+  } else if(kind==='marketplace'){
+    r(1,7,14,2,'#8A5A2B');
+    r(2,9,2,7,'#6B4A2B'); r(12,9,2,7,'#6B4A2B');
+    for(let i=0;i<5;i++){
+      g.fillStyle = i%2 ? '#D0392B' : th.snow_bright;
+      g.fillRect(X+(1+i*2.8)*u, Y+3*u, 2.8*u, 4*u);
+    }
+    r(1,2,14,1,'#6B4A2B');
+    r(4,5,2,2,th.accent_warm); r(8,5,2,2,th.accent);
+    r(11,5,2,2,'#5ED6A0');
+  } else if(kind==='workshop'){
+    r(2,7,12,9,'#6B4A2B'); r(3,9,10,1,'#54381F');
+    g.fillStyle=th.snow_bright; g.beginPath();
+    g.moveTo(X-1.5*u,Y+8*u); g.lineTo(X+w/2,Y+1*u); g.lineTo(X+w+1.5*u,Y+8*u);
+    g.closePath(); g.fill();
+    r(6,11,4,5,th.panel); r(11,1,2,4,th.rock);
+    if(!done) r(3,10,3,3,th.accent_warm);
+    else { r(4,10,6,4,'#D0392B'); r(6,10,2,4,th.snow_bright); r(4,11,6,1,th.snow_bright); }
+  } else if(kind==='postbox'){
+    r(6,6,4,10,'#5A5A62');
+    r(3,1,10,7,'#D0392B');
+    r(4,2,8,2,'#F2F7FA'); r(5,5,6,1,'#7A1E15');
+    if(!done) r(13,2,2,2,th.accent);
+  }
+}
+
+function drawGround(g){
+  const th=CFG.theme, cols=[th.snow,th.snow_alt,th.ice,th.path,th.sea];
+  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
+    const t=map[y][x];
+    g.fillStyle = (t===5||t===7)?th.snow : (t===6?th.snow_alt : (cols[Math.min(t,4)]||th.snow));
+    g.fillRect(x*T*S,y*T*S,T*S,T*S);
+    if(t===4){ g.fillStyle=th.sea_deep;
+      if((x+y+Math.floor(tick/18))%3===0) g.fillRect(x*T*S,y*T*S+6*S,T*S,2*S); }
+    if(t===5){ const X=x*T*S,Y=y*T*S;
+      g.fillStyle='#6B4A2B'; g.fillRect(X+7*S,Y+11*S,2*S,5*S);
+      for(let i=0;i<3;i++){ g.fillStyle=i%2?th.pine_dark:th.pine; g.beginPath();
+        g.moveTo(X+T*S/2,Y+(1+i*3.5)*S); g.lineTo(X+(14-i)*S,Y+(7+i*3.5)*S);
+        g.lineTo(X+(2+i)*S,Y+(7+i*3.5)*S); g.closePath(); g.fill(); }
+      g.fillStyle=th.snow_bright; g.fillRect(X+6*S,Y+4*S,4*S,S);
+    }
+    if(t===6){ const X=x*T*S,Y=y*T*S;
+      g.fillStyle=th.rock; g.fillRect(X+3*S,Y+7*S,10*S,7*S);
+      g.fillStyle=th.snow_bright; g.fillRect(X+3*S,Y+7*S,10*S,2*S); }
+  }
+}
+
+function drawLabels(g){
+  g.font=`bold ${9*S/2}px ui-monospace, monospace`; g.textAlign='center';
+  Object.entries(CFG.locations).forEach(([id,l])=>{
+    const [x,y]=l.tile, X=x*T*S+T*S/2, Y=y*T*S-4;
+    const done=visited.has(id), open=unlocked(id), active=nearId===id;
+    const txt=(done?'\u2713 ':(open?'':'\u2715 '))+l.name.toUpperCase();
+    const wpx=g.measureText(txt).width+10;
+    g.fillStyle='rgba(10,18,26,.88)'; g.fillRect(X-wpx/2,Y-13,wpx,15);
+    g.fillStyle=active?'#E8863C':done?'#29B5E8':open?'#9FC2D6':'#5A7183';
+    g.fillText(txt,X,Y-2);
+    if(active){
+      const b=Math.sin(tick/8)*3;
+      g.fillStyle=open?'#E8863C':'#5A7183'; g.beginPath();
+      g.moveTo(X,Y-18+b); g.lineTo(X-5,Y-26+b); g.lineTo(X+5,Y-26+b); g.closePath(); g.fill();
+      const hint=open?'PRESS E':'NOT YET';
+      g.font=`bold ${8*S/2}px ui-monospace, monospace`;
+      const hw=g.measureText(hint).width+12;
+      const HY=(y+1)*T*S+10;
+      g.fillStyle=open?'rgba(232,134,60,.92)':'rgba(90,113,131,.92)';
+      g.fillRect(X-hw/2,HY,hw,15);
+      g.fillStyle='#101C27'; g.fillText(hint,X,HY+11);
+      g.font=`bold ${9*S/2}px ui-monospace, monospace`;
+    }
+  });
+  g.textAlign='left';
+}
+
+let flakes=[];
+function drawSnowfall(g){
+  if(!flakes.length){ const r=rng(99);
+    for(let i=0;i<60;i++) flakes.push({x:r()*COLS*T*S,y:r()*ROWS*T*S,s:.4+r()*1.1,w:r()*2}); }
+  g.fillStyle='rgba(255,255,255,.75)';
+  flakes.forEach(f=>{ f.y+=f.s; f.x+=Math.sin((tick+f.w*40)/40)*.4;
+    if(f.y>ROWS*T*S) f.y=-4; g.fillRect(f.x,f.y,S,S); });
+}
+
+function render(){
+  const g=ctx;
+  g.fillStyle=CFG.theme.sky; g.fillRect(0,0,COLS*T*S,ROWS*T*S);
+  drawGround(g);
+  Object.entries(CFG.locations).forEach(([id,l])=>
+    drawStructure(g,l.kind,l.tile[0],l.tile[1],visited.has(id)));
+  drawPenguin(g,P.px*T*S,P.py*T*S);
+  drawRoute(g);
+  drawLabels(g); drawSnowfall(g);
+}
+
+// A gentle "go here next" cue: chevrons marching from the penguin toward the
+// next unvisited location in the unlock order (Library -> Marketplace ->
+// Workshop -> Postbox). Fades in only when the penguin is not already there.
+function drawRoute(g){
+  if(!haveVisitor()) return;
+  const order=Object.keys(CFG.locations);
+  const targetId=order.find(id=>!visited.has(id) && unlocked(id));
+  if(!targetId || nearId===targetId) return;
+  const tl=CFG.locations[targetId].tile;
+  const px=P.px*T*S+T*S/2, py=P.py*T*S+T*S/2;
+  const tx=tl[0]*T*S+T*S/2, ty=tl[1]*T*S+T*S/2;
+  const dx=tx-px, dy=ty-py, len=Math.hypot(dx,dy);
+  if(len<T*S*1.3) return;
+  const ux=dx/len, uy=dy/len, ang=Math.atan2(uy,ux);
+  // three chevrons that march toward the target
+  const march=(tick/6)%1;
+  for(let i=0;i<3;i++){
+    const d=T*S*1.1 + (i+march)*T*S*0.9;
+    if(d>len-T*S*0.8) continue;
+    const cx=px+ux*d, cy=py+uy*d;
+    const a=(0.85-i*0.22);
+    g.save(); g.translate(cx,cy); g.rotate(ang);
+    g.strokeStyle=`rgba(232,134,60,${a})`; g.lineWidth=3*S/2;
+    g.lineCap='round'; g.lineJoin='round';
+    g.beginPath();
+    g.moveTo(-4*S/2,-5*S/2); g.lineTo(4*S/2,0); g.lineTo(-4*S/2,5*S/2);
+    g.stroke(); g.restore();
+  }
+}
+
+// ---------------- POV interior scenes ----------------
+// Drawn procedurally in the same pixel idiom as the map. Shown behind the
+// library / marketplace panels and the wake-up screen so the interaction feels
+// like it happens "at the desk", not in a floating box.
+let sceneActive=null, sceneCtx=null, sceneW=0, sceneH=0;
+
+function drawCoCoFront(g,cx,cy,u){
+  const c=CFG.penguin;
+  const r=(x,y,w,h,col)=>{ g.fillStyle=col; g.fillRect(cx+x*u,cy+y*u,w*u,h*u); };
+  r(-5,7,3,2,c.foot); r(2,7,3,2,c.foot);
+  r(-5,-6,10,13,c.body); r(-6,-4,12,10,c.body); r(-4,-7,8,1,c.body);
+  r(-6,-2,2,6,c.body_dark); r(4,-2,2,6,c.body_dark);
+  r(-3,-1,6,7,c.belly);
+  r(-3,-4,2,2,c.eye); r(1,-4,2,2,c.eye); r(-1,-2,2,2,c.beak);
+}
+function shelfBooks(g,x,y,w,u,seed){
+  const r=rng(seed); let cx=x;
+  const cols=['#C4553E','#3E7DA8','#C9A13B','#4F9E6A','#8A5FA8','#B5482F','#3C6E8F'];
+  while(cx<x+w-u){ const bw=(1+Math.floor(r()*2))*u, bh=(6+Math.floor(r()*4))*u;
+    g.fillStyle=cols[Math.floor(r()*cols.length)];
+    g.fillRect(cx,y-bh,bw-1,bh); cx+=bw; }
+}
+function drawScene(kind){
+  const g=sceneCtx, w=sceneW, h=sceneH, u=S, th=CFG.theme;
+  if(kind==='wake'){
+    g.fillStyle='#0A1622'; g.fillRect(0,0,w,h);
+    // igloo dome: concentric arcs of pale blocks
+    g.fillStyle='#152A3C'; g.fillRect(0,h*0.62,w,h*0.38);
+    for(let ring=0;ring<5;ring++){
+      const ry=h*0.62-ring*h*0.11, rw=w*(0.9-ring*0.13);
+      g.fillStyle=ring%2?'#20364A':'#26415A';
+      for(let bx=w/2-rw/2; bx<w/2+rw/2; bx+=rw/6){
+        g.fillRect(bx+2,ry-h*0.10,rw/6-3,h*0.10-2);
+      }
+    }
+    // sleeping mat + CoCo lying down
+    g.fillStyle='#7A1E15'; g.fillRect(w*0.28,h*0.74,w*0.44,h*0.10);
+    const cx=w*0.5, cy=h*0.73;
+    g.fillStyle=CFG.penguin.body; g.fillRect(cx-70,cy-8,140,34);
+    g.fillStyle=CFG.penguin.belly; g.fillRect(cx-30,cy+2,120,20);
+    g.fillStyle=CFG.penguin.eye; g.fillRect(cx-58,cy-2,6,6);
+    g.fillStyle=CFG.penguin.beak; g.fillRect(cx-70,cy+2,10,6);
+    // wrapped present
+    g.fillStyle=th.accent; g.fillRect(w*0.66,h*0.70,54,44);
+    g.fillStyle=th.accent_warm; g.fillRect(w*0.66,h*0.70+18,54,7);
+    g.fillRect(w*0.66+22,h*0.70,7,44);
+    // Zzz -> thought of a friend
+    g.fillStyle='#EAF6FD'; g.font=`bold ${18}px ui-monospace,monospace`;
+    g.fillText('z',cx-90,cy-30); g.fillText('Z',cx-104,cy-52);
+    g.fillStyle='rgba(255,255,255,.10)';
+    g.beginPath(); g.arc(w*0.30,h*0.28,58,0,7); g.fill();
+    g.fillStyle=th.accent; g.fillRect(w*0.30-14,h*0.28-18,28,30);      // friend torso
+    g.fillStyle='#EADFcf'; g.fillRect(w*0.30-9,h*0.28-34,18,16);       // friend head
+    g.fillStyle='#7FA8C2'; g.font=`italic ${13}px ui-monospace,monospace`;
+    g.fillText('...my friend',w*0.30-40,h*0.28+42);
+    return;
+  }
+  if(kind==='library'){
+    g.fillStyle='#1B1526'; g.fillRect(0,0,w,h);                        // warm dark wall
+    // bookshelves across the top third (visible above the desk panel)
+    for(let row=0;row<3;row++){
+      const y=h*0.04+row*h*0.115;
+      g.fillStyle='#3A2C4E'; g.fillRect(w*0.05,y,w*0.90,h*0.095);      // shelf box
+      shelfBooks(g,w*0.06,y+h*0.095,w*0.88,u,700+row);
+      g.fillStyle='#241a33'; g.fillRect(w*0.05,y+h*0.095,w*0.90,3);    // shelf lip
+    }
+    // warm lantern glow, upper right
+    const lg=g.createRadialGradient(w*0.85,h*0.14,8,w*0.85,h*0.14,150);
+    lg.addColorStop(0,'rgba(232,134,60,.55)'); lg.addColorStop(1,'rgba(232,134,60,0)');
+    g.fillStyle=lg; g.fillRect(w*0.6,0,w*0.4,h*0.5);
+    g.fillStyle=th.accent_warm; g.fillRect(w*0.83,h*0.10,12,18);       // lantern body
+    g.fillStyle='#FFE7B0'; g.fillRect(w*0.833,h*0.115,7,11);
+    // CoCo behind the reading desk; the desk edge meets the panel top
+    drawCoCoFront(g,w*0.5,h*0.40,S*2.0);
+    g.fillStyle='#5A3D22'; g.fillRect(0,h*0.48,w,h*0.52);              // desk
+    g.fillStyle='#6E4B2A'; g.fillRect(0,h*0.48,w,5);
+    g.fillStyle='#C9A13B'; g.fillRect(w*0.14,h*0.43,38,9);             // a book on the desk
+    return;
+  }
+  if(kind==='marketplace'){
+    g.fillStyle=th.sky; g.fillRect(0,0,w,h);
+    // striped awning across the very top
+    for(let i=0;i<11;i++){ g.fillStyle=i%2?'#D0392B':'#F2F7FA';
+      g.fillRect(i*(w/11),0,w/11,h*0.12); }
+    g.fillStyle='#8A5A2B'; g.fillRect(0,h*0.12,w,7);
+    g.fillStyle='#6B4A2B'; g.fillRect(w*0.05,h*0.12,9,h*0.4);          // posts
+    g.fillRect(w*0.91,h*0.12,9,h*0.4);
+    g.fillStyle=th.snow; g.fillRect(0,h*0.28,w,h*0.20);               // snow behind stall
+    // CoCo tending the stall, behind the counter
+    drawCoCoFront(g,w*0.5,h*0.29,S*1.9);
+    // crates of goods with price tags sitting on the counter
+    const goods=['#4F9E6A','#3E7DA8','#C9A13B','#8A5FA8','#C4553E'];
+    for(let i=0;i<5;i++){ const x=w*0.09+i*w*0.17;
+      g.fillStyle='#7A5433'; g.fillRect(x,h*0.40,w*0.12,h*0.06);       // crate
+      g.fillStyle=goods[i]; g.fillRect(x+6,h*0.37,w*0.12-12,h*0.035);  // produce
+      g.fillStyle='#F2F7FA'; g.fillRect(x+w*0.12-15,h*0.405,13,9);     // tag
+    }
+    g.fillStyle='#5A3D22'; g.fillRect(0,h*0.46,w,h*0.54);              // counter
+    g.fillStyle='#6E4B2A'; g.fillRect(0,h*0.46,w,5);
+    return;
+  }
+}
+function openScene(kind){ sceneActive=kind; $('scene').classList.add('on'); }
+function closeScene(){ sceneActive=null; $('scene').classList.remove('on'); }
+// Tie the POV desk panel to the scene: same width as the canvas, and capped so
+// the interior shows in the top half above it.
+function sizePovCard(){
+  const cv=$('cv'), card=document.querySelector('#ov-loc .card');
+  if(!cv || !card) return;
+  card.style.width=cv.style.width;
+  const hpx=parseFloat(cv.style.height||'0');
+  if(hpx) card.style.maxHeight=Math.round(hpx*0.50)+'px';
+}
+
+// ---------------- opening title + combined wake/intake ----------------
+let wokeUp=false;
+// Convert *phrases* wrapped in asterisks into shimmering spans. Content is our
+// own config copy, so escaping first keeps it safe.
+function sparkle(s){ return esc(s).replace(/\*([^*]+)\*/g,'<span class="spark">$1</span>'); }
+
+function openTitle(){
+  const t=(CFG.intro)||{};
+  $('t-title').textContent=t.title||'Loco for CoCo';
+  $('t-body').innerHTML=(t.body||[]).map(p=>`<p style="margin:0 0 10px">${esc(p)}</p>`).join('');
+  $('t-go').textContent=t.button||'START';
+  $('ov-title').classList.add('on');
+}
+$('t-go').addEventListener('click',()=>{
+  $('ov-title').classList.remove('on');
+  openWake();
+});
+
+// CoCo waking and taking the visitor's details are now one screen.
+function openWake(){
+  const k=CFG.intake||{}, wk=k.wake||{};
+  $('w-head').textContent=wk.head||'Sending a CoCo POC to my friend';
+  $('w-flavor').textContent=wk.flavor||'';
+  $('w-line').innerHTML=sparkle(wk.line||'');
+  const op=k.opening||'';
+  $('i-open').innerHTML=sparkle(op);
+  $('i-open').style.display=op?'block':'none';
+  $('i-prompt').textContent=k.prompt||'';
+  (k.fields||[]).forEach(f=>{ const el=$('i-'+(f.id==='first_name'?'first':f.id));
+    if(el) el.placeholder=f.placeholder||''; });
+  const s=$('i-industry');
+  if(!s.options.length){
+    // Blank first, with "Let CoCo guess" as an explicit option; both submit null
+    // so CoCo infers the industry from the company.
+    s.innerHTML='<option value="" selected></option>'+
+      '<option value="">Let CoCo guess</option>'+
+      Object.entries(CFG.industries).map(([k2,v])=>`<option value="${k2}">${esc(v.name)}</option>`).join('');
+  }
+  openScene('wake');
+  $('ov-wake').classList.add('on');
+  setTimeout(()=>$('i-first').focus(),40);
+}
+
+async function submitIntake(){
+  const body={ first_name:$('i-first').value.trim(), company:$('i-company').value.trim(),
+    email:$('i-email').value.trim(), industry:$('i-industry').value||null };
+  // Inline, next to the button, and mark the offending field - the old error
+  // landed in a tiny corner nobody looks at, so a blank email read as "stuck".
+  const hint=$('i-hint');
+  $('i-first').classList.toggle('invalid',!body.first_name);
+  const emailBad = !body.email || !body.email.includes('@');
+  $('i-email').classList.toggle('invalid',emailBad);
+  if(!body.first_name || emailBad){
+    hint.classList.add('err');
+    hint.textContent = !body.first_name
+      ? 'I need your first name to address it'
+      : 'I need an email to post it to';
+    ($('i-first').classList.contains('invalid')?$('i-first'):$('i-email')).focus();
+    return;
+  }
+  hint.classList.remove('err'); hint.textContent='Waking CoCo...';
+  $('w-go').disabled=true;
+  try{
+    const r=await fetch('/api/intake',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)});
+    if(!r.ok){ hint.classList.add('err');
+      hint.textContent='Something went wrong: '+(await r.text()).slice(0,80);
+      $('w-go').disabled=false; return; }
+    wokeUp=true;
+    showErr(''); $('ov-wake').classList.remove('on'); closeScene();
+    await loadOptions(); await poll();
+  }catch(e){ hint.classList.add('err'); hint.textContent='Cannot reach the server - is it running?'; }
+  $('w-go').disabled=false;
+}
+$('w-go').addEventListener('click',submitIntake);
+// Clear the warning as soon as they start fixing the field.
+['i-first','i-email'].forEach(id=>$(id).addEventListener('input',()=>{
+  $(id).classList.remove('invalid');
+  $('i-hint').classList.remove('err'); $('i-hint').textContent='ENTER to continue';
+}));
+['i-first','i-company','i-email'].forEach(id=>$(id).addEventListener('keydown',e=>{
+  e.stopPropagation(); if(e.key==='Enter') submitIntake(); }));
+$('i-industry').addEventListener('keydown',e=>e.stopPropagation());
+
+// ---------------- location panel ----------------
+const POV_LOCS=['library','marketplace'];
+const isPov=id=>POV_LOCS.includes(id);
+let inSceneLoc=null, inScenePhase=null;   // 'await' waiting on CoCo, 'reply' shown
+async function loadOptions(){
+  try{ OPTS=await (await fetch('/api/options',{cache:'no-store'})).json(); }
+  catch(e){ OPTS={}; }
+}
+
+function openPanel(id){
+  const l=CFG.locations[id]; if(!l) return;
+  if(!unlocked(id)){
+    // Silence read as a broken keypress in testing, so say why.
+    const nxt=(ST.unlocked||[]).slice(-1)[0];
+    nudge(`${l.name} is not open yet. ${nxt?CFG.locations[nxt].name:'The library'} first.`);
+    return;
+  }
+  if(Date.now()<reopenLock) return;   // stops ENTER submitting then reopening
+  // The postbox is the send step: it opens the final summary window with the
+  // SEND button rather than a separate "post it" card.
+  if(id==='postbox') return showBp();
+  panelOpen=true; panelLoc=id; sel=new Set();
+  inSceneLoc=null; inScenePhase=null;
+  Object.keys(keys).forEach(k=>keys[k]=false);
+  // POV locations get the drawn interior behind a low "desk" panel; others use
+  // the plain modal.
+  const pov=isPov(id);
+  if(pov){ openScene(id); $('ov-loc').classList.add('pov'); sizePovCard(); }
+  else { closeScene(); $('ov-loc').classList.remove('pov');
+    const card=document.querySelector('#ov-loc .card');
+    if(card){ card.style.width=''; card.style.maxHeight=''; } }
+  const say=$('c-say'); say.classList.remove('on'); say.innerHTML='';
+  $('c-loc').textContent=l.name.toUpperCase();
+  $('c-rep').textContent=l.represents||'';
+  $('c-head').textContent=l.heading||'';
+  $('c-hint').textContent=l.hint||'';
+
+  const isList=l.mode==='checklist', isCompose=l.mode==='compose', isSend=l.mode==='send';
+  $('c-opts').style.display=isList?'grid':'none';
+  $('c-otherwrap').style.display=isList?'block':'none';
+  $('c-composewrap').style.display=isCompose?'block':'none';
+  $('c-go').textContent=isSend?(l.button||'POST IT'):(isCompose?'FORGE IT':'CONFIRM');
+
+  if(isList){
+    const items=OPTS[id]||[];
+    $('c-otherlab').textContent=l.other_label||'Something else';
+    $('c-other').placeholder=l.other_placeholder||'';
+    $('c-other').value='';
+    $('c-opts').innerHTML=items.map((o,i)=>
+      `<label class="opt" data-i="${i}"><input type="checkbox">
+         <span><span class="lb">${esc(o.label)}</span>
+         <span class="nt">${esc(o.note||'')}</span></span></label>`).join('');
+    [...$('c-opts').children].forEach(el=>{
+      el.addEventListener('click',ev=>{
+        if(ev.target.tagName!=='INPUT'){ ev.preventDefault();
+          const cb=el.querySelector('input'); cb.checked=!cb.checked; }
+        const i=+el.dataset.i;
+        if(el.querySelector('input').checked) sel.add(i); else sel.delete(i);
+        el.classList.toggle('sel',el.querySelector('input').checked);
+        syncGo();
+      });
+    });
+  }
+  if(isCompose){ $('c-compose').placeholder=l.placeholder||''; $('c-compose').value=''; }
+  // Workshop: show a recap of everything chosen so far, so the visitor's one
+  // line builds on visible context (and CoCo shapes the POC from all of it).
+  const recap=$('c-recap');
+  if(id==='workshop'){
+    const v=ST.visitor||{}, ind=(CFG.industries[v.industry]||{}).name||'your sector';
+    const held=ST.held||[], joined=ST.joined||[];
+    const row=(k,items)=>`<div style=\"margin:3px 0\"><span style=\"color:#7FA8C2;font-size:11px;letter-spacing:.08em;text-transform:uppercase\">${k}</span><br>${items.length?items.map(esc).join(', '):'<span style=\"color:#5E8399\">nothing yet</span>'}</div>`;
+    recap.innerHTML=`<div style=\"background:#0A141C;border:2px solid #24425A;border-radius:6px;padding:8px 11px;margin:2px 0 10px;font-size:13px;line-height:1.4\">
+      <div style=\"margin:3px 0\"><span style=\"color:#7FA8C2;font-size:11px;letter-spacing:.08em;text-transform:uppercase\">World</span><br>${esc(ind)}</div>
+      ${row('Data you hold',held)}
+      ${row('From the Marketplace',joined)}</div>`;
+    recap.style.display='block';
+  } else { recap.style.display='none'; recap.innerHTML=''; }
+  $('ov-loc').classList.add('on');
+  syncGo();
+  setTimeout(()=>{ if(isCompose) $('c-compose').focus(); },40);
+}
+function syncGo(){
+  const l=CFG.locations[panelLoc]||{};
+  if(l.mode==='checklist') $('c-go').disabled = sel.size===0 && !$('c-other').value.trim();
+  else if(l.mode==='compose') $('c-go').disabled = !$('c-compose').value.trim();
+  else $('c-go').disabled=false;
+}
+function closePanel(){ panelOpen=false; panelLoc=null; reopenLock=Date.now()+700;
+  inSceneLoc=null; inScenePhase=null;
+  $('ov-loc').classList.remove('on','pov'); closeScene(); }
+
+// ---------------- final window: summary + send ----------------
+async function showBp(){
+  let d; try{ d=await (await fetch('/api/blueprint',{cache:'no-store'})).json(); }
+  catch(e){ return showErr('cannot load blueprint'); }
+  const p=d.poc||{}; if(!p.poc_name) return;
+  window.__bp=d;
+  const li=a=>(a||[]).map(x=>`<li>${esc(x)}</li>`).join('');
+  // Names only, no links: everything actionable arrives in the email.
+  const featNames=(d.features||[]).map(f=>f.name||f).filter(Boolean);
+  const joinNames=(d.joined||[]);
+  renderBpBody(d,featNames,joinNames,li);
+  paintSendBtn(d);
+  $('ov-bp').classList.add('on');
+}
+function renderBpBody(d,featNames,joinNames,li){
+  const p=d.poc||{};
+  $('bp').innerHTML = `
+    <h3>What you are building</h3><div style="font-size:15px">${esc(p.poc_name)}</div>
+    <div style="font-size:13px;color:#7FA8C2;margin-top:3px">${esc(p.summary||'')}</div>
+    ${joinNames.length?`<h3>Data you are attaching</h3><ul>${li(joinNames)}</ul>`:''}
+    ${featNames.length?`<h3>Snowflake features in play</h3><ul>${li(featNames.slice(0,4))}</ul>`:''}
+    <div style="margin-top:12px;font-size:13px;color:#9FC2D6;line-height:1.5">
+      The full brief, the Cortex Code prompt${p.guide_title?', the guide to fork':''}
+      and your Word document are in the email — nothing to download here.</div>`;
+}
+function paintSendBtn(d){
+  const btn=$('bp-send'), sub=$('bp-sub'), keys=$('bp-keys'), h2=$('bp-h2');
+  if(d.queued || d.draft_created){
+    h2.textContent='On its way';
+    sub.textContent=`CoCo is posting your POC to ${d.email}.`;
+    btn.disabled=true; btn.textContent='SENT \u2713';
+    keys.textContent='Check your inbox in a few minutes';
+  } else {
+    h2.textContent='Ready to post';
+    sub.textContent=`I\u2019ll draft it to ${d.email}.`;
+    btn.disabled=false; btn.textContent='SEND MY POC';
+    keys.textContent='CoCo drafts it to your inbox';
+  }
+}
+async function sendPoc(){
+  const btn=$('bp-send'); if(btn.disabled) return;
+  btn.disabled=true; btn.textContent='DRAFTING\u2026';
+  $('bp-sub').textContent='Handing it to CoCo to post\u2026';
+  try{
+    const r=await post('/api/send',{});
+    if(!r.ok){ btn.disabled=false; btn.textContent='SEND MY POC';
+      $('bp-sub').textContent='That did not go through \u2014 try once more.'; return; }
+  }catch(e){ btn.disabled=false; btn.textContent='SEND MY POC';
+    $('bp-sub').textContent='Cannot reach the server.'; return; }
+  // Re-read so the button reflects the queued/drafted truth, not an assumption.
+  try{ const d=await (await fetch('/api/blueprint',{cache:'no-store'})).json();
+    window.__bp=d; paintSendBtn(d); }catch(e){}
+}
+function closeBp(){ $('ov-bp').classList.remove('on'); reopenLock=Date.now()+700; }
+$('bp-send').addEventListener('click',sendPoc);
+
+// ---------------- new visitor ----------------
+$('newv').addEventListener('click',async()=>{
+  if(!confirm('Clear this visitor and start fresh?')) return;
+  try{ await fetch('/api/reset',{method:'POST'}); }catch(e){}
+  location.reload();
+});
+$('c-other').addEventListener('input',syncGo);
+$('c-other').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter') submitPanel(); });
+$('c-compose').addEventListener('input',syncGo);
+$('c-compose').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter') submitPanel(); });
+
+async function submitPanel(){
+  const id=panelLoc, l=CFG.locations[id]||{}; if(!id) return;
+  // In a POV location, once CoCo has replied the button becomes "leave" and
+  // just closes the desk scene.
+  if(isPov(id) && inScenePhase==='reply'){ visited.add(id); closePanel(); return; }
+  histIdx=null;
+  try{
+    if(l.mode==='checklist'){
+      const items=OPTS[id]||[];
+      const labels=[...sel].map(i=>items[i]&&items[i].label).filter(Boolean);
+      const other=$('c-other').value.trim(); if(other) labels.push(other);
+      if(!labels.length) return;
+      await post('/api/select',{location:id,labels});
+    } else if(l.mode==='compose'){
+      const text=$('c-compose').value.trim(); if(!text) return;
+      await post('/api/compose',{text});
+    } else {
+      await post('/api/send',{});
+    }
+    if(isPov(id)){
+      // Stay at the desk: CoCo answers in-scene rather than in the top bubble.
+      inSceneLoc=id; inScenePhase='await';
+      const say=$('c-say'); say.classList.add('on');
+      say.innerHTML='<b>CoCo</b>Let me look that up for you\u2026';
+      $('c-opts').style.display='none'; $('c-otherwrap').style.display='none';
+      $('c-go').disabled=true; $('c-go').textContent='THINKING\u2026';
+    } else {
+      visited.add(id); closePanel();
+    }
+  }catch(e){ showErr('cannot reach server'); }
+}
+$('c-go').addEventListener('click',submitPanel);
+
+// While a POV desk is open and awaiting CoCo, surface the reply in-scene.
+function paintScenePanel(s){
+  if(!panelOpen || !isPov(panelLoc) || inScenePhase!=='await') return;
+  const say=$('c-say');
+  if(s.thinking){
+    const last=(s.reasoning||[]).slice(-1)[0]||'Processing your request\u2026';
+    say.innerHTML='<b>CoCo</b>'+esc(last);
+  } else if(s.reply){
+    inScenePhase='reply'; visited.add(panelLoc);
+    say.innerHTML='<b>CoCo</b>'+esc(s.reply);
+    const leave = panelLoc==='library' ? 'LEAVE THE LIBRARY' : 'LEAVE THE STALL';
+    $('c-go').disabled=false; $('c-go').textContent=leave;
+  }
+}
+
+async function post(url,body){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)});
+  if(!r.ok) showErr('rejected: '+(await r.text()).slice(0,90)); else showErr('');
+  return r;
+}
+
+// ---------------- reasoning tray ----------------
+let trayOpen=false, thinkSince=0, bpShown=false;
+$('trayhead').addEventListener('click',()=>{
+  trayOpen=!trayOpen;
+  $('traybody').classList.toggle('on',trayOpen);
+  $('traychev').innerHTML = trayOpen?'HIDE WORK &#9652;':'SHOW WORK &#9662;';
+  // The open tray adds height fitCanvas did not know about, which pushed the
+  // bottom of the tray past the viewport and killed its own scroll. Re-fit so
+  // the board shrinks and the tray body keeps its scrollable 132px.
+  fitCanvas();
+});
+function paintTray(s){
+  const lines=s.reasoning||[];
+  $('trayhead').classList.toggle('live',!!s.thinking);
+  if(s.thinking && !thinkSince) thinkSince=Date.now();
+  if(!s.thinking) thinkSince=0;
+  const last=lines.length?lines[lines.length-1]:'';
+  if(s.thinking){
+    // A truthful elapsed counter, because the first real reasoning line can be
+    // 30 seconds away and a frozen label reads as a hang.
+    const secs=thinkSince?Math.floor((Date.now()-thinkSince)/1000):0;
+    $('traynow').textContent=(last||'Processing your request...')+`  (${secs}s)`;
+  } else {
+    $('traynow').textContent = lines.length?`Done \u2014 ${lines.length} steps`:'Idle';
+  }
+  if(trayOpen){
+    const b=$('traybody');
+    if(b.dataset.n!==String(lines.length)){
+      b.dataset.n=String(lines.length);
+      b.innerHTML=lines.map(l=>`<div>${esc(l)}</div>`).join('');
+      b.scrollTop=b.scrollHeight;
+    }
+  }
+}
+
+// ---------------- history ----------------
+function stepHist(d){
+  const n=(ST.turns||[]).length; if(!n) return;
+  if(histIdx===null) histIdx = d<0 ? n-1 : null;
+  else { histIdx+=d; if(histIdx>=n||histIdx<0) histIdx=null; }
+  paintBubble(ST);
+}
+$('h-prev').addEventListener('click',()=>stepHist(-1));
+$('h-next').addEventListener('click',()=>stepHist(1));
+
+function paintBubble(s){
+  const turns=s.turns||[], n=turns.length;
+  $('h-prev').disabled = n===0 || histIdx===0;
+  $('h-next').disabled = histIdx===null;
+  $('h-at').textContent = n? (histIdx===null?`now \u00b7 ${n}`:`${histIdx+1} / ${n}`) : '';
+  $('histback').classList.toggle('on',histIdx!==null);
+
+  if(nudgeUntil>Date.now()){ setMessage(nudgeMsg); $('yousaid').classList.remove('on'); return; }
+
+  let msg, said='';
+  if(histIdx!==null && turns[histIdx]){
+    msg=turns[histIdx].reply; said=turns[histIdx].text;
+  } else if(s.thinking){
+    msg=typeTarget || 'Let me think about that...';
+  } else if(s.reply){
+    msg=s.reply; const t=turns[n-1]; said=t?t.text:'';
+  } else {
+    // Only an UNLOCKED location may narrate. The penguin starts on the postbox
+    // tile, so without this a fresh 0/4 session opened with the closing line.
+    const l=(nearId&&unlocked(nearId))?CFG.locations[nearId]:null;
+    msg = l&&l.narrative ? fillCli(l.narrative,s)
+        : (haveVisitor()
+            ? `Use WASD or the arrows, ${esc((s.visitor||{}).first_name)}. Walk up to a place and press E.`
+            : 'Press E when you reach somewhere interesting.');
+  }
+  $('yousaid').classList.toggle('on',!!said);
+  if(said) $('yousaid').textContent='You said: '+said;
+  setMessage(msg||'');
+}
+function fillCli(t,s){
+  const v=s.visitor||{};
+  return t.replace(/\{first_name\}/g,v.first_name||'there')
+          .replace(/\{company\}/g,v.company||'your organisation')
+          .replace(/\{email\}/g,v.email||'you');
+}
+
+// ---------------- state ----------------
+function onState(s){
+  const firstLoad = !ST.updated_at;
+  ST=s;
+  (s.turns||[]).forEach(t=>visited.add(t.location));
+  const v=s.visitor||{};
+  $('h-name').textContent=v.first_name||'\u2014';
+  $('h-ind').textContent=(CFG.industries[v.industry]||{}).name||'\u2014';
+  $('h-col').textContent=`${visited.size} / ${Object.keys(CFG.locations).length}`;
+  if(s.started_at && haveVisitor()){
+    // A soft guide, not a cliff: at zero it says so and play continues, rather
+    // than promising a limit it never enforces.
+    const left=CFG.event.time_limit_seconds-(Date.now()/1000-s.started_at);
+    if(left>0){
+      $('h-time').textContent=`${Math.floor(left/60)}:${String(Math.floor(left%60)).padStart(2,'0')}`;
+      $('h-time').style.color=left<60?'#E8863C':'';
+    } else {
+      $('h-time').textContent='OVER'; $('h-time').style.color='#E8863C';
+      // The countdown now has a consequence: CoCo says so once, then play
+      // continues. A limit that expires in silence is worse than no limit.
+      if(!overNudged && s.stage!=='done'){ overNudged=true;
+        nudge('We are past five minutes - let us get your present in the post.',6000); }
+    }
+  } else { $('h-time').textContent=`${Math.floor(CFG.event.time_limit_seconds/60)}:00`; }
+  const ids=Object.keys(CFG.locations), bar=$('stagebar');
+  if(bar.children.length!==ids.length) bar.innerHTML=ids.map(()=>'<div></div>').join('');
+  [...bar.children].forEach((d,i)=>{
+    d.className = visited.has(ids[i])?'on':(nearId===ids[i]?'cur':''); });
+
+  const opening = $('ov-wake').classList.contains('on') || $('ov-title').classList.contains('on');
+  $('banner').classList.toggle('on', !haveVisitor() && !opening);
+  if(!haveVisitor() && !opening && firstLoad) openTitle();
+  paintTray(s);
+  paintBubble(s);
+  paintScenePanel(s);
+}
+
+let typeTarget='',typeI=0;
+function setMessage(m){ if(m===typeTarget) return; typeTarget=m; typeI=0; }
+function stepType(){ if(typeI<typeTarget.length){ typeI+=2;
+  const el=$('d-msg'); el.textContent=typeTarget.slice(0,typeI);
+  // Keep the freshly typed tail visible when a reply is long enough to scroll.
+  el.scrollTop=el.scrollHeight; } }
+
+async function poll(){
+  try{ const r=await fetch('/api/state',{cache:'no-store'});
+    if(r.ok){ onState(await r.json()); }
+  }catch(e){ showErr('state unavailable \u2014 is server.py running?'); }
+}
+
+function loop(){ tick++; stepMovement(); if(tick%2===0) stepType(); render();
+  if(sceneActive) drawScene(sceneActive); requestAnimationFrame(loop); }
+
+// The board was previously sized once at load, so moving the window at the
+// booth left it mis-sized until a reload.
+function fitCanvas(){
+  const cv=$('cv'); if(!cv) return;
+  const chrome=$('bubble').offsetHeight+$('hud').offsetHeight+$('tray').offsetHeight+58;
+  const w=Math.max(320,Math.min(innerWidth-24,1056,(innerHeight-chrome)*COLS/ROWS));
+  cv.style.width=Math.round(w)+'px';
+  cv.style.height=Math.round(w*ROWS/COLS)+'px';
+  if($('ov-loc').classList.contains('pov')) sizePovCard();
+}
+
+(async function init(){
+  try{ CFG=await (await fetch('/api/config')).json(); }
+  catch(e){ showErr('cannot load config.json'); return; }
+  T=CFG.render.tile; S=CFG.render.scale; COLS=CFG.render.cols; ROWS=CFG.render.rows;
+  const cv=$('cv'); cv.width=COLS*T*S; cv.height=ROWS*T*S;
+  ctx=cv.getContext('2d'); ctx.imageSmoothingEnabled=false;
+  const sc=$('scene'); sc.width=COLS*T*S; sc.height=ROWS*T*S;
+  sceneW=sc.width; sceneH=sc.height;
+  sceneCtx=sc.getContext('2d'); sceneCtx.imageSmoothingEnabled=false;
+  fitCanvas();
+  addEventListener('resize',fitCanvas);
+  // When a reply (or the "you said" line) grows the bubble, re-fit so the stage
+  // shrinks to match instead of the bubble spilling over the tray.
+  if(window.ResizeObserver){
+    let raf=0;
+    new ResizeObserver(()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(fitCanvas); })
+      .observe($('bubble'));
+  }
+  document.documentElement.style.setProperty('--panel',CFG.theme.panel);
+  document.documentElement.style.setProperty('--edge',CFG.theme.panel_edge);
+  $('b-title').textContent=CFG.event.title;
+  $('b-sub').textContent=CFG.event.subtitle.toUpperCase();
+  P.x=P.px=CFG.penguin.start[0]; P.y=P.py=CFG.penguin.start[1];
+  buildMap(); await loadOptions(); await poll();
+  if(!haveVisitor()) openTitle();
+  setInterval(poll,CFG.server.poll_ms); loop();
+})();
+</script>
+</body>
+</html>

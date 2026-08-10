@@ -1,0 +1,15 @@
+# Runtime state — never commit
+game/state.json
+game/cost.jsonl*
+game/outbox/*
+!game/outbox/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+*.swp

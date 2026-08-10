@@ -1,0 +1,66 @@
+# Loco4CoCo booth infrastructure — DCM project manifest.
+#
+# Every Snowflake object the activation needs is defined as code here so it can
+# be recreated on any account with one command. Before this existed, the objects
+# were hand-created and the SESSIONS table silently drifted away from the app.
+#
+# Deploy:  python3 deploy/bootstrap.py --target LONDON
+# Or:      snow dcm plan --target LONDON  &&  snow dcm deploy --target LONDON
+#
+# NOTE on project_owner: ACCOUNTADMIN is used because these are personal demo
+# accounts. For a shared or production account, Snowflake's guidance is a
+# dedicated deploy role granted only to a service user - see
+# https://docs.snowflake.com/en/user-guide/dcm-projects/dcm-projects-use
+
+manifest_version: 2
+type: DCM_PROJECT
+
+default_target: LONDON
+
+targets:
+  LONDON:
+    account_identifier: SFSEEUROPE-PG_LONDON
+    project_name: LOCO4COCO_DEPLOY.PROJECTS.LOCO4COCO_BOOTH
+    project_owner: ACCOUNTADMIN
+    templating_config: LONDON
+
+  # A genuinely different account AND region, so portability is proven rather
+  # than assumed.
+  US_WEST_DEMO:
+    account_identifier: SFSEEUROPE-US_WEST_DEMO_PG
+    project_name: LOCO4COCO_DEPLOY.PROJECTS.LOCO4COCO_BOOTH
+    project_owner: ACCOUNTADMIN
+    templating_config: US_WEST_DEMO
+
+templating:
+  defaults:
+    db: LOCO4COCO
+    schema: BOOTH
+    wh: LOCO4COCO_WH
+    wh_size: XSMALL
+    auto_suspend: 60
+    city: London
+    language: en
+    # Monitor values are consumed by hooks/post_hook.sql, not by DCM - resource
+    # monitors are not a supported DEFINE entity.
+    monitor: LOCO4COCO_RM
+    monitor_quota: 20
+    # Deliberately NOT defaulted. The username differs per account (PGARDNER on
+    # London, PADDY on the US demo account), and a monitor pointed at a
+    # non-existent user fails outright - which is better than one that silently
+    # warns nobody. Every target must state its own.
+    monitor_notify_user: ""
+
+  configurations:
+    LONDON:
+      city: London
+      language: en
+      monitor_quota: 20
+      monitor_notify_user: PGARDNER
+
+    US_WEST_DEMO:
+      city: Test Bench
+      language: en
+      # Smaller quota: this target exists to prove deployment, not to run an event.
+      monitor_quota: 5
+      monitor_notify_user: PADDY

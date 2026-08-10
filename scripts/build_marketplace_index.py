@@ -1,0 +1,263 @@
+#!/usr/bin/env python3
+"""Harvest and verify the Marketplace listings offered to visitors.
+
+The game used to name only vague categories ("Population & demographics")
+because inventing a listing or provider name is a defect. This produces the
+honest alternative: real listings whose existence, region availability, provider
+and access terms are all verified, bundled so the booth resolves them instantly.
+
+    python3 scripts/build_marketplace_index.py             # verify
+    python3 scripts/build_marketplace_index.py --write     # rewrite the index
+    python3 scripts/build_marketplace_index.py --candidates weather
+
+WHY PROVIDER NAMES ARE RECORDED RATHER THAN SCRAPED
+---------------------------------------------------
+`SHOW AVAILABLE LISTINGS` exposes `organization_profile_name` for only 137 of
+4,256 listings, and the public listing page is a client-rendered React app - a
+plain HTTP GET returns 66KB of HTML containing no provider name at all. The
+names below were read from the rendered pages on the date in VERIFIED_ON and are
+recorded as constants.
+
+So this script verifies what SQL can prove - the listing exists, is not
+by-request or discover-only, and which regions it is available in - and treats
+the provider and access terms as human-verified values with a date attached. To
+re-verify those, load the pages in a real browser again.
+
+CURATION IS JUDGEMENT, VERIFICATION IS FACT. The industry groupings are
+editorial and should be reviewed by an SE.
+"""
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PLUGIN = os.path.dirname(HERE)
+OUT = os.path.join(PLUGIN, "skills", "loco4coco", "references", "marketplace-index.md")
+BASE = "https://app.snowflake.com/marketplace/listing/"
+CONNECTION = "PG_LONDON"
+VERIFIED_ON = "2026-08-06"
+
+# global_name -> (provider, access, canonical path)
+# Access is normalised from what the listing page shows. "Accepts MCD" means it
+# is chargeable, so it is labelled Paid unless a trial makes it usable for free.
+LISTINGS = {
+    "GZSVZAJO3":      ("Jaywing", "Free",
+                       "jaywing-uk-england-and-wales-only-census-2021-trial"),
+    "GZSVZ1K7VF":     ("CACI Ltd", "Free",
+                       "caci-ltd-acorn-geodemographic-segmentation-in-the-uk"),
+    "GZSVZ1K7UA":     ("CACI Ltd", "Free",
+                       "caci-ltd-paycheck-%E2%80%93-uk-household-income-estimates-at-postcode-level-sample-data"),
+    "GZSVZ1K7UQ":     ("CACI Ltd", "Free",
+                       "caci-ltd-address-spine-%E2%80%93-uk-address-level-property-information-sample-data"),
+    "GZTDZJKVCU":     ("Met Office", "Free",
+                       "met-office-national-severe-weather-warning-service"),
+    "GZTDZJKVCY":     ("Met Office", "Free 14-day trial",
+                       "met-office-postcode-sector-weather-forecasts"),
+    "GZSTZ67BY9OQW":  ("Snowflake", "Free",
+                       "snowflake-pubmed-biomedical-research-corpus"),
+    "GZSTZJUPD23":    ("Element Data", "Paid",
+                       "element-data-healthcare-common-procedure-coding-system-level-ii-hcpcs"),
+    "GZTSZ290BVCAO":  ("Snowflake Public Data Products", "Free 60-day trial",
+                       "snowflake-public-data-products-snowflake-public-data-foreign-exchange-rates"),
+    "GZTSZ290BVSAO":  ("Snowflake Public Data Products", "Free 60-day trial",
+                       "snowflake-public-data-products-snowflake-public-data-core-weather-data"),
+    "GZTDZ7DJU9":     ("Turnleaf Analytics", "Free",
+                       "turnleaf-analytics-inflation-forecasting-headline-core-cpi-by-country"),
+    "GZ2FSZH8URW":    ("North Data GmbH", "Free 7-day trial",
+                       "north-data-gmbh-company-data-uk-incl-guernsey-xl-dataset"),
+    "GZSTZLT2II6":    ("IBISWorld", "Free",
+                       "ibisworld-industry-classification-systems-naics-anzsic-isic-uk-sic-etc"),
+    "GZT0ZI0XJ6Q":    ("CSRHub LLC", "Free 30-day trial",
+                       "csrhub-llc-csrhub-esg-environment-social-governance-fast-start"),
+    "GZT0Z4CM1E9L4":  ("CARTO", "Free", "carto-carto-boundaries"),
+    "GZT0Z4CM1E9KJ":  ("CARTO", "Free", "carto-overture-maps-transportation"),
+    "GZTSZRC7HQ3":    ("CEIC Data", "Free", "ceic-data-ceic-commodities-data"),
+    "GZ1MMZD99V46":   ("YuzeData", "Free",
+                       "yuzedata-carbon-footprint-data-scope-1-2-3-sustainability-performance-reporting"),
+    "GZSOZ71OJH":     ("Yes Energy", "Free", "yes-energy-yes-energy-sample-data"),
+    "GZSVZ5WLU0":     ("Kpler", "Free", "kpler-coal-global-data"),
+    "GZT0Z12POH90":   ("Sports Innovation Lab", "Free",
+                       "sports-innovation-lab-over-the-top-ott-market-analysis-purchase-behavior-of-sports-fans"),
+}
+
+# Curated per industry. Keys match config.json industries.
+# Deliberately excluded: Factori mobility data (GZT8Z4NUG5) - its page showed no
+# access terms at all, and an unlabelled listing is a dead end for a visitor on
+# a trial. Better to offer four we can describe than five we cannot.
+CURATED = {
+    "healthcare":    ["GZSVZAJO3", "GZSVZ1K7VF", "GZTDZJKVCY", "GZSTZ67BY9OQW",
+                      "GZSTZJUPD23"],
+    "financial":     ["GZTSZ290BVCAO", "GZTDZ7DJU9", "GZ2FSZH8URW",
+                      "GZSTZLT2II6", "GZT0ZI0XJ6Q"],
+    "retail":        ["GZTDZJKVCY", "GZSVZ1K7VF", "GZSVZ1K7UA", "GZSVZAJO3",
+                      "GZSTZLT2II6"],
+    "public":        ["GZSVZAJO3", "GZSVZ1K7UQ", "GZT0Z4CM1E9L4", "GZSVZ1K7VF",
+                      "GZTDZJKVCU"],
+    "manufacturing": ["GZTSZRC7HQ3", "GZ2FSZH8URW", "GZTSZ290BVSAO",
+                      "GZ1MMZD99V46", "GZT0Z4CM1E9KJ"],
+    "energy":        ["GZTDZJKVCY", "GZTDZJKVCU", "GZSOZ71OJH", "GZSVZ5WLU0",
+                      "GZ1MMZD99V46"],
+    "media":         ["GZSVZ1K7VF", "GZSVZAJO3", "GZT0Z12POH90",
+                      "GZTSZ290BVSAO", "GZT0Z4CM1E9L4"],
+    "other":         ["GZTSZ290BVSAO", "GZSVZAJO3", "GZ2FSZH8URW",
+                      "GZT0Z4CM1E9L4", "GZTSZ290BVCAO"],
+}
+
+
+def show_listings():
+    cmd = ["snow", "sql", "-q", "SHOW AVAILABLE LISTINGS",
+           "--format", "json", "-c", CONNECTION]
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+    if r.returncode != 0:
+        sys.exit(f"SHOW AVAILABLE LISTINGS failed: {(r.stderr or r.stdout)[:300]}")
+    rows = json.loads(r.stdout or "[]")
+    return {str(x.get("global_name")): x for x in rows if isinstance(x, dict)}
+
+
+def regions_of(row):
+    regs = str(row.get("regions") or "")
+    return sorted({r.split(".")[-1] for r in regs.split(",") if r.strip()})
+
+
+def url_for(g):
+    prov, _acc, slug = LISTINGS[g]
+    return BASE + g + ("/" + slug if slug else "")
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--write", action="store_true")
+    ap.add_argument("--candidates", help="search London listings by keyword")
+    a = ap.parse_args()
+
+    print("Reading SHOW AVAILABLE LISTINGS...")
+    catalog = show_listings()
+    print(f"  {len(catalog)} listings in the catalogue")
+
+    if a.candidates:
+        kw = a.candidates.lower()
+        hits = [(g, r) for g, r in catalog.items()
+                if kw in str(r.get("title")).lower()
+                and "AWS_EU_WEST_2" in str(r.get("regions") or "")]
+        print(f"\n{len(hits)} London-available listings matching {kw!r}:")
+        for g, r in sorted(hits, key=lambda x: str(x[1].get("title"))):
+            print(f"  {str(r.get('title'))[:62]:64} {g}")
+        return 0
+
+    wanted = sorted({g for lst in CURATED.values() for g in lst})
+    print(f"\nVerifying {len(wanted)} curated listings "
+          f"({sum(len(v) for v in CURATED.values())} industry slots)\n")
+
+    problems = []
+    for g in wanted:
+        if g not in LISTINGS:
+            problems.append((g, "no recorded provider - re-run the browser pass"))
+            continue
+        row = catalog.get(g)
+        if not row:
+            problems.append((g, "not in SHOW AVAILABLE LISTINGS any more"))
+            continue
+        if str(row.get("is_by_request")).lower() == "true":
+            problems.append((g, "now by-request only"))
+        if str(row.get("discover_only")).lower() == "true":
+            problems.append((g, "now discover-only"))
+        if "AWS_EU_WEST_2" not in str(row.get("regions") or ""):
+            problems.append((g, "no longer available in London (eu-west-2)"))
+
+    for g, why in problems:
+        title = str(catalog.get(g, {}).get("title", "?"))[:46]
+        print(f"  FAIL  {g:16} {title:48} {why}")
+
+    for g in wanted:
+        if g in LISTINGS and not any(p[0] == g for p in problems):
+            prov, acc, _s = LISTINGS[g]
+            n = len(regions_of(catalog[g]))
+            print(f"  ok    {str(catalog[g].get('title'))[:44]:46} "
+                  f"{prov:30} {acc:18} {n} regions")
+
+    print(f"\n{len(wanted) - len(problems)} of {len(wanted)} verified, "
+          f"{len(problems)} failing")
+    if problems:
+        print("\nRefusing to write an index with unverified entries. Naming a "
+              "listing or provider we cannot confirm is exactly the defect this "
+              "file exists to prevent.")
+        return 1
+
+    if a.write:
+        write_md(catalog)
+        print(f"\nwrote {OUT}")
+    else:
+        print("\n(verify only - pass --write to regenerate the index)")
+    return 0
+
+
+def write_md(catalog):
+    from datetime import date
+    lines = [
+        "---",
+        "name: marketplace-index",
+        'description: "Curated Snowflake Marketplace listings offered to booth '
+        'visitors, each with a verified provider name, listing URL, access terms '
+        'and region availability. Bundled so the booth never has to invent a '
+        'listing. Rebuild with scripts/build_marketplace_index.py before each '
+        'event."',
+        "---",
+        "",
+        "# Curated Marketplace listings",
+        "",
+        f"**Catalogue checked:** {date.today().isoformat()} — every listing below "
+        "is present in `SHOW AVAILABLE LISTINGS`, is not by-request or "
+        "discover-only, and is available in `AWS_EU_WEST_2`.",
+        f"**Providers and access terms read from the listing pages:** {VERIFIED_ON}.",
+        "",
+        "## What is verified, and what is not",
+        "",
+        "| Claim | How it is checked |",
+        "|---|---|",
+        "| The listing exists | `SHOW AVAILABLE LISTINGS`, every run |",
+        "| Region availability | `regions` column, every run |",
+        "| Not by-request / discover-only | access flags, every run |",
+        "| Provider name | read from the rendered listing page, dated above |",
+        "| Access terms | read from the rendered listing page, dated above |",
+        "| **Fit to the industry** | **editorial judgement — review this** |",
+        "",
+        "Provider names cannot be re-derived by script: SQL exposes "
+        "`organization_profile_name` for only 137 of 4,256 listings, and the "
+        "public page is a client-rendered React app whose raw HTML contains no "
+        "provider at all. They are recorded constants with a date, refreshed by "
+        "loading the pages in a real browser.",
+        "",
+        "## Rules",
+        "",
+        "- **Never name a listing or provider that is not in this file.**",
+        "- **Filter by region before offering a listing.** A visitor in London "
+        "cannot use a us-east-1-only share, and sending them to one wastes the "
+        "five minutes we just spent with them.",
+        "- **Label anything that is not free.** Visitors are on a trial; an "
+        "unmarked paid listing is a dead end.",
+        "- If a listing has no stated access terms at all, leave it out. That is "
+        "why Factori mobility data is excluded despite being relevant.",
+        "",
+    ]
+    for industry, names in CURATED.items():
+        lines += [f"## {industry}", "",
+                  "| Listing | Provider | Access | Global name | Regions |",
+                  "|---|---|---|---|---|"]
+        for g in names:
+            row = catalog[g]
+            prov, acc, _s = LISTINGS[g]
+            title = str(row.get("title")).strip()
+            regs = regions_of(row)
+            shown = ", ".join(regs[:4]) + (f" +{len(regs) - 4}" if len(regs) > 4 else "")
+            lines.append(f"| [{title}]({url_for(g)}) | {prov} | {acc} | "
+                         f"`{g}` | {shown} |")
+        lines.append("")
+    with open(OUT, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

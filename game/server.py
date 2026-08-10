@@ -1,0 +1,1449 @@
+#!/usr/bin/env python3
+"""Loco4CoCo arcade companion — local server.
+
+The visitor drives a penguin round an arctic map. At each location the browser
+posts their choices here; this server prompts the REAL Cortex Code via
+`cortex exec` and streams what CoCo is doing back to the screen. Nothing in the
+browser talks to Snowflake or to an MCP directly.
+
+    browser --(HTTP)--> server --(cortex exec)--> CoCo --> Snowflake / Gmail MCP
+
+Two exec profiles, deliberately different:
+
+  conversational turns : --no-mcp   (no tools needed, and skipping MCP startup
+                                     is the single biggest latency win)
+  the postbox send     : --bypass   (MCP on; without --bypass the Gmail tool
+                                     call is AUTO-REJECTED in exec mode)
+
+Delivery is Route A behind a transport interface. See config.delivery.
+
+  python3 server.py                 # use config.json
+  python3 server.py --port 5000     # override
+"""
+
+import argparse
+import base64
+import html
+import json
+import os
+import posixpath
+import re
+import subprocess
+import tempfile
+import threading
+import time
+import uuid
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(HERE, "config.json")
+STATE_PATH = os.path.join(HERE, "state.json")
+PLUGIN_ROOT = os.path.dirname(HERE)
+GUIDES_PATH = os.path.join(PLUGIN_ROOT, "skills", "loco4coco",
+                           "references", "guides-index.md")
+FEATURES_PATH = os.path.join(PLUGIN_ROOT, "skills", "loco4coco",
+                             "references", "feature-docs.md")
+MARKET_PATH = os.path.join(PLUGIN_ROOT, "skills", "loco4coco",
+                           "references", "marketplace-index.md")
+
+_lock = threading.Lock()
+
+MIME = {
+    ".html": "text/html; charset=utf-8",
+    ".js": "text/javascript; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+}
+
+BLANK_STATE = {
+    "stage": "attract",
+    "session_id": "",
+    "location": "",
+    "thinking": False,
+    "reasoning": [],
+    "reply": "",
+    "narrative": "",
+    "turns": [],
+    "visitor": {"first_name": "", "company": "", "email": "", "industry": ""},
+    "held": [],
+    "joined": [],
+    "joined_listings": [],
+    "poc": {},
+    "unlocked": ["library"],
+    "blueprint_url": "",
+    "draft_created": False,
+    "queued": False,
+    "email_sent": False,
+    "logged": False,
+    "log_error": "",
+    "coco_seconds": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "job_id": None,
+    "started_at": None,
+    "updated_at": None,
+}
+
+# Coarse industry inference. Instant and free, which matters against a
+# five-minute clock; the visitor always gets to correct it with one click.
+INDUSTRY_HINTS = {
+    "healthcare": ["nhs", "hospital", "trust", "health", "clinic", "care",
+                   "medical", "pharma", "biotech", "gp ", "surgery", "patient"],
+    "financial": ["bank", "capital", "invest", "insur", "asset", "fund",
+                  "lloyds", "barclays", "hsbc", "natwest", "santander",
+                  "financ", "fintech", "pension", "building society", "credit"],
+    "retail": ["retail", "tesco", "sainsbury", "asda", "morrison", "aldi",
+               "lidl", "marks", "boots", "shop", "store", "consumer",
+               "unilever", "nestle", "diageo", "brand", "grocer", "fashion"],
+    "public": ["council", "borough", "government", "ministry", "department",
+               "authority", "police", "dwp", "hmrc", "defra", "agency",
+               "public", "county", "city of", "gov.uk", "school", "university"],
+    "manufacturing": ["manufactur", "factory", "industri", "engineer",
+                      "automotive", "aerospace", "rolls", "bae", "jaguar",
+                      "steel", "chemical", "plant", "production"],
+    "energy": ["energy", "power", "utilit", "water", "grid", "national grid",
+               "shell", "bp ", "centrica", "octopus", "sse", "electric",
+               "gas", "renewab", "nuclear", "thames"],
+    "media": ["media", "broadcast", "bbc", "sky", "itv", "telecom", "vodafone",
+              "bt ", "o2", "three", "ee ", "publish", "music", "studio",
+              "entertain", "advertis", "agency", "game"],
+}
+
+
+def load_config():
+    with open(CONFIG_PATH, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def read_state():
+    with _lock:
+        if not os.path.exists(STATE_PATH):
+            return dict(BLANK_STATE)
+        try:
+            with open(STATE_PATH, encoding="utf-8") as f:
+                data = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            # A half-written file must never crash the booth display.
+            return dict(BLANK_STATE)
+    merged = dict(BLANK_STATE)
+    merged.update(data)
+    return merged
+
+
+def write_state(patch, replace=False):
+    """Shallow-merge a patch into state.json, atomically.
+
+    `replace` writes the patch wholesale. Needed for reset: `visitor` and `poc`
+    are merged sub-dicts, so passing an empty one would leave the previous
+    visitor's POC in place - which is exactly how one visitor's name leaked
+    into the next visitor's session.
+    """
+    with _lock:
+        current = dict(BLANK_STATE)
+        if os.path.exists(STATE_PATH) and not replace:
+            try:
+                with open(STATE_PATH, encoding="utf-8") as f:
+                    current.update(json.load(f))
+            except (json.JSONDecodeError, OSError):
+                pass
+        for k, v in patch.items():
+            if k in ("visitor", "poc") and isinstance(v, dict) and not replace:
+                sub = dict(current.get(k) or {})
+                sub.update(v)
+                current[k] = sub
+            else:
+                current[k] = v
+        if current.get("stage") not in (None, "attract") and not current.get("started_at"):
+            current["started_at"] = time.time()
+        current["updated_at"] = time.time()
+        tmp = STATE_PATH + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(current, f, indent=1)
+        os.replace(tmp, STATE_PATH)
+    return current
+
+
+# ---------------------------------------------------------------- cost logging
+
+def log_cost(cfg, kind, seconds, usage, ok):
+    """Append-only spend trail with the real token counts exec reports. We do
+    not cap the visitor, so this is the only way spend stays visible."""
+    path = os.path.join(HERE, (cfg.get("coco") or {}).get("cost_log", "cost.jsonl"))
+    u = usage or {}
+    rec = {"at": time.time(), "kind": kind, "seconds": round(seconds, 2),
+           "input_tokens": u.get("input_tokens"),
+           "output_tokens": u.get("output_tokens"),
+           "cache_read": u.get("cache_read_input_tokens"),
+           "cache_write": u.get("cache_creation_input_tokens"),
+           "ok": ok}
+    try:
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec) + "\n")
+    except OSError:
+        pass
+
+
+# ------------------------------------------------------------- the CoCo bridge
+
+# Reasoning worth showing a visitor. Deliberately excludes assistant text,
+# because that is the reply and it already has a home in the thought bubble.
+def _readable(name):
+    return {"sql_execute": "querying Snowflake", "web_search": "searching the web",
+            "web_fetch": "reading a page", "read": "reading a file",
+            "bash": "running a command", "python_repl": "working it out"}.get(
+                name, name.replace("_", " "))
+
+
+# Lines that break character or expose plumbing. A booth audience must never
+# read "the user wants me to respond as CoCo the Snowflake penguin" - it tells
+# them he was told to act like one - nor see internal tool names.
+_TRAY_BLOCK = re.compile(
+    r"(the user wants|the user is asking|the user said|i need to (keep|pick|respond)"
+    r"|i should (keep|respond|reply)|no bullet points|plain english|short sentences"
+    r"|max \d+ words|as coco|the coco|my instructions|the prompt|mcp__|create_draft"
+    r"|tool search|toolset|google-workspace|google-calendar|gmail|skill\b"
+    r"|verbatim|minified json|booth)", re.I)
+
+
+def _sentences(text, limit=3):
+    out = []
+    for s in re.split(r"(?<=[.!?])\s+", (text or "").strip()):
+        s = s.strip().lstrip("-*\u2022 ").strip()
+        if len(s) < 12 or _TRAY_BLOCK.search(s):
+            continue
+        out.append(s)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def run_exec(cfg, prompt, kind, job_id=None, use_mcp=False, timeout=None):
+    """Run `cortex exec` and stream its real reasoning into state.reasoning.
+
+    Uses --format json, which emits NDJSON events including genuine `thinking`
+    blocks, tool calls, and token usage. The tray therefore shows what CoCo is
+    actually doing rather than a decorative spinner.
+    """
+    c = cfg.get("coco") or {}
+    cmd = [c.get("binary", "cortex"), "exec", prompt, "--format", "json"]
+    conn = (cfg.get("snowflake") or {}).get("connection_name")
+    if conn:
+        cmd += ["--connection", conn]
+    if use_mcp:
+        # Without --bypass, exec auto-rejects the Gmail tool call and the send
+        # silently does nothing. Proven: "Tool denied: headless mode requires..."
+        cmd.append("--bypass")
+    else:
+        cmd.append("--no-mcp")
+    # Booth-tunable model + effort. Set config.coco.model / config.coco.effort to
+    # switch the underlying model or trade quality for speed without code edits.
+    model = c.get("model")
+    if model:
+        cmd += ["-m", str(model)]
+    effort = c.get("effort")
+    if effort:
+        cmd += ["--effort", str(effort)]
+
+    started = time.time()
+    lines, final, usage, ok = [], "", {}, False
+
+    def push(line):
+        lines.append(line)
+        write_state({"reasoning": lines[-40:]})
+
+    try:
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                             stderr=subprocess.DEVNULL, text=True,
+                             bufsize=1, cwd=HERE)
+        deadline = started + (timeout or c.get("timeout_seconds", 180))
+        for raw in p.stdout:
+            raw = raw.strip()
+            if not raw:
+                continue
+            if job_id is not None:
+                cur = read_state()
+                if cur.get("job_id") not in (None, job_id):
+                    p.kill()
+                    return False, ""      # superseded by a newer message
+            try:
+                ev = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            t = ev.get("type")
+            if t == "system" and ev.get("subtype") == "init":
+                push("Processing your request...")
+            elif t == "assistant":
+                for b in (ev.get("message", {}).get("content") or []):
+                    bt = b.get("type")
+                    if bt == "thinking":
+                        for s in _sentences(b.get("thinking")):
+                            push(s)
+                    elif bt == "tool_use":
+                        push("\u2192 " + _readable(b.get("name") or "a tool"))
+            elif t == "result":
+                final = (ev.get("result") or "").strip()
+                usage = ev.get("usage") or {}
+                ok = not ev.get("is_error")
+            if time.time() > deadline:
+                p.kill()
+                push("That is taking a while - I will go with what I have.")
+                break
+        p.wait(timeout=10)
+        if p.returncode == 0 and final:
+            ok = True
+    except FileNotFoundError:
+        return False, "CoCo CLI not found on PATH, so I cannot answer."
+    except Exception as e:                                       # noqa: BLE001
+        return False, f"Something went wrong reaching CoCo: {e}"
+
+    log_cost(cfg, kind, time.time() - started, usage, ok)
+    meta = {"seconds": round(time.time() - started, 1), "usage": usage, "ok": ok}
+    if not final:
+        return False, "I lost my train of thought there - try me again.", meta
+    return ok, final, meta
+
+
+def base_context(cfg, state):
+    vis = state.get("visitor") or {}
+    ind = industry_name(cfg, vis.get("industry"))
+    ctx = [
+        f"You are CoCo, the Snowflake penguin, at the Snowflake World Tour "
+        f"{cfg['event']['city']} booth.",
+        "This is a five-minute activation. Be warm, brief and concrete.",
+        "Never use bullet points, headings, markdown or emoji - your words are "
+        "shown in a small speech bubble.",
+    ]
+    if vis.get("first_name"):
+        ctx.append(f"You are speaking to {vis['first_name']}"
+                   + (f" from {vis['company']}" if vis.get("company") else "")
+                   + (f", in {ind}." if ind else "."))
+    return ctx
+
+
+def fill(tmpl, cfg, state, **extra):
+    vis = state.get("visitor") or {}
+    vals = {
+        "first_name": vis.get("first_name") or "there",
+        "company": vis.get("company") or "your organisation",
+        "email": vis.get("email") or "you",
+        "industry": industry_name(cfg, vis.get("industry")) or "your sector",
+        "held": ", ".join(state.get("held") or []) or "nothing yet",
+        "joined": ", ".join(state.get("joined") or []) or "nothing yet",
+    }
+    vals.update(extra)
+    out = tmpl
+    for k, v in vals.items():
+        out = out.replace("{" + k + "}", str(v))
+    return out
+
+
+# ------------------------------------------------------------------- industries
+
+def industry_name(cfg, key):
+    if not key:
+        return ""
+    return ((cfg.get("industries") or {}).get(key) or {}).get("name", "")
+
+
+def infer_industry(cfg, company):
+    """Keyword match on the company name. Cheap, instant, and always
+    confirmed by the visitor with one click."""
+    c = (company or "").lower()
+    if not c:
+        return "other"
+    for key, hints in INDUSTRY_HINTS.items():
+        for h in hints:
+            if h in c:
+                return key
+    return "other"
+
+
+def options_for(cfg, loc_id, state):
+    """The checklist a location shows.
+
+    The Marketplace reads the verified listing index rather than config, so the
+    visitor is offered real listings with real providers. This is where the
+    Agentic Marketplace Discovery PrPr substitutes itself: same contract,
+    different source.
+    """
+    loc = (cfg.get("locations") or {}).get(loc_id) or {}
+    src = loc.get("source")
+    if not src:
+        return []
+    ind = (state.get("visitor") or {}).get("industry") or "other"
+    if src == "marketplace_index":
+        return [{"id": r["global_name"], "label": r["title"],
+                 "note": f"{r['provider']} \u00b7 {r['access']}",
+                 "url": r["url"], "provider": r["provider"],
+                 "access": r["access"]}
+                for r in listings_for(cfg, ind)]
+    industries = cfg.get("industries") or {}
+    block = industries.get(ind) or industries.get("other") or {}
+    return block.get(src) or []
+
+
+# ----------------------------------------------------------------- guides index
+
+_guides_cache = None
+
+
+def load_guides():
+    """Parse guides-index.md into {archetype: (title, slug)} primary forks."""
+    global _guides_cache
+    if _guides_cache is not None:
+        return _guides_cache
+    out, current = {}, None
+    try:
+        with open(GUIDES_PATH, encoding="utf-8") as f:
+            for line in f:
+                m = re.match(r"^##\s+\d+\.\s+(\S+)", line)
+                if m:
+                    current = m.group(1).strip()
+                    continue
+                if current and line.startswith("|") and "`" in line:
+                    cells = [c.strip() for c in line.strip().strip("|").split("|")]
+                    if len(cells) < 2:
+                        continue
+                    slug = cells[1].strip("` ")
+                    note = cells[2] if len(cells) > 2 else ""
+                    if "Primary fork" in note and current not in out:
+                        out[current] = (cells[0], slug)
+    except OSError:
+        pass
+    _guides_cache = out
+    return out
+
+
+def guide_for(cfg, archetype):
+    g = load_guides().get((archetype or "").strip())
+    if not g:
+        return "", ""
+    base = (cfg.get("delivery") or {}).get(
+        "guides_base", "https://www.snowflake.com/en/developers/guides/")
+    return g[0], base + g[1] + "/"
+
+
+# ------------------------------------------------- feature documentation links
+
+_features_cache = None
+
+
+def load_features():
+    """Parse feature-docs.md into {feature name: docs url}.
+
+    This is a CLOSED list: the Workshop may only name features from here, which
+    is what guarantees every feature in a blueprint carries a working link. A
+    name outside the list is dropped rather than rendered bare - omitting one is
+    better than shipping a guess in something a visitor keeps.
+    """
+    global _features_cache
+    if _features_cache is not None:
+        return _features_cache
+    out = {}
+    try:
+        with open(FEATURES_PATH, encoding="utf-8") as f:
+            for line in f:
+                if not line.startswith("|") or "https://" not in line:
+                    continue
+                cells = [c.strip() for c in line.strip().strip("|").split("|")]
+                if len(cells) >= 2 and cells[1].startswith("https://"):
+                    out[cells[0]] = cells[1]
+    except OSError:
+        pass
+    _features_cache = out
+    return out
+
+
+def link_features(names):
+    """Return [(name, url)] for names in the closed list, preserving order."""
+    docs = load_features()
+    seen, out = set(), []
+    for n in (names or []):
+        key = str(n).strip()
+        if key in docs and key not in seen:
+            seen.add(key)
+            out.append((key, docs[key]))
+    return out
+
+
+# ------------------------------------------------------- marketplace listings
+
+_market_cache = None
+
+
+def load_marketplace():
+    """Parse marketplace-index.md into {industry: [listing dicts]}.
+
+    Only listings in this file may ever be named. SQL exposes a provider name
+    for a small minority of listings and the public page is client-rendered, so
+    provider names are recorded constants - see the file header.
+    """
+    global _market_cache
+    if _market_cache is not None:
+        return _market_cache
+    out, current = {}, None
+    row_re = re.compile(r"^\|\s*\[(?P<title>.+?)\]\((?P<url>[^)]+)\)\s*\|"
+                        r"\s*(?P<prov>[^|]+?)\s*\|\s*(?P<acc>[^|]+?)\s*\|"
+                        r"\s*`(?P<gname>[^`]+)`\s*\|\s*(?P<regs>[^|]*)\|")
+    try:
+        with open(MARKET_PATH, encoding="utf-8") as f:
+            for line in f:
+                h = re.match(r"^##\s+([a-z_]+)\s*$", line.strip())
+                if h:
+                    current = h.group(1)
+                    out.setdefault(current, [])
+                    continue
+                if not current:
+                    continue
+                m = row_re.match(line.strip())
+                if m:
+                    out[current].append({
+                        "title": m.group("title").strip(),
+                        "provider": m.group("prov").strip(),
+                        "access": m.group("acc").strip(),
+                        "url": m.group("url").strip(),
+                        "global_name": m.group("gname").strip(),
+                        "regions": m.group("regs").strip(),
+                    })
+    except OSError:
+        pass
+    _market_cache = out
+    return out
+
+
+def listings_for(cfg, industry):
+    """Curated listings for an industry, filtered to the event region.
+
+    The region filter is not cosmetic: handing a London visitor a us-east-1-only
+    share sends them somewhere they cannot go.
+    """
+    market = load_marketplace()
+    rows = market.get(industry) or market.get("other") or []
+    region = ((cfg.get("event") or {}).get("region") or "").strip()
+    if not region:
+        return rows
+    short = region.split(".")[-1]
+    keep = []
+    for r in rows:
+        regs = r.get("regions") or ""
+        # A truncated "+N" list means we cannot prove absence, so keep it.
+        if short in regs or "+" in regs:
+            keep.append(r)
+    return keep
+
+
+# --------------------------------------------------------------- the CoCo prompt
+
+def build_coco_prompt(cfg, state):
+    """The thing they paste into CoCo on their own free trial.
+
+    Six parts, per prompt-builder.md. Built deterministically from what they
+    actually told us: it must never invent table or column names, so it tells
+    CoCo to inspect and ask instead.
+    """
+    vis = state.get("visitor") or {}
+    poc = state.get("poc") or {}
+    ind = industry_name(cfg, vis.get("industry")) or "our sector"
+    held = state.get("held") or []
+    joined = state.get("joined") or []
+    listings = state.get("joined_listings") or []
+
+    lines = [
+        f"You are helping me build a proof of concept in Snowflake. I work in "
+        f"{ind}" + (f" at {vis.get('company')}" if vis.get("company") else "") + ".",
+        "",
+        "THE DATA",
+        "I have not loaded anything yet. The data I hold is:",
+    ]
+    lines += [f"  - {h}" for h in (held or ["(to be confirmed)"])]
+    if listings:
+        lines.append("I also want to attach these Snowflake Marketplace listings:")
+        for r in listings:
+            lines.append(f"  - {r['title']} (provider: {r['provider']}, "
+                         f"listing {r['global_name']})")
+        extra = [j for j in joined if j not in {r["title"] for r in listings}]
+        for j in extra:
+            lines.append(f"  - {j} (I will need to find a suitable listing)")
+    elif joined:
+        lines.append("I also want to join these categories of Marketplace data:")
+        lines += [f"  - {j}" for j in joined]
+    lines += [
+        "",
+        "BUILD THIS",
+        poc.get("poc_name") or "A working proof of concept",
+    ]
+    if poc.get("summary"):
+        lines.append(poc["summary"])
+    feats = [n for n, _u in link_features(poc.get("features"))]
+    if feats:
+        lines.append("Use these Snowflake features: " + ", ".join(feats) + ".")
+
+    title, url = poc.get("guide_title"), poc.get("guide_url")
+    if title and url:
+        lines += ["", "START FROM", f"Follow this guide as the base: {title}", url]
+
+    lines += [
+        "",
+        "CONSTRAINTS",
+        "Do not invent table or column names. Inspect what exists first, and "
+        "ask me when something is ambiguous.",
+        "Work in small steps and show me the SQL before you run anything that "
+        "creates or changes objects.",
+        "Keep everything in one database and schema so it is easy to drop afterwards.",
+        "",
+        "FIRST STEP",
+        poc.get("first_step") or "Tell me what you need from me to get started, "
+        "then set up the database and schema.",
+    ]
+    return "\n".join(lines)
+
+
+# ------------------------------------------------------------------- blueprint
+
+def blueprint_html(cfg, state):
+    vis = state.get("visitor") or {}
+    poc = state.get("poc") or {}
+    d = cfg.get("delivery") or {}
+    e = html.escape
+    prompt = build_coco_prompt(cfg, state)
+    held = state.get("held") or []
+    joined = state.get("joined") or []
+    listings = state.get("joined_listings") or []
+    url = state.get("blueprint_url") or ""
+
+    def ul(items):
+        return "<ul>" + "".join(f"<li>{e(i)}</li>" for i in items) + "</ul>"
+
+    parts = [
+        "<div style=\"font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,"
+        "sans-serif;font-size:15px;line-height:1.55;color:#1B2733;max-width:640px\">",
+        f"<p>Hi {e(vis.get('first_name') or 'there')},</p>",
+        "<p>Here is the POC we sketched out together at the Snowflake booth. "
+        "Everything below is yours to keep.</p>",
+        f"<h2 style=\"color:#29B5E8;font-size:19px;margin:22px 0 6px\">"
+        f"{e(poc.get('poc_name') or 'Your proof of concept')}</h2>",
+        f"<p>{e(poc.get('summary') or '')}</p>",
+    ]
+    if held:
+        parts += ["<h3 style=\"font-size:15px;margin:20px 0 4px\">"
+                  "Data you already hold</h3>", ul(held)]
+
+    # Marketplace: real listing, named provider, working link.
+    if listings or joined:
+        parts.append("<h3 style=\"font-size:15px;margin:20px 0 4px\">"
+                     "To attach from the Snowflake Marketplace</h3><ul>")
+        named = set()
+        for r in listings:
+            named.add(r["title"])
+            parts.append(
+                f"<li><a href=\"{e(r['url'])}\">{e(r['title'])}</a><br>"
+                f"<span style=\"color:#667;font-size:13px\">{e(r['provider'])} "
+                f"&middot; {e(r['access'])}</span></li>")
+        for j in joined:
+            if j not in named:
+                parts.append(f"<li>{e(j)}<br><span style=\"color:#667;"
+                             f"font-size:13px\">You mentioned this one &mdash; "
+                             f"search the Marketplace for a provider</span></li>")
+        parts.append("</ul>")
+
+    # Features, each with a documentation link by construction.
+    feats = link_features(poc.get("features"))
+    if feats:
+        parts.append("<h3 style=\"font-size:15px;margin:20px 0 4px\">"
+                     "Snowflake features you will use</h3><ul>")
+        for name, doc in feats:
+            parts.append(f"<li><a href=\"{e(doc)}\">{e(name)}</a></li>")
+        parts.append("</ul>")
+
+    parts += [
+        "<h3 style=\"font-size:15px;margin:22px 0 4px\">Paste this into Cortex "
+        "Code to begin</h3>",
+        "<p style=\"margin:0 0 6px;color:#556\">Start a free trial at "
+        f"<a href=\"{e(d.get('signup_url',''))}\">{e(d.get('signup_url',''))}</a>, "
+        "open Cortex Code, and paste this in.</p>",
+        "<pre style=\"background:#F4F7FA;border:1px solid #D6E2EC;border-radius:6px;"
+        "padding:12px;white-space:pre-wrap;word-wrap:break-word;font-size:13px;"
+        f"font-family:ui-monospace,Menlo,Consolas,monospace\">{e(prompt)}</pre>",
+    ]
+    if poc.get("guide_title") and poc.get("guide_url"):
+        parts += ["<h3 style=\"font-size:15px;margin:22px 0 4px\">Start from this "
+                  "guide</h3>",
+                  f"<p><a href=\"{e(poc['guide_url'])}\">{e(poc['guide_title'])}</a></p>"]
+
+    # Considerations, in place of a score. Guidance beats a number.
+    cons = poc.get("considerations") or []
+    if cons:
+        parts += ["<h3 style=\"font-size:15px;margin:22px 0 4px\">Considerations</h3>",
+                  "<p style=\"margin:0 0 6px;color:#556\">Worth thinking about "
+                  "before you start:</p>", ul(cons)]
+    if url:
+        parts += ["<p style=\"margin-top:24px\">A Word version is here: "
+                  f"<a href=\"{e(url)}\">download the document</a>. "
+                  "That link expires in seven days, but this email will not - "
+                  "everything you need is above.</p>"]
+    parts += ["<p style=\"margin-top:24px;color:#667\">See you next time.<br>"
+              "CoCo</p>", "</div>"]
+    return "\n".join(parts)
+
+
+def blueprint_docx(cfg, state):
+    """Generate a real .docx with python-docx. Returns a path, or "" if the
+    library is missing - a missing document must not block the email."""
+    try:
+        from docx import Document
+        from docx.shared import Pt, RGBColor
+    except ImportError:
+        return ""
+    vis = state.get("visitor") or {}
+    poc = state.get("poc") or {}
+    doc = Document()
+
+    h = doc.add_heading(poc.get("poc_name") or "Your proof of concept", level=0)
+    for run in h.runs:
+        run.font.color.rgb = RGBColor(0x29, 0xB5, 0xE8)
+    doc.add_paragraph(
+        f"Prepared for {vis.get('first_name') or 'you'}"
+        + (f" at {vis.get('company')}" if vis.get("company") else "")
+        + f" — Snowflake World Tour {cfg['event']['city']}.")
+    if poc.get("summary"):
+        doc.add_paragraph(poc["summary"])
+
+    def bullets(title, items):
+        if not items:
+            return
+        doc.add_heading(title, level=2)
+        for i in items:
+            doc.add_paragraph(str(i), style="List Bullet")
+
+    bullets("Data you already hold", state.get("held") or [])
+
+    listings = state.get("joined_listings") or []
+    joined = state.get("joined") or []
+    if listings or joined:
+        doc.add_heading("To attach from the Snowflake Marketplace", level=2)
+        named = set()
+        for r in listings:
+            named.add(r["title"])
+            p = doc.add_paragraph(style="List Bullet")
+            p.add_run(r["title"]).bold = True
+            p.add_run(f"\n{r['provider']} \u00b7 {r['access']}\n{r['url']}")
+        for j in joined:
+            if j not in named:
+                doc.add_paragraph(
+                    f"{j} — search the Marketplace for a provider",
+                    style="List Bullet")
+
+    feats = link_features((poc.get("features") or []))
+    if feats:
+        doc.add_heading("Snowflake features you will use", level=2)
+        for name, docurl in feats:
+            p = doc.add_paragraph(style="List Bullet")
+            p.add_run(name).bold = True
+            p.add_run(f"\n{docurl}")
+
+    doc.add_heading("Paste this into Cortex Code to begin", level=2)
+    doc.add_paragraph(
+        "Start a free trial at " + (cfg.get("delivery") or {}).get("signup_url", "")
+        + ", open Cortex Code, and paste the block below.")
+    p = doc.add_paragraph()
+    run = p.add_run(build_coco_prompt(cfg, state))
+    run.font.name = "Consolas"
+    run.font.size = Pt(9)
+
+    if poc.get("guide_title"):
+        doc.add_heading("Start from this guide", level=2)
+        doc.add_paragraph(poc["guide_title"])
+        if poc.get("guide_url"):
+            doc.add_paragraph(poc["guide_url"])
+    cons = poc.get("considerations") or []
+    if cons:
+        doc.add_heading("Considerations", level=2)
+        doc.add_paragraph("Worth thinking about before you start:")
+        for c in cons:
+            doc.add_paragraph(str(c), style="List Bullet")
+
+    safe = re.sub(r"[^A-Za-z0-9]+", "-", (vis.get("first_name") or "visitor")).strip("-")
+    path = os.path.join(tempfile.gettempdir(),
+                        f"loco4coco-{safe}-{int(time.time())}.docx")
+    doc.save(path)
+    return path
+
+
+# ----------------------------------------------------------------- snow helpers
+
+def snow_sql(cfg, sql):
+    """Run one statement via the snow CLI. Avoids adding a connector
+    dependency to what is otherwise a stdlib server."""
+    conn = (cfg.get("snowflake") or {}).get("connection_name")
+    cmd = ["snow", "sql", "-q", sql, "--format", "json"]
+    if conn:
+        cmd += ["-c", conn]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=90)
+        if r.returncode != 0:
+            return None, (r.stderr or r.stdout or "").strip()[:300]
+        return json.loads(r.stdout or "[]"), ""
+    except FileNotFoundError:
+        return None, "snow CLI not found on PATH"
+    except (json.JSONDecodeError, subprocess.TimeoutExpired) as e:
+        return None, str(e)[:300]
+
+
+def stage_and_presign(cfg, local_path):
+    """Upload the .docx and return a presigned download URL."""
+    d = cfg.get("delivery") or {}
+    stage = d.get("stage") or ""
+    if not stage or not local_path:
+        return "", "no stage configured"
+    conn = (cfg.get("snowflake") or {}).get("connection_name")
+    cmd = ["snow", "stage", "copy", local_path, stage, "--overwrite"]
+    if conn:
+        cmd += ["-c", conn]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+        if r.returncode != 0:
+            return "", (r.stderr or r.stdout or "").strip()[:300]
+    except FileNotFoundError:
+        return "", "snow CLI not found on PATH"
+    except subprocess.TimeoutExpired:
+        return "", "stage upload timed out"
+
+    name = os.path.basename(local_path)
+    secs = int(d.get("presign_seconds", 604800))
+    rows, err = snow_sql(
+        cfg, f"SELECT GET_PRESIGNED_URL({stage}, '{name}', {secs}) AS URL")
+    if not rows:
+        return "", err or "presign returned nothing"
+    row = rows[0] if isinstance(rows, list) else rows
+    if isinstance(row, list):
+        row = row[0] if row else {}
+    return (row.get("URL") or row.get("url") or ""), ""
+
+
+def log_session(cfg, state):
+    """Write the visitor's row. Returns (ok, error).
+
+    Escaping is done ONCE, by handing Snowflake a single JSON document and
+    letting it do the typing. Building 27 quoted literals by hand is how the
+    previous version ended up writing to columns that did not exist and failing
+    silently four times in a row.
+    """
+    sf = cfg.get("snowflake") or {}
+    tbl = f"{sf.get('database')}.{sf.get('schema')}.{sf.get('sessions_table', 'SESSIONS')}"
+    vis = state.get("visitor") or {}
+    poc = state.get("poc") or {}
+    turns = state.get("turns") or []
+
+    started = state.get("started_at") or time.time()
+    payload = {
+        "SESSION_ID": state.get("session_id") or "",
+        "EVENT_CITY": (cfg.get("event") or {}).get("city", ""),
+        "LANGUAGE_CODE": (cfg.get("event") or {}).get("language", ""),
+        "FIRST_NAME": vis.get("first_name", ""),
+        "COMPANY": vis.get("company", ""),
+        "INDUSTRY": industry_name(cfg, vis.get("industry")),
+        "EMAIL": vis.get("email", ""),
+        "DATA_HELD": state.get("held") or [],
+        "MARKETPLACE_JOINED": state.get("joined") or [],
+        "POC_ARCHETYPE": poc.get("archetype", ""),
+        "POC_NAME": poc.get("poc_name", ""),
+        "POC_SUMMARY": poc.get("summary", ""),
+        "GUIDE_FORKED": poc.get("guide_title", ""),
+        "GUIDE_URL": poc.get("guide_url", ""),
+        "FEATURES": poc.get("features") or [],
+        "READINESS_SCORE": int(poc.get("readiness") or 0),
+        "CONSIDERATIONS": poc.get("considerations") or [],
+        "FIRST_STEP": poc.get("first_step", ""),
+        "DOCUMENT_URL": state.get("blueprint_url", ""),
+        "DELIVERY_STATUS": delivery_status(state),
+        "DURATION_SECONDS": int(time.time() - started),
+        "COCO_SECONDS": int(state.get("coco_seconds") or 0),
+        "INPUT_TOKENS": int(state.get("input_tokens") or 0),
+        "OUTPUT_TOKENS": int(state.get("output_tokens") or 0),
+        "SE_OPERATOR": (cfg.get("event") or {}).get("operator", ""),
+        "NOTES": f"{len(turns)} turns",
+    }
+    cols = [k for k in payload if k not in ("DATA_HELD", "MARKETPLACE_JOINED",
+                                            "FEATURES", "CONSIDERATIONS")]
+    num = {"READINESS_SCORE", "DURATION_SECONDS", "COCO_SECONDS",
+           "INPUT_TOKENS", "OUTPUT_TOKENS"}
+    sel = [f"p:{c}::{'NUMBER' if c in num else 'TEXT'}" for c in cols]
+    arr_cols = ["DATA_HELD", "MARKETPLACE_JOINED", "FEATURES", "CONSIDERATIONS"]
+    sel += [f"p:{c}::ARRAY" for c in arr_cols]
+
+    sql = (f"INSERT INTO {tbl} (SESSION_TS, {', '.join(cols + arr_cols)}) "
+           f"SELECT CURRENT_TIMESTAMP(), {', '.join(sel)} "
+           f"FROM (SELECT PARSE_JSON(BASE64_DECODE_STRING("
+           f"'{_json_arg(payload)}')) AS p)")
+    rows, err = snow_sql(cfg, sql)
+    return (rows is not None), err
+
+
+def _json_arg(payload):
+    """Base64 the payload so the SQL text is alphanumeric only.
+
+    `snow sql` always performs client-side variable substitution, and a raw JSON
+    document reaches it full of braces, quotes and ampersands - which produced a
+    bare "SQL rendering error" with no indication of the cause. Encoding removes
+    every character the CLI or SQL parser could react to, so there is exactly
+    one way for this to be interpreted.
+    """
+    raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    return base64.b64encode(raw).decode("ascii")
+
+
+def delivery_status(state):
+    """Truthful by construction. Nothing here may claim SENT - only the ops
+    drain, which actually presses Send, may set that."""
+    if state.get("draft_created"):
+        return "DRAFTED"
+    if state.get("queued"):
+        return "QUEUED"
+    return "FAILED"
+
+
+def log_turn(cfg, session_id, loc_id, text, reply, meta):
+    """One row per location per visitor, so the slowest and most expensive beat
+    is answerable rather than guessed at."""
+    sf = cfg.get("snowflake") or {}
+    tbl = f"{sf.get('database')}.{sf.get('schema')}.TURNS"
+    u = (meta or {}).get("usage") or {}
+    payload = {
+        "SESSION_ID": session_id or "",
+        "LOCATION": loc_id,
+        "VISITOR_INPUT": (text or "")[:2000],
+        "REPLY": (reply or "")[:2000],
+        "DURATION_SECONDS": int((meta or {}).get("seconds") or 0),
+        "INPUT_TOKENS": int(u.get("input_tokens") or 0),
+        "OUTPUT_TOKENS": int(u.get("output_tokens") or 0),
+        "CACHE_READ_TOKENS": int(u.get("cache_read_input_tokens") or 0),
+        "SUCCEEDED": bool((meta or {}).get("ok")),
+    }
+    doc = _json_arg(payload)
+    sql = (f"INSERT INTO {tbl} (TURN_TS, SESSION_ID, LOCATION, VISITOR_INPUT, "
+           f"REPLY, DURATION_SECONDS, INPUT_TOKENS, OUTPUT_TOKENS, "
+           f"CACHE_READ_TOKENS, SUCCEEDED) SELECT CURRENT_TIMESTAMP(), "
+           f"p:SESSION_ID::TEXT, p:LOCATION::TEXT, p:VISITOR_INPUT::TEXT, "
+           f"p:REPLY::TEXT, p:DURATION_SECONDS::NUMBER, p:INPUT_TOKENS::NUMBER, "
+           f"p:OUTPUT_TOKENS::NUMBER, p:CACHE_READ_TOKENS::NUMBER, "
+           f"p:SUCCEEDED::BOOLEAN FROM (SELECT PARSE_JSON(BASE64_DECODE_STRING("
+           f"'{doc}')) AS p)")
+    rows, err = snow_sql(cfg, sql)
+    return (rows is not None), err
+
+
+# ------------------------------------------------------------------- transports
+
+class OutboxTransport:
+    """Route A. Build the .docx, stage it, presign it, compose the email, and
+    write it to outbox/ as the durable record. Then opportunistically ask
+    exec-CoCo to create the Gmail draft.
+
+    Why an outbox rather than sending directly: the Gmail MCP is reachable from
+    an INTERACTIVE CoCo session but not from `cortex exec` - verified, with
+    --bypass and persistent tool search, the Gmail tools never load headlessly
+    while Calendar's do. The MCP also exposes create_draft only, with no send
+    tool and no attachment parameter. So the game queues a fully-composed
+    email and the operator's interactive session drains it (see the
+    loco4coco-ops skill). Nothing here ever claims an email was sent.
+    """
+
+    last_meta = None
+
+    def deliver(self, cfg, state, job_id):
+        d = cfg.get("delivery") or {}
+        docx = blueprint_docx(cfg, state)
+        url, err = ("", "")
+        if docx:
+            url, err = stage_and_presign(cfg, docx)
+        if url:
+            write_state({"blueprint_url": url})
+            state = read_state()
+
+        body = blueprint_html(cfg, state)
+        vis = state.get("visitor") or {}
+        poc = state.get("poc") or {}
+        subject = d.get("subject_template",
+                        "Your Snowflake POC blueprint: {poc_name}").replace(
+            "{poc_name}", poc.get("poc_name") or "your POC")
+
+        # The outbox write is the thing that must not fail silently.
+        queued, qerr = self._queue(cfg, vis, subject, body, url, docx, poc)
+        if not queued:
+            return False, ("I could not wrap it up: " + (qerr or "unknown error")
+                           + " Grab a Snowflake person and we will sort it.")
+
+        # The opportunistic Gmail draft never succeeds under `cortex exec` (the
+        # MCP tools do not load headlessly), so by default we skip it entirely -
+        # it was costing ~50-80s of dead time on the postbox for no gain. The
+        # outbox is what actually delivers. Flip delivery.try_draft to re-enable
+        # it if a future exec build loads MCP tools.
+        if d.get("try_draft"):
+            drafted, detail = self._try_draft(cfg, vis, subject, body, job_id)
+        else:
+            drafted, detail = False, ""
+            self.last_meta = None
+        write_state({"draft_created": drafted, "blueprint_url": url})
+
+        if drafted:
+            reply = detail or "Drafted and ready - it will be with you shortly."
+        else:
+            reply = (f"Wrapped, labelled and in the postbox for "
+                     f"{vis.get('email')}. It goes out shortly - I do not send "
+                     f"it myself from in here.")
+        if err and not url:
+            reply += " The Word version could not be attached this time."
+        return True, reply
+
+    def _queue(self, cfg, vis, subject, body, url, docx, poc):
+        d = cfg.get("delivery") or {}
+        out = os.path.join(HERE, d.get("outbox_dir", "outbox"))
+        try:
+            os.makedirs(out, exist_ok=True)
+            stamp = time.strftime("%Y%m%d-%H%M%S")
+            safe = re.sub(r"[^A-Za-z0-9]+", "-",
+                          (vis.get("first_name") or "visitor")).strip("-").lower()
+            rec = {
+                "queued_at": time.time(),
+                "to": vis.get("email"),
+                "subject": subject,
+                "is_html": True,
+                "body_html": body,
+                "document_url": url,
+                "document_local": docx or "",
+                "visitor": vis,
+                "poc_name": poc.get("poc_name"),
+                "sent": False,
+            }
+            path = os.path.join(out, f"{stamp}-{safe}.json")
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(rec, f, indent=1)
+            os.replace(tmp, path)
+            return True, ""
+        except OSError as e:
+            return False, str(e)[:200]
+
+    def _try_draft(self, cfg, vis, subject, body, job_id):
+        """Opportunistic. Expected to fail headlessly; the outbox is the path
+        that actually works, so a failure here is not a visitor-facing error."""
+        prompt = (
+            "Create a Gmail draft using the Gmail MCP create_draft tool.\n\n"
+            f"to: {vis.get('email')}\n"
+            f"subject: {subject}\n"
+            "isHtml: true\n\n"
+            "body (verbatim HTML, do not alter):\n" + body + "\n\n"
+            "Your ENTIRE final message must be one line of minified JSON and "
+            'nothing else:\n{"created": true, "detail": "one short sentence"}\n'
+            "Set created to true ONLY if the create_draft tool actually ran and "
+            "returned success. If the tool is missing, denied or errored, set "
+            "created to false. Creating a draft is not sending, so never claim "
+            "it was sent."
+        )
+        ok, raw, meta = run_exec(cfg, prompt, "send", job_id=job_id, use_mcp=True)
+        self.last_meta = meta
+        # Fail closed: a visitor must never be told their present was posted
+        # when it was not, so anything we cannot positively confirm is False.
+        m = re.search(r'\{.*?"created".*?\}', raw or "", re.S)
+        if not m:
+            return False, ""
+        try:
+            v = json.loads(m.group(0))
+        except json.JSONDecodeError:
+            return False, ""
+        return v.get("created") is True, str(v.get("detail") or "").strip()
+
+
+class GmailApiTransport:
+    """Route B placeholder. A real attachment with no operator step, via an own
+    OAuth client with the gmail.send scope. Deliberately unimplemented: nothing
+    in the booth path depends on it, and it must not be relied on until an
+    OAuth client is proven to clear Workspace policy."""
+
+    def deliver(self, cfg, state, job_id):
+        return False, ("The Gmail API transport is not configured. Switch "
+                       "delivery.transport back to outbox.")
+
+
+TRANSPORTS = {"outbox": OutboxTransport, "draft_link": OutboxTransport,
+              "gmail_api": GmailApiTransport}
+
+
+def get_transport(cfg):
+    name = (cfg.get("delivery") or {}).get("transport", "outbox")
+    return (TRANSPORTS.get(name) or OutboxTransport)()
+
+
+# ------------------------------------------------------------------ turn runner
+
+def finish_turn(cfg, loc_id, label, reply, extra=None, meta=None):
+    cur = read_state()
+    turns = list(cur.get("turns") or [])
+    turns.append({"location": loc_id, "text": label, "reply": reply,
+                  "at": time.time()})
+    patch = {"thinking": False, "reply": reply, "turns": turns}
+    if meta:
+        u = meta.get("usage") or {}
+        patch["coco_seconds"] = int((cur.get("coco_seconds") or 0) + (meta.get("seconds") or 0))
+        patch["input_tokens"] = int((cur.get("input_tokens") or 0) + (u.get("input_tokens") or 0))
+        patch["output_tokens"] = int((cur.get("output_tokens") or 0) + (u.get("output_tokens") or 0))
+    if extra:
+        patch.update(extra)
+    write_state(patch)
+    # Always record the turn, even when no exec ran (e.g. the postbox no longer
+    # spends an exec on a doomed draft attempt) - otherwise the location is
+    # missing from TURNS and the per-beat timing table has a hole.
+    ok, err = log_turn(cfg, cur.get("session_id"), loc_id, label, reply, meta)
+    if not ok:
+        print(f"[loco4coco] TURNS insert failed for {loc_id}: {err}")
+
+
+def unlock_next(cfg, loc_id, state):
+    order = cfg.get("unlock_order") or []
+    if loc_id not in order:
+        return state.get("unlocked") or []
+    unlocked = list(state.get("unlocked") or [])
+    i = order.index(loc_id)
+    if i + 1 < len(order) and order[i + 1] not in unlocked:
+        unlocked.append(order[i + 1])
+    return unlocked
+
+
+def run_checklist(cfg, loc_id, labels, job_id):
+    state = read_state()
+    key = "held" if loc_id == "library" else "joined"
+    patch = {key: labels}
+    if loc_id == "marketplace":
+        # Resolve each pick back to its verified listing so the blueprint can
+        # name the provider and link the listing. Anything typed into "Other"
+        # stays a plain string - we will not guess a provider for it.
+        ind = (state.get("visitor") or {}).get("industry") or "other"
+        by_title = {r["title"]: r for r in listings_for(cfg, ind)}
+        patch["joined_listings"] = [by_title[l] for l in labels if l in by_title]
+    write_state(patch)
+    state = read_state()
+    loc = (cfg.get("locations") or {}).get(loc_id) or {}
+    body = fill(loc.get("prompt", ""), cfg, state,
+                selection=", ".join(labels) or "nothing")
+    prompt = "\n".join(base_context(cfg, state)) + "\n\n" + body
+    ok, reply, meta = run_exec(cfg, prompt, loc_id, job_id=job_id)
+    if not ok and not reply:
+        return
+    finish_turn(cfg, loc_id, ", ".join(labels), reply,
+                {"unlocked": unlock_next(cfg, loc_id, state)}, meta)
+
+
+def run_workshop(cfg, text, job_id):
+    state = read_state()
+    loc = (cfg.get("locations") or {}).get("workshop") or {}
+    feature_list = ", ".join(sorted(load_features()))
+    body = fill(loc.get("prompt", ""), cfg, state, input=text,
+                feature_list=feature_list)
+    prompt = "\n".join(base_context(cfg, state)) + "\n\n" + body
+    ok, raw, meta = run_exec(cfg, prompt, "workshop", job_id=job_id)
+    if not ok and not raw:
+        return
+
+    poc, reply = {}, raw
+    m = re.search(r"\{.*\}", raw or "", re.S)
+    if m:
+        try:
+            poc = json.loads(m.group(0))
+        except json.JSONDecodeError:
+            poc = {}
+    if poc:
+        reply = poc.get("reply") or "Right, I have what I need."
+        arche = poc.get("archetype") or ""
+        title, url = guide_for(cfg, arche)
+        if not title:
+            # Fall back on the most broadly useful fork rather than invent one.
+            title, url = guide_for(cfg, "talk-to-my-data")
+        poc["guide_title"], poc["guide_url"] = title, url
+        # Drop anything outside the closed list, so every feature has a link.
+        poc["features"] = [n for n, _u in link_features(poc.get("features"))]
+        cons = poc.get("considerations")
+        if isinstance(cons, str):
+            cons = [cons]
+        poc["considerations"] = [str(c).strip() for c in (cons or [])
+                                if str(c).strip()][:4]
+        try:
+            poc["readiness"] = max(1, min(5, int(poc.get("readiness") or 3)))
+        except (TypeError, ValueError):
+            poc["readiness"] = 3
+    else:
+        poc = {"poc_name": text[:60], "summary": raw[:300], "features": [],
+               "readiness": 3,
+               "considerations": ["We ran out of time to work through the "
+                                  "detail - start by confirming what data you "
+                                  "can actually get hold of."]}
+        t, u = guide_for(cfg, "talk-to-my-data")
+        poc["guide_title"], poc["guide_url"] = t, u
+
+    finish_turn(cfg, "workshop", text, reply,
+                {"poc": poc, "unlocked": unlock_next(cfg, "workshop", state)}, meta)
+
+
+def run_send(cfg, job_id):
+    state = read_state()
+    transport = get_transport(cfg)
+    queued, reply = transport.deliver(cfg, state, job_id)
+    st = read_state()
+    # email_sent stays truthful: nothing is actually sent until the operator's
+    # interactive session drains the outbox, so a queued present is not a sent
+    # one. Only a confirmed Gmail draft counts as further along than queued.
+    write_state({"queued": bool(queued),
+                 "email_sent": bool(st.get("draft_created"))})
+
+    # Log BEFORE finish_turn. finish_turn clears `thinking`, which is the signal
+    # everything else waits on, so logging after it means the row lands after
+    # the visitor has already been told the flow is finished - and a failure
+    # would go unnoticed until someone counted rows.
+    ok, err = log_session(cfg, read_state())
+    if ok:
+        write_state({"logged": True, "log_error": ""})
+    else:
+        write_state({"logged": False, "log_error": err or "unknown"})
+        print(f"[loco4coco] SESSIONS insert FAILED: {err}")
+
+    finish_turn(cfg, "postbox", "send the blueprint", reply, {"stage": "done"},
+                getattr(transport, "last_meta", None))
+
+
+# ------------------------------------------------------------------ HTTP server
+
+class Handler(BaseHTTPRequestHandler):
+    server_version = "Loco4CoCo"
+    # Timestamp of the last HTTP request. The idle watchdog uses it to stop a
+    # forgotten server so it can never linger (and never burns anything: the
+    # server is idle when no browser is polling).
+    last_request = time.time()
+
+    def log_message(self, fmt, *args):
+        if "/api/state" not in (self.path or ""):
+            super().log_message(fmt, *args)
+
+    def _send(self, code, body=b"", ctype="text/plain; charset=utf-8"):
+        Handler.last_request = time.time()
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        if body:
+            self.wfile.write(body)
+
+    def _json(self, obj, code=200):
+        self._send(code, json.dumps(obj).encode("utf-8"), MIME[".json"])
+
+    def _body(self):
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            return json.loads(self.rfile.read(n) or b"{}")
+        except (ValueError, json.JSONDecodeError):
+            return None
+
+    def do_GET(self):
+        path = urlparse(self.path).path
+        if path == "/api/state":
+            return self._json(read_state())
+        if path == "/api/config":
+            return self._json(load_config())
+        if path == "/api/options":
+            cfg, st = load_config(), read_state()
+            return self._json({loc: options_for(cfg, loc, st)
+                               for loc in (cfg.get("locations") or {})})
+        if path == "/api/blueprint":
+            # The visitor must leave with something even if the email never
+            # arrives, so the finished blueprint is readable on screen.
+            cfg, st = load_config(), read_state()
+            poc = st.get("poc") or {}
+            # readiness is internal lead-ranking data. This payload is rendered
+            # straight to the visitor, so the score never leaves the server.
+            safe_poc = {k: v for k, v in poc.items()
+                        if k not in ("readiness", "weakest_point", "reply")}
+            return self._json({
+                "poc": safe_poc,
+                "held": st.get("held") or [],
+                "joined": st.get("joined") or [],
+                "listings": st.get("joined_listings") or [],
+                "features": [{"name": n, "url": u}
+                             for n, u in link_features(poc.get("features"))],
+                "considerations": poc.get("considerations") or [],
+                "prompt": build_coco_prompt(cfg, st) if st.get("poc") else "",
+                "document_url": st.get("blueprint_url") or "",
+                "signup_url": (cfg.get("delivery") or {}).get("signup_url", ""),
+                "email": (st.get("visitor") or {}).get("email", ""),
+                "queued": bool(st.get("queued")),
+                "draft_created": bool(st.get("draft_created")),
+            })
+        if path in ("/", "/index.html"):
+            return self._file("index.html")
+        safe = posixpath.normpath(path).lstrip("/")
+        if not safe or ".." in safe:
+            return self._send(404, b"not found")
+        return self._file(safe)
+
+    def do_POST(self):
+        path = urlparse(self.path).path
+        routes = {
+            "/api/intake": self._intake,
+            "/api/select": self._select,
+            "/api/compose": self._compose,
+            "/api/send": self._post_it,
+            "/api/reset": self._reset,
+            "/api/state": self._patch,
+        }
+        fn = routes.get(path)
+        if not fn:
+            return self._send(404, b"not found")
+        return fn()
+
+    def _reset(self):
+        # replace=True, so nothing from the previous visitor survives.
+        return self._json(write_state(dict(BLANK_STATE), replace=True))
+
+    def _patch(self):
+        patch = self._body()
+        if not isinstance(patch, dict):
+            return self._json({"error": "expected an object"}, 400)
+        return self._json(write_state(patch))
+
+    def _intake(self):
+        b = self._body()
+        if not isinstance(b, dict):
+            return self._json({"error": "invalid json"}, 400)
+        cfg = load_config()
+        first = (b.get("first_name") or "").strip()[:80]
+        company = (b.get("company") or "").strip()[:120]
+        email = (b.get("email") or "").strip()[:160]
+        if not first or not email or "@" not in email:
+            return self._json({"error": "need a first name and an email"}, 400)
+        industry = b.get("industry") or infer_industry(cfg, company)
+        if industry not in (cfg.get("industries") or {}):
+            industry = "other"
+        st = write_state({
+            "visitor": {"first_name": first, "company": company,
+                        "email": email, "industry": industry},
+            "stage": "library", "unlocked": ["library"], "reasoning": [],
+            "session_id": uuid.uuid4().hex,
+        })
+        return self._json({"ok": True, "industry": industry,
+                           "industry_name": industry_name(cfg, industry),
+                           "state": st})
+
+    def _select(self):
+        b = self._body()
+        if not isinstance(b, dict):
+            return self._json({"error": "invalid json"}, 400)
+        cfg = load_config()
+        loc_id = b.get("location") or ""
+        if loc_id not in (cfg.get("locations") or {}):
+            return self._json({"error": f"unknown location {loc_id!r}"}, 400)
+        labels = [str(x)[:120] for x in (b.get("labels") or []) if str(x).strip()]
+        if not labels:
+            return self._json({"error": "nothing selected"}, 400)
+        job = uuid.uuid4().hex
+        write_state({"thinking": True, "reply": "", "reasoning": [],
+                     "job_id": job, "location": loc_id, "stage": loc_id})
+        threading.Thread(target=run_checklist,
+                         args=(cfg, loc_id, labels, job), daemon=True).start()
+        return self._json({"accepted": True, "job_id": job})
+
+    def _compose(self):
+        b = self._body()
+        if not isinstance(b, dict):
+            return self._json({"error": "invalid json"}, 400)
+        text = (b.get("text") or "").strip()[:500]
+        if not text:
+            return self._json({"error": "empty message"}, 400)
+        cfg = load_config()
+        job = uuid.uuid4().hex
+        write_state({"thinking": True, "reply": "", "reasoning": [],
+                     "job_id": job, "location": "workshop", "stage": "workshop"})
+        threading.Thread(target=run_workshop, args=(cfg, text, job),
+                         daemon=True).start()
+        return self._json({"accepted": True, "job_id": job})
+
+    def _post_it(self):
+        cfg = load_config()
+        st = read_state()
+        if not (st.get("visitor") or {}).get("email"):
+            return self._json({"error": "no email on file"}, 400)
+        if not st.get("poc"):
+            return self._json({"error": "no POC to send yet"}, 400)
+        job = uuid.uuid4().hex
+        write_state({"thinking": True, "reply": "", "reasoning": [],
+                     "job_id": job, "location": "postbox", "stage": "postbox"})
+        threading.Thread(target=run_send, args=(cfg, job), daemon=True).start()
+        return self._json({"accepted": True, "job_id": job})
+
+    def _file(self, rel):
+        full = os.path.join(HERE, rel)
+        if not os.path.isfile(full):
+            return self._send(404, b"not found")
+        ext = os.path.splitext(full)[1].lower()
+        with open(full, "rb") as f:
+            self._send(200, f.read(), MIME.get(ext, "application/octet-stream"))
+
+
+def main():
+    cfg = load_config()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--host", default=cfg["server"]["host"])
+    ap.add_argument("--port", type=int, default=cfg["server"]["port"])
+    args = ap.parse_args()
+
+    if not os.path.exists(STATE_PATH):
+        write_state(dict(BLANK_STATE))
+
+    srv = ThreadingHTTPServer((args.host, args.port), Handler)
+    print(f"Loco4CoCo companion running at http://{args.host}:{args.port}/")
+    print(f"  event     : {cfg['event']['city']} ({cfg['event']['language']})")
+    print(f"  account   : {cfg['snowflake']['connection_name']}")
+    print(f"  transport : {(cfg.get('delivery') or {}).get('transport')}")
+    print(f"  guides    : {len(load_guides())} primary forks loaded")
+    # Warm the model so the first real visitor does not pay cold-start latency.
+    # Raw subprocess (not run_exec) so it never writes to the shared game state.
+    if (cfg.get("coco") or {}).get("warm_up", True):
+        def _warm():
+            c = cfg.get("coco") or {}
+            cmd = [c.get("binary", "cortex"), "exec",
+                   "Reply with the single word: ready.", "--no-mcp"]
+            conn = (cfg.get("snowflake") or {}).get("connection_name")
+            if conn:
+                cmd += ["--connection", conn]
+            if c.get("model"):
+                cmd += ["-m", str(c["model"])]
+            try:
+                subprocess.run(cmd, stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL, cwd=HERE, timeout=90)
+            except Exception:                                    # noqa: BLE001
+                pass
+        threading.Thread(target=_warm, daemon=True).start()
+        print("  warm-up   : model warm-up dispatched")
+    # Idle watchdog: if nothing hits the server for this many minutes (no browser
+    # open, no test), it shuts itself down so it can never run for hours
+    # unattended. Set server.idle_shutdown_minutes to 0 to disable.
+    idle_min = (cfg.get("server") or {}).get("idle_shutdown_minutes", 45)
+    if idle_min:
+        def _watchdog():
+            while True:
+                time.sleep(30)
+                if time.time() - Handler.last_request > idle_min * 60:
+                    print(f"\nidle for {idle_min} min - shutting down.")
+                    srv.shutdown()
+                    return
+        threading.Thread(target=_watchdog, daemon=True).start()
+        print(f"  idle stop : after {idle_min} min with no requests")
+    print("Ctrl-C to stop.")
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        print("\nstopped")
+
+
+if __name__ == "__main__":
+    main()

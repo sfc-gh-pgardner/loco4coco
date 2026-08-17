@@ -72,6 +72,24 @@
       "head": "Sending a CoCo POC to my friend",
       "flavor": "Somewhere in the Arctic. (Yes, penguins live in Antarctica, but CoCo is special!)",
       "line": "CoCo stirs in his igloo, he dreams of sending his friend a *CoCo POC* (proof of concept) present - *that friend is you!*"
+    },
+    "letter": {
+      "_comment": "The opening is a sequence, not a form: CoCo is home, a letter arrives, and the letter itself IS the intake. Every phase is click-skippable so a booth operator is never trapped in an animation.",
+      "arctic": "Somewhere in the Arctic...",
+      "arctic_sub": "(Yes, penguins live in Antarctica, but CoCo is special!)",
+      "greeting": "Hey CoCo,",
+      "body": [
+        "It's your friend {first_name}!",
+        "I've heard you and the Cortex Crew have been cooking up some amazing products recently.",
+        "Me and my team at {company} wanted to learn more.",
+        "We're particularly interested in {industry} and wanted to understand what an MVP/POC would look like for this on Snowflake.",
+        "Could you help us out?"
+      ],
+      "signoff": "Signed {email}",
+      "button": "SEAL IT AND GO",
+      "line1": "Not sure why {first_name} always signs off with their email like that...",
+      "line2": "Anyway, let's go and get this show on the road.",
+      "map_line": "First stop is my Data Library. That's where I keep all the unstructured, semi-structured and structured data that would be useful for {first_name} and {company}."
     }
   },
   "unlock_order": [
@@ -622,15 +640,15 @@
         4
       ],
       "kind": "library",
-      "name": "The Library",
-      "represents": "Data you already hold",
+      "name": "The Data Library",
+      "represents": "Data your company already holds",
       "mode": "checklist",
       "source": "data_sources",
-      "heading": "Which of these do you actually have?",
+      "heading": "Which of these do you work with at the moment?",
       "hint": "Tick everything that applies. Add your own if it's missing.",
       "other_label": "Something else you hold",
       "other_placeholder": "e.g. 20 years of inspection photographs",
-      "narrative": "This is your library, {first_name}. Every shelf here is data {company} already holds.",
+      "narrative": "This is my magic data library, {first_name}. Every shelf can mimic something {company} already holds. You can ask me for anything, from MP3 to CSV, PDF to Parquet.",
       "prompt": "The visitor works in {industry} at {company}. In THE LIBRARY they said they already hold: {selection}. Reply in at most 2 short sentences: reflect back the most valuable thing in that list, and name ONE specific, named Snowflake feature that would unlock it (for example Cortex Analyst, Cortex Search, Snowpark, Dynamic Tables, ML Classification, Snowflake Marketplace). Name the feature, not a general ability like handling large datasets. Warm, plain English, no jargon, no bullet points, no headings, no em dashes.",
       "transport": "complete"
     },
@@ -648,8 +666,8 @@
       "hint": "Real listings from the Snowflake Marketplace, filtered to what you can actually attach in this region. No copying, no pipelines.",
       "other_label": "Something else you'd join",
       "other_placeholder": "e.g. competitor pricing",
-      "discovery": "manual",
-      "_discovery_comment": "manual = the curated, verified marketplace-index.md. Swap to 'agentic' when the Agentic Marketplace Discovery PrPr lands; the panel contract does not change.",
+      "discovery": "live",
+      "_discovery_comment": "live = SHOW AVAILABLE LISTINGS filtered to event.region + is_ready_for_import, matched against marketplace.industry_keywords, pinned entries first. Falls back to the curated marketplace-index.md if the live tier is cold, fails, or returns fewer than marketplace.min_live_results. Set to 'manual' to force the curated index.",
       "narrative": "These are live datasets you can query the moment you attach them. Nothing to copy, nothing to maintain.",
       "prompt": "The visitor works in {industry} at {company} and holds: {held}. In THE MARKETPLACE they chose to join these real Snowflake Marketplace listings: {selection}. Reply in at most 2 short sentences: say what joining those lets them answer that they cannot answer today. Refer to the datasets only by the names given above; do not invent any other listing or provider name. Plain English, no bullet points, no em dashes.",
       "transport": "complete"
@@ -804,5 +822,189 @@
     "skip": "SKIP THIS",
     "prompt": "The visitor is {first_name}, {industry}, at {company}. They hold: {held}. They are joining: {joined}. Their POC is \"{poc_name}\": {poc_summary}\n\nThey have asked you one question: \"{input}\"\n\nAnswer it in at most 4 short sentences, specific to THEIR situation and their data, not generic advice. Plain English, no bullet points, no headings, no em dashes. If you are not sure, say what you would check.",
     "tool_hint": "Use your tools to check the Snowflake documentation before you answer, so the answer is grounded rather than guessed. One lookup is enough."
+  },
+  "marketplace": {
+    "_comment": "Live discovery needs NO private preview: SHOW AVAILABLE LISTINGS piped through RESULT_SCAN gives 188 importable listings in AWS_EU_WEST_2 (of 4327 total, 799 region-available). Measured 2026-08-17. The curated index stays as the offline-safe fallback.",
+    "min_live_results": 3,
+    "cache_minutes": 120,
+    "industry_keywords": {
+      "healthcare": [
+        "clinical",
+        "patient",
+        "nhs",
+        "health",
+        "disease",
+        "epidemiolog",
+        "population health",
+        "prescrib",
+        "wellbeing",
+        "mortality",
+        "hospital",
+        "medic",
+        "pharma",
+        "drug",
+        "life science",
+        "biotech"
+      ],
+      "financial": [
+        "foreign exchange",
+        "inflation",
+        "credit",
+        "risk",
+        "equity",
+        "market",
+        "macro",
+        "payments",
+        "fraud",
+        "interest rate",
+        "economic",
+        "commodit"
+      ],
+      "retail": [
+        "consumer",
+        "footfall",
+        "spend",
+        "household income",
+        "demographic",
+        "acorn",
+        "basket",
+        "weather",
+        "postcode",
+        "segmentation",
+        "price"
+      ],
+      "public": [
+        "census",
+        "postcode",
+        "deprivation",
+        "boundary",
+        "population",
+        "geospatial",
+        "planning",
+        "crime",
+        "education",
+        "transport",
+        "uprn"
+      ],
+      "manufacturing": [
+        "supply chain",
+        "logistics",
+        "commodit",
+        "shipping",
+        "freight",
+        "industrial",
+        "manufactur",
+        "materials",
+        "energy price",
+        "trade",
+        "tariff",
+        "production",
+        "inventory",
+        "supplier",
+        "port",
+        "vessel",
+        "steel",
+        "metal",
+        "company data",
+        "economic"
+      ],
+      "energy": [
+        "weather",
+        "climate",
+        "emission",
+        "carbon",
+        "grid",
+        "renewable",
+        "solar",
+        "wind",
+        "temperature",
+        "energy",
+        "net zero"
+      ],
+      "media": [
+        "audience",
+        "media",
+        "broadband",
+        "mobile",
+        "advertising",
+        "viewership",
+        "telco",
+        "subscriber",
+        "content",
+        "social"
+      ],
+      "other": [
+        "weather",
+        "census",
+        "demographic",
+        "postcode",
+        "economic",
+        "geospatial"
+      ]
+    },
+    "_pinned_comment": "Verified importable in AWS_EU_WEST_2 on 2026-08-17. Met Office profile GZTDZJKVBD. Surfaced first when the live tier finds them. Ordnance Survey is deliberately absent: it is NOT on the Marketplace in any region, so it lives in config.sourcing instead.",
+    "pinned": {
+      "energy": [
+        "GZTDZJKVCM",
+        "GZTDZJKVCU",
+        "GZTDZJKVCY"
+      ],
+      "public": [
+        "GZTDZJKVCU",
+        "GZTDZJKVCY",
+        "GZSVZAJO3"
+      ],
+      "retail": [
+        "GZTDZJKVCY",
+        "GZSVZAJO3"
+      ],
+      "other": [
+        "GZTDZJKVCY"
+      ]
+    },
+    "provider_names": {
+      "_comment": "SHOW AVAILABLE LISTINGS returns an opaque profile id, not a display name.",
+      "GZTDZJKVBD": "Met Office",
+      "GZSVZ1K7TX": "CACI",
+      "GZTSZAS2KCS": "Snowflake Public Data",
+      "GZSOZ1LLBU": "Weather Source"
+    },
+    "exclude": [
+      "health check",
+      "dashboard",
+      "assistant",
+      "connector",
+      "generate synthetic",
+      "sample",
+      "trial - ",
+      "demo"
+    ],
+    "_exclude_comment": "Keyword matching pulls in tools and apps, not just data. A healthcare stall offering 'Snowflake Health Check Dashboard' reads as broken, so obvious non-dataset titles are dropped."
+  },
+  "sourcing": {
+    "_comment": "Where data can come from when the visitor is NOT yet a Snowflake customer. Ordnance Survey lives here rather than in the Marketplace because it is not listed there in any region (checked 2026-08-17); Open UPRN exists but is not available in AWS_EU_WEST_2.",
+    "synthetic_hint": "CoCo can mimic any shelf as synthetic data so a POC can start before the real feed exists. Generate it in Snowflake with GENERATOR and RANDOM, or let Cortex fabricate realistic rows from a description.",
+    "external": [
+      {
+        "name": "Ordnance Survey Data Hub",
+        "url": "https://osdatahub.os.uk/",
+        "note": "UK geospatial: addresses, UPRN, topography. Not on the Snowflake Marketplace."
+      },
+      {
+        "name": "ONS Open Geography Portal",
+        "url": "https://geoportal.statistics.gov.uk/",
+        "note": "Boundaries, postcode lookups, output areas."
+      },
+      {
+        "name": "data.gov.uk",
+        "url": "https://www.data.gov.uk/",
+        "note": "UK public sector open data."
+      },
+      {
+        "name": "Met Office DataHub",
+        "url": "https://datahub.metoffice.gov.uk/",
+        "note": "Direct API access, and also on the Marketplace."
+      }
+    ]
   }
 }

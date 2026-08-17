@@ -186,6 +186,41 @@
     white-space:pre-wrap; word-break:break-word; color:#CFE6F5; }
   #bp .score { font-size:15px; color:var(--edge); }
   #bp a { color:var(--edge); }
+  /* ---------- the letter: beige paper, dark ink, pulls up from the envelope ---------- */
+  #ov-letter { align-items:flex-end; }
+  .card.letter {
+    background:#EFE6D2; border:2px solid #B9A98A; border-radius:4px;
+    color:#2A2418; width:min(600px,94vw); max-height:76vh; overflow-y:auto;
+    box-shadow:0 -8px 28px rgba(0,0,0,.55); margin:0 0 4vh;
+    padding:22px 26px 26px;
+    transform:translateY(110%); transition:transform .85s cubic-bezier(.16,.84,.28,1);
+    font-family:Georgia,'Iowan Old Style',serif;
+  }
+  #ov-letter.on .card.letter { transform:translateY(0); }
+  .card.letter .lgreet { font-size:19px; margin-bottom:12px; }
+  .card.letter .lp { font-size:15px; line-height:1.9; margin:0 0 7px; }
+  .card.letter .lin {
+    background:transparent; border:0; border-bottom:2px solid #9C8C6E;
+    color:#1C4E7A; font:inherit; font-size:15px; padding:0 4px 1px;
+    border-radius:0;
+    /* Must stay inline: the global input rule stretches these to full width,
+       which tore each sentence across three lines and stranded the "!". */
+    width:auto; display:inline-block; vertical-align:baseline;
+  }
+  #l-first { width:150px; } #l-company { width:205px; }
+  #l-email { width:225px; } #l-industry { width:195px; }
+  .card.letter .lin:focus { outline:none; border-bottom-color:#1C4E7A; background:rgba(28,78,122,.06); }
+  .card.letter .lin.invalid { border-bottom-color:#B4442E; background:rgba(180,68,46,.08); }
+  .card.letter .lsel { min-width:170px; }
+  .card.letter .lsel option { color:#2A2418; }
+  .card.letter .lhint { font-size:12px; color:#8A3524; font-family:ui-monospace,monospace; }
+  .card.letter .primary { font-family:ui-monospace,monospace; }
+  /* CoCo's spoken beats over the house scene */
+  .hsay { display:none; position:absolute; left:50%; transform:translateX(-50%);
+    bottom:16vh; z-index:40; max-width:min(600px,90vw);
+    background:rgba(10,22,34,.92); border:2px solid var(--edge); border-radius:6px;
+    padding:10px 14px; color:#EAF6FD; font-size:15px; line-height:1.5; text-align:center; }
+  .hsay.on { display:block; }
 </style>
 </head>
 <body>
@@ -243,6 +278,29 @@
         <button class="primary" id="a-go">ASK COCO</button>
         <button id="a-skip">SKIP THIS</button></div>
     </div></div>
+
+    <!-- Opening beat 1: the arctic title card -->
+    <div class="ov" id="ov-arctic"><div class="card" style="text-align:center;border-color:var(--edge);width:min(620px,94vw);background:rgba(10,22,34,.92)">
+      <div id="a-arctic" style="font-size:28px;font-weight:800;letter-spacing:.03em"></div>
+      <div id="a-arcticsub" class="hint" style="margin-top:8px;font-size:13px"></div>
+    </div></div>
+
+    <!-- Opening beat 2: the letter pulls up out of the envelope AND is the intake -->
+    <div class="ov" id="ov-letter"><div class="card letter">
+      <div id="l-greet" class="lgreet"></div>
+      <p class="lp">It's your friend <input type="text" id="l-first" class="lin" placeholder="first name" autocomplete="off" spellcheck="false">!</p>
+      <p class="lp">I've heard you and the Cortex Crew have been cooking up some amazing products recently.</p>
+      <p class="lp">Me and my team at <input type="text" id="l-company" class="lin" placeholder="company name" autocomplete="off" spellcheck="false"> wanted to learn more.</p>
+      <p class="lp">We're particularly interested in <select id="l-industry" class="lin lsel"></select> and wanted to understand what an MVP/POC would look like for this on Snowflake.</p>
+      <p class="lp">Could you help us out?</p>
+      <p class="lp" style="margin-top:14px"><span id="l-sign">Signed </span><input type="email" id="l-email" class="lin" placeholder="your email" autocomplete="off" spellcheck="false"></p>
+      <div class="go" style="margin-top:14px;justify-content:space-between;align-items:center">
+        <span id="l-hint" class="lhint"></span>
+        <button class="primary" id="l-go">SEAL IT AND GO</button></div>
+    </div></div>
+
+    <!-- CoCo speaking over the house scene, between the letter and the map -->
+    <div id="h-say" class="hsay"></div>
 
     <!-- CoCo wakes AND takes your details on one screen -->
     <div class="ov" id="ov-wake"><div class="card" style="border-color:var(--edge)">
@@ -568,6 +626,51 @@ function shelfBooks(g,x,y,w,u,seed){
 }
 function drawScene(kind){
   const g=sceneCtx, w=sceneW, h=sceneH, u=S, th=CFG.theme;
+  if(kind==='house'){
+    const p=openProg();
+    g.fillStyle='#0A1622'; g.fillRect(0,0,w,h);
+    // back wall of ice blocks, floor, and the door CoCo will leave through
+    for(let by=0; by<h*0.62; by+=h*0.105){
+      for(let bx=0; bx<w; bx+=w*0.13){
+        g.fillStyle=((bx/(w*0.13)|0)+(by/(h*0.105)|0))%2?'#20364A':'#26415A';
+        g.fillRect(bx+2,by+2,w*0.13-4,h*0.105-4);
+      }
+    }
+    g.fillStyle='#152A3C'; g.fillRect(0,h*0.62,w,h*0.38);
+    const dx=w*0.10, dw=w*0.16;
+    g.fillStyle='#0E1E2C'; g.fillRect(dx,h*0.22,dw,h*0.40);
+    g.fillStyle='#2B4A61'; g.fillRect(dx,h*0.22,dw,6);
+    g.fillStyle=th.accent_warm; g.fillRect(dx+dw*0.18,h*0.40,dw*0.64,7);  // slot
+    // the letter: through the slot, then on the floor, then in CoCo's flipper
+    const lw=w*0.11, lh=h*0.075;
+    let lx=dx+dw*0.16, ly=h*0.40;
+    if(openPhase==='post'){ ly=h*0.40+(h*0.62-h*0.40-lh)*p; }
+    else if(openPhase==='house'){ ly=-lh; }
+    else { ly=h*0.62-lh; }
+    // CoCo walks from the middle of the room to the letter, then out the door
+    let cxF=0.60;
+    if(openPhase==='walk') cxF=0.60-(0.60-0.30)*p;
+    else if(openPhase==='letter'||openPhase==='line1'||openPhase==='line2') cxF=0.30;
+    else if(openPhase==='leave') cxF=0.30-(0.30+0.18)*p;
+    const cx=w*cxF, cy=h*0.58;
+    const holding = openPhase==='letter'||openPhase==='line1'||openPhase==='line2'||openPhase==='leave';
+    if(openPhase!=='house'&&openPhase!=='post'&&!holding){ /* letter still on floor */ }
+    g.fillStyle=CFG.penguin.body; g.fillRect(cx-26,cy-52,52,76);
+    g.fillStyle=CFG.penguin.belly; g.fillRect(cx-16,cy-34,32,52);
+    g.fillStyle=CFG.penguin.eye; g.fillRect(cx-12,cy-42,6,6); g.fillRect(cx+6,cy-42,6,6);
+    g.fillStyle=CFG.penguin.beak; g.fillRect(cx-5,cy-32,10,7);
+    g.fillStyle=CFG.penguin.foot||'#E8863C';
+    const step=(openPhase==='walk'||openPhase==='leave')&&(Math.floor(p*8)%2===0);
+    g.fillRect(cx-20,cy+24,14,7); g.fillRect(cx+6,cy+24-(step?3:0),14,7);
+    // beige envelope, drawn last when held so it reads as picked up
+    const ex = holding ? cx+22 : lx, ey = holding ? cy-18 : ly;
+    if(openPhase!=='house'){
+      g.fillStyle='#EADFC6'; g.fillRect(ex,ey,lw,lh);
+      g.strokeStyle='#B9A98A'; g.lineWidth=2; g.strokeRect(ex,ey,lw,lh);
+      g.beginPath(); g.moveTo(ex,ey); g.lineTo(ex+lw/2,ey+lh*0.6); g.lineTo(ex+lw,ey); g.stroke();
+    }
+    return;
+  }
   if(kind==='wake'){
     g.fillStyle='#0A1622'; g.fillRect(0,0,w,h);
     // igloo dome: concentric arcs of pale blocks
@@ -673,8 +776,109 @@ function openTitle(){
 }
 $('t-go').addEventListener('click',()=>{
   $('ov-title').classList.remove('on');
-  openWake();
+  startOpening();
 });
+
+// ---------------- the opening: a letter arrives, and it IS the intake form ----
+// Phase-driven rather than a single form, per the reviewed flow. Every phase is
+// click-skippable so a booth operator is never trapped behind an animation.
+let openPhase='', openT=0;
+const OPEN_DUR={arctic:2800,house:1000,post:1200,walk:1400,letter:0,
+                line1:3000,line2:2600,leave:1600};
+function openProg(){
+  const d=OPEN_DUR[openPhase]||1;
+  return Math.max(0,Math.min(1,(Date.now()-openT)/d));
+}
+function L(){ return (CFG.intake||{}).letter||{}; }
+function fillTpl(s){
+  const v=ST.visitor||{}, lv=lastLetter;
+  return String(s||'')
+    .replace(/\{first_name\}/g,v.first_name||lv.first_name||'your friend')
+    .replace(/\{company\}/g,v.company||lv.company||'their team')
+    .replace(/\{email\}/g,v.email||lv.email||'')
+    .replace(/\{industry\}/g,lv.industry_name||'what you do');
+}
+let lastLetter={};
+function startOpening(){ openScene('house'); setPhase('arctic'); }
+function setPhase(p){
+  openPhase=p; openT=Date.now();
+  $('ov-arctic').classList.toggle('on',p==='arctic');
+  $('ov-letter').classList.toggle('on',p==='letter');
+  if(p==='arctic'){
+    $('a-arctic').textContent=L().arctic||'Somewhere in the Arctic...';
+    $('a-arcticsub').textContent=L().arctic_sub||'';
+  }
+  if(p==='letter') paintLetter();
+  if(p==='line1'||p==='line2'){
+    const say=$('h-say');
+    say.classList.add('on');
+    say.textContent=fillTpl(p==='line1'?L().line1:L().line2);
+  } else { $('h-say').classList.remove('on'); }
+  if(p==='map'){
+    closeScene();
+    // Re-assert after the post-intake state apply, which otherwise repaints the
+    // default "use WASD" line over the top of this one.
+    const line=fillTpl(L().map_line);
+    nudge(line,12000);
+    setTimeout(()=>nudge(line,10000),700);
+  }
+  // Timed phases advance themselves; 'letter' waits for the visitor to submit.
+  const d=OPEN_DUR[p];
+  if(d){ clearTimeout(setPhase._t); setPhase._t=setTimeout(nextPhase,d); }
+}
+function nextPhase(){
+  const order=['arctic','house','post','walk','letter','line1','line2','leave','map'];
+  const i=order.indexOf(openPhase);
+  if(i<0||openPhase==='map') return;
+  if(openPhase==='letter') return;            // blocked until the form is sent
+  setPhase(order[i+1]);
+}
+function openingActive(){ return openPhase && openPhase!=='map'; }
+// Click or any key skips the current beat, except while filling the letter in.
+document.addEventListener('click',e=>{
+  if(!openingActive() || openPhase==='letter') return;
+  if(e.target.closest('#ov-letter')) return;
+  // The click that STARTED a phase must not also skip it (the START button's
+  // click bubbles here with the first phase already set).
+  if(Date.now()-openT<400) return;
+  clearTimeout(setPhase._t); nextPhase();
+});
+
+function paintLetter(){
+  const l=L();
+  $('l-greet').textContent=l.greeting||'Hey CoCo,';
+  $('l-sign').textContent=(l.signoff||'Signed {email}').replace('{email}','');
+  $('l-go').textContent=l.button||'SEAL IT AND GO';
+  const s=$('l-industry');
+  if(!s.options.length){
+    // A visible placeholder rather than a blank underline: mid-sentence, an
+    // empty select read as a rendering fault. Empty value still means "guess".
+    s.innerHTML='<option value="" selected>(pick one, or let CoCo guess)</option>'+
+      Object.entries(CFG.industries).map(([k,v])=>`<option value="${k}">${esc(v.name)}</option>`).join('');
+  }
+  setTimeout(()=>$('l-first').focus(),260);
+}
+
+async function submitLetter(){
+  const first=$('l-first').value.trim(), company=$('l-company').value.trim(),
+        email=$('l-email').value.trim(), industry=$('l-industry').value||null;
+  const bad = !first || !email || !email.includes('@');
+  $('l-first').classList.toggle('invalid',!first);
+  $('l-email').classList.toggle('invalid',!email||!email.includes('@'));
+  $('l-hint').textContent = bad ? 'CoCo needs a name and an email to post it back.' : '';
+  if(bad) return;
+  const iname=(CFG.industries[industry]||{}).name||'';
+  lastLetter={first_name:first,company:company,email:email,industry_name:iname};
+  $('l-go').disabled=true;
+  try{
+    await post('/api/intake',{first_name:first,company:company,email:email,industry:industry});
+    $('ov-letter').classList.remove('on');
+    setPhase('line1');
+  }catch(e){ showErr('cannot reach server'); }
+  $('l-go').disabled=false;
+}
+$('l-go').addEventListener('click',submitLetter);
+$('ov-letter').addEventListener('keydown',e=>{ if(e.key==='Enter') submitLetter(); });
 
 // CoCo waking and taking the visitor's details are now one screen.
 function openWake(){
@@ -1071,7 +1275,9 @@ function onState(s){
   [...bar.children].forEach((d,i)=>{
     d.className = visited.has(ids[i])?'on':(nearId===ids[i]?'cur':''); });
 
-  const opening = $('ov-wake').classList.contains('on') || $('ov-title').classList.contains('on');
+  const opening = $('ov-wake').classList.contains('on') || $('ov-title').classList.contains('on')
+    || $('ov-arctic').classList.contains('on') || $('ov-letter').classList.contains('on')
+    || openingActive();
   $('banner').classList.toggle('on', !haveVisitor() && !opening);
   if(!haveVisitor() && !opening && firstLoad) openTitle();
   paintTray(s);
@@ -1088,6 +1294,10 @@ function maybeOpenAsk(s){
   const a=CFG.ask||{};
   if(!a.enabled || askShown || s.ask_used || !s.poc || s.thinking) return;
   if($('ov-bp').classList.contains('on')) return;
+  // Never steal the opening: a leftover POC in state was rendering this card on
+  // top of the title screen and swallowing the START click.
+  if(openingActive() || $('ov-title').classList.contains('on')
+     || $('ov-arctic').classList.contains('on') || $('ov-letter').classList.contains('on')) return;
   askShown=true;
   $('a-head').textContent=a.heading||'Ask CoCo one thing';
   $('a-hint').textContent=a.hint||'';

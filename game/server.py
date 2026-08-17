@@ -45,6 +45,7 @@ FEATURES_PATH = os.path.join(PLUGIN_ROOT, "skills", "loco4coco",
                              "references", "feature-docs.md")
 MARKET_PATH = os.path.join(PLUGIN_ROOT, "skills", "loco4coco",
                            "references", "marketplace-index.md")
+LISTING_URL = "https://app.snowflake.com/marketplace/listing/"
 
 _lock = threading.Lock()
 
@@ -638,7 +639,127 @@ def load_marketplace():
     return out
 
 
+_live_cache = {"at": 0, "rows": [], "error": ""}
+_live_lock = threading.Lock()
+
+
+def region_short(cfg):
+    return ((cfg.get("event") or {}).get("region") or "").strip().split(".")[-1]
+
+
+def refresh_live_listings(cfg, force=False):
+    """Pull the real Marketplace catalogue once, then serve every visitor from memory.
+
+    No private preview needed: SHOW AVAILABLE LISTINGS piped through RESULT_SCAN
+    is enough. Measured on PG_LONDON: 4327 listings, 799 available in
+    AWS_EU_WEST_2, 188 of those importable. One query per server start rather
+    than one per visitor, so the stall stays instant.
+
+    Note SHOW ... LIKE does NOT filter on title, which is why the title match is
+    done here in SQL and not in the SHOW.
+    """
+    mk = cfg.get("marketplace") or {}
+    ttl = float(mk.get("cache_minutes", 120)) * 60
+    with _live_lock:
+        if not force and _live_cache["rows"] and time.time() - _live_cache["at"] < ttl:
+            return _live_cache["rows"], ""
+        region = region_short(cfg)
+        if not region:
+            _live_cache["error"] = "event.region is not set"
+            return [], _live_cache["error"]
+        try:
+            cur = sf_conn(cfg).cursor()
+            try:
+                cur.execute("SHOW AVAILABLE LISTINGS")
+                cur.execute(
+                    'SELECT "title", "global_name", "profile", "regions" '
+                    "FROM TABLE(RESULT_SCAN(LAST_QUERY_ID(-1))) "
+                    'WHERE "regions" LIKE %s AND "is_ready_for_import" = \'true\'',
+                    (f"%{region}%",))
+                rows = [{"title": t, "global_name": g, "profile": p,
+                         "regions": r,
+                         # is_ready_for_import was already filtered to true
+                         "access": "Ready to import",
+                         "url": LISTING_URL + g}
+                        for (t, g, p, r) in cur.fetchall()]
+            finally:
+                cur.close()
+        except Exception as e:                                   # noqa: BLE001
+            _live_cache["error"] = str(e)[:200].replace("\n", " ")
+            return [], _live_cache["error"]
+        _live_cache.update({"at": time.time(), "rows": rows, "error": ""})
+        return rows, ""
+
+
+def listings_live(cfg, industry):
+    """Match the live catalogue against this industry's keyword avenues.
+
+    Pinned listings (verified by global_name) come first so a booth always leads
+    with something known-good, then keyword matches fill the rest.
+    """
+    rows, err = refresh_live_listings(cfg)
+    if not rows:
+        return [], err or "no live listings"
+    mk = cfg.get("marketplace") or {}
+    words = [w.lower() for w in
+             ((mk.get("industry_keywords") or {}).get(industry)
+              or (mk.get("industry_keywords") or {}).get("other") or [])]
+    pins = (mk.get("pinned") or {}).get(industry) or []
+    deny = [w.lower() for w in (mk.get("exclude") or [])]
+
+    def blocked(title):
+        t = (title or "").lower()
+        return any(d in t for d in deny)
+
+    by_gn = {r["global_name"]: r for r in rows}
+    names = mk.get("provider_names") or {}
+
+    def named(r):
+        # SHOW returns an opaque profile id, not a display name, so a known
+        # provider is named from config and anything else is labelled honestly.
+        r = dict(r)
+        r["provider"] = names.get(r.get("profile") or "", "Snowflake Marketplace")
+        return r
+
+    out, seen = [], set()
+    for gn in pins:
+        r = by_gn.get(gn)
+        if r:
+            out.append(named(r))
+            seen.add(gn)
+    for r in rows:
+        if r["global_name"] in seen:
+            continue
+        t = (r["title"] or "").lower()
+        if any(w in t for w in words) and not blocked(t):
+            out.append(named(r))
+            seen.add(r["global_name"])
+    return out, ""
+
+
 def listings_for(cfg, industry):
+    """Tier chain: live catalogue first, curated index as the booth-safe net.
+
+    Tier 1 live   - real, current, region-filtered, importable.
+    Tier 2 curated- marketplace-index.md, used when live is cold, fails, or is
+                    too thin to fill a stall. Offline safe and quality checked.
+    Tier 3 future - agentic discovery when that preview lands; same contract.
+    """
+    loc = ((cfg.get("locations") or {}).get("marketplace") or {})
+    mk = cfg.get("marketplace") or {}
+    want = int(mk.get("min_live_results", 3))
+    if (loc.get("discovery") or "manual") == "live":
+        live, err = listings_live(cfg, industry)
+        if len(live) >= want:
+            _live_cache["tier"] = "live"
+            return live[:max(want, 6)]
+        print(f"[loco4coco] live marketplace thin for {industry} "
+              f"({len(live)} hits{', ' + err if err else ''}), using curated index")
+    _live_cache["tier"] = "curated"
+    return listings_curated(cfg, industry)
+
+
+def listings_curated(cfg, industry):
     """Curated listings for an industry, filtered to the event region.
 
     The region filter is not cosmetic: handing a London visitor a us-east-1-only

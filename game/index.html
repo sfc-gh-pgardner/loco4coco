@@ -176,6 +176,9 @@
     color:var(--dim); border:1px solid var(--line); border-radius:5px; font:inherit;
     font-size:10px; letter-spacing:.12em; padding:4px 9px; cursor:pointer; }
   #newv:hover { color:var(--warm); border-color:var(--warm); }
+  /* Keep the history arrows clear of the fixed NEW VISITOR pill, which was
+     slicing the top of both glyphs. */
+  #hist { margin-right:104px; }
   /* blueprint reveal: the visitor must leave with the thing they built */
   #bp { text-align:left; }
   #bp h3 { font-size:12px; letter-spacing:.14em; text-transform:uppercase;
@@ -211,8 +214,10 @@
   #l-email { width:225px; } #l-industry { width:195px; }
   .card.letter .lin:focus { outline:none; border-bottom-color:#1C4E7A; background:rgba(28,78,122,.06); }
   .card.letter .lin.invalid { border-bottom-color:#B4442E; background:rgba(180,68,46,.08); }
-  .card.letter .lsel { min-width:170px; }
-  .card.letter .lsel option { color:#2A2418; }
+  .card.letter .lsel { min-width:170px; color-scheme:light; }
+  /* An option with no background inherits the OS popup colour: on a dark-mode
+     machine that paints dark text on dark. Pin both. */
+  .card.letter .lsel option { color:#2A2418; background-color:#FFFFFF; }
   .card.letter .lhint { font-size:12px; color:#8A3524; font-family:ui-monospace,monospace; }
   .card.letter .primary { font-family:ui-monospace,monospace; }
   /* CoCo's spoken beats over the house scene */
@@ -835,13 +840,19 @@ function nextPhase(){
 }
 function openingActive(){ return openPhase && openPhase!=='map'; }
 // Click or any key skips the current beat, except while filling the letter in.
-document.addEventListener('click',e=>{
+// Skip is deliberate, and scoped to the SCENE only. A document-wide click
+// listener meant any stray click ate a beat, so four incidental clicks skipped
+// the whole intro and visitor two onward never saw it.
+function skipBeat(){
   if(!openingActive() || openPhase==='letter') return;
-  if(e.target.closest('#ov-letter')) return;
-  // The click that STARTED a phase must not also skip it (the START button's
-  // click bubbles here with the first phase already set).
-  if(Date.now()-openT<400) return;
   clearTimeout(setPhase._t); nextPhase();
+}
+$('scene').addEventListener('click',skipBeat);
+document.addEventListener('keydown',e=>{
+  if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight'){
+    if(openPhase==='letter') return;      // Enter submits the letter instead
+    skipBeat();
+  }
 });
 
 function paintLetter(){
@@ -853,7 +864,7 @@ function paintLetter(){
   if(!s.options.length){
     // A visible placeholder rather than a blank underline: mid-sentence, an
     // empty select read as a rendering fault. Empty value still means "guess".
-    s.innerHTML='<option value="" selected>(pick one, or let CoCo guess)</option>'+
+    s.innerHTML='<option value="" selected>(or let CoCo guess)</option>'+
       Object.entries(CFG.industries).map(([k,v])=>`<option value="${k}">${esc(v.name)}</option>`).join('');
   }
   setTimeout(()=>$('l-first').focus(),260);
@@ -1283,22 +1294,16 @@ function onState(s){
   paintTray(s);
   paintBubble(s);
   paintScenePanel(s);
-  maybeOpenAsk(s);
 }
 
 // ---------------- ask CoCo one thing ----------------
-// Opens itself once, the moment the POC exists. A booth visitor should not have
-// to find a button, and SKIP keeps it optional so it cannot eat the 5 minutes.
-let askShown=false;
-function maybeOpenAsk(s){
+// NOT auto-opened. An overlay that appears on its own is wrong here: it fired
+// off the back of a leftover POC in state and covered the START button. The
+// endpoint and the card stay, to be wired in as a DELIBERATE step in the flow
+// (its own beat after the Workshop, or its own tile) rather than a popup.
+function openAsk(){
   const a=CFG.ask||{};
-  if(!a.enabled || askShown || s.ask_used || !s.poc || s.thinking) return;
-  if($('ov-bp').classList.contains('on')) return;
-  // Never steal the opening: a leftover POC in state was rendering this card on
-  // top of the title screen and swallowing the START click.
-  if(openingActive() || $('ov-title').classList.contains('on')
-     || $('ov-arctic').classList.contains('on') || $('ov-letter').classList.contains('on')) return;
-  askShown=true;
+  if(!a.enabled) return;
   $('a-head').textContent=a.heading||'Ask CoCo one thing';
   $('a-hint').textContent=a.hint||'';
   $('a-text').placeholder=a.placeholder||'';

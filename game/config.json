@@ -810,7 +810,7 @@
   },
   "ask": {
     "_comment": "The one unscripted stop. Always exec (never the fast path): this is where real CoCo earns it, because nothing is injected for it to reflect back, so it has a genuine reason to use its tools. Optional and skippable so it cannot blow the five minutes.",
-    "enabled": true,
+    "enabled": false,
     "transport": "exec",
     "tools": true,
     "max_turns": 4,
@@ -821,7 +821,8 @@
     "button": "ASK COCO",
     "skip": "SKIP THIS",
     "prompt": "The visitor is {first_name}, {industry}, at {company}. They hold: {held}. They are joining: {joined}. Their POC is \"{poc_name}\": {poc_summary}\n\nThey have asked you one question: \"{input}\"\n\nAnswer it in at most 4 short sentences, specific to THEIR situation and their data, not generic advice. Plain English, no bullet points, no headings, no em dashes. If you are not sure, say what you would check.",
-    "tool_hint": "Use your tools to check the Snowflake documentation before you answer, so the answer is grounded rather than guessed. One lookup is enough."
+    "tool_hint": "Use your tools to check the Snowflake documentation before you answer, so the answer is grounded rather than guessed. One lookup is enough.",
+    "_status": "Disabled: it must be a deliberate beat in the flow, not a popup. The /api/ask endpoint and the card are built and proven (real tool call, grounded answer) - re-enable when it has its own step or tile."
   },
   "marketplace": {
     "_comment": "Live discovery needs NO private preview: SHOW AVAILABLE LISTINGS piped through RESULT_SCAN gives 188 importable listings in AWS_EU_WEST_2 (of 4327 total, 799 region-available). Measured 2026-08-17. The curated index stays as the offline-safe fallback.",

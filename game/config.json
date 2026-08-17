@@ -11,7 +11,7 @@
     "language": "en",
     "region": "AWS_EU_WEST_2",
     "_region_comment": "Marketplace listings are filtered to this region. Offering a visitor a share they cannot attach wastes the five minutes we just spent with them.",
-    "title": "LOCO 4 CoCo",
+    "title": "Loco for CoCo",
     "subtitle": "Five minutes to your next data product",
     "time_limit_seconds": 300
   },
@@ -86,10 +86,11 @@
         "Could you help us out?"
       ],
       "signoff": "Signed {email}",
-      "button": "SEAL IT AND GO",
+      "button": "THAT'S BETTER",
       "line1": "Not sure why {first_name} always signs off with their email like that...",
       "line2": "Anyway, let's go and get this show on the road.",
-      "map_line": "First stop is my Data Library. That's where I keep all the unstructured, semi-structured and structured data that would be useful for {first_name} and {company}."
+      "map_line": "First stop is my Data Library. That's where I keep all the unstructured, semi-structured and structured data that would be useful for {first_name} and {company}.",
+      "bubble": "Wow, a letter from my friend! Shame I can't make out some of these words...\n(Please fill this in with your details)"
     }
   },
   "unlock_order": [

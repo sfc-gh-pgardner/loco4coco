@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Loco 4 CoCo</title>
+<title>Loco for CoCo</title>
 <style>
   :root { --panel:#101C27; --edge:#29B5E8; --text:#EAF6FD; --warm:#E8863C;
           --dim:#7FA8C2; --line:#1E3446; }
@@ -191,10 +191,21 @@
   #bp a { color:var(--edge); }
   /* ---------- the letter: beige paper, dark ink, pulls up from the envelope ---------- */
   #ov-letter { align-items:flex-end; }
+  /* CoCo reacts to the letter he has just been handed, above the paper itself. */
+  .lwrap { display:flex; flex-direction:column; align-items:center;
+    width:min(600px,94vw); margin:0 0 4vh; }
+  .lbubble { position:relative; background:#16283A; border:3px solid var(--edge);
+    border-radius:14px; padding:10px 14px; margin-bottom:16px;
+    color:#EAF6FD; font-size:14px; line-height:1.5; text-align:center;
+    font-family:ui-monospace,monospace; box-shadow:0 0 26px rgba(41,181,232,.16); }
+  .lbubble:after { content:''; position:absolute; bottom:-10px; left:50%;
+    margin-left:-9px; width:0; height:0; border-style:solid;
+    border-width:11px 9px 0 9px;
+    border-color:var(--edge) transparent transparent transparent; }
   .card.letter {
     background:#EFE6D2; border:2px solid #B9A98A; border-radius:4px;
-    color:#2A2418; width:min(600px,94vw); max-height:76vh; overflow-y:auto;
-    box-shadow:0 -8px 28px rgba(0,0,0,.55); margin:0 0 4vh;
+    color:#2A2418; width:100%; max-height:66vh; overflow-y:auto;
+    box-shadow:0 -8px 28px rgba(0,0,0,.55); margin:0;
     padding:22px 26px 26px;
     transform:translateY(110%); transition:transform .85s cubic-bezier(.16,.84,.28,1);
     font-family:Georgia,'Iowan Old Style',serif;
@@ -291,9 +302,11 @@
     </div></div>
 
     <!-- Opening beat 2: the letter pulls up out of the envelope AND is the intake -->
-    <div class="ov" id="ov-letter"><div class="card letter">
+    <div class="ov" id="ov-letter"><div class="lwrap">
+      <div class="lbubble" id="l-bubble"></div>
+      <div class="card letter">
       <div id="l-greet" class="lgreet"></div>
-      <p class="lp">It's your friend <input type="text" id="l-first" class="lin" placeholder="first name" autocomplete="off" spellcheck="false">!</p>
+      <p class="lp">It's your friend <input type="text" id="l-first" class="lin" placeholder="your name" autocomplete="off" spellcheck="false">!</p>
       <p class="lp">I've heard you and the Cortex Crew have been cooking up some amazing products recently.</p>
       <p class="lp">Me and my team at <input type="text" id="l-company" class="lin" placeholder="company name" autocomplete="off" spellcheck="false"> wanted to learn more.</p>
       <p class="lp">We're particularly interested in <select id="l-industry" class="lin lsel"></select> and wanted to understand what an MVP/POC would look like for this on Snowflake.</p>
@@ -301,8 +314,8 @@
       <p class="lp" style="margin-top:14px"><span id="l-sign">Signed </span><input type="email" id="l-email" class="lin" placeholder="your email" autocomplete="off" spellcheck="false"></p>
       <div class="go" style="margin-top:14px;justify-content:space-between;align-items:center">
         <span id="l-hint" class="lhint"></span>
-        <button class="primary" id="l-go">SEAL IT AND GO</button></div>
-    </div></div>
+        <button class="primary" id="l-go">THAT'S BETTER</button></div>
+    </div></div></div>
 
     <!-- CoCo speaking over the house scene, between the letter and the map -->
     <div id="h-say" class="hsay"></div>
@@ -412,8 +425,17 @@ const keys={};
 let reopenLock=0;
 const blocking = () => panelOpen || $('ov-title').classList.contains('on')
   || $('ov-wake').classList.contains('on')
+  || $('ov-arctic').classList.contains('on')
+  || $('ov-letter').classList.contains('on')
+  || $('ov-ask').classList.contains('on')
   || $('ov-bp').classList.contains('on');
 addEventListener('keydown',e=>{
+  // Movement swallows w/a/s/d with preventDefault, so a focused field lost those
+  // letters entirely: typing "paddy" produced "py". Any editable target gets the
+  // key first, whatever else is going on. Escape still falls through to close.
+  const t=e.target, tag=((t && t.tagName) || '').toLowerCase();
+  if(e.key!=='Escape' && (tag==='input' || tag==='select' || tag==='textarea'
+      || (t && t.isContentEditable))) return;
   if(blocking()){
     if(e.key==='Escape'){ if(panelOpen) closePanel(); else closeBp(); }
     return;
@@ -851,15 +873,18 @@ $('scene').addEventListener('click',skipBeat);
 document.addEventListener('keydown',e=>{
   if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight'){
     if(openPhase==='letter') return;      // Enter submits the letter instead
+    const t=e.target, tag=((t && t.tagName) || '').toLowerCase();
+    if(tag==='input'||tag==='select'||tag==='textarea') return;
     skipBeat();
   }
 });
 
 function paintLetter(){
   const l=L();
+  $('l-bubble').textContent=l.bubble||"Wow, a letter from my friend!";
   $('l-greet').textContent=l.greeting||'Hey CoCo,';
   $('l-sign').textContent=(l.signoff||'Signed {email}').replace('{email}','');
-  $('l-go').textContent=l.button||'SEAL IT AND GO';
+  $('l-go').textContent=l.button||"THAT'S BETTER";
   const s=$('l-industry');
   if(!s.options.length){
     // A visible placeholder rather than a blank underline: mid-sentence, an
@@ -889,7 +914,10 @@ async function submitLetter(){
   $('l-go').disabled=false;
 }
 $('l-go').addEventListener('click',submitLetter);
-$('ov-letter').addEventListener('keydown',e=>{ if(e.key==='Enter') submitLetter(); });
+$('ov-letter').addEventListener('keydown',e=>{
+  e.stopPropagation();                       // belt and braces over the global guard
+  if(e.key==='Enter') submitLetter();
+});
 
 // CoCo waking and taking the visitor's details are now one screen.
 function openWake(){

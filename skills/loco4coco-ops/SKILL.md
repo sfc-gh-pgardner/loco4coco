@@ -23,6 +23,26 @@ Each check must **prove** the capability, not merely observe that something exis
 | 6 | Guides index valid | `python3 scripts/build_guides_index.py` — expect `0 failing, 0 redirecting` | Fix slugs before any visitor sees one |
 | 7 | Docs lookup | One `snowflake_product_docs` query | Venue network. Degrade to naming features without links |
 | 8 | Write path | Insert a row with an apostrophe and an accent, read it back, delete it | Escaping regression |
+| 9 | **Delivery, automated** | `curl -s http://127.0.0.1:4747/api/delivery/check \| python3 -m json.tool` — expect `"ok": true` | See below. This one check covers checks 1-2 of delivery and is the fastest way to clear a stand |
+
+### Check 9 in detail: the automated delivery preflight
+
+One call proves every leg of the handover on that laptop, in order: `python-docx`
+importable, stage configured, stage reachable, `outbox/` writable, and a real file
+staged and **presigned end to end**. Run it per stand.
+
+```bash
+curl -s http://127.0.0.1:4747/api/delivery/check | python3 -m json.tool
+```
+
+`"ok": true` means the QR handover works, which means **no visitor can leave with
+nothing** even if email never works all day. Treat that as the bar for opening a
+stand, and check 5 (real Gmail arrival) as the upgrade rather than the gate.
+
+If `presign_works` fails, the stand is not ready: check `snowflake.connection_name`
+in `game/config.json` and that the deploy actually created
+`@LOCO4COCO.BOOTH.BLUEPRINTS`. If `word_library` fails, `pip3 install python-docx`.
+If the QR renders as a plain link only, `pip3 install segno`.
 
 ### Check 5 in detail
 
@@ -156,7 +176,12 @@ The postbox is the longest wait and it lands last. Input tokens are ~53k per
 turn but ~48k of that is cache reads, so the token cost is low; the problem is
 latency, not spend.
 
-## Draining the outbox (this is how the blueprint actually reaches the visitor)
+## Draining the outbox (the email route — no longer the only one)
+
+Since the confirmation card now shows a QR code to the presigned document, a visitor
+already has their blueprint before you drain anything. The drain is what turns that
+into an email they can find again next week. It is important, not load-bearing.
+
 
 The game does not send email. It cannot, and the reasons are settled rather than
 open questions:

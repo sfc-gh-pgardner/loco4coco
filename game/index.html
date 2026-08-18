@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Loco for CoCo</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/favicon.svg">
 <style>
   :root { --panel:#101C27; --edge:#29B5E8; --text:#EAF6FD; --warm:#E8863C;
           --dim:#7FA8C2; --line:#1E3446; }
@@ -14,7 +16,9 @@
     gap:7px; padding:8px 10px; }
   /* The bubble/tray/hud must render at their natural height and never be squeezed
      by the column flex - shrinking them spilled the bubble's text over the tray.
-     Only the stage flexes; fitCanvas re-runs when the bubble grows. */
+     The chrome is a FIXED budget: it must not change height mid-turn, or the
+     board is re-fitted under the visitor and the whole page appears to slide
+     downwards as CoCo's reply lands. */
   #bubble, #tray, #hud, #stagebar { flex:0 0 auto; }
   .rail { width:100%; max-width:1056px; }
 
@@ -33,9 +37,11 @@
   /* Long CoCo replies were clipped by a rigid box. The message now wraps and,
      only if it is genuinely long, scrolls inside a bounded bubble instead of
      pushing the canvas and tray off-screen. */
+  /* min-height reserves the space a three-line reply needs, so short and long
+     messages occupy the same box and the chrome budget stays constant. */
   #bubble .msg { margin-top:4px; font-size:15px; line-height:1.5;
     white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
-    max-height:24vh; overflow-y:auto; }
+    min-height:68px; max-height:18vh; overflow-y:auto; }
   #hist { display:flex; gap:5px; align-items:center; }
   #hist button { background:#0E1F2E; color:var(--dim); border:1px solid var(--line);
     border-radius:4px; font:inherit; font-size:11px; padding:1px 7px; cursor:pointer; }
@@ -98,6 +104,30 @@
   .say.on { display:block; }
   .say b { color:var(--warm); font-size:10px; letter-spacing:.16em;
     text-transform:uppercase; display:block; margin-bottom:3px; }
+
+  /* ---------- the previous location, collapsed ---------- */
+  /* Four stops is enough to lose the thread. Rather than repeat CoCo in the
+     bubble AND the panel, the last exchange is available here on demand. */
+  .prev { display:none; margin:2px 0 10px; border:1px solid var(--line);
+    border-radius:5px; background:#0A141C; }
+  .prev.on { display:block; }
+  .prevhead { padding:5px 10px; cursor:pointer; color:var(--dim);
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    display:flex; justify-content:space-between; gap:8px; }
+  .prevhead:hover { color:var(--edge); }
+  .prevbody { display:none; padding:0 10px 8px; font-size:13px; line-height:1.45;
+    max-height:15vh; overflow-y:auto; border-top:1px solid var(--line); }
+  .prevbody.on { display:block; }
+  .prevbody .lab { color:var(--warm); font-size:10px; letter-spacing:.12em;
+    text-transform:uppercase; display:block; margin:7px 0 2px; }
+  .prevbody .txt { color:#8FB4CB; white-space:pre-wrap; word-break:break-word; }
+
+  /* The action block docks at the foot of the scrolling card. */
+  #ov-loc .card { display:flex; flex-direction:column; overflow:hidden; }
+  .cscroll { flex:1 1 auto; overflow-y:auto; min-height:0; }
+  .dock { flex:0 0 auto; background:var(--panel);
+    padding-top:8px; margin-top:6px; border-top:1px solid var(--line); }
+  .ov.pov .dock { background:transparent; }
   /* sparkly / shimmer text for the phrases CoCo is proudest of */
   .spark { background:linear-gradient(90deg,#29B5E8 0%,#EAF6FD 25%,#E8863C 50%,#EAF6FD 75%,#29B5E8 100%);
     background-size:200% auto; -webkit-background-clip:text; background-clip:text;
@@ -145,6 +175,20 @@
   input.invalid { border-color:#FF7A7A !important; }
   #i-hint.err { color:#FF7A7A; }
 
+  /* ---------- the take-it-with-you handover ---------- */
+  #bp-hand { display:none; gap:14px; margin-top:14px; padding:12px;
+    align-items:center; background:#0A141C; border:2px solid var(--edge);
+    border-radius:8px; }
+  #bp-hand.on { display:flex; }
+  #bp-qr { background:#FFF; border-radius:4px; flex:0 0 auto; display:block; }
+  #bp-hand .handh { color:var(--warm); font-size:11px; letter-spacing:.14em;
+    text-transform:uppercase; margin-bottom:4px; }
+  #bp-hand .handp { font-size:13px; line-height:1.5; color:#9FC2D6; }
+  #bp-hand .handlink { display:inline-block; margin-top:7px; font-size:11px;
+    color:var(--edge); word-break:break-all; text-decoration:none;
+    border-bottom:1px dotted var(--edge); }
+  #bp-hand .handlink:hover { color:var(--text); }
+
   /* ---------- reasoning tray: replaces "CoCo is thinking" ---------- */
   #tray { background:#0C1720; border:2px solid var(--line); border-radius:6px;
     font-size:11px; overflow:hidden; }
@@ -190,11 +234,15 @@
   #bp .score { font-size:15px; color:var(--edge); }
   #bp a { color:var(--edge); }
   /* ---------- the letter: beige paper, dark ink, pulls up from the envelope ---------- */
-  #ov-letter { align-items:flex-end; }
+  /* Centred, not bottom-anchored: flush to the floor the letter looked like
+     a dropped toolbar and the bubble above it had nowhere to sit. */
+  #ov-letter { align-items:center; }
   /* CoCo reacts to the letter he has just been handed, above the paper itself. */
   .lwrap { display:flex; flex-direction:column; align-items:center;
-    width:min(600px,94vw); margin:0 0 4vh; }
+    width:min(600px,94vw); margin:2vh 0 6vh; perspective:900px; }
   .lbubble { position:relative; background:#16283A; border:3px solid var(--edge);
+    opacity:0; transform:translateY(8px); transition:opacity .5s ease .95s,
+    transform .5s ease .95s;
     border-radius:14px; padding:10px 14px; margin-bottom:16px;
     color:#EAF6FD; font-size:14px; line-height:1.5; text-align:center;
     font-family:ui-monospace,monospace; box-shadow:0 0 26px rgba(41,181,232,.16); }
@@ -207,10 +255,31 @@
     color:#2A2418; width:100%; max-height:66vh; overflow-y:auto;
     box-shadow:0 -8px 28px rgba(0,0,0,.55); margin:0;
     padding:22px 26px 26px;
-    transform:translateY(110%); transition:transform .85s cubic-bezier(.16,.84,.28,1);
+    transform:translateY(118%) rotateX(26deg) scale(.94);
+    transform-origin:50% 100%;
+    transition:transform .7s cubic-bezier(.4,0,.7,.2);
     font-family:Georgia,'Iowan Old Style',serif;
   }
-  #ov-letter.on .card.letter { transform:translateY(0); }
+  #ov-letter.on .lbubble { opacity:1; transform:translateY(0); }
+  /* Two-stage: the sheet is pulled out of the envelope (fast, tilted) then
+     settles flat with a small overshoot, rather than one flat slide. */
+  #ov-letter.on .card.letter {
+    transform:translateY(0) rotateX(0deg) scale(1);
+    transition:transform 1.05s cubic-bezier(.13,1.02,.22,1.0),
+               box-shadow .9s ease .2s;
+    box-shadow:0 22px 60px rgba(0,0,0,.62);
+  }
+  /* Lead the eye to what actually needs filling in. */
+  #ov-letter.on .card.letter .lin { animation:lglow 1.5s ease-out both; }
+  #ov-letter.on .card.letter #l-first    { animation-delay:1.15s; }
+  #ov-letter.on .card.letter #l-company  { animation-delay:1.40s; }
+  #ov-letter.on .card.letter #l-industry { animation-delay:1.65s; }
+  #ov-letter.on .card.letter #l-email    { animation-delay:1.90s; }
+  @keyframes lglow {
+    0%   { background:rgba(28,78,122,0);   border-bottom-color:#9C8C6E; }
+    35%  { background:rgba(232,134,60,.22); border-bottom-color:#B4442E; }
+    100% { background:rgba(28,78,122,0);   border-bottom-color:#9C8C6E; }
+  }
   .card.letter .lgreet { font-size:19px; margin-bottom:12px; }
   .card.letter .lp { font-size:15px; line-height:1.9; margin:0 0 7px; }
   .card.letter .lin {
@@ -341,20 +410,35 @@
 
     <!-- per-location panel -->
     <div class="ov" id="ov-loc"><div class="card">
+      <!-- Scroll region + fixed footer. A sticky footer inside one scroll box
+           painted its opaque band over the middle of the option list, hiding a
+           choice the visitor never knew was there. -->
+      <div class="cscroll" id="c-scroll">
       <h2 id="c-loc"></h2>
       <div class="sub" id="c-rep"></div>
+      <!-- Where you have just been, collapsed. The visitor loses the thread
+           between stops, and this is cheaper than repeating CoCo everywhere. -->
+      <div id="c-prev" class="prev">
+        <div class="prevhead" id="c-prevhead"></div>
+        <div class="prevbody" id="c-prevbody"></div>
+      </div>
       <div class="say" id="c-say"></div>
       <div class="q" id="c-head"></div>
       <div class="hint" id="c-hint"></div>
       <div id="c-recap" style="display:none"></div>
       <div class="opts" id="c-opts"></div>
-      <div class="fld" id="c-otherwrap" style="margin-top:8px">
-        <label id="c-otherlab"></label>
-        <input type="text" id="c-other" autocomplete="off" spellcheck="false"></div>
-      <div class="fld" id="c-composewrap" style="display:none">
-        <input type="text" id="c-compose" autocomplete="off" spellcheck="false"></div>
-      <div class="go"><button class="primary" id="c-go">CONFIRM</button>
-        <span class="keys">ESC to step away</span></div>
+      </div><!-- /cscroll -->
+      <!-- Docked last: what you type is the action, so it sits under the
+           conversation and stays reachable however long CoCo's reply is. -->
+      <div class="dock" id="c-dock">
+        <div class="fld" id="c-otherwrap" style="margin-top:8px">
+          <label id="c-otherlab"></label>
+          <input type="text" id="c-other" autocomplete="off" spellcheck="false"></div>
+        <div class="fld" id="c-composewrap" style="display:none">
+          <input type="text" id="c-compose" autocomplete="off" spellcheck="false"></div>
+        <div class="go"><button class="primary" id="c-go">CONFIRM</button>
+          <span class="keys">ESC to step away</span></div>
+      </div>
     </div></div>
 
     <div id="banner"><h1 id="b-title">LOCO 4 CoCo</h1><p id="b-sub">PRESS START</p></div>
@@ -369,8 +453,20 @@
     <h2 id="bp-h2">Ready to post</h2>
     <div class="sub" id="bp-sub"></div>
     <div id="bp"></div>
+    <!-- Tier 2 handover. The email depends on an operator draining the outbox,
+         so the visitor must be able to take the document away from the stand
+         itself. This block is the thing that cannot fail. -->
+    <div id="bp-hand">
+      <img id="bp-qr" alt="Scan to download your blueprint" width="150" height="150">
+      <div class="handtxt">
+        <div class="handh">Take it with you now</div>
+        <div class="handp" id="bp-handp">Scan this with your phone camera to
+          download your Word blueprint. The link works for seven days.</div>
+        <a id="bp-link" class="handlink" target="_blank" rel="noopener"></a>
+      </div>
+    </div>
     <div class="go"><button class="primary" id="bp-send">SEND MY POC</button>
-      <span class="keys" id="bp-keys">CoCo drafts it to your inbox</span></div>
+      <span class="keys" id="bp-keys">Builds your document and the email</span></div>
   </div></div>
 
 </div>
@@ -655,47 +751,137 @@ function drawScene(kind){
   const g=sceneCtx, w=sceneW, h=sceneH, u=S, th=CFG.theme;
   if(kind==='house'){
     const p=openProg();
+    const F=Math.sin(tick/7)*0.5+0.5;                 // fire flicker 0..1
+    const FL=h*0.66;                                  // floor line
+    // ---- walls: ice blocks with a lit top edge
     g.fillStyle='#0A1622'; g.fillRect(0,0,w,h);
-    // back wall of ice blocks, floor, and the door CoCo will leave through
-    for(let by=0; by<h*0.62; by+=h*0.105){
+    for(let by=0; by<FL; by+=h*0.105){
       for(let bx=0; bx<w; bx+=w*0.13){
-        g.fillStyle=((bx/(w*0.13)|0)+(by/(h*0.105)|0))%2?'#20364A':'#26415A';
+        const alt=((bx/(w*0.13)|0)+(by/(h*0.105)|0))%2;
+        g.fillStyle=alt?'#20364A':'#26415A';
         g.fillRect(bx+2,by+2,w*0.13-4,h*0.105-4);
+        g.fillStyle='rgba(255,255,255,.04)';
+        g.fillRect(bx+2,by+2,w*0.13-4,3);
       }
     }
-    g.fillStyle='#152A3C'; g.fillRect(0,h*0.62,w,h*0.38);
-    const dx=w*0.10, dw=w*0.16;
-    g.fillStyle='#0E1E2C'; g.fillRect(dx,h*0.22,dw,h*0.40);
-    g.fillStyle='#2B4A61'; g.fillRect(dx,h*0.22,dw,6);
-    g.fillStyle=th.accent_warm; g.fillRect(dx+dw*0.18,h*0.40,dw*0.64,7);  // slot
-    // the letter: through the slot, then on the floor, then in CoCo's flipper
+    // ---- floor, boards fanning toward the viewer
+    g.fillStyle='#152A3C'; g.fillRect(0,FL,w,h-FL);
+    for(let i=0;i<9;i++){
+      g.fillStyle=i%2?'rgba(255,255,255,.03)':'rgba(0,0,0,.10)';
+      const x0=w*(i/9), x1=w*0.5+(x0-w*0.5)*1.9;
+      g.beginPath(); g.moveTo(x0,FL); g.lineTo(x1,h); g.lineTo(x1+w*0.06,h);
+      g.lineTo(x0+w*0.055,FL); g.closePath(); g.fill();
+    }
+    g.fillStyle='#0E1E2C'; g.fillRect(0,FL,w,4);
+    // ---- window: night sky, moon, snow drifting past
+    const wx=w*0.60, wy=h*0.09, ww=w*0.24, wh=h*0.26;
+    g.fillStyle='#08121C'; g.fillRect(wx-5,wy-5,ww+10,wh+10);
+    g.fillStyle='#0D2438'; g.fillRect(wx,wy,ww,wh);
+    g.fillStyle='#EAF6FD'; g.fillRect(wx+ww*0.66,wy+wh*0.18,13,13);
+    for(let i=0;i<16;i++){
+      g.fillStyle='rgba(234,246,253,.55)';
+      g.fillRect(wx+((i*37+tick*0.6)%ww),wy+((i*53+tick*1.4)%wh),S,S);
+    }
+    g.fillStyle='#2B4A61';
+    g.fillRect(wx+ww/2-2,wy,4,wh); g.fillRect(wx,wy+wh/2-2,ww,4);
+    g.strokeStyle='#3A5F7A'; g.lineWidth=4; g.strokeRect(wx,wy,ww,wh);
+    // ---- fireplace: the room's light source
+    const fx=w*0.80, fy=h*0.34, fw=w*0.15, fh=FL-fy;
+    g.fillStyle='#243747'; g.fillRect(fx-8,fy-10,fw+16,fh+10);
+    g.fillStyle='#08111A'; g.fillRect(fx,fy,fw,fh);
+    g.fillStyle='#3A2A1C'; g.fillRect(fx+6,fy+fh-16,fw-12,10);
+    g.fillStyle='#5A3D22'; g.fillRect(fx+10,fy+fh-22,fw-20,8);
+    for(let i=0;i<5;i++){
+      const bh=(14+i*4)*(0.7+F*0.5), bx=fx+fw*0.18+i*(fw*0.16);
+      g.fillStyle=i%2?'#E8863C':'#F2C14E';
+      g.fillRect(bx,fy+fh-22-bh,fw*0.13,bh);
+    }
+    const fg=g.createRadialGradient(fx+fw/2,fy+fh*0.7,10,fx+fw/2,fy+fh*0.7,w*0.52);
+    fg.addColorStop(0,'rgba(232,134,60,'+(0.30+F*0.12)+')');
+    fg.addColorStop(1,'rgba(232,134,60,0)');
+    g.fillStyle=fg; g.fillRect(0,0,w,h);
+    // ---- shelf of jars above the hearth
+    g.fillStyle='#5A3D22'; g.fillRect(w*0.58,h*0.42,w*0.16,6);
+    ['#4F9E6A','#3E7DA8','#C9A13B'].forEach((c,i)=>{ g.fillStyle=c;
+      g.fillRect(w*0.59+i*(w*0.05),h*0.42-15,w*0.035,15); });
+    // ---- rug
+    g.fillStyle='#7A3B32'; g.beginPath();
+    g.ellipse(w*0.62,h*0.80,w*0.20,h*0.070,0,0,7); g.fill();
+    g.fillStyle='#9C4C40'; g.beginPath();
+    g.ellipse(w*0.62,h*0.80,w*0.13,h*0.044,0,0,7); g.fill();
+    // ---- the door: it swings open on 'leave' and CoCo walks out through it
+    const dx=w*0.08, dw=w*0.17, dy=h*0.22, dh=FL-dy;
+    g.fillStyle='#0A1826'; g.fillRect(dx-7,dy-7,dw+14,dh+7);
+    g.fillStyle='#2B4A61'; g.fillRect(dx-7,dy-7,dw+14,7);
+    const swing = openPhase==='leave' ? Math.min(1,p*1.6) : 0;
+    if(swing>0){
+      g.fillStyle='#0A1622'; g.fillRect(dx,dy,dw,dh);
+      const sg=g.createLinearGradient(dx,dy,dx+dw,dy+dh);
+      sg.addColorStop(0,'rgba(159,194,214,'+(0.30*swing)+')');
+      sg.addColorStop(1,'rgba(159,194,214,0)');
+      g.fillStyle=sg; g.fillRect(dx,dy,dw*1.5,dh);
+      for(let i=0;i<10;i++){
+        g.fillStyle='rgba(255,255,255,'+(0.5*swing)+')';
+        g.fillRect(dx+((i*29+tick*1.1)%dw),dy+((i*41+tick*2.2)%dh),S,S);
+      }
+    }
+    const pw=dw*(1-swing*0.82);
+    g.fillStyle='#123049'; g.fillRect(dx,dy,pw,dh);
+    g.fillStyle='#1B4260';
+    g.fillRect(dx+3,dy+6,Math.max(0,pw-6),dh*0.42);
+    g.fillRect(dx+3,dy+dh*0.52,Math.max(0,pw-6),dh*0.42);
+    if(swing<0.5){
+      g.fillStyle=th.accent_warm; g.fillRect(dx+pw*0.18,dy+dh*0.42,pw*0.64,7);
+      g.fillStyle='#9FC2D6'; g.fillRect(dx+pw-14,dy+dh*0.55,7,7);
+    }
+    // ---- the letter: through the slot, to the floor, then in his flipper
     const lw=w*0.11, lh=h*0.075;
     let lx=dx+dw*0.16, ly=h*0.40;
-    if(openPhase==='post'){ ly=h*0.40+(h*0.62-h*0.40-lh)*p; }
+    if(openPhase==='post'){ ly=h*0.40+(FL-h*0.40-lh)*p; }
     else if(openPhase==='house'){ ly=-lh; }
-    else { ly=h*0.62-lh; }
-    // CoCo walks from the middle of the room to the letter, then out the door
-    let cxF=0.60;
-    if(openPhase==='walk') cxF=0.60-(0.60-0.30)*p;
-    else if(openPhase==='letter'||openPhase==='line1'||openPhase==='line2') cxF=0.30;
-    else if(openPhase==='leave') cxF=0.30-(0.30+0.18)*p;
-    const cx=w*cxF, cy=h*0.58;
-    const holding = openPhase==='letter'||openPhase==='line1'||openPhase==='line2'||openPhase==='leave';
-    if(openPhase!=='house'&&openPhase!=='post'&&!holding){ /* letter still on floor */ }
-    g.fillStyle=CFG.penguin.body; g.fillRect(cx-26,cy-52,52,76);
-    g.fillStyle=CFG.penguin.belly; g.fillRect(cx-16,cy-34,32,52);
-    g.fillStyle=CFG.penguin.eye; g.fillRect(cx-12,cy-42,6,6); g.fillRect(cx+6,cy-42,6,6);
-    g.fillStyle=CFG.penguin.beak; g.fillRect(cx-5,cy-32,10,7);
-    g.fillStyle=CFG.penguin.foot||'#E8863C';
-    const step=(openPhase==='walk'||openPhase==='leave')&&(Math.floor(p*8)%2===0);
-    g.fillRect(cx-20,cy+24,14,7); g.fillRect(cx+6,cy+24-(step?3:0),14,7);
-    // beige envelope, drawn last when held so it reads as picked up
-    const ex = holding ? cx+22 : lx, ey = holding ? cy-18 : ly;
-    if(openPhase!=='house'){
-      g.fillStyle='#EADFC6'; g.fillRect(ex,ey,lw,lh);
-      g.strokeStyle='#B9A98A'; g.lineWidth=2; g.strokeRect(ex,ey,lw,lh);
-      g.beginPath(); g.moveTo(ex,ey); g.lineTo(ex+lw/2,ey+lh*0.6); g.lineTo(ex+lw,ey); g.stroke();
+    else { ly=FL-lh; }
+    // ---- CoCo crosses to the letter, then steps INTO the doorway and out
+    let cxF=0.62, scale=1, fade=1;
+    if(openPhase==='walk') cxF=0.62-(0.62-0.34)*p;
+    else if(openPhase==='letter'||openPhase==='line1'||openPhase==='line2') cxF=0.34;
+    else if(openPhase==='leave'){
+      const doorF=(dx+dw/2)/w;
+      cxF=0.34+(doorF-0.34)*Math.min(1,p*1.35);
+      scale=1-0.45*Math.max(0,p-0.55)/0.45;
+      fade=1-Math.max(0,p-0.72)/0.28;
     }
+    const cx=w*cxF, cy=FL-h*0.08;
+    const holding = openPhase==='letter'||openPhase==='line1'
+                 || openPhase==='line2'||openPhase==='leave';
+    g.save(); g.globalAlpha=Math.max(0,Math.min(1,fade));
+    const bw2=52*scale, bh2=76*scale;
+    g.fillStyle='rgba(0,0,0,.28)';
+    g.beginPath(); g.ellipse(cx,cy+26*scale,bw2*0.52,7*scale,0,0,7); g.fill();
+    g.fillStyle=CFG.penguin.body; g.fillRect(cx-bw2/2,cy-bh2*0.68,bw2,bh2);
+    g.fillStyle=CFG.penguin.belly;
+    g.fillRect(cx-bw2*0.31,cy-bh2*0.45,bw2*0.62,bh2*0.68);
+    g.fillStyle=CFG.penguin.eye;
+    g.fillRect(cx-bw2*0.23,cy-bh2*0.55,6*scale,6*scale);
+    g.fillRect(cx+bw2*0.11,cy-bh2*0.55,6*scale,6*scale);
+    g.fillStyle=CFG.penguin.beak;
+    g.fillRect(cx-5*scale,cy-bh2*0.42,10*scale,7*scale);
+    g.fillStyle=CFG.penguin.foot||'#E8863C';
+    const step=(openPhase==='walk'||openPhase==='leave')&&(Math.floor(p*9)%2===0);
+    g.fillRect(cx-bw2*0.38,cy+22*scale,14*scale,7*scale);
+    g.fillRect(cx+bw2*0.11,cy+22*scale-(step?3:0),14*scale,7*scale);
+    const ex = holding ? cx+bw2*0.42 : lx, ey = holding ? cy-bh2*0.28 : ly;
+    if(openPhase!=='house'){
+      const ew=holding?lw*scale:lw, eh=holding?lh*scale:lh;
+      g.fillStyle='#EADFC6'; g.fillRect(ex,ey,ew,eh);
+      g.strokeStyle='#B9A98A'; g.lineWidth=2; g.strokeRect(ex,ey,ew,eh);
+      g.beginPath(); g.moveTo(ex,ey); g.lineTo(ex+ew/2,ey+eh*0.6);
+      g.lineTo(ex+ew,ey); g.stroke();
+    }
+    g.restore();
+    // ---- vignette to seat the room
+    const vg=g.createRadialGradient(w/2,h*0.55,h*0.30,w/2,h*0.55,h*0.95);
+    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.55)');
+    g.fillStyle=vg; g.fillRect(0,0,w,h);
     return;
   }
   if(kind==='wake'){
@@ -733,46 +919,263 @@ function drawScene(kind){
   }
   if(kind==='library'){
     g.fillStyle='#1B1526'; g.fillRect(0,0,w,h);                        // warm dark wall
-    // bookshelves across the top third (visible above the desk panel)
-    for(let row=0;row<3;row++){
-      const y=h*0.04+row*h*0.115;
-      g.fillStyle='#3A2C4E'; g.fillRect(w*0.05,y,w*0.90,h*0.095);      // shelf box
-      shelfBooks(g,w*0.06,y+h*0.095,w*0.88,u,700+row);
-      g.fillStyle='#241a33'; g.fillRect(w*0.05,y+h*0.095,w*0.90,3);    // shelf lip
+    const DK=h*0.48;                                                   // desk line
+    // ---- floorboards in perspective below the shelves
+    g.fillStyle='#2A1F38'; g.fillRect(0,DK-h*0.08,w,h*0.08);
+    for(let i=0;i<10;i++){
+      g.fillStyle=i%2?'rgba(255,255,255,.028)':'rgba(0,0,0,.12)';
+      const x0=w*(i/10), x1=w*0.5+(x0-w*0.5)*1.7;
+      g.beginPath(); g.moveTo(x0,DK-h*0.08); g.lineTo(x1,DK);
+      g.lineTo(x1+w*0.05,DK); g.lineTo(x0+w*0.05,DK-h*0.08);
+      g.closePath(); g.fill();
     }
-    // warm lantern glow, upper right
-    const lg=g.createRadialGradient(w*0.85,h*0.14,8,w*0.85,h*0.14,150);
-    lg.addColorStop(0,'rgba(232,134,60,.55)'); lg.addColorStop(1,'rgba(232,134,60,0)');
-    g.fillStyle=lg; g.fillRect(w*0.6,0,w*0.4,h*0.5);
-    g.fillStyle=th.accent_warm; g.fillRect(w*0.83,h*0.10,12,18);       // lantern body
-    g.fillStyle='#FFE7B0'; g.fillRect(w*0.833,h*0.115,7,11);
-    // CoCo behind the reading desk; the desk edge meets the panel top
+    // ---- four shelf tiers, deeper stacks, a few tilted spines
+    for(let row=0;row<4;row++){
+      const y=h*0.025+row*h*0.098;
+      g.fillStyle='#2E2340'; g.fillRect(w*0.03,y,w*0.94,h*0.084);      // recess
+      g.fillStyle='#3A2C4E'; g.fillRect(w*0.03,y,w*0.94,4);
+      shelfBooks(g,w*0.04,y+h*0.084,w*0.92,u,700+row);
+      const r2=rng(31+row);                                            // leaners
+      for(let k=0;k<2;k++){
+        const lx=w*(0.10+r2()*0.78), bh=h*0.055;
+        g.save(); g.translate(lx,y+h*0.084); g.rotate(-0.22-r2()*0.16);
+        g.fillStyle=['#C9A13B','#4F9E6A','#C4553E'][k%3];
+        g.fillRect(0,-bh,u*3,bh); g.restore();
+      }
+      g.fillStyle='#241a33'; g.fillRect(w*0.03,y+h*0.084,w*0.94,3);    // lip
+      g.fillStyle='rgba(0,0,0,.22)'; g.fillRect(w*0.03,y+h*0.084+3,w*0.94,5);
+    }
+    // ---- rolling ladder against the stacks
+    const ldx=w*0.16;
+    g.fillStyle='#6E4B2A'; g.fillRect(ldx,h*0.03,6,DK-h*0.06);
+    g.fillRect(ldx+w*0.085,h*0.03,6,DK-h*0.06);
+    for(let ry=h*0.07; ry<DK-h*0.05; ry+=h*0.055){
+      g.fillStyle='#5A3D22'; g.fillRect(ldx,ry,w*0.085+6,5);
+    }
+    // ---- lantern, its beam, and dust motes drifting in it
+    const lgx=w*0.85, lgy=h*0.13;
+    const lg=g.createRadialGradient(lgx,lgy,8,lgx,lgy,h*0.62);
+    lg.addColorStop(0,'rgba(232,134,60,.55)');
+    lg.addColorStop(1,'rgba(232,134,60,0)');
+    g.fillStyle=lg; g.fillRect(0,0,w,h);
+    g.fillStyle=th.accent_warm; g.fillRect(lgx-6,lgy-9,12,18);
+    g.fillStyle='#FFE7B0'; g.fillRect(lgx-4,lgy-6,7,11);
+    g.fillStyle='#4A3520'; g.fillRect(lgx-2,lgy-20,4,11);              // hook
+    for(let i=0;i<22;i++){
+      const mx=lgx-w*0.30+((i*53+tick*0.35)%(w*0.34));
+      const my=lgy+((i*37+tick*0.22)%(h*0.34));
+      g.fillStyle='rgba(255,231,176,'+(0.10+0.22*((i%3)/2))+')';
+      g.fillRect(mx,my,S,S);
+    }
+    // ---- CoCo behind the reading desk
     drawCoCoFront(g,w*0.5,h*0.40,S*2.0);
-    g.fillStyle='#5A3D22'; g.fillRect(0,h*0.48,w,h*0.52);              // desk
-    g.fillStyle='#6E4B2A'; g.fillRect(0,h*0.48,w,5);
-    g.fillStyle='#C9A13B'; g.fillRect(w*0.14,h*0.43,38,9);             // a book on the desk
+    // ---- desk: top edge catches the lantern, front face falls away
+    g.fillStyle='#5A3D22'; g.fillRect(0,DK,w,h-DK);
+    for(let i=0;i<7;i++){                                              // grain
+      g.fillStyle=i%2?'rgba(0,0,0,.10)':'rgba(255,231,176,.035)';
+      g.fillRect(0,DK+10+i*Math.max(6,(h-DK)/8),w,3);
+    }
+    g.fillStyle='#6E4B2A'; g.fillRect(0,DK,w,5);
+    g.fillStyle='rgba(255,231,176,.12)'; g.fillRect(w*0.55,DK,w*0.45,5);
+    g.fillStyle='#C9A13B'; g.fillRect(w*0.14,h*0.43,38,9);             // open book
+    g.fillStyle='#EFE6D2'; g.fillRect(w*0.14+3,h*0.43-6,32,7);
+    g.fillStyle='#3A2A1C'; g.fillRect(w*0.72,h*0.42,10,7);             // inkwell
+    // ---- vignette
+    const vg=g.createRadialGradient(w/2,h*0.42,h*0.28,w/2,h*0.42,h*0.95);
+    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.58)');
+    g.fillStyle=vg; g.fillRect(0,0,w,h);
     return;
   }
   if(kind==='marketplace'){
+    const CT=h*0.46;                                                   // counter
     g.fillStyle=th.sky; g.fillRect(0,0,w,h);
-    // striped awning across the very top
-    for(let i=0;i<11;i++){ g.fillStyle=i%2?'#D0392B':'#F2F7FA';
-      g.fillRect(i*(w/11),0,w/11,h*0.12); }
-    g.fillStyle='#8A5A2B'; g.fillRect(0,h*0.12,w,7);
-    g.fillStyle='#6B4A2B'; g.fillRect(w*0.05,h*0.12,9,h*0.4);          // posts
-    g.fillRect(w*0.91,h*0.12,9,h*0.4);
-    g.fillStyle=th.snow; g.fillRect(0,h*0.28,w,h*0.20);               // snow behind stall
-    // CoCo tending the stall, behind the counter
+    // ---- other stalls receding behind, in silhouette
+    for(let i=0;i<5;i++){
+      const sx=w*(0.02+i*0.21), sw=w*0.15, sh=h*0.13;
+      g.fillStyle='#16303F'; g.fillRect(sx,h*0.20,sw,sh);
+      g.fillStyle='#1D3D50'; g.fillRect(sx,h*0.20,sw,6);
+      g.fillStyle='rgba(232,134,60,.16)';                              // lit inside
+      g.fillRect(sx+sw*0.3,h*0.20+8,sw*0.4,sh-12);
+    }
+    g.fillStyle=th.snow; g.fillRect(0,h*0.30,w,CT-h*0.30);            // snow floor
+    g.fillStyle='rgba(41,181,232,.10)'; g.fillRect(0,h*0.30,w,4);
+    // ---- striped awning with a scalloped edge
+    for(let i=0;i<11;i++){
+      g.fillStyle=i%2?'#D0392B':'#F2F7FA';
+      g.fillRect(i*(w/11),0,w/11,h*0.12);
+      g.beginPath(); g.arc(i*(w/11)+w/22,h*0.12,w/22,0,Math.PI); g.fill();
+    }
+    g.fillStyle='#8A5A2B'; g.fillRect(0,h*0.135,w,7);
+    // ---- bunting slung under the awning
+    for(let i=0;i<14;i++){
+      const bx=w*0.03+i*(w*0.069);
+      const sag=Math.sin(i/2.1)*4;
+      g.fillStyle=['#E8863C','#29B5E8','#F2C14E','#4F9E6A'][i%4];
+      g.beginPath(); g.moveTo(bx,h*0.155+sag);
+      g.lineTo(bx+w*0.03,h*0.155+sag); g.lineTo(bx+w*0.015,h*0.195+sag);
+      g.closePath(); g.fill();
+    }
+    g.fillStyle='#6B4A2B'; g.fillRect(w*0.04,h*0.135,9,CT-h*0.135);   // posts
+    g.fillRect(w*0.92,h*0.135,9,CT-h*0.135);
+    // ---- hanging lamp over the counter, warm pool of light
+    const px=w*0.22, py=h*0.20;
+    g.fillStyle='#3A2A1C'; g.fillRect(px-2,h*0.145,4,py-h*0.145);
+    g.fillStyle='#C9A13B'; g.fillRect(px-11,py,22,8);
+    const pg=g.createRadialGradient(px,py+8,6,px,py+8,h*0.40);
+    pg.addColorStop(0,'rgba(255,231,176,.40)');
+    pg.addColorStop(1,'rgba(255,231,176,0)');
+    g.fillStyle=pg; g.fillRect(0,0,w,h);
+    // ---- CoCo tending the stall, with breath in the cold
     drawCoCoFront(g,w*0.5,h*0.29,S*1.9);
-    // crates of goods with price tags sitting on the counter
+    for(let i=0;i<5;i++){
+      const t=(tick*0.9+i*22)%110;
+      g.fillStyle='rgba(234,246,253,'+(0.30*(1-t/110))+')';
+      g.fillRect(w*0.5+16+t*0.5,h*0.29-4-t*0.28,S*(1+t/60),S*(1+t/60));
+    }
+    // ---- crates of goods with price tags
     const goods=['#4F9E6A','#3E7DA8','#C9A13B','#8A5FA8','#C4553E'];
     for(let i=0;i<5;i++){ const x=w*0.09+i*w*0.17;
-      g.fillStyle='#7A5433'; g.fillRect(x,h*0.40,w*0.12,h*0.06);       // crate
-      g.fillStyle=goods[i]; g.fillRect(x+6,h*0.37,w*0.12-12,h*0.035);  // produce
-      g.fillStyle='#F2F7FA'; g.fillRect(x+w*0.12-15,h*0.405,13,9);     // tag
+      g.fillStyle='#7A5433'; g.fillRect(x,h*0.40,w*0.12,h*0.06);
+      g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(x,h*0.40,w*0.12,4);
+      g.fillStyle=goods[i]; g.fillRect(x+6,h*0.37,w*0.12-12,h*0.035);
+      g.fillStyle='#F2F7FA'; g.fillRect(x+w*0.12-15,h*0.405,13,9);
+      g.fillStyle='#7A5433'; g.fillRect(x+w*0.12-15,h*0.405,13,2);
     }
-    g.fillStyle='#5A3D22'; g.fillRect(0,h*0.46,w,h*0.54);              // counter
-    g.fillStyle='#6E4B2A'; g.fillRect(0,h*0.46,w,5);
+    // ---- chalkboard price sign propped at the end of the counter
+    const cbx=w*0.78, cby=h*0.33;
+    g.fillStyle='#4A3520'; g.fillRect(cbx-3,cby-3,w*0.16+6,h*0.11+6);
+    g.fillStyle='#16303F'; g.fillRect(cbx,cby,w*0.16,h*0.11);
+    g.fillStyle='rgba(242,247,250,.72)';
+    for(let r=0;r<3;r++) g.fillRect(cbx+7,cby+9+r*11,w*0.16*(0.72-r*0.16),3);
+    // ---- counter
+    g.fillStyle='#5A3D22'; g.fillRect(0,CT,w,h-CT);
+    for(let i=0;i<9;i++){                                              // planks
+      g.fillStyle='rgba(0,0,0,.12)';
+      g.fillRect(i*(w/9),CT,3,h-CT);
+    }
+    g.fillStyle='#6E4B2A'; g.fillRect(0,CT,w,5);
+    g.fillStyle='rgba(255,231,176,.10)'; g.fillRect(0,CT,w*0.42,5);
+    // a second lamp low over the counter, so this scene is lit like the library
+    const l2=g.createRadialGradient(w*0.72,CT-6,6,w*0.72,CT-6,h*0.26);
+    l2.addColorStop(0,'rgba(255,231,176,.26)');
+    l2.addColorStop(1,'rgba(255,231,176,0)');
+    g.fillStyle=l2; g.fillRect(w*0.42,CT-h*0.26,w*0.58,h*0.30);
+    // ---- snow falling through the scene
+    for(let i=0;i<34;i++){
+      const sx=(i*97+Math.sin((tick+i*13)/40)*9)%w;
+      const sy=(i*61+tick*1.5)%h;
+      g.fillStyle='rgba(255,255,255,.65)'; g.fillRect(sx,sy,S,S);
+    }
+    return;
+  }
+  if(kind==='workshop'){
+    const BN=h*0.52;                                                   // bench line
+    // ---- steel back wall with panel seams
+    g.fillStyle='#0B1219'; g.fillRect(0,0,w,h);
+    for(let x=0;x<w;x+=w*0.11){
+      g.fillStyle='#121C26'; g.fillRect(x+2,0,w*0.11-4,BN);
+      g.fillStyle='#1A2833'; g.fillRect(x+2,0,w*0.11-4,3);
+    }
+    // ---- cyan floor/wall grid glow
+    g.strokeStyle='rgba(41,181,232,.16)'; g.lineWidth=2;
+    for(let y=h*0.06;y<BN;y+=h*0.075){
+      g.beginPath(); g.moveTo(0,y); g.lineTo(w,y); g.stroke();
+    }
+    for(let x=0;x<w;x+=w*0.055){
+      g.beginPath(); g.moveTo(x,0); g.lineTo(x,BN); g.stroke();
+    }
+    // ---- server racks either side, LEDs scanning down each column
+    [w*0.03,w*0.83].forEach((rx,side)=>{
+      g.fillStyle='#0E1A24'; g.fillRect(rx,h*0.05,w*0.14,BN-h*0.06);
+      g.fillStyle='#1B2C3A'; g.fillRect(rx,h*0.05,w*0.14,4);
+      for(let r=0;r<9;r++){
+        const ry=h*0.075+r*((BN-h*0.11)/9);
+        g.fillStyle='#16242F'; g.fillRect(rx+5,ry,w*0.14-10,(BN-h*0.11)/9-4);
+        const lit=((Math.floor(tick/5)+r+side*4)%9)<3;
+        g.fillStyle=lit?'#29B5E8':'#1E3A4C';
+        g.fillRect(rx+9,ry+4,6,6);
+        g.fillStyle=lit?'rgba(41,181,232,.30)':'transparent';
+        g.fillRect(rx+5,ry,w*0.14-10,(BN-h*0.11)/9-4);
+        g.fillStyle='#24455C';                                         // drive slots
+        for(let d=0;d<3;d++) g.fillRect(rx+22+d*10,ry+5,6,(BN-h*0.11)/9-14);
+      }
+    });
+    // ---- glowing conduits running along the floor into the bench
+    for(let i=0;i<3;i++){
+      const cy2=BN-h*0.05+i*6;
+      g.fillStyle='rgba(41,181,232,'+(0.18+0.10*Math.sin((tick+i*30)/12))+')';
+      g.fillRect(w*0.17,cy2,w*0.66,4);
+    }
+    // ---- the holographic schematic: a slow-rotating wireframe box
+    const ox=w*0.5, oy=h*0.27, rw=w*0.15, rh=h*0.11, a=tick/38;
+    const eg=g.createRadialGradient(ox,BN,8,ox,BN,h*0.42);             // emitter cone
+    eg.addColorStop(0,'rgba(41,181,232,.34)');
+    eg.addColorStop(1,'rgba(41,181,232,0)');
+    g.fillStyle=eg; g.fillRect(w*0.24,0,w*0.52,BN);
+    g.fillStyle='#1B4260'; g.fillRect(ox-22,BN-9,44,9);                // emitter
+    g.fillStyle='#29B5E8'; g.fillRect(ox-14,BN-12,28,4);
+    const pt=(sx,sy,sz)=>{                                             // cheap 3D
+      const c=Math.cos(a), si=Math.sin(a);
+      const X=sx*c-sz*si, Z=sx*si+sz*c;
+      const k=1/(1+Z*0.34);
+      return [ox+X*rw*k, oy+sy*rh*k];
+    };
+    const V=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+             [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]].map(v=>pt(v[0],v[1],v[2]));
+    const E=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],
+             [0,4],[1,5],[2,6],[3,7]];
+    g.strokeStyle='rgba(41,181,232,.85)'; g.lineWidth=2;
+    E.forEach(e=>{ g.beginPath(); g.moveTo(V[e[0]][0],V[e[0]][1]);
+      g.lineTo(V[e[1]][0],V[e[1]][1]); g.stroke(); });
+    g.fillStyle='#9FE8FF'; V.forEach(v=>g.fillRect(v[0]-2,v[1]-2,5,5));
+    g.strokeStyle='rgba(159,232,255,.30)'; g.lineWidth=1;              // scan line
+    const sl=oy-rh+((tick*1.6)%(rh*2));
+    g.beginPath(); g.moveTo(ox-rw,sl); g.lineTo(ox+rw,sl); g.stroke();
+    // ---- articulated arms dipping to the bench, throwing sparks
+    [[w*0.26,-1],[w*0.74,1]].forEach((arm,i)=>{
+      const ax=arm[0], dip=Math.sin(tick/17+i*2.1);
+      const j1x=ax, j1y=h*0.14, j2x=ax+arm[1]*w*0.055, j2y=h*0.28+dip*h*0.03;
+      const tipx=ax+arm[1]*w*0.015, tipy=BN-h*0.045+dip*h*0.018;
+      g.strokeStyle='#39525F'; g.lineWidth=9;
+      g.beginPath(); g.moveTo(j1x,j1y); g.lineTo(j2x,j2y);
+      g.lineTo(tipx,tipy); g.stroke();
+      g.strokeStyle='#5A7A8C'; g.lineWidth=3;
+      g.beginPath(); g.moveTo(j1x,j1y); g.lineTo(j2x,j2y);
+      g.lineTo(tipx,tipy); g.stroke();
+      g.fillStyle='#1B4260'; g.fillRect(j1x-8,j1y-8,16,16);
+      g.fillRect(j2x-6,j2y-6,12,12);
+      g.fillStyle='#E8863C'; g.fillRect(tipx-4,tipy-4,8,8);
+      if(dip>0.55){                                                    // sparks
+        for(let k2=0;k2<7;k2++){
+          const t2=(tick*2+k2*9)%18;
+          g.fillStyle='rgba(255,231,176,'+(1-t2/18)+')';
+          g.fillRect(tipx+(k2-3)*3.5, tipy+t2*1.5, S, S);
+        }
+        g.fillStyle='rgba(255,231,176,.18)';
+        g.beginPath(); g.arc(tipx,tipy,20,0,7); g.fill();
+      }
+    });
+    // ---- CoCo at the bench, lit from below by the hologram
+    drawCoCoFront(g,w*0.5,h*0.44,S*1.9);
+    g.fillStyle='rgba(41,181,232,.16)';
+    g.fillRect(w*0.5-38,h*0.34,76,h*0.18);
+    // ---- steel bench: the panel docks against this edge
+    g.fillStyle='#243747'; g.fillRect(0,BN,w,h-BN);
+    g.fillStyle='#31485B'; g.fillRect(0,BN,w,5);
+    g.fillStyle='rgba(41,181,232,.35)'; g.fillRect(0,BN+5,w,2);
+    for(let x=w*0.05;x<w*0.95;x+=w*0.09){                              // bolts
+      g.fillStyle='#1A2833'; g.fillRect(x,BN+12,7,7);
+    }
+    for(let i=0;i<5;i++){                                              // seams
+      g.fillStyle='rgba(0,0,0,.16)';
+      g.fillRect(0,BN+26+i*Math.max(8,(h-BN)/6),w,2);
+    }
+    g.fillStyle='rgba(41,181,232,.07)';                                // spill
+    g.fillRect(w*0.30,BN+5,w*0.40,h-BN);
+    // ---- vignette
+    const vg2=g.createRadialGradient(w/2,h*0.40,h*0.30,w/2,h*0.40,h*0.98);
+    vg2.addColorStop(0,'rgba(0,0,0,0)'); vg2.addColorStop(1,'rgba(0,0,0,.62)');
+    g.fillStyle=vg2; g.fillRect(0,0,w,h);
     return;
   }
 }
@@ -785,7 +1188,13 @@ function sizePovCard(){
   if(!cv || !card) return;
   card.style.width=cv.style.width;
   const hpx=parseFloat(cv.style.height||'0');
-  if(hpx) card.style.maxHeight=Math.round(hpx*0.50)+'px';
+  // Half the canvas was 180px on a short window: the options and the review
+  // strip were both scrolled out of sight. Give the panel a floor, and let it
+  // take more of the stage when the stage is small.
+  if(hpx){
+    const want=Math.max(320,Math.round(hpx*0.62));
+    card.style.maxHeight=Math.min(want,Math.round(innerHeight*0.72))+'px';
+  }
 }
 
 // ---------------- opening title + combined wake/intake ----------------
@@ -867,6 +1276,11 @@ function openingActive(){ return openPhase && openPhase!=='map'; }
 // the whole intro and visitor two onward never saw it.
 function skipBeat(){
   if(!openingActive() || openPhase==='letter') return;
+  // A beat must be on screen for a moment before it can be skipped. Without
+  // this, the click that submits the letter (and any impatient second click or
+  // Enter) fell straight through and ate line1, line2 and the door exit, so
+  // every visitor after the first jumped from the letter to the map.
+  if(Date.now()-openT < 600) return;
   clearTimeout(setPhase._t); nextPhase();
 }
 $('scene').addEventListener('click',skipBeat);
@@ -986,13 +1400,34 @@ $('w-go').addEventListener('click',submitIntake);
 $('i-industry').addEventListener('keydown',e=>e.stopPropagation());
 
 // ---------------- location panel ----------------
-const POV_LOCS=['library','marketplace'];
+const POV_LOCS=['library','marketplace','workshop'];
 const isPov=id=>POV_LOCS.includes(id);
 let inSceneLoc=null, inScenePhase=null;   // 'await' waiting on CoCo, 'reply' shown
 async function loadOptions(){
   try{ OPTS=await (await fetch('/api/options',{cache:'no-store'})).json(); }
   catch(e){ OPTS={}; }
 }
+
+// Fill the collapsed "earlier" strip from the last completed turn, so the
+// visitor can re-read the previous stop without CoCo repeating himself.
+function paintPrev(id){
+  const strip=$('c-prev'), head=$('c-prevhead'), body=$('c-prevbody');
+  const turns=(ST.turns||[]).filter(t=>t.location && t.location!==id);
+  const t=turns[turns.length-1];
+  body.classList.remove('on');
+  if(!t){ strip.classList.remove('on'); return; }
+  const nm=((CFG.locations[t.location]||{}).name)||t.location;
+  head.innerHTML=`<span>Earlier &middot; ${esc(nm)}</span><span>REVIEW &#9662;</span>`;
+  body.innerHTML=`<span class="lab">You said</span>`
+    +`<div class="txt">${esc(t.text||'-')}</div>`
+    +`<span class="lab">CoCo replied</span>`
+    +`<div class="txt">${esc(t.reply||'-')}</div>`;
+  strip.classList.add('on');
+}
+$('c-prevhead').addEventListener('click',()=>{
+  const b=$('c-prevbody'), open=b.classList.toggle('on');
+  $('c-prevhead').lastElementChild.innerHTML = open?'HIDE &#9652;':'REVIEW &#9662;';
+});
 
 function openPanel(id){
   const l=CFG.locations[id]; if(!l) return;
@@ -1017,6 +1452,7 @@ function openPanel(id){
     const card=document.querySelector('#ov-loc .card');
     if(card){ card.style.width=''; card.style.maxHeight=''; } }
   const say=$('c-say'); say.classList.remove('on'); say.innerHTML='';
+  paintPrev(id);
   $('c-loc').textContent=l.name.toUpperCase();
   $('c-rep').textContent=l.represents||'';
   $('c-head').textContent=l.heading||'';
@@ -1064,7 +1500,12 @@ function openPanel(id){
   } else { recap.style.display='none'; recap.innerHTML=''; }
   $('ov-loc').classList.add('on');
   syncGo();
-  setTimeout(()=>{ if(isCompose) $('c-compose').focus(); },40);
+  // Land the caret in the docked action block, not at the top of the card.
+  setTimeout(()=>{
+    const sc=$('c-scroll');
+    if(sc) sc.scrollTop=0;           // start at the top: the options matter most
+    if(isCompose) $('c-compose').focus({preventScroll:true});
+  },40);
 }
 function syncGo(){
   const l=CFG.locations[panelLoc]||{};
@@ -1099,35 +1540,62 @@ function renderBpBody(d,featNames,joinNames,li){
     ${featNames.length?`<h3>Snowflake features in play</h3><ul>${li(featNames.slice(0,4))}</ul>`:''}
     <div style="margin-top:12px;font-size:13px;color:#9FC2D6;line-height:1.5">
       The full brief, the Cortex Code prompt${p.guide_title?', the guide to fork':''}
-      and your Word document are in the email. Nothing to download here.</div>`;
+      and your Word document all travel with the blueprint. Take it from the
+      code below now, and it goes to your inbox too.</div>`;
 }
 function paintSendBtn(d){
   const btn=$('bp-send'), sub=$('bp-sub'), keys=$('bp-keys'), h2=$('bp-h2');
   if(d.queued || d.draft_created){
-    h2.textContent='On its way';
-    sub.textContent=`CoCo is posting your POC to ${d.email}.`;
-    btn.disabled=true; btn.textContent='SENT \u2713';
-    keys.textContent='Check your inbox in a few minutes';
+    h2.textContent='Your blueprint is ready';
+    // Honest: the email is queued for the stand to send, and the document
+    // itself is available right now. Claiming "SENT" was never true from here.
+    sub.textContent=`Queued for ${d.email} \u2014 and ready to take away below.`;
+    btn.disabled=true; btn.textContent='DONE \u2713';
+    keys.textContent='Scan the code to keep it';
   } else {
     h2.textContent='Ready to post';
-    sub.textContent=`I\u2019ll draft it to ${d.email}.`;
+    sub.textContent=`I\u2019ll build it and queue it for ${d.email}.`;
     btn.disabled=false; btn.textContent='SEND MY POC';
-    keys.textContent='CoCo drafts it to your inbox';
+    keys.textContent='Builds your document and the email';
   }
+  paintHandover(d);
+}
+// Show the QR only once there is a real presigned URL behind it: a code that
+// resolves to nothing is worse than no code at all.
+function paintHandover(d){
+  const wrap=$('bp-hand'), url=d.document_url||'';
+  if(!url){ wrap.classList.remove('on'); return; }
+  $('bp-qr').src='/api/qr?u='+encodeURIComponent(url);
+  $('bp-qr').onerror=()=>{                       // segno missing: link only
+    $('bp-qr').style.display='none';
+    $('bp-handp').textContent='Open this link to download your Word blueprint. '
+      +'It works for seven days.';
+  };
+  const a=$('bp-link'); a.href=url;
+  a.textContent=url.length>62?url.slice(0,62)+'\u2026':url;
+  wrap.classList.add('on');
 }
 async function sendPoc(){
   const btn=$('bp-send'); if(btn.disabled) return;
-  btn.disabled=true; btn.textContent='DRAFTING\u2026';
-  $('bp-sub').textContent='Handing it to CoCo to post\u2026';
+  btn.disabled=true; btn.textContent='BUILDING IT\u2026';
+  $('bp-sub').textContent='Writing your document and staging it\u2026';
   try{
     const r=await post('/api/send',{});
     if(!r.ok){ btn.disabled=false; btn.textContent='SEND MY POC';
       $('bp-sub').textContent='That did not go through \u2014 try once more.'; return; }
   }catch(e){ btn.disabled=false; btn.textContent='SEND MY POC';
     $('bp-sub').textContent='Cannot reach the server.'; return; }
-  // Re-read so the button reflects the queued/drafted truth, not an assumption.
-  try{ const d=await (await fetch('/api/blueprint',{cache:'no-store'})).json();
-    window.__bp=d; paintSendBtn(d); }catch(e){}
+  // The send runs in a background thread, so a single re-read raced it and the
+  // QR never appeared. Poll until the presigned URL exists (or we give up and
+  // show the queued state without a code).
+  for(let i=0;i<30;i++){
+    await new Promise(r=>setTimeout(r,700));
+    let d; try{ d=await (await fetch('/api/blueprint',{cache:'no-store'})).json(); }
+    catch(e){ continue; }
+    window.__bp=d;
+    if(d.document_url || d.queued || d.draft_created){ paintSendBtn(d); }
+    if(d.document_url) return;
+  }
 }
 function closeBp(){ $('ov-bp').classList.remove('on'); reopenLock=Date.now()+700; }
 $('bp-send').addEventListener('click',sendPoc);
@@ -1186,7 +1654,8 @@ function paintScenePanel(s){
   } else if(s.reply){
     inScenePhase='reply'; visited.add(panelLoc);
     say.innerHTML='<b>CoCo</b>'+esc(s.reply);
-    const leave = panelLoc==='library' ? 'LEAVE THE LIBRARY' : 'LEAVE THE STALL';
+    const leave = {library:'LEAVE THE LIBRARY', marketplace:'LEAVE THE STALL',
+                   workshop:'LEAVE THE WORKSHOP'}[panelLoc] || 'STEP AWAY';
     $('c-go').disabled=false; $('c-go').textContent=leave;
   }
 }
@@ -1204,9 +1673,8 @@ $('trayhead').addEventListener('click',()=>{
   trayOpen=!trayOpen;
   $('traybody').classList.toggle('on',trayOpen);
   $('traychev').innerHTML = trayOpen?'HIDE WORK &#9652;':'SHOW WORK &#9662;';
-  // The open tray adds height fitCanvas did not know about, which pushed the
-  // bottom of the tray past the viewport and killed its own scroll. Re-fit so
-  // the board shrinks and the tray body keeps its scrollable 132px.
+  // The open tray body adds height the fixed chrome budget excludes, so re-fit
+  // to keep its scrollable 132px inside the viewport.
   fitCanvas();
 });
 function paintTray(s){
@@ -1215,7 +1683,9 @@ function paintTray(s){
   // (non-agentic) turns have none, so the tray is hidden for them rather than
   // filled with a decorative spinner. It belongs to the exec turns only.
   const agentic = (s.transport||'exec')==='exec';
-  $('tray').style.display = agentic ? '' : 'none';
+  // visibility, not display: hiding the box entirely collapsed the chrome and
+  // shifted the board mid-turn. The slot stays, the content goes.
+  $('tray').style.visibility = agentic ? '' : 'hidden';
   if(!agentic){ thinkSince=0; return; }
   $('trayhead').classList.toggle('live',!!s.thinking);
   if(s.thinking && !thinkSince) thinkSince=Date.now();
@@ -1257,6 +1727,16 @@ function paintBubble(s){
   $('histback').classList.toggle('on',histIdx!==null);
 
   if(nudgeUntil>Date.now()){ setMessage(nudgeMsg); $('yousaid').classList.remove('on'); return; }
+
+  // While a POV desk is open, CoCo speaks in-scene only. Mirroring the reply up
+  // here as well was the repetition: the same words in the bubble, in #c-say,
+  // and echoed again by "You said" over a panel that already shows the choice.
+  if(panelOpen && isPov(panelLoc) && histIdx===null){
+    $('yousaid').classList.remove('on');
+    const l=CFG.locations[panelLoc]||{};
+    setMessage(l.narrative?fillCli(l.narrative,s):'');
+    return;
+  }
 
   let msg, said='';
   if(histIdx!==null && turns[histIdx]){
@@ -1369,9 +1849,17 @@ function loop(){ tick++; stepMovement(); if(tick%2===0) stepType(); render();
 
 // The board was previously sized once at load, so moving the window at the
 // booth left it mis-sized until a reload.
+// The chrome budget is measured ONCE, at first fit, and reused. Measuring it
+// live meant a long reply (or the tray hiding itself on a fast turn) changed the
+// board size mid-turn, which read as the whole page sliding downwards.
+let chromeReserve=0;
 function fitCanvas(){
   const cv=$('cv'); if(!cv) return;
-  const chrome=$('bubble').offsetHeight+$('hud').offsetHeight+$('tray').offsetHeight+58;
+  if(!chromeReserve){
+    chromeReserve=$('bubble').offsetHeight+$('hud').offsetHeight
+                 +$('tray').offsetHeight+58;
+  }
+  const chrome=chromeReserve+(trayOpen?140:0);
   const w=Math.max(320,Math.min(innerWidth-24,1056,(innerHeight-chrome)*COLS/ROWS));
   cv.style.width=Math.round(w)+'px';
   cv.style.height=Math.round(w*ROWS/COLS)+'px';
@@ -1388,14 +1876,7 @@ function fitCanvas(){
   sceneW=sc.width; sceneH=sc.height;
   sceneCtx=sc.getContext('2d'); sceneCtx.imageSmoothingEnabled=false;
   fitCanvas();
-  addEventListener('resize',fitCanvas);
-  // When a reply (or the "you said" line) grows the bubble, re-fit so the stage
-  // shrinks to match instead of the bubble spilling over the tray.
-  if(window.ResizeObserver){
-    let raf=0;
-    new ResizeObserver(()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(fitCanvas); })
-      .observe($('bubble'));
-  }
+  addEventListener('resize',()=>{ chromeReserve=0; fitCanvas(); });
   document.documentElement.style.setProperty('--panel',CFG.theme.panel);
   document.documentElement.style.setProperty('--edge',CFG.theme.panel_edge);
   $('b-title').textContent=CFG.event.title;

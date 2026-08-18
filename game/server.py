@@ -33,7 +33,7 @@ import threading
 import time
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(HERE, "config.json")
@@ -1251,6 +1251,9 @@ class OutboxTransport:
             stamp = time.strftime("%Y%m%d-%H%M%S")
             safe = re.sub(r"[^A-Za-z0-9]+", "-",
                           (vis.get("first_name") or "visitor")).strip("-").lower()
+            # Keyed on the session id: a retry replaces the record instead of
+            # queueing the same visitor twice for the operator to send twice.
+            sid = (read_state().get("session_id") or "")[:8]
             rec = {
                 "queued_at": time.time(),
                 "to": vis.get("email"),
@@ -1263,7 +1266,13 @@ class OutboxTransport:
                 "poc_name": poc.get("poc_name"),
                 "sent": False,
             }
-            path = os.path.join(out, f"{stamp}-{safe}.json")
+            name = f"{stamp}-{safe}-{sid}.json" if sid else f"{stamp}-{safe}.json"
+            if sid:                      # replace any earlier record for this id
+                for prior in os.listdir(out):
+                    if prior.endswith(f"-{sid}.json"):
+                        name = prior
+                        break
+            path = os.path.join(out, name)
             tmp = path + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(rec, f, indent=1)
@@ -1557,6 +1566,31 @@ class Handler(BaseHTTPRequestHandler):
                 "queued": bool(st.get("queued")),
                 "draft_created": bool(st.get("draft_created")),
             })
+        if path == "/api/qr":
+            # Tier 2 of delivery: the presigned URL as a scannable SVG so the
+            # visitor leaves with the document even if no email ever goes out.
+            # Rendered server-side with segno (pure Python) rather than a
+            # vendored JS encoder, so what they scan comes from a library we
+            # can verify rather than hand-rolled bit placement.
+            st = read_state()
+            url = (parse_qs(urlparse(self.path).query).get("u") or
+                   [st.get("blueprint_url") or ""])[0]
+            if not url:
+                return self._send(404, b"no document url yet")
+            try:
+                import io
+                import segno
+                buf = io.BytesIO()
+                segno.make(url, error="M").save(
+                    buf, kind="svg", scale=5, border=2,
+                    dark="#0A121A", light="#FFFFFF")
+                return self._send(200, buf.getvalue(), MIME[".svg"])
+            except ImportError:
+                return self._send(501, b"segno not installed")
+            except Exception as e:                                # noqa: BLE001
+                return self._send(500, str(e)[:200].encode("utf-8"))
+        if path == "/api/delivery/check":
+            return self._delivery_check()
         if path in ("/", "/index.html"):
             return self._file("index.html")
         safe = posixpath.normpath(path).lstrip("/")
@@ -1678,12 +1712,72 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"error": "no email on file"}, 400)
         if not st.get("poc"):
             return self._json({"error": "no POC to send yet"}, 400)
+        # Already delivered for this visitor: hand back the same result rather
+        # than re-staging the document and logging a duplicate SESSIONS row.
+        if st.get("queued") and st.get("blueprint_url"):
+            return self._json({"accepted": True, "already": True,
+                               "blueprint_url": st.get("blueprint_url")})
         job = uuid.uuid4().hex
         write_state({"thinking": True, "reply": "", "reasoning": [],
                      "transport": "none",
                      "job_id": job, "location": "postbox", "stage": "postbox"})
         threading.Thread(target=run_send, args=(cfg, job), daemon=True).start()
         return self._json({"accepted": True, "job_id": job})
+
+    def _delivery_check(self):
+        """Per-stand preflight. Names the leg that is broken rather than failing
+        silently at the postbox with a visitor watching."""
+        cfg = load_config()
+        d = cfg.get("delivery") or {}
+        checks = []
+
+        def add(name, ok, detail=""):
+            checks.append({"check": name, "ok": bool(ok), "detail": detail})
+
+        try:
+            import docx                                          # noqa: F401
+            add("word_library", True, "python-docx importable")
+        except Exception as e:                                    # noqa: BLE001
+            add("word_library", False, f"pip install python-docx ({e})")
+
+        stage = d.get("stage") or ""
+        add("stage_configured", bool(stage), stage or "delivery.stage is empty")
+        if stage:
+            rows, err = snow_sql(cfg, f"LIST {stage}")
+            add("stage_reachable", err == "", err or f"{len(rows or [])} objects")
+
+        out = os.path.join(HERE, d.get("outbox_dir", "outbox"))
+        try:
+            os.makedirs(out, exist_ok=True)
+            probe = os.path.join(out, ".probe")
+            with open(probe, "w", encoding="utf-8") as f:
+                f.write("ok")
+            os.remove(probe)
+            pending = len([p for p in os.listdir(out) if p.endswith(".json")])
+            add("outbox_writable", True, f"{pending} queued record(s)")
+        except OSError as e:
+            add("outbox_writable", False, str(e)[:160])
+
+        # End-to-end proof: stage a tiny file and presign it. This is the exact
+        # path a visitor's document takes, so a green here means Tier 2 works.
+        try:
+            probe = os.path.join(tempfile.gettempdir(), "loco4coco-preflight.txt")
+            with open(probe, "w", encoding="utf-8") as f:
+                f.write("loco4coco preflight\n")
+            url, err = stage_and_presign(cfg, probe)
+            add("presign_works", bool(url), err or "presigned URL returned")
+        except Exception as e:                                    # noqa: BLE001
+            add("presign_works", False, str(e)[:160])
+
+        add("email_transport", not d.get("try_draft"),
+            "outbox drain by the operator (Gmail MCP is interactive-only); "
+            "the QR link is the primary handover at the stand")
+
+        ok = all(c["ok"] for c in checks
+                 if c["check"] != "email_transport")
+        return self._json({"ok": ok, "checks": checks,
+                           "stage": stage,
+                           "transport": d.get("transport")})
 
     def _file(self, rel):
         full = os.path.join(HERE, rel)

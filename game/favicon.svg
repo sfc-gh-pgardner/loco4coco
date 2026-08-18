@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+<!-- Loco for CoCo. Drawn as a 16x16 pixel grid so it stays sharp in a tab.
+     Palette matches config.json penguin: body #4AA8DC, belly #F2F7FA,
+     beak/feet #E8863C, eye #16222E, on the app's #0A121A field. -->
+<rect width="16" height="16" rx="3" fill="#0A121A"/>
+<!-- head -->
+<rect x="5" y="2" width="6" height="4" fill="#4AA8DC"/>
+<rect x="4" y="3" width="8" height="3" fill="#4AA8DC"/>
+<!-- body -->
+<rect x="4" y="6" width="8" height="7" fill="#4AA8DC"/>
+<rect x="3" y="7" width="10" height="5" fill="#4AA8DC"/>
+<!-- shaded flippers -->
+<rect x="2" y="7" width="2" height="4" fill="#2F87BC"/>
+<rect x="12" y="7" width="2" height="4" fill="#2F87BC"/>
+<!-- belly -->
+<rect x="6" y="7" width="4" height="6" fill="#F2F7FA"/>
+<rect x="5" y="8" width="6" height="4" fill="#F2F7FA"/>
+<!-- eyes -->
+<rect x="6" y="4" width="1" height="2" fill="#16222E"/>
+<rect x="9" y="4" width="1" height="2" fill="#16222E"/>
+<!-- beak -->
+<rect x="7" y="5" width="2" height="2" fill="#E8863C"/>
+<!-- feet -->
+<rect x="4" y="13" width="3" height="2" fill="#E8863C"/>
+<rect x="9" y="13" width="3" height="2" fill="#E8863C"/>
+</svg>

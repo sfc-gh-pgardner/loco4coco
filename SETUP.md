@@ -31,7 +31,7 @@ for the human. The optional "Ask CoCo one thing" stop adds about 35s.
 Install the Snowflake CLI and Cortex Code, then the three Python packages:
 
 ```bash
-pip3 install snowflake-connector-python python-docx PyYAML
+pip3 install snowflake-connector-python python-docx PyYAML segno
 ```
 
 Check all three answer:
@@ -141,16 +141,49 @@ setup); after that it settles to 2 to 3.5s.
 - The server stops itself after **45 minutes idle**, so a forgotten laptop cannot run all
   night. Change `server.idle_shutdown_minutes`, or set `0` for a long event.
 
-## Email delivery: read this
+## Delivery: how the visitor actually gets their blueprint
 
-The game does **not** send email itself, on purpose. It writes a fully composed email to
-`game/outbox/` as a durable record, and an operator drains it from an **interactive**
-Cortex Code session using the Gmail tools.
+There are three independent tiers. Each one is sufficient on its own, so a failure in
+one does not send a visitor away empty-handed.
 
-The reason is a real limitation: Gmail MCP tools do not load under `cortex exec`, only in
-an interactive session. Snowflake's own email function only reaches verified users in the
-same account, so it cannot reach visitors. Nothing in the game ever claims an email was
-sent when it was not. See the `loco4coco-ops` skill for the drain procedure.
+**Tier 1 - the QR code on screen. This is the primary handover at an event.**
+When the visitor presses SEND, the game builds a real Word document, uploads it to
+`@LOCO4COCO.BOOTH.BLUEPRINTS` and presigns it for seven days. The confirmation card
+shows that link as a QR code plus a tappable link. They scan it and leave with the
+document. This path needs no email, no MCP, and no operator - only the Snowflake
+connection the game already has.
+
+**Tier 2 - the queued email, drained by an operator.**
+The game writes a fully composed email to `game/outbox/` as a durable record, and an
+operator drains it from an **interactive** Cortex Code session using the Gmail tools.
+This is deliberate, not a shortcut: Gmail MCP tools do not load under `cortex exec`,
+only in an interactive session; the MCP exposes `create_draft` only, with no send tool
+and no attachment parameter; and `snowflake.com` publishes DMARC `p=reject`, so a
+third-party sender is rejected outright. See the `loco4coco-ops` skill for the drain.
+
+**Tier 3 - the durable record, for after the event.**
+The document sits in the Snowflake stage and the row in `BOOTH.SESSIONS` carries
+`DOCUMENT_URL` and `DELIVERY_STATUS`, so leads can be reconciled and re-sent in bulk
+later even if the laptop is wiped. Note the presigned URL expires after seven days;
+re-presign from the stage if you need it after that.
+
+Nothing in the game ever claims an email was sent when it was not. The card says
+"queued", and points at the QR.
+
+### Preflight: run this at every stand before doors open
+
+```bash
+curl -s http://127.0.0.1:4747/api/delivery/check | python3 -m json.tool
+```
+
+It checks, in order: `python-docx` importable, the stage configured, the stage
+reachable, `outbox/` writable, and - the one that matters - a real file staged and
+presigned end to end. `"ok": true` means Tier 1 works, which means no visitor can
+leave with nothing. If `presign_works` fails, the stand is not ready: check the
+connection name in `game/config.json` and that the deploy created the stage.
+
+If `segno` is not installed the QR degrades to a plain link rather than breaking, but
+install it - a link nobody can type is not a handover.
 
 ## Between visitors, and end of day
 

@@ -594,6 +594,61 @@ def link_features(names):
     return out
 
 
+ARCHETYPES_PATH = os.path.join(HERE, "archetypes.md")
+_arch_cache = None
+
+
+def load_archetypes():
+    """Parse archetypes.md into {key: {features, first_step, pool}}.
+
+    This is the precompute that makes the forge fast. Everything here is
+    available with zero inference, so the blocking model call only has to choose
+    an archetype and speak, and the background call returns consideration
+    INDICES instead of four sentences of prose.
+    """
+    global _arch_cache
+    if _arch_cache is not None:
+        return _arch_cache
+    out, cur = {}, None
+    try:
+        with open(ARCHETYPES_PATH, encoding="utf-8") as f:
+            for line in f:
+                line = line.rstrip("\n")
+                if line.startswith("## "):
+                    cur = line[3:].strip()
+                    out[cur] = {"features": [], "first_step": "", "pool": []}
+                    continue
+                if not cur:
+                    continue
+                m = re.match(r"^\|\s*features\s*\|\s*(.+?)\s*\|$", line)
+                if m:
+                    out[cur]["features"] = [x.strip() for x in
+                                            m.group(1).split(",") if x.strip()]
+                    continue
+                m = re.match(r"^\|\s*first_step\s*\|\s*(.+?)\s*\|$", line)
+                if m:
+                    out[cur]["first_step"] = m.group(1).strip()
+                    continue
+                m = re.match(r"^\d+\.\s+(.+)$", line)
+                if m:
+                    out[cur]["pool"].append(m.group(1).strip())
+    except OSError:
+        pass
+    _arch_cache = out
+    return out
+
+
+def archetype_defaults(cfg, arche):
+    """Everything we can say about an archetype without asking a model."""
+    cat = load_archetypes()
+    a = cat.get(arche) or cat.get("talk-to-my-data") or {}
+    return {
+        "features": [n for n, _u in link_features(a.get("features") or [])],
+        "first_step": a.get("first_step") or "",
+        "pool": a.get("pool") or [],
+    }
+
+
 # ------------------------------------------------------- marketplace listings
 
 _market_cache = None
@@ -940,15 +995,53 @@ def blueprint_docx(cfg, state):
     try:
         from docx import Document
         from docx.shared import Pt, RGBColor
+        from docx.oxml.ns import qn
     except ImportError:
         return ""
     vis = state.get("visitor") or {}
     poc = state.get("poc") or {}
     doc = Document()
 
+    # Snowflake brand, not the python-docx default. The template ships Times New
+    # Roman, which is the first thing a visitor notices about a document they
+    # keep. Inter is the Snowflake typeface; the fallbacks cover a machine that
+    # does not have it, and eastasia must be set too or Word substitutes a serif.
+    BRAND_BLUE = RGBColor(0x29, 0xB5, 0xE8)
+    HEADING_BLUE = RGBColor(0x11, 0x56, 0x7F)
+    BODY_INK = RGBColor(0x1A, 0x24, 0x2E)
+
+    def set_font(style_obj, name, size=None, color=None, bold=None):
+        f = style_obj.font
+        f.name = name
+        if size is not None:
+            f.size = size
+        if color is not None:
+            f.color.rgb = color
+        if bold is not None:
+            f.bold = bold
+        rpr = style_obj.element.get_or_add_rPr()
+        rfonts = rpr.get_or_add_rFonts()
+        for attr in ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia"):
+            rfonts.set(qn(attr), name)
+
+    FONT = "Inter"
+    set_font(doc.styles["Normal"], FONT, Pt(10.5), BODY_INK)
+    for name, size in (("Title", Pt(24)), ("Heading 1", Pt(15)),
+                       ("Heading 2", Pt(12.5)), ("List Bullet", Pt(10.5))):
+        try:
+            st = doc.styles[name]
+        except KeyError:
+            continue
+        colour = BRAND_BLUE if name == "Title" else (
+            HEADING_BLUE if name.startswith("Heading") else BODY_INK)
+        set_font(st, FONT, size, colour, True if name != "List Bullet" else None)
+        st.paragraph_format.space_before = Pt(10 if name != "Title" else 0)
+        st.paragraph_format.space_after = Pt(4)
+
     h = doc.add_heading(poc.get("poc_name") or "Your proof of concept", level=0)
     for run in h.runs:
-        run.font.color.rgb = RGBColor(0x29, 0xB5, 0xE8)
+        run.font.color.rgb = BRAND_BLUE
+        run.font.name = FONT
     doc.add_paragraph(
         f"Prepared for {vis.get('first_name') or 'you'}"
         + (f" at {vis.get('company')}" if vis.get("company") else "")
@@ -989,14 +1082,24 @@ def blueprint_docx(cfg, state):
             p.add_run(name).bold = True
             p.add_run(f"\n{docurl}")
 
-    doc.add_heading("Paste this into Cortex Code to begin", level=2)
+    signup = (cfg.get("delivery") or {}).get("signup_url", "")
+    doc.add_heading("Before you start", level=2)
     doc.add_paragraph(
-        "Start a free trial at " + (cfg.get("delivery") or {}).get("signup_url", "")
-        + ", open Cortex Code, and paste the block below.")
+        "Start a free Snowflake trial" + (f" at {signup}" if signup else "")
+        + ", then open Cortex Code.", style="List Number")
+    doc.add_paragraph(
+        "Copy the prompt in the next section and paste it in as your first "
+        "message.", style="List Number")
+
+    doc.add_heading("Paste this into Cortex Code to begin", level=2)
     p = doc.add_paragraph()
     run = p.add_run(build_coco_prompt(cfg, state))
     run.font.name = "Consolas"
     run.font.size = Pt(9)
+    rpr = run._element.get_or_add_rPr()
+    rf = rpr.get_or_add_rFonts()
+    for attr in ("w:ascii", "w:hAnsi", "w:cs"):
+        rf.set(qn(attr), "Consolas")
 
     if poc.get("guide_title"):
         doc.add_heading("Start from this guide", level=2)
@@ -1436,6 +1539,20 @@ def run_workshop(cfg, text, job_id):
             poc["readiness"] = max(1, min(5, int(poc.get("readiness") or 3)))
         except (TypeError, ValueError):
             poc["readiness"] = 3
+        # Stage 1 is deliberately thin - archetype, name, features, reply - which
+        # is what took 84s and 1051 output tokens when it also had to write the
+        # summary and four considerations. Fill the rest from the catalogue now
+        # so the blueprint is already complete and correct, then improve it in
+        # the background while the visitor walks to the postbox.
+        d = archetype_defaults(cfg, arche)
+        if not poc.get("features"):
+            poc["features"] = d["features"]
+        if not poc.get("first_step"):
+            poc["first_step"] = d["first_step"]
+        if not poc.get("summary"):
+            poc["summary"] = ""
+        if not poc.get("considerations"):
+            poc["considerations"] = d["pool"][:3]
     else:
         poc = {"poc_name": text[:60], "summary": raw[:300], "features": [],
                "readiness": 3,
@@ -1446,7 +1563,91 @@ def run_workshop(cfg, text, job_id):
         poc["guide_title"], poc["guide_url"] = t, u
 
     finish_turn(cfg, "workshop", text, reply,
-                {"poc": poc, "unlocked": unlock_next(cfg, "workshop", state)}, meta)
+                {"poc": poc, "unlocked": unlock_next(cfg, "workshop", state),
+                 "poc_pending": bool(poc.get("archetype"))}, meta)
+    if poc.get("archetype"):
+        threading.Thread(target=refine_poc, args=(cfg, text), daemon=True).start()
+
+
+def refine_poc(cfg, text):
+    """Stage 2. Runs AFTER CoCo has spoken, on the fast transport, while the
+    visitor reads the reply and walks to the postbox. Fills the summary and the
+    honest readiness score, and picks considerations from the precomputed pool by
+    INDEX rather than writing them.
+
+    Never blocks and never fails loudly: the blueprint is already complete from
+    catalogue defaults, so a failure here costs tailoring, not the visit.
+    """
+    try:
+        state = read_state()
+        poc = dict(state.get("poc") or {})
+        arche = poc.get("archetype") or ""
+        d = archetype_defaults(cfg, arche)
+        pool = d["pool"]
+        if not pool:
+            write_state({"poc_pending": False})
+            return
+        listed = "\n".join(f"{i + 1}. {c}" for i, c in enumerate(pool))
+        vis = state.get("visitor") or {}
+        prompt = (
+            "You are helping shape a Snowflake proof of concept. Be concrete and "
+            "never generic.\n\n"
+            f"Person: {vis.get('first_name') or 'they'} at "
+            f"{vis.get('company') or 'their organisation'}, "
+            f"{industry_name(cfg, vis.get('industry'))}.\n"
+            f"They hold: {', '.join(state.get('held') or []) or 'unspecified'}.\n"
+            f"They will attach: {', '.join(state.get('joined') or []) or 'nothing yet'}.\n"
+            f"They asked the POC to: \"{text}\"\n"
+            f"It is a '{arche}' build called '{poc.get('poc_name') or 'their POC'}'.\n\n"
+            "Candidate considerations:\n" + listed + "\n\n"
+            "Return ONLY minified JSON, no prose, no code fence, with exactly "
+            "these keys: {\"summary\": 2 sentences on what it does and why it "
+            "matters to THEM, \"first_step\": one concrete first action, "
+            "\"considerations\": array of exactly 3 integers, the numbers of the "
+            "most relevant candidates above, \"readiness\": integer 1-5}\n"
+            "Score readiness strictly: only award 4 or 5 if they named specific "
+            "data, a specific question and a specific user. Nobody sees the "
+            "number, so be honest rather than kind."
+        )
+        loc = {"transport": "complete"}
+        ok, raw, _meta = run_turn(cfg, prompt, "workshop_refine", loc=loc)
+        if not ok and not raw:
+            write_state({"poc_pending": False})
+            return
+        m = re.search(r"\{.*\}", raw or "", re.S)
+        extra = {}
+        if m:
+            try:
+                extra = json.loads(m.group(0))
+            except json.JSONDecodeError:
+                extra = {}
+        # Re-read: the visitor may have moved on and state may have changed.
+        poc = dict((read_state().get("poc") or {}))
+        if extra.get("summary"):
+            poc["summary"] = str(extra["summary"])[:600]
+        if extra.get("first_step"):
+            poc["first_step"] = str(extra["first_step"])[:300]
+        idx = extra.get("considerations")
+        if isinstance(idx, list):
+            picked = []
+            for i in idx:
+                try:
+                    n = int(i)
+                except (TypeError, ValueError):
+                    continue
+                if 1 <= n <= len(pool) and pool[n - 1] not in picked:
+                    picked.append(pool[n - 1])
+            if picked:
+                poc["considerations"] = picked[:4]
+        try:
+            poc["readiness"] = max(1, min(5, int(extra.get("readiness")
+                                                or poc.get("readiness") or 3)))
+        except (TypeError, ValueError):
+            pass
+        write_state({"poc": poc, "poc_pending": False})
+    except Exception:                                             # noqa: BLE001
+        # A background refinement must never take the booth down.
+        write_state({"poc_pending": False})
 
 
 def run_ask(cfg, text, job_id):
@@ -1717,6 +1918,13 @@ class Handler(BaseHTTPRequestHandler):
         if st.get("queued") and st.get("blueprint_url"):
             return self._json({"accepted": True, "already": True,
                                "blueprint_url": st.get("blueprint_url")})
+        # Stage 2 may still be running if the visitor sprinted here. Give it a
+        # moment, then go with what we have: the blueprint is already complete
+        # from catalogue defaults, so this is a quality wait, not a hard one.
+        waited = 0.0
+        while read_state().get("poc_pending") and waited < 8.0:
+            time.sleep(0.25)
+            waited += 0.25
         job = uuid.uuid4().hex
         write_state({"thinking": True, "reply": "", "reasoning": [],
                      "transport": "none",

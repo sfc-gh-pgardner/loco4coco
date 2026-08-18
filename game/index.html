@@ -105,18 +105,29 @@
   .say b { color:var(--warm); font-size:10px; letter-spacing:.16em;
     text-transform:uppercase; display:block; margin-bottom:3px; }
 
-  /* ---------- the previous location, collapsed ---------- */
+  /* ---------- the journey, as tiles ---------- */
   /* Four stops is enough to lose the thread. Rather than repeat CoCo in the
-     bubble AND the panel, the last exchange is available here on demand. */
-  .prev { display:none; margin:2px 0 10px; border:1px solid var(--line);
-    border-radius:5px; background:#0A141C; }
-  .prev.on { display:block; }
-  .prevhead { padding:5px 10px; cursor:pointer; color:var(--dim);
-    font-size:10px; letter-spacing:.14em; text-transform:uppercase;
-    display:flex; justify-content:space-between; gap:8px; }
-  .prevhead:hover { color:var(--edge); }
-  .prevbody { display:none; padding:0 10px 8px; font-size:13px; line-height:1.45;
-    max-height:15vh; overflow-y:auto; border-top:1px solid var(--line); }
+     bubble AND the panel, each finished stop is a tile you can tap open. */
+  #c-prev { display:none; margin:2px 0 10px; }
+  #c-prev.on { display:block; }
+  .ptiles { display:flex; gap:4px; }
+  .ptile { flex:1; background:var(--panel); border:2px solid var(--line);
+    border-radius:6px; padding:3px 7px; min-width:0; }
+  .ptile .k { font-size:9px; letter-spacing:.13em; color:var(--dim);
+    text-transform:uppercase; white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; }
+  .ptile .v { font-size:11px; font-weight:700; color:#5E8399; margin-top:1px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ptile.done { cursor:pointer; border-color:var(--edge); }
+  .ptile.done .v { color:var(--edge); }
+  .ptile.done:hover { background:#12283A; }
+  .ptile.done.open { border-color:var(--warm); background:#12283A; }
+  .ptile.done.open .v { color:var(--warm); }
+  .ptile.cur { border-color:var(--warm); }
+  .ptile.cur .k, .ptile.cur .v { color:var(--warm); }
+  .prevbody { display:none; margin-top:5px; padding:7px 10px 8px;
+    font-size:13px; line-height:1.45; max-height:11vh; overflow-y:auto;
+    background:#0A141C; border:1px solid var(--edge); border-radius:5px; }
   .prevbody.on { display:block; }
   .prevbody .lab { color:var(--warm); font-size:10px; letter-spacing:.12em;
     text-transform:uppercase; display:block; margin:7px 0 2px; }
@@ -124,7 +135,13 @@
 
   /* The action block docks at the foot of the scrolling card. */
   #ov-loc .card { display:flex; flex-direction:column; overflow:hidden; }
-  .cscroll { flex:1 1 auto; overflow-y:auto; min-height:0; }
+  .cscroll { flex:1 1 auto; overflow-y:auto; min-height:0;
+    /* A fade at the bottom edge, so a clipped list reads as scrollable rather
+       than as a panel that is simply missing its options. */
+    background:linear-gradient(var(--panel) 30%,rgba(11,22,31,0)) bottom/100% 18px
+      no-repeat local; }
+  .ov.pov .cscroll { background:linear-gradient(rgba(8,16,23,.92) 30%,
+    rgba(8,16,23,0)) bottom/100% 18px no-repeat local; }
   .dock { flex:0 0 auto; background:var(--panel);
     padding-top:8px; margin-top:6px; border-top:1px solid var(--line); }
   .ov.pov .dock { background:transparent; }
@@ -416,16 +433,16 @@
       <div class="cscroll" id="c-scroll">
       <h2 id="c-loc"></h2>
       <div class="sub" id="c-rep"></div>
-      <!-- Where you have just been, collapsed. The visitor loses the thread
-           between stops, and this is cheaper than repeating CoCo everywhere. -->
-      <div id="c-prev" class="prev">
-        <div class="prevhead" id="c-prevhead"></div>
+      <!-- The journey as four tiles, matching the HUD at the top of the page.
+           A full-width "EARLIER - THE DATA LIBRARY" bar read as a stray toolbar;
+           this reads as progress you can tap. -->
+      <div id="c-prev">
+        <div class="ptiles" id="c-ptiles"></div>
         <div class="prevbody" id="c-prevbody"></div>
       </div>
       <div class="say" id="c-say"></div>
       <div class="q" id="c-head"></div>
       <div class="hint" id="c-hint"></div>
-      <div id="c-recap" style="display:none"></div>
       <div class="opts" id="c-opts"></div>
       </div><!-- /cscroll -->
       <!-- Docked last: what you type is the action, so it sits under the
@@ -710,12 +727,13 @@ function drawRoute(g){
   if(len<T*S*1.3) return;
   const ux=dx/len, uy=dy/len, ang=Math.atan2(uy,ux);
   // three chevrons that march toward the target
-  const march=(tick/6)%1;
-  for(let i=0;i<3;i++){
-    const d=T*S*1.1 + (i+march)*T*S*0.9;
+  const march=(tick/22)%1;
+  const breath=0.58+0.16*Math.sin(tick/26);      // slow, not a flicker
+  for(let i=0;i<2;i++){
+    const d=T*S*1.1 + (i+march)*T*S*1.15;
     if(d>len-T*S*0.8) continue;
     const cx=px+ux*d, cy=py+uy*d;
-    const a=(0.85-i*0.22);
+    const a=breath-i*0.14;
     g.save(); g.translate(cx,cy); g.rotate(ang);
     g.strokeStyle=`rgba(232,134,60,${a})`; g.lineWidth=3*S/2;
     g.lineCap='round'; g.lineJoin='round';
@@ -730,6 +748,40 @@ function drawRoute(g){
 // library / marketplace panels and the wake-up screen so the interaction feels
 // like it happens "at the desk", not in a floating box.
 let sceneActive=null, sceneCtx=null, sceneW=0, sceneH=0;
+// drawScene runs off the animation loop and has no access to server state, so
+// the in-flight status is mirrored here once per poll.
+let sceneThinking=false;
+// THE SAFE BAND. The POV panel is an overlay above the scene canvas, so panel
+// height eats art. Every interior draws its furniture line at SAFE and keeps all
+// detail above it, so the strip the panel covers is deliberately plain surface.
+let postT=0;                           // when the posting beat started
+const POST_MS=2600;
+//
+// SAFE is MEASURED, not assumed. It began as a constant, which broke on a short
+// viewport: the panel has a minimum usable height, so when the scene got small
+// the panel grew past the line the scenes were protecting and covered CoCo. The
+// panel wins that argument - options must be reachable - so the art yields to it
+// instead, and the furniture line lands on the real panel top at any size.
+const BAND=0.44;                       // the band we ASK for when there is room
+let SAFE=1-BAND;                       // the band we actually GOT, per frame
+function measureSafe(){
+  const card=document.querySelector('#ov-loc.on.pov .card'), cv=$('cv');
+  if(!card || !cv){ SAFE=1-BAND; return; }
+  // BOTH heights must be CSS pixels. Measuring the card (CSS) against sceneH
+  // (the backing store, 720 tall on a 2x display) under-reserved the band by the
+  // device ratio, which is exactly how much of CoCo ended up behind the panel.
+  const cr=cv.getBoundingClientRect(), cssH=cr.height;
+  if(!cssH){ SAFE=1-BAND; return; }
+  // Where the panel's TOP is, not how tall it is. The panel is anchored to the
+  // viewport and may hang below the canvas, and height alone counted that
+  // overhang as covered art - 68px of scene we were refusing to draw in for no
+  // reason. The top edge is the only thing the art has to stay clear of.
+  const ch=cssH-(card.getBoundingClientRect().top-cr.top);
+  // The floor is low on purpose. On a cramped window the panel needs more room
+  // than the band would give it, and the honest answer is to compress the scene
+  // rather than to paint furniture where the panel will cover it.
+  SAFE=Math.max(0.18,Math.min(0.80,1-ch/cssH));
+}
 
 function drawCoCoFront(g,cx,cy,u){
   const c=CFG.penguin;
@@ -740,6 +792,26 @@ function drawCoCoFront(g,cx,cy,u){
   r(-3,-1,6,7,c.belly);
   r(-3,-4,2,2,c.eye); r(1,-4,2,2,c.eye); r(-1,-2,2,2,c.beak);
 }
+// A loading animation that belongs to the character rather than the chrome:
+// "Processing your request..." was only ever text in the panel, so the scene sat
+// frozen while CoCo appeared to do nothing. Drawn in the same pixel idiom.
+function drawThinkBubble(g,cx,cy,u){
+  const bx=cx+3*u, by=cy-15*u, bw=13*u, bh=7*u;
+  g.fillStyle='rgba(10,20,28,.55)';                      // soft drop
+  g.fillRect(bx-u,by+u,bw,bh);
+  g.fillStyle='#EAF6FD'; g.fillRect(bx,by,bw,bh);        // cloud body
+  g.fillRect(bx+2*u,by-u,bw-4*u,bh+2*u);
+  g.fillStyle='#9FC2D6';                                 // trail toward his head
+  g.fillRect(bx-1.5*u,by+bh+1.5*u,2*u,2*u);
+  g.fillRect(bx-3*u,by+bh+4*u,1.5*u,1.5*u);
+  // three dots, one lit at a time, so it reads as working not stuck
+  const lit=Math.floor(tick/9)%3;
+  for(let i=0;i<3;i++){
+    g.fillStyle = i===lit ? '#E8863C' : '#B9CBD8';
+    const d = i===lit ? 0.5*u : 0;
+    g.fillRect(bx+2.5*u+i*3.2*u-d/2, by+2.5*u-d/2, 2*u+d, 2*u+d);
+  }
+}
 function shelfBooks(g,x,y,w,u,seed){
   const r=rng(seed); let cx=x;
   const cols=['#C4553E','#3E7DA8','#C9A13B','#4F9E6A','#8A5FA8','#B5482F','#3C6E8F'];
@@ -749,6 +821,7 @@ function shelfBooks(g,x,y,w,u,seed){
 }
 function drawScene(kind){
   const g=sceneCtx, w=sceneW, h=sceneH, u=S, th=CFG.theme;
+  measureSafe();                  // where the panel actually is, this frame
   if(kind==='house'){
     const p=openProg();
     const F=Math.sin(tick/7)*0.5+0.5;                 // fire flicker 0..1
@@ -919,7 +992,7 @@ function drawScene(kind){
   }
   if(kind==='library'){
     g.fillStyle='#1B1526'; g.fillRect(0,0,w,h);                        // warm dark wall
-    const DK=h*0.48;                                                   // desk line
+    const DK=h*SAFE;                                                    // desk line = band
     // ---- floorboards in perspective below the shelves
     g.fillStyle='#2A1F38'; g.fillRect(0,DK-h*0.08,w,h*0.08);
     for(let i=0;i<10;i++){
@@ -931,7 +1004,7 @@ function drawScene(kind){
     }
     // ---- four shelf tiers, deeper stacks, a few tilted spines
     for(let row=0;row<4;row++){
-      const y=h*0.025+row*h*0.098;
+      const y=h*0.02+row*(h*SAFE-h*0.10)/4;
       g.fillStyle='#2E2340'; g.fillRect(w*0.03,y,w*0.94,h*0.084);      // recess
       g.fillStyle='#3A2C4E'; g.fillRect(w*0.03,y,w*0.94,4);
       shelfBooks(g,w*0.04,y+h*0.084,w*0.92,u,700+row);
@@ -968,7 +1041,8 @@ function drawScene(kind){
       g.fillRect(mx,my,S,S);
     }
     // ---- CoCo behind the reading desk
-    drawCoCoFront(g,w*0.5,h*0.40,S*2.0);
+    drawCoCoFront(g,w*0.5,DK-h*0.055,S*2.0);
+    if(sceneThinking) drawThinkBubble(g,w*0.5,DK-h*0.055,S*2.0);
     // ---- desk: top edge catches the lantern, front face falls away
     g.fillStyle='#5A3D22'; g.fillRect(0,DK,w,h-DK);
     for(let i=0;i<7;i++){                                              // grain
@@ -977,9 +1051,9 @@ function drawScene(kind){
     }
     g.fillStyle='#6E4B2A'; g.fillRect(0,DK,w,5);
     g.fillStyle='rgba(255,231,176,.12)'; g.fillRect(w*0.55,DK,w*0.45,5);
-    g.fillStyle='#C9A13B'; g.fillRect(w*0.14,h*0.43,38,9);             // open book
-    g.fillStyle='#EFE6D2'; g.fillRect(w*0.14+3,h*0.43-6,32,7);
-    g.fillStyle='#3A2A1C'; g.fillRect(w*0.72,h*0.42,10,7);             // inkwell
+    g.fillStyle='#C9A13B'; g.fillRect(w*0.14,DK-13,38,9);             // open book
+    g.fillStyle='#EFE6D2'; g.fillRect(w*0.14+3,DK-19,32,7);
+    g.fillStyle='#3A2A1C'; g.fillRect(w*0.72,DK-14,10,7);              // inkwell
     // ---- vignette
     const vg=g.createRadialGradient(w/2,h*0.42,h*0.28,w/2,h*0.42,h*0.95);
     vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.58)');
@@ -987,7 +1061,7 @@ function drawScene(kind){
     return;
   }
   if(kind==='marketplace'){
-    const CT=h*0.46;                                                   // counter
+    const CT=h*SAFE;                                                    // counter = band
     g.fillStyle=th.sky; g.fillRect(0,0,w,h);
     // ---- other stalls receding behind, in silhouette
     for(let i=0;i<5;i++){
@@ -1026,23 +1100,25 @@ function drawScene(kind){
     pg.addColorStop(1,'rgba(255,231,176,0)');
     g.fillStyle=pg; g.fillRect(0,0,w,h);
     // ---- CoCo tending the stall, with breath in the cold
-    drawCoCoFront(g,w*0.5,h*0.29,S*1.9);
+    drawCoCoFront(g,w*0.5,CT-h*0.20,S*1.9);
+    if(sceneThinking) drawThinkBubble(g,w*0.5,CT-h*0.20,S*1.9);
     for(let i=0;i<5;i++){
       const t=(tick*0.9+i*22)%110;
       g.fillStyle='rgba(234,246,253,'+(0.30*(1-t/110))+')';
-      g.fillRect(w*0.5+16+t*0.5,h*0.29-4-t*0.28,S*(1+t/60),S*(1+t/60));
+      g.fillRect(w*0.5+16+t*0.5,CT-h*0.20-4-t*0.28,S*(1+t/60),S*(1+t/60));
     }
     // ---- crates of goods with price tags
     const goods=['#4F9E6A','#3E7DA8','#C9A13B','#8A5FA8','#C4553E'];
+    const cy0=CT-h*0.075;                                  // crates ON the counter
     for(let i=0;i<5;i++){ const x=w*0.09+i*w*0.17;
-      g.fillStyle='#7A5433'; g.fillRect(x,h*0.40,w*0.12,h*0.06);
-      g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(x,h*0.40,w*0.12,4);
-      g.fillStyle=goods[i]; g.fillRect(x+6,h*0.37,w*0.12-12,h*0.035);
-      g.fillStyle='#F2F7FA'; g.fillRect(x+w*0.12-15,h*0.405,13,9);
-      g.fillStyle='#7A5433'; g.fillRect(x+w*0.12-15,h*0.405,13,2);
+      g.fillStyle='#7A5433'; g.fillRect(x,cy0,w*0.12,h*0.075);
+      g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(x,cy0,w*0.12,4);
+      g.fillStyle=goods[i]; g.fillRect(x+6,cy0-h*0.035,w*0.12-12,h*0.035);
+      g.fillStyle='#F2F7FA'; g.fillRect(x+w*0.12-15,cy0+6,13,9);
+      g.fillStyle='#7A5433'; g.fillRect(x+w*0.12-15,cy0+6,13,2);
     }
     // ---- chalkboard price sign propped at the end of the counter
-    const cbx=w*0.78, cby=h*0.33;
+    const cbx=w*0.78, cby=CT-h*0.185;
     g.fillStyle='#4A3520'; g.fillRect(cbx-3,cby-3,w*0.16+6,h*0.11+6);
     g.fillStyle='#16303F'; g.fillRect(cbx,cby,w*0.16,h*0.11);
     g.fillStyle='rgba(242,247,250,.72)';
@@ -1069,7 +1145,7 @@ function drawScene(kind){
     return;
   }
   if(kind==='workshop'){
-    const BN=h*0.52;                                                   // bench line
+    const BN=h*SAFE;                                                    // bench = band
     // ---- steel back wall with panel seams
     g.fillStyle='#0B1219'; g.fillRect(0,0,w,h);
     for(let x=0;x<w;x+=w*0.11){
@@ -1107,7 +1183,7 @@ function drawScene(kind){
       g.fillRect(w*0.17,cy2,w*0.66,4);
     }
     // ---- the holographic schematic: a slow-rotating wireframe box
-    const ox=w*0.5, oy=h*0.27, rw=w*0.15, rh=h*0.11, a=tick/38;
+    const ox=w*0.5, oy=BN*0.44, rw=w*0.15, rh=BN*0.20, a=tick/38;
     const eg=g.createRadialGradient(ox,BN,8,ox,BN,h*0.42);             // emitter cone
     eg.addColorStop(0,'rgba(41,181,232,.34)');
     eg.addColorStop(1,'rgba(41,181,232,0)');
@@ -1134,7 +1210,7 @@ function drawScene(kind){
     // ---- articulated arms dipping to the bench, throwing sparks
     [[w*0.26,-1],[w*0.74,1]].forEach((arm,i)=>{
       const ax=arm[0], dip=Math.sin(tick/17+i*2.1);
-      const j1x=ax, j1y=h*0.14, j2x=ax+arm[1]*w*0.055, j2y=h*0.28+dip*h*0.03;
+      const j1x=ax, j1y=BN*0.16, j2x=ax+arm[1]*w*0.055, j2y=BN*0.52+dip*h*0.03;
       const tipx=ax+arm[1]*w*0.015, tipy=BN-h*0.045+dip*h*0.018;
       g.strokeStyle='#39525F'; g.lineWidth=9;
       g.beginPath(); g.moveTo(j1x,j1y); g.lineTo(j2x,j2y);
@@ -1156,9 +1232,10 @@ function drawScene(kind){
       }
     });
     // ---- CoCo at the bench, lit from below by the hologram
-    drawCoCoFront(g,w*0.5,h*0.44,S*1.9);
+    drawCoCoFront(g,w*0.5,BN-h*0.055,S*1.9);
+    if(sceneThinking) drawThinkBubble(g,w*0.5,BN-h*0.055,S*1.9);
     g.fillStyle='rgba(41,181,232,.16)';
-    g.fillRect(w*0.5-38,h*0.34,76,h*0.18);
+    g.fillRect(w*0.5-38,BN-h*0.16,76,h*0.16);
     // ---- steel bench: the panel docks against this edge
     g.fillStyle='#243747'; g.fillRect(0,BN,w,h-BN);
     g.fillStyle='#31485B'; g.fillRect(0,BN,w,5);
@@ -1178,6 +1255,70 @@ function drawScene(kind){
     g.fillStyle=vg2; g.fillRect(0,0,w,h);
     return;
   }
+  if(kind==='postbox'){
+    const p=Math.max(0,Math.min(1,(Date.now()-postT)/POST_MS));
+    const GR=h*SAFE;
+    g.fillStyle=th.sky; g.fillRect(0,0,w,h);
+    // arctic dusk behind: a soft horizon and a few pines
+    const sg=g.createLinearGradient(0,0,0,GR);
+    sg.addColorStop(0,'#0E2436'); sg.addColorStop(1,'#1D3D50');
+    g.fillStyle=sg; g.fillRect(0,0,w,GR);
+    for(let i=0;i<7;i++){
+      const tx=w*(0.05+i*0.15), th2=h*0.10;
+      g.fillStyle='#123049';
+      g.beginPath(); g.moveTo(tx,GR-th2*1.6); g.lineTo(tx-w*0.030,GR);
+      g.lineTo(tx+w*0.030,GR); g.closePath(); g.fill();
+    }
+    g.fillStyle=th.snow; g.fillRect(0,GR,w,h-GR);
+    g.fillStyle='rgba(41,181,232,.10)'; g.fillRect(0,GR,w,4);
+    // the postbox
+    const bx=w*0.62, by=GR-h*0.26, bw=w*0.11, bh=h*0.26;
+    g.fillStyle='#3A2A1C'; g.fillRect(bx+bw*0.36,by+bh*0.55,bw*0.28,bh*0.45);
+    g.fillStyle='#C4553E'; g.fillRect(bx,by,bw,bh*0.60);
+    g.fillStyle='#A6412F'; g.fillRect(bx,by,bw,6);
+    g.fillStyle='#16222E'; g.fillRect(bx+bw*0.18,by+bh*0.22,bw*0.64,7);   // slot
+    // the envelope: arcs across, tips into the slot, then it is gone
+    const slotX=bx+bw*0.5, slotY=by+bh*0.22;
+    const ew=w*0.075, eh=h*0.052;
+    if(p<0.62){
+      const t=p/0.62;
+      const ex=w*0.30+(slotX-ew/2-w*0.30)*t;
+      const ey=(GR-h*0.16)-Math.sin(t*Math.PI)*h*0.13;
+      g.save(); g.translate(ex+ew/2,ey+eh/2); g.rotate(-0.5+t*0.5);
+      g.fillStyle='#EADFC6'; g.fillRect(-ew/2,-eh/2,ew,eh);
+      g.strokeStyle='#B9A98A'; g.lineWidth=2; g.strokeRect(-ew/2,-eh/2,ew,eh);
+      g.beginPath(); g.moveTo(-ew/2,-eh/2); g.lineTo(0,eh*0.1);
+      g.lineTo(ew/2,-eh/2); g.stroke(); g.restore();
+    } else if(p<0.78){
+      const t=(p-0.62)/0.16;                         // sinking into the slot
+      g.fillStyle='#EADFC6';
+      g.fillRect(slotX-ew/2,slotY-eh*(1-t),ew,eh*(1-t));
+    }
+    if(p>0.60){                                      // flap knock, then sparkle
+      g.fillStyle='#A6412F';
+      g.fillRect(bx+bw*0.18,slotY-(p<0.72?4:0),bw*0.64,7);
+    }
+    if(p>0.74){
+      for(let i=0;i<9;i++){
+        const t=(p-0.74)/0.26, a=1-t;
+        const ang=i*0.7, r=t*h*0.12;
+        g.fillStyle=`rgba(255,231,176,${Math.max(0,a)})`;
+        g.fillRect(slotX+Math.cos(ang)*r,slotY+Math.sin(ang)*r-h*0.02,S,S);
+      }
+    }
+    // CoCo, having posted it, with a flipper still raised
+    const cx=w*0.44, cy=GR-h*0.045;
+    drawCoCoFront(g,cx,cy,S*1.9);
+    if(p>0.62){
+      g.fillStyle=CFG.penguin.body_dark;
+      g.fillRect(cx+S*1.9*4,cy-S*1.9*6,S*1.9*2,S*1.9*4);
+    }
+    for(let i=0;i<26;i++){                            // snow
+      const sx=(i*89+Math.sin((tick+i*11)/38)*8)%w, sy=(i*67+tick*1.2)%h;
+      g.fillStyle='rgba(255,255,255,.6)'; g.fillRect(sx,sy,S,S);
+    }
+    return;
+  }
 }
 function openScene(kind){ sceneActive=kind; $('scene').classList.add('on'); }
 function closeScene(){ sceneActive=null; $('scene').classList.remove('on'); }
@@ -1192,8 +1333,12 @@ function sizePovCard(){
   // strip were both scrolled out of sight. Give the panel a floor, and let it
   // take more of the stage when the stage is small.
   if(hpx){
-    const want=Math.max(320,Math.round(hpx*0.62));
-    card.style.maxHeight=Math.min(want,Math.round(innerHeight*0.72))+'px';
+    // Ask for the band; take more only if the band is too small to use. A 144px
+    // scroll window put all six dataset options below the fold on a short
+    // screen, which looked like a panel with nothing in it. The scenes follow.
+    const want=Math.max(Math.round(hpx*BAND),340);
+    card.style.maxHeight=Math.min(want,Math.round(hpx*0.72),
+                                  Math.round(innerHeight*0.70))+'px';
   }
 }
 
@@ -1408,26 +1553,50 @@ async function loadOptions(){
   catch(e){ OPTS={}; }
 }
 
-// Fill the collapsed "earlier" strip from the last completed turn, so the
-// visitor can re-read the previous stop without CoCo repeating himself.
+// The journey as four tiles: one per location, in flow order, styled like the
+// HUD. A finished stop is tappable and reveals what was said there.
 function paintPrev(id){
-  const strip=$('c-prev'), head=$('c-prevhead'), body=$('c-prevbody');
-  const turns=(ST.turns||[]).filter(t=>t.location && t.location!==id);
-  const t=turns[turns.length-1];
-  body.classList.remove('on');
-  if(!t){ strip.classList.remove('on'); return; }
-  const nm=((CFG.locations[t.location]||{}).name)||t.location;
-  head.innerHTML=`<span>Earlier &middot; ${esc(nm)}</span><span>REVIEW &#9662;</span>`;
-  body.innerHTML=`<span class="lab">You said</span>`
-    +`<div class="txt">${esc(t.text||'-')}</div>`
-    +`<span class="lab">CoCo replied</span>`
-    +`<div class="txt">${esc(t.reply||'-')}</div>`;
-  strip.classList.add('on');
+  const wrap=$('c-prev'), tiles=$('c-ptiles'), body=$('c-prevbody');
+  body.classList.remove('on'); body.innerHTML='';
+  const ids=Object.keys(CFG.locations);
+  const turnFor=lid=>(ST.turns||[]).filter(t=>t.location===lid).slice(-1)[0];
+  // Nothing to review yet: the tiles would be four dead boxes.
+  if(!ids.some(l=>l!==id && turnFor(l))){ wrap.classList.remove('on'); return; }
+  tiles.innerHTML=ids.map(lid=>{
+    const l=CFG.locations[lid]||{}, t=turnFor(lid);
+    const cls = lid===id ? 'cur' : (t ? 'done' : '');
+    const val = lid===id ? 'here now'
+              : t ? (summarise(t.text)||'done')
+              : 'to come';
+    // Short label: "THE DATA LIBRARY" will not fit four across.
+    const key=String(l.name||lid).replace(/^The\s+/i,'');
+    return `<div class="ptile ${cls}" data-loc="${lid}">`
+      +`<div class="k">${esc(key)}</div><div class="v">${esc(val)}</div></div>`;
+  }).join('');
+  [...tiles.children].forEach(el=>{
+    if(!el.classList.contains('done')) return;
+    el.addEventListener('click',()=>{
+      const was=el.classList.contains('open');
+      [...tiles.children].forEach(o=>o.classList.remove('open'));
+      if(was){ body.classList.remove('on'); body.innerHTML=''; return; }
+      el.classList.add('open');
+      cancelAutoLeave();            // they are reading; stop the auto-exit
+      const t=turnFor(el.dataset.loc)||{};
+      body.innerHTML=`<span class="lab">You said</span>`
+        +`<div class="txt">${esc(t.text||'-')}</div>`
+        +`<span class="lab">CoCo replied</span>`
+        +`<div class="txt">${esc(t.reply||'-')}</div>`;
+      body.classList.add('on');
+    });
+  });
+  wrap.classList.add('on');
 }
-$('c-prevhead').addEventListener('click',()=>{
-  const b=$('c-prevbody'), open=b.classList.toggle('on');
-  $('c-prevhead').lastElementChild.innerHTML = open?'HIDE &#9652;':'REVIEW &#9662;';
-});
+// Tiles are narrow, so show a count rather than truncating a list mid-word.
+function summarise(text){
+  const parts=String(text||'').split(',').map(x=>x.trim()).filter(Boolean);
+  if(parts.length>1) return parts.length+' chosen';
+  return parts[0]||'';
+}
 
 function openPanel(id){
   const l=CFG.locations[id]; if(!l) return;
@@ -1442,7 +1611,7 @@ function openPanel(id){
   // SEND button rather than a separate "post it" card.
   if(id==='postbox') return showBp();
   panelOpen=true; panelLoc=id; sel=new Set();
-  inSceneLoc=null; inScenePhase=null;
+  inSceneLoc=null; inScenePhase=null; cancelAutoLeave();
   Object.keys(keys).forEach(k=>keys[k]=false);
   // POV locations get the drawn interior behind a low "desk" panel; others use
   // the plain modal.
@@ -1485,19 +1654,6 @@ function openPanel(id){
     });
   }
   if(isCompose){ $('c-compose').placeholder=l.placeholder||''; $('c-compose').value=''; }
-  // Workshop: show a recap of everything chosen so far, so the visitor's one
-  // line builds on visible context (and CoCo shapes the POC from all of it).
-  const recap=$('c-recap');
-  if(id==='workshop'){
-    const v=ST.visitor||{}, ind=(CFG.industries[v.industry]||{}).name||'your sector';
-    const held=ST.held||[], joined=ST.joined||[];
-    const row=(k,items)=>`<div style=\"margin:3px 0\"><span style=\"color:#7FA8C2;font-size:11px;letter-spacing:.08em;text-transform:uppercase\">${k}</span><br>${items.length?items.map(esc).join(', '):'<span style=\"color:#5E8399\">nothing yet</span>'}</div>`;
-    recap.innerHTML=`<div style=\"background:#0A141C;border:2px solid #24425A;border-radius:6px;padding:8px 11px;margin:2px 0 10px;font-size:13px;line-height:1.4\">
-      <div style=\"margin:3px 0\"><span style=\"color:#7FA8C2;font-size:11px;letter-spacing:.08em;text-transform:uppercase\">World</span><br>${esc(ind)}</div>
-      ${row('Data you hold',held)}
-      ${row('From the Marketplace',joined)}</div>`;
-    recap.style.display='block';
-  } else { recap.style.display='none'; recap.innerHTML=''; }
   $('ov-loc').classList.add('on');
   syncGo();
   // Land the caret in the docked action block, not at the top of the card.
@@ -1513,7 +1669,8 @@ function syncGo(){
   else if(l.mode==='compose') $('c-go').disabled = !$('c-compose').value.trim();
   else $('c-go').disabled=false;
 }
-function closePanel(){ panelOpen=false; panelLoc=null; reopenLock=Date.now()+700;
+function closePanel(){ cancelAutoLeave();
+  panelOpen=false; panelLoc=null; reopenLock=Date.now()+700;
   inSceneLoc=null; inScenePhase=null;
   $('ov-loc').classList.remove('on','pov'); closeScene(); }
 
@@ -1550,8 +1707,13 @@ function paintSendBtn(d){
     // Honest: the email is queued for the stand to send, and the document
     // itself is available right now. Claiming "SENT" was never true from here.
     sub.textContent=`Queued for ${d.email} \u2014 and ready to take away below.`;
-    btn.disabled=true; btn.textContent='DONE \u2713';
-    keys.textContent='Scan the code to keep it';
+    // Was disabled: a dead control at the emotional high point. It now plays
+    // the posting beat and ends the visit.
+    const ready=!!d.document_url;
+    btn.disabled=!ready;
+    btn.textContent=ready?'POST IT':'FINISHING\u2026';
+    keys.textContent=ready?'Scan the code first if you want it on your phone'
+                          :'Staging your document\u2026';
   } else {
     h2.textContent='Ready to post';
     sub.textContent=`I\u2019ll build it and queue it for ${d.email}.`;
@@ -1598,7 +1760,26 @@ async function sendPoc(){
   }
 }
 function closeBp(){ $('ov-bp').classList.remove('on'); reopenLock=Date.now()+700; }
-$('bp-send').addEventListener('click',sendPoc);
+$('bp-send').addEventListener('click',()=>{
+  const d=window.__bp||{};
+  // Second press, once it is queued, is the "post it" beat rather than a resend.
+  if(d.queued || d.draft_created) return playPosting();
+  sendPoc();
+});
+// The letter physically going in the box. Nothing is sent here - the send already
+// happened - this is the closing beat so the visit ends on an action.
+function playPosting(){
+  if($('bp-send').disabled) return;
+  $('bp-send').disabled=true;
+  $('ov-bp').classList.remove('on');        // clear the card so the beat is seen
+  postT=Date.now(); openScene('postbox');
+  setTimeout(()=>{
+    closeScene();
+    visited.add('postbox');
+    const v=(ST.visitor||{}).first_name||'';
+    nudge(`Posted${v?', '+v:''}. That is your POC on its way. Go and build it.`,14000);
+  },POST_MS+220);
+}
 
 // ---------------- new visitor ----------------
 $('newv').addEventListener('click',async()=>{
@@ -1657,8 +1838,24 @@ function paintScenePanel(s){
     const leave = {library:'LEAVE THE LIBRARY', marketplace:'LEAVE THE STALL',
                    workshop:'LEAVE THE WORKSHOP'}[panelLoc] || 'STEP AWAY';
     $('c-go').disabled=false; $('c-go').textContent=leave;
+    // Walk them back out. Standing in a finished room waiting to be told to
+    // leave is dead time on a five minute budget, and the reply is not lost:
+    // paintBubble adopts it in the top thought bubble on the way out.
+    startAutoLeave();
   }
 }
+
+let autoLeaveT=0;
+const AUTO_LEAVE_MS=3000;          // long enough to read a 40 word reply
+function startAutoLeave(){
+  clearTimeout(autoLeaveT);
+  const at=panelLoc;
+  autoLeaveT=setTimeout(()=>{
+    if(!panelOpen || panelLoc!==at || inScenePhase!=='reply') return;
+    visited.add(at); closePanel();
+  },AUTO_LEAVE_MS);
+}
+function cancelAutoLeave(){ clearTimeout(autoLeaveT); autoLeaveT=0; }
 
 async function post(url,body){
   const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
@@ -1799,6 +1996,7 @@ function onState(s){
     || openingActive();
   $('banner').classList.toggle('on', !haveVisitor() && !opening);
   if(!haveVisitor() && !opening && firstLoad) openTitle();
+  sceneThinking = !!s.thinking;
   paintTray(s);
   paintBubble(s);
   paintScenePanel(s);

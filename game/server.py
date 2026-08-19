@@ -68,8 +68,10 @@ BLANK_STATE = {
     "reply": "",
     "narrative": "",
     "turns": [],
-    "visitor": {"first_name": "", "company": "", "email": "", "industry": ""},
+    "visitor": {"first_name": "", "company": "", "email": "", "industry": "",
+                "problem": ""},
     "held": [],
+    "platforms": [],
     "joined": [],
     "joined_listings": [],
     "poc": {},
@@ -457,6 +459,11 @@ def fill(tmpl, cfg, state, **extra):
         "industry": industry_name(cfg, vis.get("industry")) or "your sector",
         "held": ", ".join(state.get("held") or []) or "nothing yet",
         "joined": ", ".join(state.get("joined") or []) or "nothing yet",
+        # Captured at the letter stage, so it is already in hand by the time the
+        # visitor reaches the library. Every location prompt can lean on it,
+        # which is why the later questions can be shorter than they were.
+        "problem": (vis.get("problem") or "").strip() or "not stated",
+        "platforms": ", ".join(state.get("platforms") or []) or "not stated",
     }
     vals.update(extra)
     out = tmpl
@@ -855,10 +862,19 @@ def build_coco_prompt(cfg, state):
         f"You are helping me build a proof of concept in Snowflake. I work in "
         f"{ind}" + (f" at {vis.get('company')}" if vis.get("company") else "") + ".",
         "",
+        "THE PROBLEM",
+        (vis.get("problem") or "").strip()
+        or "(I described this at the booth but did not write it down.)",
+        "",
         "THE DATA",
         "I have not loaded anything yet. The data I hold is:",
     ]
     lines += [f"  - {h}" for h in (held or ["(to be confirmed)"])]
+    plats = state.get("platforms") or []
+    if plats:
+        lines.append("It is sitting on: " + ", ".join(plats)
+                     + ". Tell me the shortest route to get it into Snowflake "
+                       "before you build anything.")
     if listings:
         lines.append("I also want to attach these Snowflake Marketplace listings:")
         for r in listings:
@@ -918,8 +934,12 @@ def blueprint_html(cfg, state):
         return "<ul>" + "".join(f"<li>{e(i)}</li>" for i in items) + "</ul>"
 
     parts = [
+        # 640px is a desktop measure. Almost every one of these is opened on a
+        # phone, so the body is a single 34rem column at 16px - below that,
+        # iOS inflates the text itself and the layout stops being ours.
         "<div style=\"font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,"
-        "sans-serif;font-size:15px;line-height:1.55;color:#1B2733;max-width:640px\">",
+        "sans-serif;font-size:16px;line-height:1.6;color:#1A242E;"
+        "max-width:34rem;margin:0 auto;padding:0 4px\">",
         f"<p>Hi {e(vis.get('first_name') or 'there')},</p>",
         "<p>Here is the POC we sketched out together at the Snowflake booth. "
         "Everything below is yours to keep.</p>",
@@ -928,8 +948,19 @@ def blueprint_html(cfg, state):
         f"<p>{e(poc.get('summary') or '')}</p>",
     ]
     if held:
-        parts += ["<h3 style=\"font-size:15px;margin:20px 0 4px\">"
+        parts += ["<h3 style=\"font-size:16px;margin:22px 0 4px\">"
                   "Data you already hold</h3>", ul(held)]
+
+    ipaths = integration_paths(state)
+    if ipaths:
+        parts.append("<h3 style=\"font-size:16px;margin:22px 0 4px\">"
+                     "Getting that data into Snowflake</h3><ul>")
+        for plat, howto, purl in ipaths:
+            parts.append(
+                f"<li><b>{e(plat)}</b><br><span style=\"color:#5B7382;"
+                f"font-size:14px\">{e(howto)}</span><br>"
+                f"<a href=\"{e(purl)}\">{e(purl)}</a></li>")
+        parts.append("</ul>")
 
     # Marketplace: real listing, named provider, working link.
     if listings or joined:
@@ -961,12 +992,21 @@ def blueprint_html(cfg, state):
     parts += [
         "<h3 style=\"font-size:15px;margin:22px 0 4px\">Paste this into Cortex "
         "Code to begin</h3>",
-        "<p style=\"margin:0 0 6px;color:#556\">Start a free trial at "
-        f"<a href=\"{e(d.get('signup_url',''))}\">{e(d.get('signup_url',''))}</a>, "
-        "open Cortex Code, and paste this in.</p>",
-        "<pre style=\"background:#F4F7FA;border:1px solid #D6E2EC;border-radius:6px;"
-        "padding:12px;white-space:pre-wrap;word-wrap:break-word;font-size:13px;"
+        "<p style=\"margin:0 0 10px;color:#55707F\">Start a free trial, open "
+        "Cortex Code, and paste this in as your first message.</p>",
+        # A bare URL is a poor target on a phone. Buttons in email have to be
+        # padded anchors with inline styles - no CSS class survives Gmail.
+        (f"<a href=\"{e(d.get('signup_url',''))}\" style=\"display:block;"
+         "text-align:center;text-decoration:none;padding:15px 18px;"
+         "border-radius:10px;background:#29B5E8;color:#08222E;font-weight:700;"
+         "font-size:16px;margin:0 0 12px\">Start a free trial</a>"
+         if d.get("signup_url") else ""),
+        "<pre style=\"background:#0E1F2B;color:#DDEBF4;border-radius:10px;"
+        "padding:14px;white-space:pre-wrap;overflow-wrap:anywhere;"
+        "font-size:13px;line-height:1.5;"
         f"font-family:ui-monospace,Menlo,Consolas,monospace\">{e(prompt)}</pre>",
+        "<p style=\"margin:8px 0 0;color:#7B909D;font-size:13px\">"
+        "Long-press the block above to select and copy it.</p>",
     ]
     if poc.get("guide_title") and poc.get("guide_url"):
         parts += ["<h3 style=\"font-size:15px;margin:22px 0 4px\">Start from this "
@@ -987,6 +1027,261 @@ def blueprint_html(cfg, state):
     parts += ["<p style=\"margin-top:24px;color:#667\">See you next time.<br>"
               "CoCo</p>", "</div>"]
     return "\n".join(parts)
+
+
+# --------------------------------------------------------- integration paths
+
+# One entry per platform the library offers. These are deliberately concrete:
+# "use a connector" is not an answer a visitor can act on, but "Openflow, or
+# Azure Data Factory writing Parquet to an external stage" is.
+INTEGRATION_PATHS = {
+    "Microsoft / Azure": (
+        "Openflow has a first-party connector for Azure Blob Storage and "
+        "SQL Server. For Fabric or OneLake, register the Iceberg tables through "
+        "a catalog integration and query them in place - no copy.",
+        "https://docs.snowflake.com/en/user-guide/data-load-azure"),
+    "AWS": (
+        "Point an external stage at the S3 bucket with a storage integration, "
+        "then Snowpipe for continuous load. If the data is already Iceberg in "
+        "Glue, use a catalog integration and leave it where it is.",
+        "https://docs.snowflake.com/en/user-guide/data-load-s3"),
+    "Google Cloud": (
+        "A storage integration over the GCS bucket plus an external stage. "
+        "BigQuery data moves cleanly as Parquet exported to GCS, or through "
+        "Openflow if you need it on a schedule.",
+        "https://docs.snowflake.com/en/user-guide/data-load-gcs"),
+    "Oracle": (
+        "Openflow's Oracle connector does change data capture, so you get an "
+        "ongoing replica rather than a nightly dump. Start with the handful of "
+        "tables the proof of concept actually reads.",
+        "https://other-docs.snowflake.com/en/connectors"),
+    "SAP": (
+        "Either the SAP connector for Snowflake, or SAP Business Data Cloud "
+        "sharing the data as Iceberg that Snowflake reads without a copy. The "
+        "second route is usually faster to stand up.",
+        "https://docs.snowflake.com/en/user-guide/tables-iceberg"),
+    "On-premise / our own servers": (
+        "Openflow can run inside your network and push out, so nothing has to "
+        "be exposed inbound. For a first proof of concept, a one-off bulk load "
+        "of a representative extract is usually enough.",
+        "https://docs.snowflake.com/en/user-guide/data-load-local-file-system"),
+    "SaaS apps (Salesforce, Workday, etc.)": (
+        "Openflow has connectors for the common SaaS sources, and the "
+        "Marketplace carries some of them as ready-made shares. Check the "
+        "Marketplace first - it is the cheaper answer when it exists.",
+        "https://other-docs.snowflake.com/en/connectors"),
+    "Already in Snowflake": (
+        "Nothing to move. Point the proof of concept at the existing tables "
+        "and spend the saved time on the model and the interface instead.",
+        "https://docs.snowflake.com/en/guides-overview-queries"),
+    "Not sure yet": (
+        "Worth ten minutes with whoever owns the source before you build. The "
+        "answer changes the effort more than any other decision here.",
+        "https://docs.snowflake.com/en/guides-overview-loading-data"),
+}
+
+
+def integration_paths(state):
+    """The route into Snowflake for each platform the visitor named."""
+    out = []
+    for p in state.get("platforms") or []:
+        hit = INTEGRATION_PATHS.get(p)
+        if hit:
+            out.append((p, hit[0], hit[1]))
+        else:
+            out.append((p, "Check the connector catalogue for this source, or "
+                        "land an extract on a stage as Parquet to begin with.",
+                        "https://other-docs.snowflake.com/en/connectors"))
+    return out
+
+
+# ------------------------------------------------------- the blueprint as a page
+
+# The .docx is a good thing to forward to a colleague and a poor thing to read on
+# a phone: Word on iOS wants a download and an app switch before anyone sees a
+# word of it, and a QR code at a booth is scanned by a phone every single time.
+# So the same state renders twice - a page for reading now, a document for
+# keeping. Mobile-first is not a nicety here, it is the primary case.
+BLUEPRINT_CSS = """
+:root { color-scheme:light; }
+* { box-sizing:border-box; }
+body { margin:0; padding:0 18px 64px;
+  font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,
+       Arial,sans-serif;
+  color:#1A242E; background:#F4F8FB;
+  -webkit-text-size-adjust:100%; }
+.wrap { max-width:34rem; margin:0 auto; }
+header { padding:26px 0 18px; }
+.mark { display:block; margin-bottom:14px; }
+h1 { font-size:1.55rem; line-height:1.25; margin:0 0 6px; color:#11567F;
+  letter-spacing:-.01em; }
+.for { color:#55707F; font-size:.95rem; margin:0; }
+.lede { font-size:1.06rem; color:#243642; margin:16px 0 0; }
+section { background:#fff; border:1px solid #DCE7EF; border-radius:12px;
+  padding:16px 16px 18px; margin:14px 0; }
+h2 { font-size:.78rem; letter-spacing:.10em; text-transform:uppercase;
+  color:#29B5E8; margin:0 0 10px; }
+ul { margin:0; padding-left:1.15rem; }
+li { margin:0 0 9px; }
+li b { color:#11567F; }
+.note { display:block; color:#5B7382; font-size:.88rem; margin-top:2px; }
+a { color:#0B7FB3; overflow-wrap:anywhere; }
+/* Tap targets, not links: a 14px underline on a phone is a coin toss. */
+.btn { display:block; text-align:center; text-decoration:none;
+  padding:15px 18px; border-radius:10px; font-weight:700; font-size:1rem;
+  background:#29B5E8; color:#08222E; border:none; width:100%;
+  cursor:pointer; font-family:inherit; }
+.btn.alt { background:#fff; color:#11567F; border:2px solid #29B5E8;
+  margin-top:10px; }
+pre { margin:0; padding:14px; background:#0E1F2B; color:#DDEBF4;
+  border-radius:10px; font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+  white-space:pre-wrap; overflow-wrap:anywhere; max-height:15rem;
+  overflow-y:auto; }
+ol { margin:0; padding-left:1.3rem; }
+footer { text-align:center; color:#7B909D; font-size:.82rem; padding:22px 0 0; }
+@media (prefers-color-scheme:dark) {
+  body { background:#0B1620; color:#DCE8F0; }
+  section { background:#12222E; border-color:#20384A; }
+  h1,li b { color:#7FD3F2; } .for,.note { color:#8FA8B8; }
+  .lede { color:#C9DCE8; } a { color:#7FD3F2; }
+  .btn.alt { background:transparent; color:#7FD3F2; }
+}
+"""
+
+SNOWFLAKE_SVG = (
+    '<svg class="mark" width="34" height="34" viewBox="-50 -50 100 100" '
+    'aria-hidden="true">'
+    + "".join(
+        '<g transform="rotate(%d)">'
+        '<path d="M15 -4 L36 -4 L36 -15 L50 0 L36 15 L36 4 L15 4 Z" '
+        'fill="#29B5E8"/></g>' % (i * 60) for i in range(6))
+    + '<path d="M0 -15 L15 0 L0 15 L-15 0 Z" fill="#29B5E8"/>'
+      '<path d="M0 -6 L6 0 L0 6 L-6 0 Z" fill="#F4F8FB"/></svg>')
+
+
+def blueprint_page(cfg, state):
+    """The blueprint as a standalone page, written to a temp file.
+
+    Same data as the .docx, different medium. Three things it can do that the
+    document cannot: render instantly on the phone that scanned the QR, make
+    every doc link tappable, and put a copy button on the CoCo prompt - which is
+    the one part of the blueprint the visitor has to move somewhere else.
+    """
+    e = html.escape
+    vis = state.get("visitor") or {}
+    poc = state.get("poc") or {}
+    d = cfg.get("delivery") or {}
+    held = state.get("held") or []
+    joined = state.get("joined") or []
+    listings = state.get("joined_listings") or []
+    prompt = build_coco_prompt(cfg, state)
+    signup = d.get("signup_url", "")
+    city = ((cfg.get("event") or {}).get("city") or "")
+
+    P = []
+    a = P.append
+    a("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">")
+    a("<meta name=\"viewport\" content=\"width=device-width,"
+      "initial-scale=1\">")
+    a("<title>%s</title>" % e(poc.get("poc_name") or "Your Snowflake POC"))
+    a("<style>%s</style></head><body><div class=\"wrap\">" % BLUEPRINT_CSS)
+
+    a("<header>" + SNOWFLAKE_SVG)
+    a("<h1>%s</h1>" % e(poc.get("poc_name") or "Your proof of concept"))
+    who = e(vis.get("first_name") or "you")
+    if vis.get("company"):
+        who += " at " + e(vis["company"])
+    a("<p class=\"for\">For %s%s</p>" % (
+        who, " &middot; Snowflake World Tour " + e(city) if city else ""))
+    if poc.get("summary"):
+        a("<p class=\"lede\">%s</p>" % e(poc["summary"]))
+    a("</header>")
+
+    # The prompt goes FIRST on the page. It is the only thing that has to travel
+    # somewhere else, and burying it under four reference sections on a phone is
+    # how it gets lost.
+    a("<section><h2>Start here</h2><ol>")
+    a("<li>Start a free Snowflake trial%s.</li>"
+      % (" at <a href=\"%s\">%s</a>" % (e(signup), e(signup)) if signup else ""))
+    a("<li>Open Cortex Code.</li>")
+    a("<li>Paste the prompt below as your first message.</li></ol>")
+    a("<pre id=\"p\">%s</pre>" % e(prompt))
+    a("<button class=\"btn\" id=\"c\" style=\"margin-top:12px\">"
+      "Copy the prompt</button>")
+    if signup:
+        a("<a class=\"btn alt\" href=\"%s\">Start a free trial</a>" % e(signup))
+    a("</section>")
+
+    if poc.get("first_step"):
+        a("<section><h2>Your first step</h2><p style=\"margin:0\">%s</p>"
+          "</section>" % e(poc["first_step"]))
+
+    if held:
+        a("<section><h2>Data you already hold</h2><ul>")
+        for h in held:
+            a("<li>%s</li>" % e(h))
+        a("</ul></section>")
+
+    paths = integration_paths(state)
+    if paths:
+        a("<section><h2>Getting that data into Snowflake</h2><ul>")
+        for plat, howto, url in paths:
+            a("<li><b>%s</b><span class=\"note\">%s</span>"
+              "<a href=\"%s\">%s</a></li>" % (e(plat), e(howto), e(url),
+                                             e(url)))
+        a("</ul></section>")
+
+    if listings or joined:
+        a("<section><h2>Attach from the Marketplace</h2><ul>")
+        named = set()
+        for r in listings:
+            named.add(r["title"])
+            a("<li><a href=\"%s\"><b>%s</b></a>"
+              "<span class=\"note\">%s &middot; %s</span></li>"
+              % (e(r["url"]), e(r["title"]), e(r["provider"]), e(r["access"])))
+        for j in joined:
+            if j not in named:
+                a("<li><b>%s</b><span class=\"note\">Search the Marketplace "
+                  "for a provider</span></li>" % e(j))
+        a("</ul></section>")
+
+    feats = link_features(poc.get("features") or [])
+    if feats:
+        a("<section><h2>Features you will use</h2><ul>")
+        for name, docurl in feats:
+            a("<li><a href=\"%s\"><b>%s</b></a></li>" % (e(docurl), e(name)))
+        a("</ul></section>")
+
+    cons = poc.get("considerations") or []
+    if cons:
+        a("<section><h2>Worth thinking about</h2><ul>")
+        for c in cons:
+            a("<li>%s</li>" % e(str(c)))
+        a("</ul></section>")
+
+    problem = (vis.get("problem") or "").strip()
+    if problem:
+        a("<section><h2>The problem you described</h2>"
+          "<p style=\"margin:0\">%s</p></section>" % e(problem))
+
+    a("<footer>Built with you at the Snowflake booth.</footer>")
+    a("</div><script>")
+    # No inline handler and no remote script: this file gets served from a
+    # presigned URL, so it has to be self-contained and boring.
+    a("document.getElementById('c').addEventListener('click',function(){"
+      "var t=document.getElementById('p').textContent;"
+      "var b=this;navigator.clipboard&&navigator.clipboard.writeText(t)"
+      ".then(function(){b.textContent='Copied';"
+      "setTimeout(function(){b.textContent='Copy the prompt';},1800);});});")
+    a("</script></body></html>")
+
+    name = re.sub(r"[^A-Za-z0-9]+", "-",
+                  (vis.get("first_name") or "visitor")).strip("-") or "visitor"
+    path = os.path.join(tempfile.gettempdir(),
+                        "loco4coco-%s-%d.html" % (name, int(time.time())))
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("\n".join(P))
+    return path
 
 
 def blueprint_docx(cfg, state):
@@ -1057,6 +1352,19 @@ def blueprint_docx(cfg, state):
             doc.add_paragraph(str(i), style="List Bullet")
 
     bullets("Data you already hold", state.get("held") or [])
+
+    paths = integration_paths(state)
+    if paths:
+        doc.add_heading("Getting that data into Snowflake", level=2)
+        for plat, how, url in paths:
+            p = doc.add_paragraph(style="List Bullet")
+            p.add_run(plat).bold = True
+            p.add_run(f"\n{how}\n{url}")
+
+    problem = ((state.get("visitor") or {}).get("problem") or "").strip()
+    if problem:
+        doc.add_heading("The problem you described", level=2)
+        doc.add_paragraph(problem)
 
     listings = state.get("joined_listings") or []
     joined = state.get("joined") or []
@@ -1310,6 +1618,28 @@ class OutboxTransport:
         if url:
             write_state({"blueprint_url": url})
             state = read_state()
+        # Side by side, deliberately - but the QR still points at the .docx.
+        # MEASURED: a presigned stage URL serves Content-Type
+        # application/octet-stream regardless of extension, and GET_PRESIGNED_URL
+        # gives no way to set it, so a browser DOWNLOADS the .html instead of
+        # rendering it. That makes the page useless as a QR target today. It is
+        # still built and staged, because it is the right artefact the moment
+        # there is somewhere that serves it with a real content type (a Streamlit
+        # or SAR page reading the SESSIONS row), and because the same markup is
+        # what the email body renders - and email is the mobile surface that
+        # works right now.
+        page_url = ""
+        try:
+            page = blueprint_page(cfg, state)
+            if page:
+                page_url, perr = stage_and_presign(cfg, page)
+                if page_url:
+                    write_state({"blueprint_page_url": page_url})
+                    state = read_state()
+                else:
+                    print("[loco] page presign failed:", perr or "?")
+        except Exception as ex:
+            print("[loco] page render failed:", ex)
 
         body = blueprint_html(cfg, state)
         vis = state.get("visitor") or {}
@@ -1833,6 +2163,10 @@ class Handler(BaseHTTPRequestHandler):
         first = (b.get("first_name") or "").strip()[:80]
         company = (b.get("company") or "").strip()[:120]
         email = (b.get("email") or "").strip()[:160]
+        # Two sentences, generously bounded. This is the single highest-value
+        # field on the form: it is the only place the visitor says WHY, and it
+        # arrives before they have walked anywhere.
+        problem = (b.get("problem") or "").strip()[:400]
         if not first or not email or "@" not in email:
             return self._json({"error": "need a first name and an email"}, 400)
         industry = b.get("industry") or infer_industry(cfg, company)
@@ -1840,7 +2174,8 @@ class Handler(BaseHTTPRequestHandler):
             industry = "other"
         st = write_state({
             "visitor": {"first_name": first, "company": company,
-                        "email": email, "industry": industry},
+                        "email": email, "industry": industry,
+                        "problem": problem},
             "stage": "library", "unlocked": ["library"], "reasoning": [],
             "session_id": uuid.uuid4().hex,
         })
@@ -1857,6 +2192,12 @@ class Handler(BaseHTTPRequestHandler):
         if loc_id not in (cfg.get("locations") or {}):
             return self._json({"error": f"unknown location {loc_id!r}"}, 400)
         labels = [str(x)[:120] for x in (b.get("labels") or []) if str(x).strip()]
+        # The library asks a second, smaller question: which platforms is this
+        # data sitting on right now. It costs one tap and it decides the whole
+        # "getting it in" section of the blueprint, so it is worth the tap.
+        plats = [str(x)[:60] for x in (b.get("platforms") or []) if str(x).strip()]
+        if plats:
+            write_state({"platforms": plats[:8]})
         if not labels:
             return self._json({"error": "nothing selected"}, 400)
         job = uuid.uuid4().hex

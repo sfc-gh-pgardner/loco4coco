@@ -91,7 +91,9 @@
       "line2": "Anyway, let's go and get this show on the road.",
       "map_line": "First stop is my Data Library. That's where I keep all the unstructured, semi-structured and structured data that would be useful for {first_name} and {company}.",
       "bubble": "Wow, a letter from my friend! Shame I can't make out some of these words...\n(Please fill this in with your details)"
-    }
+    },
+    "problem_label": "The problem you want to solve (two sentences)",
+    "problem_placeholder": "e.g. our engineers waste hours hunting through old inspection reports. We want answers in seconds, with the source."
   },
   "unlock_order": [
     "library",
@@ -650,7 +652,7 @@
       "other_label": "Something else you hold",
       "other_placeholder": "e.g. 20 years of inspection photographs",
       "narrative": "This is my magic data library, {first_name}. Every shelf can mimic something {company} already holds. You can ask me for anything, from MP3 to CSV, PDF to Parquet.",
-      "prompt": "The visitor works in {industry} at {company}. In THE LIBRARY they said they already hold: {selection}. Reply in at most 2 short sentences: reflect back the most valuable thing in that list, and name ONE specific, named Snowflake feature that would unlock it (for example Cortex Analyst, Cortex Search, Snowpark, Dynamic Tables, ML Classification, Snowflake Marketplace). Name the feature, not a general ability like handling large datasets. Warm, plain English, no jargon, no bullet points, no headings, no em dashes.",
+      "prompt": "The visitor works in {industry} at {company}. They described their problem as: \"{problem}\". In THE LIBRARY they said they already hold: {selection}, sitting on {platforms}. Reply in at most 2 short sentences: connect the most valuable thing in that list to the problem they described, and name ONE specific, named Snowflake feature that would unlock it (for example Cortex Analyst, Cortex Search, Snowpark, Dynamic Tables, ML Classification, Snowflake Marketplace). Name the feature, not a general ability like handling large datasets. Warm, plain English, no jargon, no bullet points, no headings, no em dashes.",
       "transport": "complete"
     },
     "marketplace": {
@@ -670,7 +672,7 @@
       "discovery": "live",
       "_discovery_comment": "live = SHOW AVAILABLE LISTINGS filtered to event.region + is_ready_for_import, matched against marketplace.industry_keywords, pinned entries first. Falls back to the curated marketplace-index.md if the live tier is cold, fails, or returns fewer than marketplace.min_live_results. Set to 'manual' to force the curated index.",
       "narrative": "This is the Snowflake Marketplace, and every stall is a real company's data. You attach it and query it live, seconds later. You never copy it, you never build a pipeline for it, and you never pay to store it.",
-      "prompt": "The visitor works in {industry} at {company} and holds: {held}. In THE MARKETPLACE they chose to join these real Snowflake Marketplace listings: {selection}. Reply in at most 2 short sentences: say what joining those lets them answer that they cannot answer today. Refer to the datasets only by the names given above; do not invent any other listing or provider name. Plain English, no bullet points, no em dashes.",
+      "prompt": "The visitor's stated problem is: \"{problem}\". Keep your answer pointed at it.\nThe visitor works in {industry} at {company} and holds: {held}. In THE MARKETPLACE they chose to join these real Snowflake Marketplace listings: {selection}. Reply in at most 2 short sentences: say what joining those lets them answer that they cannot answer today. Refer to the datasets only by the names given above; do not invent any other listing or provider name. Plain English, no bullet points, no em dashes.",
       "transport": "complete"
     },
     "workshop": {
@@ -686,7 +688,7 @@
       "hint": "Think big and say it in one line. An AI agent that answers for you, a dashboard that explains itself, an app your team actually opens every morning, something that spots trouble before it lands. Whatever it is, we forge it here.",
       "placeholder": "e.g. an agent that answers policy questions with citations",
       "narrative": "Bench cleared, forge lit. Tell me what the finished thing does and I'll draw up the plan.",
-      "prompt": "The visitor is {first_name}, {industry}, at {company}. They hold: {held}. They will join: {joined}. In THE WORKSHOP they said the POC should: \"{input}\".\n\nFirst choose the archetype that matches what they are ACTUALLY trying to do. Pick exactly one of these keys:\ntalk-to-my-data (ask questions of structured data in plain English)\nask-my-documents (search or Q&A over documents and free text)\nextract-from-paperwork (pull structured fields out of forms, invoices, letters)\ntriage-and-classify (sort, route or prioritise incoming items)\nan-agent-that-acts (takes an action, not just answers)\ndashboard-that-explains-itself (a visual that narrates the why)\npredict-what-happens-next (forecasting or risk scoring)\njoin-the-silos (unify data that lives in separate systems)\nshare-without-copying (give someone else live access)\nwatch-it-live (streaming or near real-time monitoring)\n\nThe data they hold decides this. If their source is documents or free text, it is ask-my-documents or extract-from-paperwork, NOT talk-to-my-data.\n\nFor features, you MUST choose 2 to 4 names EXACTLY as spelled from this list and nothing else:\n{feature_list}\n\nReturn ONLY minified JSON, no prose and no code fence, with exactly these keys:\n{\"archetype\": one key from the list above, \"poc_name\": short name in their own language, max 8 words, \"features\": array of 2-4 names copied exactly from the feature list, \"reply\": max 40 words, warm, spoken aloud to them, no bullet points, no em dashes}\n\nNothing else is wanted. Do NOT write a summary, considerations, a first step or a score - those are filled in elsewhere, and every extra word here is time the visitor spends waiting at the bench. Never claim the POC is built.",
+      "prompt": "The visitor's stated problem is: \"{problem}\". Keep your answer pointed at it.\nThe visitor is {first_name}, {industry}, at {company}. They hold: {held}. They will join: {joined}. In THE WORKSHOP they said the POC should: \"{input}\".\n\nFirst choose the archetype that matches what they are ACTUALLY trying to do. Pick exactly one of these keys:\ntalk-to-my-data (ask questions of structured data in plain English)\nask-my-documents (search or Q&A over documents and free text)\nextract-from-paperwork (pull structured fields out of forms, invoices, letters)\ntriage-and-classify (sort, route or prioritise incoming items)\nan-agent-that-acts (takes an action, not just answers)\ndashboard-that-explains-itself (a visual that narrates the why)\npredict-what-happens-next (forecasting or risk scoring)\njoin-the-silos (unify data that lives in separate systems)\nshare-without-copying (give someone else live access)\nwatch-it-live (streaming or near real-time monitoring)\n\nThe data they hold decides this. If their source is documents or free text, it is ask-my-documents or extract-from-paperwork, NOT talk-to-my-data.\n\nFor features, you MUST choose 2 to 4 names EXACTLY as spelled from this list and nothing else:\n{feature_list}\n\nReturn ONLY minified JSON, no prose and no code fence, with exactly these keys:\n{\"archetype\": one key from the list above, \"poc_name\": short name in their own language, max 8 words, \"features\": array of 2-4 names copied exactly from the feature list, \"reply\": max 40 words, warm, spoken aloud to them, no bullet points, no em dashes}\n\nNothing else is wanted. Do NOT write a summary, considerations, a first step or a score - those are filled in elsewhere, and every extra word here is time the visitor spends waiting at the bench. Never claim the POC is built.",
       "effort": "low",
       "transport": "exec",
       "tools": true,
@@ -1007,6 +1009,22 @@
         "url": "https://datahub.metoffice.gov.uk/",
         "note": "Direct API access, and also on the Marketplace."
       }
+    ]
+  },
+  "platforms": {
+    "_comment": "Where the data lives today. Asked in the library as a second, one-tap question; decides the integration-path section of the blueprint. Order is roughly booth-audience frequency.",
+    "heading": "And where does it live today?",
+    "hint": "Tap every platform it sits on. This is what decides how we get it into Snowflake, and the blueprint will spell out the route.",
+    "options": [
+      "Microsoft / Azure",
+      "AWS",
+      "Google Cloud",
+      "Oracle",
+      "SAP",
+      "On-premise / our own servers",
+      "SaaS apps (Salesforce, Workday, etc.)",
+      "Already in Snowflake",
+      "Not sure yet"
     ]
   }
 }

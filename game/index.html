@@ -348,8 +348,21 @@
   }
   #l-first { width:150px; } #l-company { width:205px; }
   #l-email { width:225px; } #l-industry { width:195px; }
-  .lta { display:block; width:100%; margin-top:5px; resize:vertical;
+  .lta { display:block; margin-top:5px; resize:vertical;
     font:inherit; font-size:14px; line-height:1.5; }
+  /* The problem field is the only input that is a PARAGRAPH rather than a word
+     dropped into a sentence, so it is the one input that must NOT stay inline.
+     `.card.letter .lin` is the more specific selector, so its `width:auto` beat
+     `.lta`'s `width:100%` and the box rendered as a stubby stump mid-sentence.
+     Overridden here, at equal specificity plus one, and given a real ruled box:
+     a full-width field with only an underline reads as a broken table row. */
+  .card.letter .lin.lta {
+    width:100%; box-sizing:border-box; display:block;
+    border:1px solid #C6B79A; border-bottom:2px solid #9C8C6E;
+    border-radius:3px; padding:8px 9px;
+    background:rgba(255,255,255,.45);
+  }
+  .card.letter .lin.lta:focus { border-color:#1C4E7A; }
   .card.letter .lin:focus { outline:none; border-bottom-color:#1C4E7A; background:rgba(28,78,122,.06); }
   .card.letter .lin.invalid { border-bottom-color:#B4442E; background:rgba(180,68,46,.08); }
   .card.letter .lsel { min-width:170px; color-scheme:light; }
@@ -541,6 +554,8 @@
         <div class="handp" id="bp-handp">Scan this with your phone camera to
           download your Word blueprint. The link works for seven days.</div>
         <a id="bp-link" class="handlink" target="_blank" rel="noopener"></a>
+        <a id="bp-read" class="handlink" target="_blank" rel="noopener"
+          style="display:none;margin-left:12px">Read it on screen →</a>
       </div>
     </div>
     <div class="go"><button class="primary" id="bp-send">SEND MY POC</button>
@@ -554,10 +569,22 @@
     <div id="done-time" style="font-size:22px;font-weight:700;color:var(--edge);margin:18px 0"></div>
     <img id="done-cardimg" alt="Your card" style="display:block;width:100%;
       border-radius:8px;margin:14px 0 4px;image-rendering:pixelated">
-    <button class="primary" id="done-card" style="margin-top:8px;padding:11px 22px;
-      font-size:14px;width:100%">SAVE MY CARD</button>
-    <div class="hint" style="margin:6px 0 0">Yours to post. Tag us and we will
-      see it.</div>
+    <div id="done-hand" style="display:none;align-items:center;gap:12px;
+      margin:10px 0 0;padding:10px;border:1px solid var(--line);border-radius:8px;
+      text-align:left">
+      <img id="done-qr" alt="" width="96" height="96"
+        style="background:#FFF;border-radius:4px;flex:0 0 auto;display:block">
+      <div style="font-size:12px;line-height:1.5;color:#9FC2D6">
+        <b style="color:var(--edge)">Scan to keep your card.</b><br>
+        It saves straight to your phone. Yours to post — tag us and we
+        will see it. Works for seven days.
+      </div>
+    </div>
+    <div class="hint" id="done-cardhint" style="margin:8px 0 0">Getting your card
+      ready to scan…</div>
+    <button class="primary" id="done-card" style="margin-top:8px;padding:8px 14px;
+      font-size:11px;width:100%;opacity:.55">SAVE A COPY TO THIS MACHINE
+      (OPERATOR)</button>
     <button class="primary" id="done-reset" style="margin-top:14px;padding:10px 28px;font-size:14px">START AGAIN</button>
   </div></div>
 
@@ -836,6 +863,46 @@ function drawRoute(g){
 // Drawn procedurally in the same pixel idiom as the map. Shown behind the
 // library / marketplace panels and the wake-up screen so the interaction feels
 // like it happens "at the desk", not in a floating box.
+// ---- Real brand art, not pixel pastiche.
+// The six-arm mark was hand-drawn three times and still read as a pinwheel,
+// because the real thing is six THICK INWARD-POINTING chevrons around a rounded
+// diamond with a hole in it - not a shape worth approximating at 60px. Load the
+// actual files. They are ordinary static assets under /assets, served by the
+// same handler as everything else.
+const IMG={};
+(function preload(){
+  [['mark','/assets/snowflake-mark.png'],
+   ['wordmark','/assets/snowflake-wordmark.png']].forEach(([k,src])=>{
+    const im=new Image();
+    im.onload=()=>{ IMG[k]=im; };
+    im.onerror=()=>{ console.warn('[loco] asset missing:',src); };
+    im.src=src;
+  });
+})();
+// Both canvases run with imageSmoothingEnabled=false, which is right for the
+// pixel art and wrong for a downscaled vector logo - unsmoothed it aliases into
+// mush. Flip it for the one draw and put it back.
+function drawImgSmooth(g,key,x,y,w,h){
+  const im=IMG[key]; if(!im) return false;
+  const was=g.imageSmoothingEnabled;
+  g.imageSmoothingEnabled=true;
+  g.drawImage(im,Math.round(x),Math.round(y),Math.round(w),Math.round(h));
+  g.imageSmoothingEnabled=was;
+  return true;
+}
+
+// Rounded rectangle as a PATH (caller fills or strokes). Canvas has
+// roundRect() now, but not on every browser a booth laptop might have.
+function rrect(g,x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
+  g.beginPath();
+  g.moveTo(x+r,y); g.lineTo(x+w-r,y); g.arcTo(x+w,y,x+w,y+r,r);
+  g.lineTo(x+w,y+h-r); g.arcTo(x+w,y+h,x+w-r,y+h,r);
+  g.lineTo(x+r,y+h); g.arcTo(x,y+h,x,y+h-r,r);
+  g.lineTo(x,y+r); g.arcTo(x,y,x+r,y,r);
+  g.closePath();
+}
+
 let sceneActive=null, sceneCtx=null, sceneW=0, sceneH=0;
 // drawScene runs off the animation loop and has no access to server state, so
 // the in-flight status is mirrored here once per poll.
@@ -966,38 +1033,9 @@ function drawScene(kind){
     g.fillStyle='#5A3D22'; g.fillRect(w*0.58,h*0.42,w*0.16,6);
     ['#4F9E6A','#3E7DA8','#C9A13B'].forEach((c,i)=>{ g.fillStyle=c;
       g.fillRect(w*0.59+i*(w*0.05),h*0.42-15,w*0.035,15); });
-    // ---- Snowflake logo on the wall. Third attempt. The second read as a
-    // pinwheel because the arms were broad flared paddles with a notch too
-    // shallow to see and a round dot in the middle. The mark is actually made of
-    // slim ARROWHEADS - a narrow shaft with a hard barb - around a diamond.
-    const sfx=w*0.375, sfy=h*0.155, sfr=h*0.066;
-    g.save(); g.translate(sfx,sfy);
-    g.fillStyle='#29B5E8';
-    for(let i=0;i<6;i++){
-      g.save(); g.rotate(i*Math.PI/3);
-      const sh=sfr*0.075;              // shaft half-width: slim, not a paddle
-      const bw=sfr*0.30;               // barb reach, across the shaft
-      g.beginPath();
-      g.moveTo(sfr*0.30,-sh);          // shaft, inner end
-      g.lineTo(sfr*0.72,-sh);
-      g.lineTo(sfr*0.72,-bw);          // barb flares hard, then spikes forward
-      g.lineTo(sfr*1.00, 0);
-      g.lineTo(sfr*0.72, bw);
-      g.lineTo(sfr*0.72, sh);
-      g.lineTo(sfr*0.30, sh);
-      g.closePath(); g.fill();
-      g.restore();
-    }
-    // diamond centre: a square on its point, not a dot, with a darker core so it
-    // reads as pierced without punching transparency through the firelit wall
-    const dr=sfr*0.30;
-    g.beginPath(); g.moveTo(0,-dr); g.lineTo(dr,0); g.lineTo(0,dr);
-    g.lineTo(-dr,0); g.closePath(); g.fill();
-    g.fillStyle='#12303F';
-    const ir=dr*0.42;
-    g.beginPath(); g.moveTo(0,-ir); g.lineTo(ir,0); g.lineTo(0,ir);
-    g.lineTo(-ir,0); g.closePath(); g.fill();
-    g.restore();
+    // ---- Snowflake logo on the wall. The real mark, drawn from file.
+    const sfx=w*0.375, sfy=h*0.155, sfr=h*0.075;
+    drawImgSmooth(g,'mark',sfx-sfr,sfy-sfr,sfr*2,sfr*2);
     // ---- framed photo of the polar bear. The first version was a stack of
     // rectangles, which is fine for a 16px sprite and wrong for a photograph -
     // a bear is all curves. Ellipses and arcs, clipped to the frame.
@@ -1392,31 +1430,132 @@ function drawScene(kind){
     // ---- CoCo at the bench, lit from below by the hologram
     drawCoCoFront(g,w*0.5,BN-h*0.055,S*1.9);
     if(sceneThinking){
-      // --- FORGING ANIMATION: welding mask, anvil, hammer, sparks ---
+      // --- FORGING: CoCo alternates between welding and hammering ---
+      // Two jobs, not one. Previously the mask and the hammer ran together,
+      // which is why the visor looked like a stuck-on black bar - nobody wears a
+      // welding mask to swing a hammer. Now it is a cycle: ~3.3s welding, then
+      // ~3.3s hammering, mask up.
       const cu=S*1.9, ccx=w*0.5, ccy=BN-h*0.055;
-      // welding visor over eyes
-      g.fillStyle='#1A1A2A'; g.fillRect(ccx-cu*4.5,ccy-cu*6.5,cu*9,cu*3.5);
-      g.fillStyle='#2A4A58'; g.fillRect(ccx-cu*3.5,ccy-cu*5.5,cu*7,cu*2);
-      g.fillStyle='rgba(41,181,232,.35)'; g.fillRect(ccx-cu*3,ccy-cu*5,cu*6,cu*1.5);
-      // anvil (dark grey T-shape)
-      const ax2=w*0.62, ay2=BN-h*0.04;
-      g.fillStyle='#3A3A42'; g.fillRect(ax2-18,ay2-8,36,8);
-      g.fillStyle='#2A2A32'; g.fillRect(ax2-10,ay2,20,14);
-      // glowing workpiece
-      g.fillStyle='#E8863C'; g.fillRect(ax2-8,ay2-12,16,5);
-      g.fillStyle='rgba(232,134,60,.4)'; g.fillRect(ax2-12,ay2-14,24,9);
-      // hammer: oscillates on sin(tick/6)
-      const hamPhase=Math.sin(tick/6);
-      const hamY=ay2-32+hamPhase*14;
-      g.fillStyle='#5A3D22'; g.fillRect(ax2-2,hamY-20,4,22);
-      g.fillStyle='#6A6A72'; g.fillRect(ax2-9,hamY-24,18,8);
-      // sparks on strike (when hammer is low)
-      if(hamPhase>0.85){
-        for(let sp=0;sp<7;sp++){
-          const ang2=sp*0.85-1.5, spd=(tick*3+sp*17)%20;
-          const spx=ax2+Math.cos(ang2)*spd, spy=ay2-10+Math.sin(ang2)*spd*0.7;
-          g.fillStyle=sp%2?'#FFE7B0':'#E8863C';
-          g.fillRect(spx,spy,S*1.5,S*1.5);
+      // The anvil used to sit at w*0.62 while CoCo stood at w*0.5, which on a
+      // wide scene is most of a metre away - so the hammer and the torch read as
+      // floating tools operating themselves. It is now within a flipper's reach,
+      // and both tools are drawn with an arm holding them.
+      const ax2=ccx+cu*7.2, ay2=BN-h*0.04;
+      // Shoulder height, not head height: the first version started the arm at
+      // ccy-cu*4.4, which put it level with the visor, so the torch appeared to
+      // come out from behind CoCo's head.
+      const shx=ccx+cu*2.8, shy=ccy-cu*3.4;
+      const flip=(gx,gy)=>{                      // one flipper, shoulder to grip
+        // In CoCo's own blue, brightened. Drawn in #1F4258 it was the same value
+        // as the wall shading and read as a shadow, not a limb.
+        g.strokeStyle='#2E6E96'; g.lineWidth=cu*1.8; g.lineCap='round';
+        g.beginPath(); g.moveTo(shx,shy); g.lineTo(gx,gy); g.stroke();
+        g.strokeStyle='#4A9BC4'; g.lineWidth=cu*0.7;
+        g.beginPath(); g.moveTo(shx,shy-cu*0.45); g.lineTo(gx,gy-cu*0.45); g.stroke();
+        // A visible grip at the end, so the arm plainly CLASPS the tool rather
+        // than stopping near it.
+        g.fillStyle='#173447';
+        g.fillRect(gx-cu*1.0,gy-cu*0.9,cu*2.0,cu*1.8);
+      };
+      const WELD = Math.floor(tick/200)%2===0;
+
+      // ---- the anvil is furniture: it stays for both jobs.
+      g.fillStyle='#3A3A42'; g.fillRect(ax2-18,ay2-8,36,8);   // face
+      g.fillStyle='#33333B'; g.fillRect(ax2-14,ay2-10,28,2);  // lit top edge
+      g.fillStyle='#2A2A32'; g.fillRect(ax2-10,ay2,20,14);    // waist
+      g.fillStyle='#22222A'; g.fillRect(ax2-16,ay2+14,32,4);  // base
+      // the workpiece, glowing on the face
+      g.fillStyle='rgba(232,134,60,.35)'; g.fillRect(ax2-13,ay2-15,26,10);
+      g.fillStyle='#E8863C'; g.fillRect(ax2-8,ay2-12,16,4);
+      g.fillStyle='#FFD79A'; g.fillRect(ax2-6,ay2-12,12,2);
+
+      if(WELD){
+        // ---- the mask. A proper helmet: a rounded grey shell over the whole
+        // head with a wide cyan window, not a black letterbox across the eyes.
+        // Narrower than the first attempt, which overhung the left shoulder
+        // and pushed a grey tab out past the right - a mask worn crooked. The
+        // shell now sits inside CoCo's silhouette.
+        const mw=cu*7.6, mh=cu*7.2, mx0=ccx-mw/2, my0=ccy-cu*9.7;
+        g.fillStyle='#5C6268';                       // shell, shadowed side
+        rrect(g,mx0,my0,mw,mh,cu*2.2); g.fill();
+        g.fillStyle='#8B9298';                       // shell, lit
+        rrect(g,mx0+cu*0.5,my0+cu*0.4,mw-cu*1.6,mh-cu*1.6,cu*1.9); g.fill();
+        g.fillStyle='#A7AEB4';                       // top highlight
+        rrect(g,mx0+cu*1.6,my0+cu*0.6,mw-cu*3.4,cu*1.0,cu*0.5); g.fill();
+        // the window: dark bezel, cyan glass, two diagonal light streaks
+        const ww=mw-cu*2.2, wh=cu*2.6, wx=ccx-ww/2, wy=my0+cu*2.4;
+        g.fillStyle='#2C3238'; rrect(g,wx-cu*0.4,wy-cu*0.4,ww+cu*0.8,wh+cu*0.8,cu*0.5); g.fill();
+        g.fillStyle='#29B5E8'; g.fillRect(wx,wy,ww,wh);
+        g.fillStyle='#7FD6F2'; g.fillRect(wx,wy,ww,cu*0.5);
+        g.save(); g.beginPath(); g.rect(wx,wy,ww,wh); g.clip();
+        g.fillStyle='rgba(255,255,255,.30)';
+        g.translate(wx,wy); g.rotate(-0.5);
+        g.fillRect(ww*0.18,-wh,cu*0.9,wh*3);
+        g.fillRect(ww*0.52,-wh,cu*0.45,wh*3);
+        g.restore();
+
+        // ---- the arc. A hard white core that flickers, a coloured halo, and a
+        // spray of sparks falling AWAY from the work - the giveaway that it is
+        // welding and not just a glow.
+        const fl=0.55+0.45*Math.abs(Math.sin(tick*0.9))*(tick%7<5?1:0.35);
+        g.fillStyle='rgba(140,210,255,'+(0.16*fl).toFixed(3)+')';
+        g.beginPath(); g.arc(ax2,ay2-12,cu*7*fl,0,7); g.fill();
+        g.fillStyle='rgba(150,220,255,'+(0.60*fl).toFixed(3)+')';
+        g.beginPath(); g.arc(ax2,ay2-12,cu*2.6*fl,0,7); g.fill();
+        g.fillStyle='#FFFFFF';
+        g.fillRect(ax2-cu*0.8,ay2-13-cu*0.5,cu*1.6,cu*1.4);
+        // The torch, HELD - angled from CoCo's flipper down onto the work.
+        // The first version was a horizontal dark bar on a dark wall: all that
+        // was visible of it was the red nozzle, floating by his chest.
+        const gx=shx+cu*1.8, gy=shy+cu*1.2;          // where the flipper grips
+        flip(gx,gy);
+        g.save(); g.translate(gx,gy);
+        g.rotate(Math.atan2((ay2-15)-gy,ax2-gx));
+        const tl=Math.hypot(ax2-gx,(ay2-15)-gy);
+        g.fillStyle='#8A9299'; g.fillRect(0,-cu*0.6,tl*0.72,cu*1.2);  // body
+        g.fillStyle='#B0B8BE'; g.fillRect(0,-cu*0.6,tl*0.72,cu*0.4);  // lit edge
+        g.fillStyle='#3A4249'; g.fillRect(tl*0.72,-cu*0.4,tl*0.20,cu*0.8);
+        g.fillStyle='#B8452E'; g.fillRect(tl*0.92,-cu*0.5,tl*0.08,cu*1.0);
+        g.restore();
+        for(let sp=0;sp<10;sp++){
+          const t2=(tick*2.2+sp*13)%26;
+          const spx=ax2+Math.cos(sp*1.9)*t2*0.8, spy=ay2-12+t2*0.75;
+          if(spy>ay2+16) continue;
+          g.fillStyle=sp%3?'#FFE7B0':'#8CD2FF';
+          g.fillRect(spx,spy,S*1.3,S*1.3);
+        }
+      } else {
+        // ---- hammering. THE BUG: the head was drawn at hamY-24 while the shaft
+        // ran hamY-20 to hamY+2, so the HANDLE was what reached the anvil. The
+        // head is now at the striking end and its bottom edge lands exactly on
+        // the workpiece at the bottom of the swing.
+        const ph=Math.sin(tick/6);                   // -1 up, +1 struck
+        const strikeY=ay2-12;                        // top of the workpiece
+        const headBot=strikeY-24+ph*24;              // ph=1 -> touching
+        g.fillStyle='#6A6A72'; g.fillRect(ax2-10,headBot-9,20,9);   // head
+        g.fillStyle='#8A8A94'; g.fillRect(ax2-10,headBot-9,20,2);   // highlight
+        g.fillStyle='#4C4C56'; g.fillRect(ax2+6,headBot-9,4,9);     // peen
+        g.fillStyle='#5A3D22'; g.fillRect(ax2-2,headBot-34,4,25);   // handle up
+        g.fillStyle='#77522F'; g.fillRect(ax2-2,headBot-34,2,25);
+        // Mid-handle, so the grip sits ON the shaft at every point of the swing.
+        flip(ax2-1,headBot-22);
+        if(ph>0.90){
+          // The burst used to be nine long-lived sparks plus a fat translucent
+          // disc, which at the first frame of the phase piled up over the hammer
+          // and read as a brown smear. Short-lived, sparser, and drawn tight to
+          // the face so the hammer stays legible through it.
+          for(let sp=0;sp<6;sp++){
+            const ang2=sp*0.62-1.85, spd=(tick*2.4+sp*11)%13;
+            // Thrown outwards and DOWNWARDS from the contact line. Sparks
+            // rising into the head's lower edge is what made the strike frame
+            // muddy: hot pixels and grey block occupying the same rows.
+            const spx=ax2+Math.cos(ang2)*spd*1.6,
+                  spy=strikeY+cu*0.8+Math.abs(Math.sin(ang2))*spd*0.5;
+            g.fillStyle=sp%2?'#FFE7B0':'#E8863C';
+            g.fillRect(spx,spy,S*1.2,S*1.2);
+          }
+          g.fillStyle='rgba(255,231,176,.22)';
+          g.beginPath(); g.arc(ax2,strikeY+cu*0.6,cu*1.5,0,7); g.fill();
         }
       }
       drawThinkBubble(g,w*0.5,BN-h*0.055,S*1.9);
@@ -1516,40 +1655,59 @@ function closeScene(){ sceneActive=null; $('scene').classList.remove('on'); }
 function sizePovCard(){
   const cv=$('cv'), card=document.querySelector('#ov-loc .card');
   if(!cv || !card) return;
-  // ONE COLUMN, SOLVED TOGETHER. The previous version capped the canvas at 44vh
-  // and left the panel pinned to the bottom of the viewport, which is precisely
-  // how the empty strip between the interior and the text appeared. Scene height
-  // and panel height are now solved as a single column that fills the stage
-  // exactly, and the panel is placed directly under the scene, lapping over its
-  // last few pixels - so the interior reads as CROPPED rather than shrunk, which
-  // is what was actually wanted. The art needs no changes: measureSafe() reads
-  // this card's live top edge every frame and moves the furniture line to it.
-  const PAD=10, LAP=26;                       // LAP is the crop, in CSS pixels
-  // Everything is measured from where the canvas actually starts. Using
-  // innerHeight assumed the canvas began at the top of the window; it does not,
-  // and that error went straight into the card offset.
+  // WIDE AND SHORT, AND THE WIDTH COMES FIRST. Three earlier versions solved
+  // for HEIGHT and then derived width from the board's 22:15 aspect, which is
+  // why the interior kept coming out as a tall narrow box with a column of dead
+  // sky in it and margins either side. The interiors are rooms seen head-on:
+  // they want to be letterboxes. So width is now taken first - the whole stage,
+  // less a margin - and the height is a fraction of it. The scene loses the
+  // empty top of the room, which is exactly the crop that was asked for, and
+  // the panel below inherits the same full width.
+  //
+  // Nothing in the art needs touching: every interior draws from (w,h) in
+  // proportion, syncSceneBuffer() reshapes the pixel buffer to match this box
+  // so the pixels stay square, and measureSafe() reads the panel's live top
+  // edge each frame and keeps the furniture line under it.
+  const PAD=10, LAP=26, WIDE=0.42, MAXW=1320, PANEL_MIN=340;
   const ov=$('ov-loc');
-  const top0=cv.getBoundingClientRect().top-ov.getBoundingClientRect().top;
-  const total=Math.max(320,innerHeight-cv.getBoundingClientRect().top-PAD);
-  // The panel keeps its floor of 340px - below that the options scroll out of
-  // sight and the panel looks empty - and its ceiling, so the scene never
-  // becomes a letterbox strip.
-  let panelH=Math.min(Math.max(Math.round(total*BAND),340),
-                      Math.round(total*0.62));
-  let sceneH=total-panelH+LAP;
-  // Aspect wins over the split: a scene wider than the window has to lose
-  // height, and the panel absorbs exactly what it gives up, so the column still
-  // fills the stage and no gap can reopen.
-  const maxW=innerWidth-PAD*2;
-  if(sceneH*COLS/ROWS>maxW){
-    sceneH=Math.round(maxW*ROWS/COLS);
-    panelH=Math.min(total-sceneH+LAP,Math.round(innerHeight*0.66));
-  }
+  // Measured from where the canvas actually starts, not from the top of the
+  // window - the HUD sits above it, and assuming otherwise once put the panel
+  // 250px too high and buried a third of the interior.
+  const cvTop=cv.getBoundingClientRect().top;
+  const top0=cvTop-ov.getBoundingClientRect().top;
+  const total=Math.max(320,innerHeight-cvTop-PAD);
+  const boxW=Math.min(innerWidth-PAD*2,MAXW);
+  let sceneH=Math.round(boxW*WIDE);
+  // The panel takes whatever is left, never less than its floor; if the column
+  // then overflows, the SCENE gives the height up, never the panel - a panel
+  // whose CONFIRM has scrolled out of sight is a dead end, a shorter room is
+  // just a tighter crop.
+  let panelH=Math.max(PANEL_MIN,total-sceneH+LAP);
+  if(sceneH+panelH-LAP>total) sceneH=Math.max(190,total-panelH+LAP);
+  cv.style.width=boxW+'px';
   cv.style.height=sceneH+'px';
-  cv.style.width=Math.round(sceneH*COLS/ROWS)+'px';
-  card.style.width=cv.style.width;
+  card.style.width=boxW+'px';
+  card.style.maxWidth='none';               // .card caps at min(700px,94vw)
   card.style.maxHeight=panelH+'px';
   card.style.marginTop=Math.max(0,top0+sceneH-LAP)+'px';
+  syncSceneBuffer();
+}
+
+// The scene canvas is `position:absolute; inset:0; width:100%; height:100%`, so
+// it is stretched to whatever box the board is in. Leaving its pixel buffer at
+// the board's 22:15 while the box became a 1:0.42 letterbox would squash every
+// pixel by a third - the art would not be cropped, it would be crushed. Reshape
+// the buffer to the box instead: width fixed, height derived, pixels square.
+function syncSceneBuffer(){
+  const sc=$('scene'), cv=$('cv'); if(!sc || !cv) return;
+  const bw=parseFloat(cv.style.width)||COLS*T*S,
+        bh=parseFloat(cv.style.height)||ROWS*T*S;
+  const W=COLS*T*S, H=Math.max(300,Math.round(W*bh/bw));
+  if(sc.width===W && sc.height===H) return;
+  sc.width=W; sc.height=H; sceneW=W; sceneH=H;
+  // Resizing a canvas resets its context state, including the smoothing flag -
+  // and a smoothed pixel scene is a blurry scene.
+  sceneCtx=sc.getContext('2d'); sceneCtx.imageSmoothingEnabled=false;
 }
 
 // ---------------- opening title + combined wake/intake ----------------
@@ -1975,6 +2133,12 @@ function paintHandover(d){
   };
   const a=$('bp-link'); a.href=url;
   a.textContent=url.length>62?url.slice(0,62)+'\u2026':url;
+  // And the same blueprint as a page you can actually READ, served by us with a
+  // real content type. The QR cannot point here - a presigned stage URL serves
+  // octet-stream whatever the extension, so a phone downloads the .html rather
+  // than rendering it - so this is the booth-screen and email surface, and the
+  // .docx is what travels.
+  const rd=$('bp-read'); if(rd){ rd.href='/blueprint'; rd.style.display=''; }
   wrap.classList.add('on');
 }
 async function sendPoc(){
@@ -2281,21 +2445,18 @@ function buildShareCard(){
   g.fillText((v.first_name||'A visitor')+' at Snowflake World Tour '+city,
              PADX,CARD_H-34);
 
-  // the mark, bottom right, drawn as six arrowheads like the wall logo
-  const mx=CARD_W-96, my=CARD_H-46, mr=30;
-  g.save(); g.translate(mx,my); g.fillStyle='#29B5E8';
-  for(let i=0;i<6;i++){
-    g.save(); g.rotate(i*Math.PI/3);
-    const sh=mr*0.075, bw=mr*0.30;
-    g.beginPath();
-    g.moveTo(mr*0.30,-sh); g.lineTo(mr*0.72,-sh); g.lineTo(mr*0.72,-bw);
-    g.lineTo(mr*1.00,0); g.lineTo(mr*0.72,bw); g.lineTo(mr*0.72,sh);
-    g.lineTo(mr*0.30,sh); g.closePath(); g.fill();
-    g.restore();
+  // The mark, bottom right. The full wordmark rather than the symbol alone: this
+  // image is going onto someone's LinkedIn feed, where a bare symbol at 30px is
+  // just a blue blob and the word is the whole point of them posting it.
+  // Aspect is the file's own, 3840x919.
+  const lw=286, lh=Math.round(lw*919/3840);
+  if(!drawImgSmooth(g,'wordmark',CARD_W-lw-46,CARD_H-lh-38,lw,lh)){
+    // The card can be built the instant the page loads, before the asset has
+    // arrived. A missing logo must not cost the visitor their card.
+    g.fillStyle='#29B5E8'; g.font='700 34px ui-sans-serif,system-ui,sans-serif';
+    g.textAlign='right'; g.fillText('snowflake',CARD_W-46,CARD_H-44);
+    g.textAlign='left';
   }
-  const dr=mr*0.30;
-  g.beginPath(); g.moveTo(0,-dr); g.lineTo(dr,0); g.lineTo(0,dr); g.lineTo(-dr,0);
-  g.closePath(); g.fill(); g.restore();
   return cv;
 }
 
@@ -2326,10 +2487,37 @@ function showDoneSummary(){
   $('done-time').textContent='Completed in '+mm+':'+String(ss).padStart(2,'0');
   // Render the card straight away, so the visitor sees the thing they are
   // being offered rather than a button promising one.
-  try{ $('done-cardimg').src=buildShareCard().toDataURL('image/png'); }
-  catch(e){ $('done-cardimg').style.display='none'; }
+  // The card is drawn here, but it must not STAY here. The booth machine is a
+  // shared demo laptop: the visitor cannot download to it and walks away from
+  // it. So the canvas goes to the server, which stages it as a real PNG and
+  // presigns it, and the visitor scans it onto their own phone.
+  try{
+    const png=buildShareCard().toDataURL('image/png');
+    $('done-cardimg').src=png;
+    handoverCard(png);
+  }
+  catch(e){ $('done-cardimg').style.display='none';
+    $('done-cardhint').textContent='Could not build your card.'; }
   $('ov-done').style.display='';
   $('ov-done').classList.add('on');
+}
+// Stage the card and show a QR for it. Failure is not fatal: the visitor still
+// has their blueprint QR, and the operator can fall back to the copy button.
+async function handoverCard(dataUrl){
+  const hint=$('done-cardhint');
+  try{
+    const r=await post('/api/card',{png:dataUrl});
+    if(!r || !r.url) throw new Error(r && r.error || 'no url');
+    const qr=$('done-qr');
+    qr.onerror=()=>{ hint.textContent='Card staged, but the QR could not be '
+      +'drawn. Ask us for the link.'; };
+    qr.src='/api/qr?u='+encodeURIComponent(r.url);
+    $('done-hand').style.display='flex';
+    hint.style.display='none';
+  }catch(e){
+    hint.textContent='Your card is on screen, but we could not put it on a code.'
+      +' Ask us and we will send it with your plan.';
+  }
 }
 $('done-card').addEventListener('click',saveShareCard);
 $('done-reset').addEventListener('click',async ()=>{
@@ -2544,6 +2732,7 @@ function fitCanvas(){
   cv.style.width=Math.round(w)+'px';
   cv.style.height=Math.round(w*ROWS/COLS)+'px';
   if($('ov-loc').classList.contains('pov')) sizePovCard();
+  else syncSceneBuffer();
 }
 
 (async function init(){

@@ -11,6 +11,11 @@ description: "Loco for CoCo — the five-minute booth activation for Snowflake W
 
 ## Non-negotiables
 
+0. **Read [`CONSTRAINTS.md`](../../CONSTRAINTS.md) before designing any feature.**
+   It records the five properties of the venue that any change has to survive.
+   The one most easily forgotten: the booth machine is a **shared demo laptop**,
+   so nothing may depend on the visitor saving a file to it. Every takeaway
+   leaves on their phone, via a QR to a presigned URL, or by email.
 1. **Five minutes, hard.** Track elapsed time from the first message. Past five minutes, cut to the reveal using `ERR.TIME_UP`. A queue is forming.
 2. **Two question calls, five questions total.** Round 1 batches three, Round 2 batches two. Never ask them one at a time — that is what makes it a form.
 3. **Every question has an Other option.** `ask_user_question` adds "Something else" automatically; do not add a redundant "Other" of your own.

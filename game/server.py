@@ -22,6 +22,8 @@ Delivery is Route A behind a transport interface. See config.delivery.
 """
 
 import argparse
+import base64
+import binascii
 import html
 import json
 import os
@@ -77,6 +79,7 @@ BLANK_STATE = {
     "poc": {},
     "unlocked": ["library"],
     "blueprint_url": "",
+    "card_url": "",
     "draft_created": False,
     "queued": False,
     "email_sent": False,
@@ -2124,6 +2127,24 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(501, b"segno not installed")
             except Exception as e:                                # noqa: BLE001
                 return self._send(500, str(e)[:200].encode("utf-8"))
+        if path == "/blueprint":
+            # The HTML blueprint, served by US with a real content type.
+            # WHY THIS EXISTS: a presigned stage URL always serves
+            # application/octet-stream (measured - GET_PRESIGNED_URL gives no way
+            # to set it), so a QR pointing at the staged .html makes a phone
+            # DOWNLOAD the file instead of rendering it. The QR therefore points
+            # at the .docx, and the same markup renders here, on the booth screen,
+            # and as the body of the email. This is the surface to replace the
+            # day there is an SPCS or Streamlit endpoint to host it on.
+            try:
+                cfg, st = load_config(), read_state()
+                page = blueprint_page(cfg, st)
+                if not page:
+                    return self._send(404, b"no blueprint yet")
+                with open(page, "rb") as fh:
+                    return self._send(200, fh.read(), MIME[".html"])
+            except Exception as e:                                # noqa: BLE001
+                return self._send(500, str(e)[:200].encode("utf-8"))
         if path == "/api/delivery/check":
             return self._delivery_check()
         if path in ("/", "/index.html"):
@@ -2143,11 +2164,51 @@ class Handler(BaseHTTPRequestHandler):
             "/api/send": self._post_it,
             "/api/reset": self._reset,
             "/api/state": self._patch,
+            "/api/card": self._card,
         }
         fn = routes.get(path)
         if not fn:
             return self._send(404, b"not found")
         return fn()
+
+    def _card(self):
+        """Stage the share card and presign it, so it can leave on a phone.
+
+        The card is drawn client-side on a canvas, and the browser's own
+        `a.download` was the original handover - which cannot work: the booth
+        machine is a shared demo laptop the visitor never logs into and walks
+        away from (see CONSTRAINTS.md). The bytes therefore come back here as a
+        data URL, get written as a real PNG, staged and presigned, and go home as
+        a QR code. A presigned .png serves as octet-stream like everything else,
+        which for an image on a phone is exactly right: it saves to Files or
+        Photos and is theirs.
+        """
+        body = self._body() or {}
+        raw = (body.get("png") or "").strip()
+        if "," in raw:
+            raw = raw.split(",", 1)[1]
+        if not raw:
+            return self._json({"error": "no image"}, 400)
+        st = read_state()
+        if st.get("card_url"):                     # idempotent, like POST IT
+            return self._json({"url": st["card_url"]})
+        try:
+            png = base64.b64decode(raw, validate=True)
+        except (ValueError, binascii.Error):
+            return self._json({"error": "not base64"}, 400)
+        if len(png) > 4_000_000 or png[:8] != b"\x89PNG\r\n\x1a\n":
+            return self._json({"error": "not a png"}, 400)
+        sid = st.get("session_id") or "visitor"
+        name = "card-%s.png" % re.sub(r"[^A-Za-z0-9_-]", "", sid)[:40]
+        path = os.path.join(tempfile.gettempdir(), name)
+        with open(path, "wb") as fh:
+            fh.write(png)
+        url, err = stage_and_presign(load_config(), path)
+        if not url:
+            print("[loco] card presign failed:", err or "?")
+            return self._json({"error": err or "presign failed"}, 502)
+        write_state({"card_url": url})
+        return self._json({"url": url})
 
     def _reset(self):
         # replace=True, so nothing from the previous visitor survives.

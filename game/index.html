@@ -135,7 +135,7 @@
 
   /* The action block docks at the foot of the scrolling card. */
   #ov-loc .card { display:flex; flex-direction:column; overflow:hidden; }
-  .cscroll { flex:1 1 auto; overflow-y:auto; min-height:0;
+  .cscroll { flex:1 1 auto; overflow-y:auto; min-height:180px;
     /* A fade at the bottom edge, so a clipped list reads as scrollable rather
        than as a panel that is simply missing its options. */
     background:linear-gradient(var(--panel) 30%,rgba(11,22,31,0)) bottom/100% 18px
@@ -182,6 +182,11 @@
   .fld { margin-bottom:8px; }
   .fld label { display:block; font-size:11px; color:var(--dim); margin-bottom:3px;
     letter-spacing:.08em; text-transform:uppercase; }
+  .cchoose { display:block; width:100%; padding:7px 0; margin-bottom:6px;
+    background:transparent; border:2px solid var(--edge); border-radius:5px;
+    color:var(--edge); font:700 12px/1 var(--ff); letter-spacing:.08em;
+    cursor:pointer; text-transform:uppercase; }
+  .cchoose:hover { background:var(--edge); color:var(--panel); }
   .go { margin-top:11px; display:flex; gap:9px; align-items:center; }
   button.primary { background:var(--warm); color:#101C27; border:none; font:inherit;
     font-weight:700; font-size:14px; letter-spacing:.06em; border-radius:6px;
@@ -452,6 +457,7 @@
           <label id="c-otherlab"></label>
           <input type="text" id="c-other" autocomplete="off" spellcheck="false"></div>
         <div class="fld" id="c-composewrap" style="display:none">
+          <button class="cchoose" id="c-coco-choose" style="display:none">LET COCO CHOOSE</button>
           <input type="text" id="c-compose" autocomplete="off" spellcheck="false"></div>
         <div class="go"><button class="primary" id="c-go">CONFIRM</button>
           <span class="keys">ESC to step away</span></div>
@@ -485,6 +491,15 @@
     <div class="go"><button class="primary" id="bp-send">SEND MY POC</button>
       <span class="keys" id="bp-keys">Builds your document and the email</span></div>
   </div></div>
+  <div class="ov" id="ov-done" style="display:none"><div class="card" style="max-width:420px;text-align:center;padding:28px 24px">
+    <div style="font-size:32px;color:#29B5E8;margin-bottom:12px">&#10052; DONE &#10052;</div>
+    <div id="done-who" style="font-size:15px;font-weight:700;color:var(--edge);margin:8px 0"></div>
+    <div id="done-poc" style="font-size:13px;color:var(--dim);margin:4px 0"></div>
+    <div id="done-feats" style="font-size:13px;color:var(--dim);margin:4px 0"></div>
+    <div id="done-time" style="font-size:22px;font-weight:700;color:var(--edge);margin:18px 0"></div>
+    <button class="primary" id="done-reset" style="margin-top:12px;padding:10px 28px;font-size:14px">START AGAIN</button>
+  </div></div>
+
 
 </div>
 <div id="err"></div>
@@ -610,14 +625,21 @@ function drawStructure(g,kind,tx,ty,done){
   const th=CFG.theme,u=S,X=tx*T*S,Y=ty*T*S,w=T*S;
   const r=(x,y,ww,hh,col)=>{ g.fillStyle=col; g.fillRect(X+x*u,Y+y*u,ww*u,hh*u); };
   if(kind==='library'){
-    r(1,4,14,12,'#6E5A8A');
-    r(2,6,12,1,'#8A74A8');
-    g.fillStyle=th.snow_bright; g.beginPath();
-    g.moveTo(X-1.5*u,Y+5*u); g.lineTo(X+w/2,Y-1*u); g.lineTo(X+w+1.5*u,Y+5*u);
+    // warm yellow body, dark grey peaked roof, two cyan windows, open book
+    r(1,5,14,11,'#F2CC5C');               // body
+    r(2,7,12,1,'#D4A830');                // horizontal band
+    g.fillStyle='#3A3A42'; g.beginPath();  // peaked roof
+    g.moveTo(X-1*u,Y+6*u); g.lineTo(X+w/2,Y+0*u); g.lineTo(X+w+1*u,Y+6*u);
     g.closePath(); g.fill();
-    r(3,8,3,4,th.accent); r(10,8,3,4,th.accent);
-    r(6,10,4,6,'#2A2138');
-    r(5,9,6,1,th.snow_bright);
+    r(3,8,4,4,th.accent); r(9,8,4,4,th.accent); // windows
+    r(6,10,4,6,'#3A3A42');                // door
+    // open book above the door
+    g.fillStyle='#F2F7FA';
+    g.beginPath(); g.moveTo(X+w/2,Y+3*u); g.lineTo(X+w/2-3*u,Y+5*u);
+    g.lineTo(X+w/2,Y+4.5*u); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(X+w/2,Y+3*u); g.lineTo(X+w/2+3*u,Y+5*u);
+    g.lineTo(X+w/2,Y+4.5*u); g.closePath(); g.fill();
+    g.fillStyle='#C4553E'; g.fillRect(X+w/2-0.5*u,Y+3*u,1*u,2*u); // spine
   } else if(kind==='marketplace'){
     r(1,7,14,2,'#8A5A2B');
     r(2,9,2,7,'#6B4A2B'); r(12,9,2,7,'#6B4A2B');
@@ -629,13 +651,18 @@ function drawStructure(g,kind,tx,ty,done){
     r(4,5,2,2,th.accent_warm); r(8,5,2,2,th.accent);
     r(11,5,2,2,'#5ED6A0');
   } else if(kind==='workshop'){
-    r(2,7,12,9,'#6B4A2B'); r(3,9,10,1,'#54381F');
-    g.fillStyle=th.snow_bright; g.beginPath();
-    g.moveTo(X-1.5*u,Y+8*u); g.lineTo(X+w/2,Y+1*u); g.lineTo(X+w+1.5*u,Y+8*u);
-    g.closePath(); g.fill();
-    r(6,11,4,5,th.panel); r(11,1,2,4,th.rock);
-    if(!done) r(3,10,3,3,th.accent_warm);
-    else { r(4,10,6,4,'#D0392B'); r(6,10,2,4,th.snow_bright); r(4,11,6,1,th.snow_bright); }
+    // modern tech lab: flat metal body, cyan LED strip, antenna/dish
+    r(1,5,14,11,'#1B2C3A');               // dark metallic body
+    r(1,9,14,1,'#29B5E8');                // cyan LED strip
+    r(2,6,12,3,'#24384A');                // upper panel
+    r(2,11,12,4,'#162430');               // lower panel
+    r(6,11,4,5,'#0B1219');                // door
+    // antenna + dish on top
+    r(7,1,2,5,'#39525F');                 // mast
+    g.fillStyle='#4AA8DC'; g.beginPath();
+    g.moveTo(X+6*u,Y+1*u); g.lineTo(X+10*u,Y+1*u);
+    g.lineTo(X+8*u,Y-1*u); g.closePath(); g.fill(); // dish
+    if(done){ r(5,10,6,1,'#29B5E8'); r(7,12,2,2,'#29B5E8'); }
   } else if(kind==='postbox'){
     r(6,6,4,10,'#5A5A62');
     r(3,1,10,7,'#D0392B');
@@ -877,6 +904,37 @@ function drawScene(kind){
     g.fillStyle='#5A3D22'; g.fillRect(w*0.58,h*0.42,w*0.16,6);
     ['#4F9E6A','#3E7DA8','#C9A13B'].forEach((c,i)=>{ g.fillStyle=c;
       g.fillRect(w*0.59+i*(w*0.05),h*0.42-15,w*0.035,15); });
+    // ---- Snowflake logo on the wall (6-arm asterisk)
+    const sfx=w*0.38, sfy=h*0.16, sfr=h*0.055;
+    g.strokeStyle='#29B5E8'; g.lineWidth=4;
+    for(let i=0;i<6;i++){
+      const ang=i*Math.PI/3;
+      g.beginPath(); g.moveTo(sfx,sfy);
+      g.lineTo(sfx+Math.cos(ang)*sfr,sfy+Math.sin(ang)*sfr); g.stroke();
+      // small dots at each arm tip
+      g.fillStyle='#29B5E8';
+      g.fillRect(sfx+Math.cos(ang)*sfr-2,sfy+Math.sin(ang)*sfr-2,5,5);
+    }
+    g.fillStyle='#29B5E8'; g.fillRect(sfx-3,sfy-3,6,6);  // centre
+    // ---- framed photo of the polar bear above the fireplace
+    const pfx=w*0.64, pfy=h*0.30, pfw=w*0.085, pfh=h*0.11;
+    g.fillStyle='#5A3D22'; g.fillRect(pfx-4,pfy-4,pfw+8,pfh+8);  // frame
+    g.fillStyle='#3A6B3A'; g.fillRect(pfx,pfy,pfw,pfh);           // mossy background
+    // bear body (white blob)
+    g.fillStyle='#F2F7FA';
+    g.fillRect(pfx+pfw*0.28,pfy+pfh*0.25,pfw*0.44,pfh*0.55);     // torso
+    g.fillRect(pfx+pfw*0.35,pfy+pfh*0.12,pfw*0.30,pfh*0.28);     // head
+    // ears
+    g.fillRect(pfx+pfw*0.30,pfy+pfh*0.08,pfw*0.12,pfh*0.12);
+    g.fillRect(pfx+pfw*0.58,pfy+pfh*0.08,pfw*0.12,pfh*0.12);
+    // scarf (light blue)
+    g.fillStyle='#7DD3F0';
+    g.fillRect(pfx+pfw*0.32,pfy+pfh*0.38,pfw*0.36,pfh*0.10);
+    // eyes + nose
+    g.fillStyle='#16222E';
+    g.fillRect(pfx+pfw*0.38,pfy+pfh*0.20,pfw*0.08,pfh*0.08);
+    g.fillRect(pfx+pfw*0.54,pfy+pfh*0.20,pfw*0.08,pfh*0.08);
+    g.fillRect(pfx+pfw*0.46,pfy+pfh*0.28,pfw*0.08,pfh*0.06);
     // ---- rug
     g.fillStyle='#7A3B32'; g.beginPath();
     g.ellipse(w*0.62,h*0.80,w*0.20,h*0.070,0,0,7); g.fill();
@@ -991,10 +1049,10 @@ function drawScene(kind){
     return;
   }
   if(kind==='library'){
-    g.fillStyle='#1B1526'; g.fillRect(0,0,w,h);                        // warm dark wall
+    g.fillStyle='#1C2B3A'; g.fillRect(0,0,w,h);                        // teal-grey wall
     const DK=h*SAFE;                                                    // desk line = band
     // ---- floorboards in perspective below the shelves
-    g.fillStyle='#2A1F38'; g.fillRect(0,DK-h*0.08,w,h*0.08);
+    g.fillStyle='#1A2A36'; g.fillRect(0,DK-h*0.08,w,h*0.08);
     for(let i=0;i<10;i++){
       g.fillStyle=i%2?'rgba(255,255,255,.028)':'rgba(0,0,0,.12)';
       const x0=w*(i/10), x1=w*0.5+(x0-w*0.5)*1.7;
@@ -1005,8 +1063,8 @@ function drawScene(kind){
     // ---- four shelf tiers, deeper stacks, a few tilted spines
     for(let row=0;row<4;row++){
       const y=h*0.02+row*(h*SAFE-h*0.10)/4;
-      g.fillStyle='#2E2340'; g.fillRect(w*0.03,y,w*0.94,h*0.084);      // recess
-      g.fillStyle='#3A2C4E'; g.fillRect(w*0.03,y,w*0.94,4);
+      g.fillStyle='#2A3F4C'; g.fillRect(w*0.03,y,w*0.94,h*0.084);      // recess
+      g.fillStyle='#3A4F5C'; g.fillRect(w*0.03,y,w*0.94,4);
       shelfBooks(g,w*0.04,y+h*0.084,w*0.92,u,700+row);
       const r2=rng(31+row);                                            // leaners
       for(let k=0;k<2;k++){
@@ -1015,7 +1073,7 @@ function drawScene(kind){
         g.fillStyle=['#C9A13B','#4F9E6A','#C4553E'][k%3];
         g.fillRect(0,-bh,u*3,bh); g.restore();
       }
-      g.fillStyle='#241a33'; g.fillRect(w*0.03,y+h*0.084,w*0.94,3);    // lip
+      g.fillStyle='#1A2A36'; g.fillRect(w*0.03,y+h*0.084,w*0.94,3);    // lip
       g.fillStyle='rgba(0,0,0,.22)'; g.fillRect(w*0.03,y+h*0.084+3,w*0.94,5);
     }
     // ---- rolling ladder against the stacks
@@ -1233,7 +1291,36 @@ function drawScene(kind){
     });
     // ---- CoCo at the bench, lit from below by the hologram
     drawCoCoFront(g,w*0.5,BN-h*0.055,S*1.9);
-    if(sceneThinking) drawThinkBubble(g,w*0.5,BN-h*0.055,S*1.9);
+    if(sceneThinking){
+      // --- FORGING ANIMATION: welding mask, anvil, hammer, sparks ---
+      const cu=S*1.9, ccx=w*0.5, ccy=BN-h*0.055;
+      // welding visor over eyes
+      g.fillStyle='#1A1A2A'; g.fillRect(ccx-cu*4.5,ccy-cu*6.5,cu*9,cu*3.5);
+      g.fillStyle='#2A4A58'; g.fillRect(ccx-cu*3.5,ccy-cu*5.5,cu*7,cu*2);
+      g.fillStyle='rgba(41,181,232,.35)'; g.fillRect(ccx-cu*3,ccy-cu*5,cu*6,cu*1.5);
+      // anvil (dark grey T-shape)
+      const ax2=w*0.62, ay2=BN-h*0.04;
+      g.fillStyle='#3A3A42'; g.fillRect(ax2-18,ay2-8,36,8);
+      g.fillStyle='#2A2A32'; g.fillRect(ax2-10,ay2,20,14);
+      // glowing workpiece
+      g.fillStyle='#E8863C'; g.fillRect(ax2-8,ay2-12,16,5);
+      g.fillStyle='rgba(232,134,60,.4)'; g.fillRect(ax2-12,ay2-14,24,9);
+      // hammer: oscillates on sin(tick/6)
+      const hamPhase=Math.sin(tick/6);
+      const hamY=ay2-32+hamPhase*14;
+      g.fillStyle='#5A3D22'; g.fillRect(ax2-2,hamY-20,4,22);
+      g.fillStyle='#6A6A72'; g.fillRect(ax2-9,hamY-24,18,8);
+      // sparks on strike (when hammer is low)
+      if(hamPhase>0.85){
+        for(let sp=0;sp<7;sp++){
+          const ang2=sp*0.85-1.5, spd=(tick*3+sp*17)%20;
+          const spx=ax2+Math.cos(ang2)*spd, spy=ay2-10+Math.sin(ang2)*spd*0.7;
+          g.fillStyle=sp%2?'#FFE7B0':'#E8863C';
+          g.fillRect(spx,spy,S*1.5,S*1.5);
+        }
+      }
+      drawThinkBubble(g,w*0.5,BN-h*0.055,S*1.9);
+    }
     g.fillStyle='rgba(41,181,232,.16)';
     g.fillRect(w*0.5-38,BN-h*0.16,76,h*0.16);
     // ---- steel bench: the panel docks against this edge
@@ -1282,8 +1369,10 @@ function drawScene(kind){
     const ew=w*0.075, eh=h*0.052;
     if(p<0.62){
       const t=p/0.62;
-      const ex=w*0.30+(slotX-ew/2-w*0.30)*t;
-      const ey=(GR-h*0.16)-Math.sin(t*Math.PI)*h*0.13;
+      const ex_start=w*0.30, ex_end=slotX-ew/2;
+      const ex=ex_start+(ex_end-ex_start)*t;
+      const ey_start=GR-h*0.22, ey_end=slotY-eh/2;
+      const ey=ey_start+(ey_end-ey_start)*t - Math.sin(t*Math.PI)*h*0.13;
       g.save(); g.translate(ex+ew/2,ey+eh/2); g.rotate(-0.5+t*0.5);
       g.fillStyle='#EADFC6'; g.fillRect(-ew/2,-eh/2,ew,eh);
       g.strokeStyle='#B9A98A'; g.lineWidth=2; g.strokeRect(-ew/2,-eh/2,ew,eh);
@@ -1327,6 +1416,14 @@ function closeScene(){ sceneActive=null; $('scene').classList.remove('on'); }
 function sizePovCard(){
   const cv=$('cv'), card=document.querySelector('#ov-loc .card');
   if(!cv || !card) return;
+  // Cap the scene so the panel gets the majority of the viewport. Without this,
+  // the library fills 60% of the screen and all six options are below the fold.
+  const maxScene=Math.round(innerHeight*0.44);
+  const natural=parseFloat(cv.style.height||'0');
+  if(natural>maxScene){
+    cv.style.height=maxScene+'px';
+    cv.style.width=Math.round(maxScene*COLS/ROWS)+'px';
+  }
   card.style.width=cv.style.width;
   const hpx=parseFloat(cv.style.height||'0');
   // Half the canvas was 180px on a short window: the options and the review
@@ -1654,6 +1751,7 @@ function openPanel(id){
     });
   }
   if(isCompose){ $('c-compose').placeholder=l.placeholder||''; $('c-compose').value=''; }
+  $('c-coco-choose').style.display = id==='workshop' ? '' : 'none';
   $('ov-loc').classList.add('on');
   syncGo();
   // Land the caret in the docked action block, not at the top of the card.
@@ -1671,6 +1769,7 @@ function syncGo(){
 }
 function closePanel(){ cancelAutoLeave();
   panelOpen=false; panelLoc=null; reopenLock=Date.now()+700;
+  fitCanvas();                              // restore natural scene size
   inSceneLoc=null; inScenePhase=null;
   $('ov-loc').classList.remove('on','pov'); closeScene(); }
 
@@ -1776,8 +1875,7 @@ function playPosting(){
   setTimeout(()=>{
     closeScene();
     visited.add('postbox');
-    const v=(ST.visitor||{}).first_name||'';
-    nudge(`Posted${v?', '+v:''}. That is your POC on its way. Go and build it.`,14000);
+    showDoneSummary();
   },POST_MS+220);
 }
 
@@ -1823,6 +1921,15 @@ async function submitPanel(){
     }
   }catch(e){ showErr('cannot reach server'); }
 }
+$('c-coco-choose').addEventListener('click',()=>{
+  const v=ST.visitor||{}, ind=(CFG.industries[v.industry]||{}).name||'your sector';
+  const held=(ST.held||[]).slice(0,2).join(' and ')||'your data';
+  const joined=(ST.joined||[]).slice(0,1)[0]||'';
+  const text='Build the most impactful thing for '+ind+' using '+held
+    +(joined?' joined with '+joined:'');
+  $('c-compose').value=text;
+  submitPanel();
+});
 $('c-go').addEventListener('click',submitPanel);
 
 // While a POV desk is open and awaiting CoCo, surface the reply in-scene.
@@ -1856,6 +1963,27 @@ function startAutoLeave(){
   },AUTO_LEAVE_MS);
 }
 function cancelAutoLeave(){ clearTimeout(autoLeaveT); autoLeaveT=0; }
+
+function showDoneSummary(){
+  const v=ST.visitor||{}, poc=ST.poc||{};
+  $('done-who').textContent=(v.first_name||'Visitor')
+    +(v.company?' @ '+v.company:'');
+  $('done-poc').textContent='POC: '+(poc.poc_name||'your proof of concept');
+  const nf=(poc.features||[]).length;
+  $('done-feats').textContent='Features: '+nf+(nf?(' \u2014 '+(poc.features||[]).join(', ')):'');
+  // elapsed from started_at
+  const elapsed=Math.round(Date.now()/1000-(ST.started_at||Date.now()/1000));
+  const mm=Math.floor(elapsed/60), ss=elapsed%60;
+  $('done-time').textContent='Completed in '+mm+':'+String(ss).padStart(2,'0');
+  $('ov-done').style.display='';
+  $('ov-done').classList.add('on');
+}
+$('done-reset').addEventListener('click',async ()=>{
+  $('done-reset').disabled=true;
+  $('done-reset').textContent='RESETTING\u2026';
+  try { await post('/api/reset',{}); } catch(e){}
+  location.reload();
+});
 
 async function post(url,body){
   const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},

@@ -1521,13 +1521,17 @@ def log_session(cfg, state):
         "OUTPUT_TOKENS": int(state.get("output_tokens") or 0),
         "SE_OPERATOR": (cfg.get("event") or {}).get("operator", ""),
         "NOTES": f"{len(turns)} turns",
+        # The qualification payload. Everything above is a pick from a list we
+        # wrote; these two are the visitor's own words and their real estate.
+        "PROBLEM_STATEMENT": vis.get("problem", ""),
+        "PLATFORMS": state.get("platforms") or [],
     }
-    cols = [k for k in payload if k not in ("DATA_HELD", "MARKETPLACE_JOINED",
-                                            "FEATURES", "CONSIDERATIONS")]
+    arr_cols = ["DATA_HELD", "MARKETPLACE_JOINED", "FEATURES",
+                "CONSIDERATIONS", "PLATFORMS"]
+    cols = [k for k in payload if k not in arr_cols]
     num = {"READINESS_SCORE", "DURATION_SECONDS", "COCO_SECONDS",
            "INPUT_TOKENS", "OUTPUT_TOKENS"}
     sel = [f"p:{c}::{'NUMBER' if c in num else 'TEXT'}" for c in cols]
-    arr_cols = ["DATA_HELD", "MARKETPLACE_JOINED", "FEATURES", "CONSIDERATIONS"]
     sel += [f"p:{c}::ARRAY" for c in arr_cols]
 
     sql = (f"INSERT INTO {tbl} (SESSION_TS, {', '.join(cols + arr_cols)}) "

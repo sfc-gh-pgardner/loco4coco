@@ -89,7 +89,14 @@ DEFINE TABLE {{db}}.{{schema}}.SESSIONS (
 
   -- Appended, not inserted: CREATE OR ALTER TABLE (which DEFINE runs) rejects
   -- adding a column anywhere but the end. Replaces the old WEAKEST_POINT.
-  CONSIDERATIONS      ARRAY         COMMENT 'What the visitor is told to think about, in place of a score'
+  CONSIDERATIONS      ARRAY         COMMENT 'What the visitor is told to think about, in place of a score',
+
+  -- Also appended. These two are the qualification payload: the problem in the
+  -- visitor's OWN WORDS, and the platforms their data sits on. Everything else
+  -- in this table is a pick from a list we wrote; these are the only columns an
+  -- SDR can quote back to them.
+  PROBLEM_STATEMENT   TEXT          COMMENT 'Two sentences, typed by the visitor at the letter stage',
+  PLATFORMS           ARRAY         COMMENT 'Where the data lives today - decides the integration path'
 )
   COMMENT = 'One row per booth visitor.';
 

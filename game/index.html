@@ -552,7 +552,13 @@
     <div id="done-poc" style="font-size:13px;color:var(--dim);margin:4px 0"></div>
     <div id="done-feats" style="font-size:13px;color:var(--dim);margin:4px 0"></div>
     <div id="done-time" style="font-size:22px;font-weight:700;color:var(--edge);margin:18px 0"></div>
-    <button class="primary" id="done-reset" style="margin-top:12px;padding:10px 28px;font-size:14px">START AGAIN</button>
+    <img id="done-cardimg" alt="Your card" style="display:block;width:100%;
+      border-radius:8px;margin:14px 0 4px;image-rendering:pixelated">
+    <button class="primary" id="done-card" style="margin-top:8px;padding:11px 22px;
+      font-size:14px;width:100%">SAVE MY CARD</button>
+    <div class="hint" style="margin:6px 0 0">Yours to post. Tag us and we will
+      see it.</div>
+    <button class="primary" id="done-reset" style="margin-top:14px;padding:10px 28px;font-size:14px">START AGAIN</button>
   </div></div>
 
 
@@ -2102,6 +2108,211 @@ function startAutoLeave(){
 }
 function cancelAutoLeave(){ clearTimeout(autoLeaveT); autoLeaveT=0; }
 
+// ---------------- the shareable card ----------------
+// A visitor leaves with a document nobody else sees. This is the other half:
+// one 1200x630 pixel-art image, sized for a LinkedIn post, showing CoCo standing
+// in a scene that matches the POC they designed.
+//
+// It is drawn, not generated. There is no image model in the loop, no latency and
+// no cost: every archetype has a precomputed palette and a motif, and the card is
+// those parts assembled with the visitor's own words on top. That is the whole
+// trick - the decision tree already tells us the finite set of things a visitor
+// can end up with, so the art can be built in advance and pieced together.
+const CARD_W=1200, CARD_H=630;
+const CARD_THEMES={
+  'talk-to-my-data':        {sky:['#0B2A3F','#1E5A7A'], accent:'#29B5E8', motif:'chat',    tag:'Talk to my data'},
+  'ask-my-documents':       {sky:['#122036','#2F4F7A'], accent:'#7DD3F0', motif:'docs',    tag:'Ask my documents'},
+  'extract-from-paperwork': {sky:['#1B1B33','#40407A'], accent:'#B39DFF', motif:'form',    tag:'Extract from paperwork'},
+  'triage-and-classify':    {sky:['#0E2B2B','#1F6060'], accent:'#4FD1B0', motif:'bins',    tag:'Triage and classify'},
+  'an-agent-that-acts':     {sky:['#2A1633','#5C2A6B'], accent:'#E88BD8', motif:'agent',   tag:'An agent that acts'},
+  'dashboard-that-explains-itself':{sky:['#0B2436','#1A5570'], accent:'#29B5E8', motif:'chart', tag:'A dashboard that explains itself'},
+  'predict-what-happens-next':{sky:['#2B1E10','#6B4A1E'], accent:'#F0A94C', motif:'trend', tag:'Predict what happens next'},
+  'join-the-silos':         {sky:['#101F2E','#2B4A66'], accent:'#8FD4F5', motif:'silos',   tag:'Join the silos'},
+  'share-without-copying':  {sky:['#0E2620','#1F5A46'], accent:'#5FD9A0', motif:'share',   tag:'Share without copying'},
+  'watch-it-live':          {sky:['#2B1220','#6B2440'], accent:'#FF7FA8', motif:'stream',  tag:'Watch it live'}
+};
+// Per-motif vertical nudge, so every motif's visual bottom lands on the same
+// ground plane as CoCo's feet. Measured, not guessed.
+const MOTIF_LIFT={chat:34,docs:-6,form:-14,bins:-18,agent:26,chart:-10,
+                  trend:-14,silos:-8,share:2,stream:6};
+function cardTheme(){
+  const a=(ST.poc||{}).archetype||'';
+  return CARD_THEMES[a]||CARD_THEMES['talk-to-my-data'];
+}
+// One pixel unit for the card, so everything stays on a grid and reads as sprite
+// art rather than as smooth vector shapes shrunk down.
+function cpx(g,x,y,w,h,c){ g.fillStyle=c; g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); }
+
+function drawCardMotif(g,kind,cx,cy,u,accent){
+  const A=accent, D='#EAF6FD', S2='rgba(255,255,255,.20)';
+  if(kind==='chat'){
+    for(let i=0;i<3;i++){
+      const bw=u*(9-i*1.5), bh=u*4, bx=cx-bw/2+(i%2?u*2:-u*2), by=cy-i*u*5.5;
+      cpx(g,bx,by,bw,bh,i===0?A:D); cpx(g,bx+u*2,by+bh,u*2,u*1.5,i===0?A:D);
+    }
+  } else if(kind==='docs'){
+    for(let i=0;i<4;i++) cpx(g,cx-u*5+i*u*1.2,cy-u*7+i*u*1.6,u*9,u*11,i===3?A:D);
+    for(let r=0;r<5;r++) cpx(g,cx-u*1.5+u*0.6,cy-u*4+r*u*1.8,u*6,u*0.7,'rgba(0,0,0,.35)');
+  } else if(kind==='form'){
+    cpx(g,cx-u*6,cy-u*8,u*12,u*15,D);
+    for(let r=0;r<5;r++){ cpx(g,cx-u*4,cy-u*6+r*u*2.6,u*2,u*2,A);
+      cpx(g,cx-u*1,cy-u*5.6+r*u*2.6,u*5,u*1.2,'rgba(0,0,0,.35)'); }
+  } else if(kind==='bins'){
+    for(let i=0;i<3;i++){ const bx=cx-u*8+i*u*6;
+      cpx(g,bx,cy,u*5,u*7,i===1?A:D);
+      cpx(g,bx+u*1,cy-u*3-i*u*1.5,u*3,u*3,S2); }
+  } else if(kind==='agent'){
+    cpx(g,cx-u*5,cy-u*6,u*10,u*9,D); cpx(g,cx-u*3,cy-u*4,u*2.5,u*2.5,A);
+    cpx(g,cx+u*0.5,cy-u*4,u*2.5,u*2.5,A);
+    cpx(g,cx-u*2,cy+u*1,u*4,u*1.2,'rgba(0,0,0,.4)');
+    cpx(g,cx-u*0.6,cy-u*9,u*1.2,u*3,D); cpx(g,cx-u*2,cy-u*11,u*4,u*2,A);
+  } else if(kind==='chart'){
+    [5,9,6,12,8].forEach((h,i)=>cpx(g,cx-u*9+i*u*4,cy+u*6-h*u,u*3,h*u,i===3?A:D));
+  } else if(kind==='trend'){
+    // Also too sparse. Bars underneath give it mass, and the forecast half of
+    // the line is drawn in the accent so the "next" part is the point.
+    for(let i=0;i<7;i++){
+      const h=(3+i*1.4)*u;
+      cpx(g,cx-u*10+i*u*3,cy+u*6-h,u*2.2,h,i>4?'rgba(255,255,255,.28)':S2);
+    }
+    for(let i=0;i<7;i++){
+      const nx=cx-u*10+i*u*3, ny=cy+u*6-(3+i*1.4)*u-u*2.4;
+      cpx(g,nx,ny,u*2.2,u*2.2,i>4?A:D);
+      if(i<6) cpx(g,nx+u*2.2,ny-u*0.8,u*0.9,u*2.4,i>3?A:D);   // rising joins
+    }
+    cpx(g,cx+u*10,cy-u*7,u*3.4,u*3.4,A);
+    cpx(g,cx-u*11,cy+u*6,u*24,u*0.9,D);                       // baseline
+  } else if(kind==='silos'){
+    for(let i=0;i<3;i++){ const bx=cx-u*9+i*u*7;
+      cpx(g,bx,cy-u*5,u*5,u*11,i===1?A:D); cpx(g,bx,cy-u*6,u*5,u*1.5,S2); }
+    cpx(g,cx-u*9,cy+u*1,u*19,u*1.2,A);
+  } else if(kind==='share'){
+    cpx(g,cx-u*11,cy-u*4,u*7,u*9,D); cpx(g,cx+u*4,cy-u*4,u*7,u*9,A);
+    for(let i=0;i<3;i++) cpx(g,cx-u*3+i*u*2,cy,u*1.4,u*1.4,D);
+  } else if(kind==='stream'){
+    // Was eight scattered squares beside a bare bar, which read as a rendering
+    // glitch rather than as a stream. It needs an object: a monitor with a live
+    // trace running across it, and a queue feeding in from the left.
+    cpx(g,cx-u*11,cy-u*8,u*22,u*15,D);                  // bezel
+    cpx(g,cx-u*10,cy-u*7,u*20,u*13,'#0B1A24');          // screen
+    for(let i=0;i<19;i++){                              // the trace
+      const yy=cy-u*0.5+Math.sin(i*0.8)*u*4.2;
+      cpx(g,cx-u*10+i*u,yy,u*1.1,u*1.1,i>14?A:D);
+    }
+    cpx(g,cx-u*10,cy+u*4.6,u*20,u*0.8,'rgba(255,255,255,.18)');
+    for(let i=0;i<4;i++)                                // queue feeding in
+      cpx(g,cx-u*15+i*u*1.6,cy-u*1+((i%2)?-u:u),u*1.3,u*1.3,A);
+    cpx(g,cx-u*4,cy+u*7,u*8,u*3,D);                     // stand
+  }
+}
+
+function wrapText(g,text,maxW){
+  const words=String(text||'').split(/\s+/).filter(Boolean), lines=[];
+  let cur='';
+  words.forEach(wd=>{
+    const t=cur?cur+' '+wd:wd;
+    if(g.measureText(t).width>maxW && cur){ lines.push(cur); cur=wd; } else cur=t;
+  });
+  if(cur) lines.push(cur);
+  return lines;
+}
+
+function buildShareCard(){
+  const cv=document.createElement('canvas');
+  cv.width=CARD_W; cv.height=CARD_H;
+  const g=cv.getContext('2d');
+  g.imageSmoothingEnabled=false;
+  const th=cardTheme(), v=ST.visitor||{}, poc=ST.poc||{};
+
+  // sky
+  const sky=g.createLinearGradient(0,0,0,CARD_H);
+  sky.addColorStop(0,th.sky[0]); sky.addColorStop(1,th.sky[1]);
+  g.fillStyle=sky; g.fillRect(0,0,CARD_W,CARD_H);
+  // stars, on a grid so they stay pixels
+  for(let i=0;i<90;i++){
+    const x=(i*137)%CARD_W, y=(i*61)%Math.round(CARD_H*0.55);
+    cpx(g,x,y,3,3,i%4?'rgba(255,255,255,.30)':'rgba(255,255,255,.65)');
+  }
+  // ground: two bands of snow
+  const GR=Math.round(CARD_H*0.64);
+  cpx(g,0,GR,CARD_W,CARD_H-GR,'#DCEAF2');
+  cpx(g,0,GR,CARD_W,10,'#FFFFFF');
+  cpx(g,0,GR+56,CARD_W,6,'rgba(41,181,232,.20)');
+
+  // the motif stands to CoCo's right, at POC scale
+  // Motifs are anchored to the ground rather than to a fixed offset: measured
+  // bottoms varied by 50px across the ten, so 'agent' floated in the sky while
+  // 'docs' sat on the snow. MOTIF_LIFT lands each one on the same plane.
+  const lift=MOTIF_LIFT[th.motif]||0;
+  drawCardMotif(g,th.motif,Math.round(CARD_W*0.775),GR-40-lift,11,th.accent);
+  // CoCo himself, reusing the in-game sprite so the card and the game agree
+  drawCoCoFront(g,Math.round(CARD_W*0.545),GR+22,9);
+
+  // text column
+  const PADX=64;
+  g.textBaseline='top';
+  g.fillStyle=th.accent;
+  g.font='700 22px ui-monospace,SFMono-Regular,Menlo,monospace';
+  g.fillText(th.tag.toUpperCase(),PADX,64);
+
+  g.fillStyle='#FFFFFF';
+  g.font='700 52px -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+  const lines=wrapText(g,poc.poc_name||'My Snowflake proof of concept',
+                       Math.round(CARD_W*0.44));
+  lines.slice(0,3).forEach((ln,i)=>g.fillText(ln,PADX,104+i*58));
+
+  let y=104+Math.min(lines.length,3)*58+16;
+  g.fillStyle='rgba(255,255,255,.80)';
+  g.font='400 24px -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+  const feats=(poc.features||[]).slice(0,3).join('  |  ');
+  if(feats) g.fillText(feats,PADX,y);
+
+  // footer strip: who, where, how long. The time is the boast.
+  cpx(g,0,CARD_H-92,CARD_W,92,'rgba(6,14,20,.88)');
+  g.fillStyle='#FFFFFF';
+  g.font='700 26px -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+  const el=Math.max(0,Math.round(Date.now()/1000-(ST.started_at||Date.now()/1000)));
+  const mm=Math.floor(el/60), ss=el%60;
+  g.fillText('Built in '+mm+':'+String(ss).padStart(2,'0')+' with Cortex Code',
+             PADX,CARD_H-66);
+  g.fillStyle='rgba(255,255,255,.62)';
+  g.font='400 20px -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+  const city=((CFG.event||{}).city)||'';
+  g.fillText((v.first_name||'A visitor')+' at Snowflake World Tour '+city,
+             PADX,CARD_H-34);
+
+  // the mark, bottom right, drawn as six arrowheads like the wall logo
+  const mx=CARD_W-96, my=CARD_H-46, mr=30;
+  g.save(); g.translate(mx,my); g.fillStyle='#29B5E8';
+  for(let i=0;i<6;i++){
+    g.save(); g.rotate(i*Math.PI/3);
+    const sh=mr*0.075, bw=mr*0.30;
+    g.beginPath();
+    g.moveTo(mr*0.30,-sh); g.lineTo(mr*0.72,-sh); g.lineTo(mr*0.72,-bw);
+    g.lineTo(mr*1.00,0); g.lineTo(mr*0.72,bw); g.lineTo(mr*0.72,sh);
+    g.lineTo(mr*0.30,sh); g.closePath(); g.fill();
+    g.restore();
+  }
+  const dr=mr*0.30;
+  g.beginPath(); g.moveTo(0,-dr); g.lineTo(dr,0); g.lineTo(0,dr); g.lineTo(-dr,0);
+  g.closePath(); g.fill(); g.restore();
+  return cv;
+}
+
+function saveShareCard(){
+  try{
+    const cv=buildShareCard();
+    const a=document.createElement('a');
+    const nm=((ST.visitor||{}).first_name||'visitor').replace(/[^A-Za-z0-9]/g,'');
+    a.download='loco4coco-'+nm+'.png';
+    a.href=cv.toDataURL('image/png');
+    a.click();
+    const b=$('done-card');
+    if(b){ b.textContent='SAVED \u2713';
+      setTimeout(()=>{ b.textContent='SAVE MY CARD'; },2000); }
+  }catch(e){ showErr('could not build the card'); }
+}
+
 function showDoneSummary(){
   const v=ST.visitor||{}, poc=ST.poc||{};
   $('done-who').textContent=(v.first_name||'Visitor')
@@ -2113,9 +2324,14 @@ function showDoneSummary(){
   const elapsed=Math.round(Date.now()/1000-(ST.started_at||Date.now()/1000));
   const mm=Math.floor(elapsed/60), ss=elapsed%60;
   $('done-time').textContent='Completed in '+mm+':'+String(ss).padStart(2,'0');
+  // Render the card straight away, so the visitor sees the thing they are
+  // being offered rather than a button promising one.
+  try{ $('done-cardimg').src=buildShareCard().toDataURL('image/png'); }
+  catch(e){ $('done-cardimg').style.display='none'; }
   $('ov-done').style.display='';
   $('ov-done').classList.add('on');
 }
+$('done-card').addEventListener('click',saveShareCard);
 $('done-reset').addEventListener('click',async ()=>{
   $('done-reset').disabled=true;
   $('done-reset').textContent='RESETTING\u2026';

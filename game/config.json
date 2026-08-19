@@ -13,7 +13,8 @@
     "_region_comment": "Marketplace listings are filtered to this region. Offering a visitor a share they cannot attach wastes the five minutes we just spent with them.",
     "title": "Loco for CoCo",
     "subtitle": "Five minutes to your next data product",
-    "time_limit_seconds": 300
+    "time_limit_seconds": 300,
+    "byline": "by Paddy Gardner"
   },
   "snowflake": {
     "connection_name": "PG_LONDON",

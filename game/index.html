@@ -270,6 +270,10 @@
   #banner h1 { font-size:52px; margin:0; color:var(--edge); letter-spacing:.06em;
     text-shadow:0 0 18px rgba(41,181,232,.5); }
   #banner p { color:var(--dim); letter-spacing:.2em; }
+  /* The byline sits tight under the title, quieter than PRESS START so it reads
+     as attribution rather than as an instruction. */
+  #b-by { margin:6px 0 18px; color:var(--warm); font-size:13px;
+    letter-spacing:.16em; text-transform:none; opacity:.9; }
   #err { position:fixed; left:8px; bottom:5px; color:#FF7A7A; font-size:11px; }
   #newv { position:fixed; right:9px; top:7px; z-index:60; background:#16283A;
     color:var(--dim); border:1px solid var(--line); border-radius:5px; font:inherit;
@@ -511,6 +515,16 @@
       <div class="q" id="c-head"></div>
       <div class="hint" id="c-hint"></div>
       <div class="opts" id="c-opts"></div>
+      <!-- The library's SECOND question, and it must read as second. It used to
+           live in the fixed dock while the options scrolled above it, which gave
+           the panel two independently scrolling regions - you could be looking
+           at "where does it live today?" with the datasets question scrolled
+           entirely out of sight. It is now part of the same single flow, and it
+           does not appear at all until the first question has been answered. -->
+      <div class="fld" id="c-platwrap" style="display:none;margin-top:14px;
+        border-top:1px solid var(--line);padding-top:12px">
+        <label id="c-platlab"></label>
+        <div class="chips" id="c-plats"></div></div>
       </div><!-- /cscroll -->
       <!-- Docked last: what you type is the action, so it sits under the
            conversation and stays reachable however long CoCo's reply is. -->
@@ -518,9 +532,6 @@
         <!-- The library's second question. One tap, and it decides the whole
              "getting your data in" section of the blueprint, so it is worth
              asking here rather than guessing later. -->
-        <div class="fld" id="c-platwrap" style="display:none;margin-top:8px">
-          <label id="c-platlab"></label>
-          <div class="chips" id="c-plats"></div></div>
         <div class="fld" id="c-otherwrap" style="margin-top:8px">
           <label id="c-otherlab"></label>
           <input type="text" id="c-other" autocomplete="off" spellcheck="false"></div>
@@ -532,7 +543,9 @@
       </div>
     </div></div>
 
-    <div id="banner"><h1 id="b-title">LOCO 4 CoCo</h1><p id="b-sub">PRESS START</p></div>
+    <div id="banner"><h1 id="b-title">LOCO 4 CoCo</h1>
+      <p id="b-by">by Paddy Gardner</p>
+      <p id="b-sub">PRESS START</p></div>
   </div>
 
   <!-- the finished blueprint, on screen: the email depends on an operator
@@ -1440,7 +1453,9 @@ function drawScene(kind){
       // wide scene is most of a metre away - so the hammer and the torch read as
       // floating tools operating themselves. It is now within a flipper's reach,
       // and both tools are drawn with an arm holding them.
-      const ax2=ccx+cu*7.2, ay2=BN-h*0.04;
+      // Far enough to CoCo's left that the hammer swings in clear air. At
+      // cu*7.2 the head passed straight through his eye on the downstroke.
+      const ax2=ccx+cu*12.5, ay2=BN-h*0.04;
       // Shoulder height, not head height: the first version started the arm at
       // ccy-cu*4.4, which put it level with the visor, so the torch appeared to
       // come out from behind CoCo's head.
@@ -1649,7 +1664,14 @@ function drawScene(kind){
   }
 }
 function openScene(kind){ sceneActive=kind; $('scene').classList.add('on'); }
-function closeScene(){ sceneActive=null; $('scene').classList.remove('on'); }
+function closeScene(){
+  sceneActive=null; $('scene').classList.remove('on');
+  // sizePovCard() reshapes the shared canvas into a letterbox for the interior.
+  // Nothing put it back, so the MAP inherited the interior's aspect and arrived
+  // squashed. Only the interiors were meant to change shape.
+  $('ov-loc').classList.remove('pov');
+  fitCanvas();
+}
 // Tie the POV desk panel to the scene: same width as the canvas, and capped so
 // the interior shows in the top half above it.
 function sizePovCard(){
@@ -2027,18 +2049,20 @@ function openPanel(id){
         const i=+el.dataset.i;
         if(el.querySelector('input').checked) sel.add(i); else sel.delete(i);
         el.classList.toggle('sel',el.querySelector('input').checked);
-        syncGo();
+        syncGo(); revealPlats();
       });
     });
   }
   if(isCompose){ $('c-compose').placeholder=l.placeholder||''; $('c-compose').value=''; }
-  // Platform chips: library only. They are not gated on the dataset ticks -
-  // someone who only types a free-text source still needs to say where it lives.
+  // Platform chips: library only, and SECOND. Gated on the first question
+  // having an answer - a tick or some free text - so the visitor meets one
+  // question at a time instead of two competing for the same panel.
   const pcfg=CFG.platforms||{}, wantPlats = id==='library'
     && Array.isArray(pcfg.options) && pcfg.options.length;
-  $('c-platwrap').style.display = wantPlats ? 'block' : 'none';
+  platsWanted=wantPlats;
+  $('c-platwrap').style.display='none';
   if(wantPlats){
-    plats=new Set();
+    plats=new Set(); platsShown=false;
     $('c-platlab').textContent=pcfg.heading||'And where does it live today?';
     $('c-plats').innerHTML=pcfg.options.map((o,i)=>
       `<div class="chip" data-p="${i}">${esc(o)}</div>`).join('');
@@ -2190,7 +2214,7 @@ $('newv').addEventListener('click',async()=>{
   try{ await fetch('/api/reset',{method:'POST'}); }catch(e){}
   location.reload();
 });
-$('c-other').addEventListener('input',syncGo);
+$('c-other').addEventListener('input',()=>{ syncGo(); revealPlats(); });
 $('c-other').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter') submitPanel(); });
 $('c-compose').addEventListener('input',syncGo);
 $('c-compose').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter') submitPanel(); });
@@ -2506,8 +2530,13 @@ function showDoneSummary(){
 async function handoverCard(dataUrl){
   const hint=$('done-cardhint');
   try{
-    const r=await post('/api/card',{png:dataUrl});
-    if(!r || !r.url) throw new Error(r && r.error || 'no url');
+    // post() resolves to the fetch Response, NOT the parsed body. Reading
+    // r.url off it gave the REQUEST url, so the QR encoded
+    // http://127.0.0.1:4747/api/card - a booth laptop address, on a stranger's
+    // phone, which of course did nothing.
+    const res=await post('/api/card',{png:dataUrl});
+    const r=await res.json();
+    if(!r || !r.url) throw new Error((r && r.error) || 'no url');
     const qr=$('done-qr');
     qr.onerror=()=>{ hint.textContent='Card staged, but the QR could not be '
       +'drawn. Ask us for the link.'; };
@@ -2526,6 +2555,22 @@ $('done-reset').addEventListener('click',async ()=>{
   try { await post('/api/reset',{}); } catch(e){}
   location.reload();
 });
+
+// Reveal the second library question once the first has an answer. Called from
+// the option toggles and from the free-text box, so either route unlocks it.
+let platsWanted=false, platsShown=false;
+function revealPlats(){
+  if(!platsWanted || platsShown) return;
+  const anyTick=!!document.querySelector('#c-opts .opt.sel'),
+        anyText=($('c-other').value||'').trim().length>1;
+  if(!anyTick && !anyText) return;
+  platsShown=true;
+  const wrap=$('c-platwrap');
+  wrap.style.display='block';
+  // Bring it into view, but gently: jumping the scroll to the bottom is what
+  // hid the options the last time this panel was "helpfully" scrolled.
+  try{ wrap.scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(e){}
+}
 
 async function post(url,body){
   const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
@@ -2750,6 +2795,10 @@ function fitCanvas(){
   document.documentElement.style.setProperty('--edge',CFG.theme.panel_edge);
   $('b-title').textContent=CFG.event.title;
   $('b-sub').textContent=CFG.event.subtitle.toUpperCase();
+  // Attribution, from config so a different operator can put their own name on
+  // their own stand without touching the markup.
+  const by=(CFG.event.byline||'').trim();
+  $('b-by').textContent=by; $('b-by').style.display=by?'':'none';
   P.x=P.px=CFG.penguin.start[0]; P.y=P.py=CFG.penguin.start[1];
   buildMap(); await loadOptions(); await poll();
   if(!haveVisitor()) openTitle();

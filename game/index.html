@@ -333,7 +333,7 @@
   #ov-letter.on .card.letter #l-first    { animation-delay:1.15s; }
   #ov-letter.on .card.letter #l-company  { animation-delay:1.40s; }
   #ov-letter.on .card.letter #l-industry { animation-delay:1.65s; }
-  #ov-letter.on .card.letter #l-email    { animation-delay:2.15s; }
+
   #ov-letter.on .card.letter #l-problem  { animation-delay:1.90s; }
   @keyframes lglow {
     0%   { background:rgba(28,78,122,0);   border-bottom-color:#9C8C6E; }
@@ -351,7 +351,7 @@
     width:auto; display:inline-block; vertical-align:baseline;
   }
   #l-first { width:150px; } #l-company { width:205px; }
-  #l-email { width:225px; } #l-industry { width:195px; }
+  #l-industry { width:195px; }
   .lta { display:block; margin-top:5px; resize:vertical;
     font:inherit; font-size:14px; line-height:1.5; }
   /* The problem field is the only input that is a PARAGRAPH rather than a word
@@ -458,7 +458,7 @@
         <textarea id="l-problem" class="lin lta" rows="2" spellcheck="false"
           placeholder="in two sentences..."></textarea></p>
       <p class="lp">Could you help us out?</p>
-      <p class="lp" style="margin-top:14px"><span id="l-sign">Signed </span><input type="email" id="l-email" class="lin" placeholder="your email" autocomplete="off" spellcheck="false"></p>
+
       <div class="go" style="margin-top:14px;justify-content:space-between;align-items:center">
         <span id="l-hint" class="lhint"></span>
         <button class="primary" id="l-go">THAT'S BETTER</button></div>
@@ -575,7 +575,11 @@
       <span class="keys" id="bp-keys">Builds your document and the email</span></div>
   </div></div>
   <div class="ov" id="ov-done" style="display:none"><div class="card" style="max-width:420px;text-align:center;padding:28px 24px">
-    <div style="font-size:32px;color:#29B5E8;margin-bottom:12px">&#10052; DONE &#10052;</div>
+    <div style="font-size:32px;color:#29B5E8;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:14px">
+      <img src="/assets/snowflake-mark.png" alt="" width="36" height="36" style="image-rendering:auto">
+      DONE
+      <img src="/assets/snowflake-mark.png" alt="" width="36" height="36" style="image-rendering:auto">
+    </div>
     <div id="done-who" style="font-size:15px;font-weight:700;color:var(--edge);margin:8px 0"></div>
     <div id="done-poc" style="font-size:13px;color:var(--dim);margin:4px 0"></div>
     <div id="done-feats" style="font-size:13px;color:var(--dim);margin:4px 0"></div>
@@ -1832,7 +1836,7 @@ function paintLetter(){
   const l=L();
   $('l-bubble').textContent=l.bubble||"Wow, a letter from my friend!";
   $('l-greet').textContent=l.greeting||'Hey CoCo,';
-  $('l-sign').textContent=(l.signoff||'Signed {email}').replace('{email}','');
+
   $('l-go').textContent=l.button||"THAT'S BETTER";
   const s=$('l-industry');
   if(!s.options.length){
@@ -1848,19 +1852,16 @@ function paintLetter(){
 
 async function submitLetter(){
   const first=$('l-first').value.trim(), company=$('l-company').value.trim(),
-        email=$('l-email').value.trim(), industry=$('l-industry').value||null,
+        industry=$('l-industry').value||null,
         problem=$('l-problem').value.trim();
-  const bad = !first || !email || !email.includes('@');
-  $('l-first').classList.toggle('invalid',!first);
-  $('l-email').classList.toggle('invalid',!email||!email.includes('@'));
-  $('l-hint').textContent = bad ? 'CoCo needs a name and an email to post it back.' : '';
-  if(bad) return;
+  if(!first){ $('l-first').classList.add('invalid');
+    $('l-hint').textContent='CoCo needs a name.'; return; }
+  $('l-first').classList.remove('invalid'); $('l-hint').textContent='';
   const iname=(CFG.industries[industry]||{}).name||'';
-  lastLetter={first_name:first,company:company,email:email,industry_name:iname};
+  lastLetter={first_name:first,company:company,industry_name:iname};
   $('l-go').disabled=true;
   try{
-    await post('/api/intake',{first_name:first,company:company,email:email,
-      industry:industry,problem:problem});
+    await post('/api/intake',{first_name:first,company:company,industry:industry,problem:problem});
     $('ov-letter').classList.remove('on');
     setPhase('line1');
   }catch(e){ showErr('cannot reach server'); }

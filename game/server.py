@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Loco4CoCo arcade companion — local server.
+"""Loco4CoCo arcade companion - local server.
 
 The visitor drives a penguin round an arctic map. At each location the browser
 posts their choices here; this server prompts the REAL Cortex Code via
@@ -1473,7 +1473,7 @@ def blueprint_docx(cfg, state):
     doc.add_paragraph(
         f"Prepared for {vis.get('first_name') or 'you'}"
         + (f" at {vis.get('company')}" if vis.get("company") else "")
-        + f" — Snowflake World Tour {cfg['event']['city']}.")
+        + f" - Snowflake World Tour {cfg['event']['city']}.")
     if poc.get("summary"):
         doc.add_paragraph(poc["summary"])
 
@@ -1512,7 +1512,7 @@ def blueprint_docx(cfg, state):
         for j in joined:
             if j not in named:
                 doc.add_paragraph(
-                    f"{j} — search the Marketplace for a provider",
+                    f"{j} - search the Marketplace for a provider",
                     style="List Bullet")
 
     feats = link_features((poc.get("features") or []))

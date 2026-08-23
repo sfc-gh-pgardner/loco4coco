@@ -5,7 +5,7 @@ description: "Curated index of Snowflake developer guides, archetype-tagged, for
 
 # Curated developer guides index
 
-**Verified:** 2026-08-05 — all 44 URLs returned HTTP 200 on that date.
+**Verified:** 2026-08-05 - all 44 URLs returned HTTP 200 on that date.
 **Base:** `https://www.snowflake.com/en/developers/guides/<slug>/`
 **Corpus:** harvested 565 of the 653 guides the site reported (86%); the shortfall is landing/industry pages and cards without a parseable heading. The curation below is a deliberate subset, not the whole corpus.
 
@@ -16,9 +16,9 @@ demolish's prior-art step hands ranked keywords to a human who eyeballs the guid
 ## Rules for using this index
 
 - Pick the **primary** fork for the resolved archetype. Offer an alternate only if the visitor's Round 2 answers clearly favour it.
-- Never invent a slug. If a needed guide is not here, say "no direct guide — build from scratch" and name the features instead. A recorded negative is honest; a fabricated URL is a defect.
+- Never invent a slug. If a needed guide is not here, say "no direct guide - build from scratch" and name the features instead. A recorded negative is honest; a fabricated URL is a defect.
 - Do not deep-link to sections. Slug-level only, which is what was verified.
-- `CoCo` in the notes column means the guide explicitly features Cortex Code or CoWork — prefer these, because the visitor's takeaway is a CoCo prompt.
+- `CoCo` in the notes column means the guide explicitly features Cortex Code or CoWork - prefer these, because the visitor's takeaway is a CoCo prompt.
 
 ---
 
@@ -110,7 +110,7 @@ Every blueprint names one of these regardless of archetype, so the visitor knows
 
 | Guide | Slug | Use when |
 |---|---|---|
-| Get Started with Snowflake CoCo Desktop | `getting-started-with-coco-desktop` | **Default** — most visitors |
+| Get Started with Snowflake CoCo Desktop | `getting-started-with-coco-desktop` | **Default** - most visitors |
 | Get Started with Snowflake CoCo CLI | `getting-started-with-coco-cli` | Comfortable in a terminal |
 | Snowflake CoCo Foundations | `coco-foundations` | Wants the concepts first |
 | Build Your First CoCo Skill | `build-a-coco-skill` | Already an engineer, wants to extend |

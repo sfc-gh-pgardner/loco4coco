@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Booth control CLI — reset between visitors, days and rehearsals.
+"""Booth control CLI - reset between visitors, days and rehearsals.
 
   python3 state_cli.py reset                  # between visitors (default)
   python3 state_cli.py reset --level day      # start of an event day

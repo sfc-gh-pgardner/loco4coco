@@ -1,4 +1,4 @@
-# Loco4CoCo booth infrastructure — DCM project manifest.
+# Loco4CoCo booth infrastructure - DCM project manifest.
 #
 # Every Snowflake object the activation needs is defined as code here so it can
 # be recreated on any account with one command. Before this existed, the objects

@@ -66,7 +66,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 | Postcode Sector Weather Forecasts | Met Office | Free 14-day trial |
 | PubMed Biomedical Research Corpus | Snowflake | Free |
 | UK Health Facts and Dimensions Sample | Facts and Dimensions Ltd | Free |
-| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free |
+| Household Acorn - geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free |
 
 **Live-search keywords** (16): clinical, patient, nhs, health, disease, epidemiolog, population health, prescrib, wellbeing, mortality, hospital, medic, pharma, drug, life science, biotech
 
@@ -119,7 +119,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 |---|---|---|
 | Postcode Sector Weather Forecasts | Met Office | Free 14-day trial |
 | Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
-| PayCheck – UK household income estimates at postcode level - SAMPLE data | CACI Ltd | Free |
+| PayCheck - UK household income estimates at postcode level - SAMPLE data | CACI Ltd | Free |
 | UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
 | Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free |
 | Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free |
@@ -148,7 +148,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 | Listing | Provider | Access |
 |---|---|---|
 | UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
-| Address Spine – UK address level property information - Sample Data | CACI Ltd | Free |
+| Address Spine - UK address level property information - Sample Data | CACI Ltd | Free |
 | CARTO Boundaries | CARTO | Free |
 | Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
 | National Severe Weather Warning Service | Met Office | Free |

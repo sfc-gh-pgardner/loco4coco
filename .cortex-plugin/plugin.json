@@ -1,5 +1,5 @@
 {
   "name": "loco4coco",
-  "description": "Loco for CoCo — a sub-five-minute, quiz-driven booth activation for Snowflake World Tour. A visitor answers five light questions and leaves with a POC blueprint: their idea in their own words, the Snowflake developer guide to fork, the features it uses with doc links, a POC readiness score, and a ready-to-paste CoCo kick-off prompt for their free trial. Two self-contained skills: loco4coco (the visitor game) and loco4coco-ops (booth setup, pre-flight, lead analytics, index maintenance). Copy is externalised into a language deck so Paris is a translation, not a rebuild. No dependency on other plugins.",
+  "description": "Loco for CoCo - a sub-five-minute, quiz-driven booth activation for Snowflake World Tour. A visitor answers five light questions and leaves with a POC blueprint: their idea in their own words, the Snowflake developer guide to fork, the features it uses with doc links, a POC readiness score, and a ready-to-paste CoCo kick-off prompt for their free trial. Two self-contained skills: loco4coco (the visitor game) and loco4coco-ops (booth setup, pre-flight, lead analytics, index maintenance). Copy is externalised into a language deck so Paris is a translation, not a rebuild. No dependency on other plugins.",
   "version": "0.1.0"
 }

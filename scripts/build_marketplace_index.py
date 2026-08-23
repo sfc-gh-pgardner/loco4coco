@@ -37,8 +37,28 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PLUGIN = os.path.dirname(HERE)
 OUT = os.path.join(PLUGIN, "skills", "loco4coco", "references", "marketplace-index.md")
 BASE = "https://app.snowflake.com/marketplace/listing/"
-CONNECTION = "PG_LONDON"
 VERIFIED_ON = "2026-08-06"
+
+
+def booth_defaults():
+    """Read the connection and region from game/config.json.
+
+    These used to be hardcoded to one person's account, which meant anyone else
+    who cloned the repo and rebuilt the index silently pointed at the wrong
+    account and filtered for the wrong region.
+    """
+    conn, region = None, None
+    try:
+        with open(os.path.join(PLUGIN, "game", "config.json"),
+                  encoding="utf-8") as f:
+            cfg = json.load(f)
+        conn = ((cfg.get("snowflake") or {}).get("connection_name")) or None
+        region = ((cfg.get("event") or {}).get("region")) or None
+        if region:
+            region = region.strip().split(".")[-1]
+    except (OSError, json.JSONDecodeError):
+        pass
+    return conn, region
 
 # global_name -> (provider, access, canonical path)
 # Access is normalised from what the listing page shows. "Accepts MCD" means it
@@ -133,9 +153,9 @@ CURATED = {
 }
 
 
-def show_listings():
+def show_listings(connection):
     cmd = ["snow", "sql", "-q", "SHOW AVAILABLE LISTINGS",
-           "--format", "json", "-c", CONNECTION]
+           "--format", "json", "-c", connection]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if r.returncode != 0:
         sys.exit(f"SHOW AVAILABLE LISTINGS failed: {(r.stderr or r.stdout)[:300]}")
@@ -164,20 +184,34 @@ def url_for(g):
 
 
 def main():
+    def_conn, def_region = booth_defaults()
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true")
-    ap.add_argument("--candidates", help="search London listings by keyword")
+    ap.add_argument("--candidates", help="search listings by keyword")
+    ap.add_argument("--connection", "-c", default=def_conn,
+                    help=f"snow CLI connection (default from game/config.json: {def_conn})")
+    ap.add_argument("--region", default=def_region,
+                    help=f"region to require, e.g. AWS_EU_WEST_2 (default from game/config.json: {def_region})")
     a = ap.parse_args()
 
+    if not a.connection:
+        sys.exit("No connection. Pass --connection, or set "
+                 "snowflake.connection_name in game/config.json.")
+    if not a.region:
+        sys.exit("No region. Pass --region, or set event.region in "
+                 "game/config.json.")
+    print(f"Connection  : {a.connection}")
+    print(f"Region      : {a.region}")
+
     print("Reading SHOW AVAILABLE LISTINGS...")
-    catalog = show_listings()
+    catalog = show_listings(a.connection)
     print(f"  {len(catalog)} listings in the catalogue")
 
     if a.candidates:
         kw = a.candidates.lower()
         hits = [(g, r) for g, r in catalog.items()
                 if kw in str(r.get("title")).lower()
-                and available_in(r, "AWS_EU_WEST_2")]
+                and available_in(r, a.region)]
         print(f"\n{len(hits)} London-available listings matching {kw!r}:")
         for g, r in sorted(hits, key=lambda x: str(x[1].get("title"))):
             print(f"  {str(r.get('title'))[:62]:64} {g}")
@@ -206,8 +240,8 @@ def main():
         # above CURATED.
         if str(row.get("is_ready_for_import")).lower() != "true":
             problems.append((g, "is_ready_for_import is false - not actually importable"))
-        if not available_in(row, "AWS_EU_WEST_2"):
-            problems.append((g, "no longer available in London (eu-west-2)"))
+        if not available_in(row, a.region):
+            problems.append((g, f"no longer available in {a.region}"))
 
     for g, why in problems:
         title = str(catalog.get(g, {}).get("title", "?"))[:46]
@@ -229,14 +263,14 @@ def main():
         return 1
 
     if a.write:
-        write_md(catalog)
+        write_md(catalog, a.region)
         print(f"\nwrote {OUT}")
     else:
         print("\n(verify only - pass --write to regenerate the index)")
     return 0
 
 
-def write_md(catalog):
+def write_md(catalog, region):
     from datetime import date
     lines = [
         "---",
@@ -250,9 +284,9 @@ def write_md(catalog):
         "",
         "# Curated Marketplace listings",
         "",
-        f"**Catalogue checked:** {date.today().isoformat()} — every listing below "
+        f"**Catalogue checked:** {date.today().isoformat()} - every listing below "
         "is present in `SHOW AVAILABLE LISTINGS`, is not by-request or "
-        "discover-only, and is available in `AWS_EU_WEST_2`.",
+        f"discover-only, and is available in `{region}`.",
         f"**Providers and access terms read from the listing pages:** {VERIFIED_ON}.",
         "",
         "## What is verified, and what is not",
@@ -264,7 +298,7 @@ def write_md(catalog):
         "| Not by-request / discover-only | access flags, every run |",
         "| Provider name | read from the rendered listing page, dated above |",
         "| Access terms | read from the rendered listing page, dated above |",
-        "| **Fit to the industry** | **editorial judgement — review this** |",
+        "| **Fit to the industry** | **editorial judgement - review this** |",
         "",
         "Provider names cannot be re-derived by script: SQL exposes "
         "`organization_profile_name` for only 137 of 4,256 listings, and the "

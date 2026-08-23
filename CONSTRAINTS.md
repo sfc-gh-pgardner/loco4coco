@@ -1,7 +1,7 @@
 # Constraints of the brief
 
 Read this before designing any feature. These are properties of the **venue**,
-not preferences, and they have already been broken once — by a "SAVE MY CARD"
+not preferences, and they have already been broken once - by a "SAVE MY CARD"
 button that called `a.download`, which cannot work on the machine it shipped on.
 
 Every change should be checked against all five.
@@ -14,7 +14,7 @@ The visitor does not own it, will not log into it, and walks away from it.
 machine.** No `a.download`. No "it's in your Downloads folder". No local install,
 no browser extension, no signing into anything.
 
-Every takeaway must leave the building on **their** device — a QR code to a
+Every takeaway must leave the building on **their** device - a QR code to a
 presigned URL, or an email. If a feature's success path ends in the laptop's
 filesystem, the feature has failed, however well it works in dev.
 
@@ -35,8 +35,7 @@ share card is 1200x630 rather than A4.
 
 Anything on the critical path must work from the laptop's own connection, and
 must degrade to something the visitor can still leave with. Three independent
-delivery tiers exist for this reason (QR, queued email, durable stage record) —
-do not collapse them into one.
+delivery tiers exist for this reason (QR, queued email, durable stage record) - do not collapse them into one.
 
 ## 5. We do not control content-type on a presigned stage URL
 
@@ -47,7 +46,7 @@ change it. `HEAD` returns 403; the signature covers `GET` only.
 Consequences:
 
 - A presigned `.html` **downloads** instead of rendering. Useless as a QR target.
-- A presigned `.docx` or `.png` is **fine** — on a phone, downloading is exactly
+- A presigned `.docx` or `.png` is **fine** - on a phone, downloading is exactly
   what we want: the file lands in Files or Photos and is theirs.
 - Anything that must *render* in a browser needs a real serving surface (SPCS
   with a public endpoint, or a Streamlit/SAR page reading the SESSIONS row), not

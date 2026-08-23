@@ -1,10 +1,10 @@
 ---
 name: agentic-marketplace-enhancement
-description: "Enhancement to the Marketplace stage using Agentic search on the Snowflake Marketplace (PrPr). Drafted for review, not yet merged into the decision tree Google Doc — the marketplace-specific sections of that doc were updated directly on 2026-08-23 with the user's explicit go-ahead; other sections stay untouched while a colleague reviews."
+description: "Enhancement to the Marketplace stage using Agentic search on the Snowflake Marketplace (PrPr). Drafted for review, not yet merged into the decision tree Google Doc - the marketplace-specific sections of that doc were updated directly on 2026-08-23 with the user's explicit go-ahead; other sections stay untouched while a colleague reviews."
 status: Tier 0 built, tested, then disabled for latency; Path D executed instead - 6 free-weighted picks per industry now live
 ---
 
-# Agentic Marketplace (PrPr) — enhancement to THE MARKETPLACE stage
+# Agentic Marketplace (PrPr) - enhancement to THE MARKETPLACE stage
 
 ## Where this landed
 
@@ -32,7 +32,7 @@ MARKETPLACE
   Tier 2 curated - marketplace-index.md, per-industry, 6 listings, all Free
 ```
 
-Tier 1 and Tier 2 are sub-second for the visitor — "the stall stays instant."
+Tier 1 and Tier 2 are sub-second for the visitor - "the stall stays instant."
 With Tier 0 off, this is the real, active chain every visitor uses today.
 
 ## What was tested (live Tier 0)
@@ -41,21 +41,21 @@ With Tier 0 off, this is the real, active chain every visitor uses today.
 Snowsight's Discover-tab agentic search, from the command line. Confirmed
 working on `PG_LONDON` (2026-08-23). Measured cost across the session:
 **one sample at ~55s, then 70s/100s+(timeout)/92s(success) once wired into
-`run_agentic_search()`** — call it 90-110s+ realistically, not 55s. ~250K
+`run_agentic_search()`** - call it 90-110s+ realistically, not 55s. ~250K
 tokens per call (mostly cached skill/tool instructions).
 
-## Path A — call it live, per visitor
+## Path A - call it live, per visitor
 
 **Rejected.** 90-110s+ of dead air breaks the booth's pace (every other step
 responds in 1-3s). Non-deterministic wording/results, and real LLM spend per
 visitor with no caching benefit since each problem statement differs.
 
-## Path B — don't use it (status quo)
+## Path B - don't use it (status quo)
 
 Tier 1 → Tier 2. Always the permanent safety net underneath whichever of
-Tier 0 / Path D is active — never changes.
+Tier 0 / Path D is active - never changes.
 
-## Path C — built, then disabled: per-visitor Tier 0 at THE LETTER
+## Path C - built, then disabled: per-visitor Tier 0 at THE LETTER
 
 Fired from `_intake()` on a daemon thread the instant industry + problem are
 known, racing THE LIBRARY. Confirmed end-to-end via `smoke_test.py` and a
@@ -67,14 +67,14 @@ automatically on the next fetch.
 measured (see `BOOTH-RUNBOOK.md`), and 90-110s+ is long enough that it's a
 real risk Tier 0 usually loses its race and just spends money in the
 background for a screen the visitor's already left. No cap by design (the
-user's explicit call: "we only need monitors") — if re-enabled, watch spend
+user's explicit call: "we only need monitors") - if re-enabled, watch spend
 in `game/cost.jsonl` (`kind: marketplace_agentic`).
 
 Implemented in `game/server.py`: `run_agentic_search()`,
 `start_agentic_search()`, `listings_agentic()`, and the extended
 `listings_for(cfg, industry, session_id)` tier chain. Left in place, dormant.
 
-## Path D — executed: offline precompute, free-weighted
+## Path D - executed: offline precompute, free-weighted
 
 Ran 8 `cortex exec` calls (one per industry, in parallel, ~4 minutes total
 wall time), each phrased as a realistic visitor problem statement and
@@ -99,7 +99,7 @@ page for every new entry, matching the file's existing rigor).
 **Result:** all 8 industries now offer 6 curated listings, **100% Free**,
 zero Paid. `scripts/build_marketplace_index.py --write` regenerated
 `marketplace-index.md`; `python3 decision_tree.py` regenerated
-`decision_tree.md` (which had its own bug fixed in the same pass — it was
+`decision_tree.md` (which had its own bug fixed in the same pass - it was
 counting a dead `config.json` field instead of parsing the real file, so
 "5 curated joins" never reflected what visitors actually saw).
 
@@ -107,7 +107,7 @@ One known, separate finding from this work, **not fixed** (out of this
 task's scope): `server.py`'s Tier 1 live SQL (`refresh_live_listings()`)
 filters `WHERE "regions" LIKE '%eu-west-2%'`, which does not match the
 literal string `"ALL"` that Snowflake returns for universally-available
-listings — so any listing available in every region is silently invisible
+listings - so any listing available in every region is silently invisible
 to Tier 1, account-wide, not just for these industries. Six of the new Tier 2
 picks are region=`"ALL"` and are unaffected (Tier 2 is a static file, not
 re-queried via that SQL), but Tier 1 itself would benefit from the same

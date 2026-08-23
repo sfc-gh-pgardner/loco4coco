@@ -1,6 +1,6 @@
 ---
 name: prompt-builder
-description: "How to compose the kick-off prompt the visitor pastes into CoCo on their free trial. This is the payload of the whole activation — the one artefact that converts a booth conversation into a build. Structure, rules, worked examples, and the anti-patterns that make a prompt fail on first contact."
+description: "How to compose the kick-off prompt the visitor pastes into CoCo on their free trial. This is the payload of the whole activation - the one artefact that converts a booth conversation into a build. Structure, rules, worked examples, and the anti-patterns that make a prompt fail on first contact."
 ---
 
 # The kick-off prompt
@@ -11,7 +11,7 @@ Everything else in the blueprint is context. **This is the payload.** If the vis
 
 The prompt runs in conditions we cannot inspect:
 
-- A **fresh free-trial account** — no data loaded, no warehouses beyond the default, no schemas.
+- A **fresh free-trial account** - no data loaded, no warehouses beyond the default, no schemas.
 - **Weeks later**, with the booth conversation forgotten.
 - Possibly by someone who has **never used CoCo**.
 - Against data we have never seen and whose column names we do not know.
@@ -20,7 +20,7 @@ So the prompt must be self-contained, must state its own assumptions, and must *
 
 ## Structure
 
-Six parts, in this order. Aim for 150–250 words: long enough to carry intent, short enough to read on a phone.
+Six parts, in this order. Aim for 150 - 250 words: long enough to carry intent, short enough to read on a phone.
 
 ```
 1. ROLE + GOAL      one sentence: who they are, what they want to end up with
@@ -37,7 +37,7 @@ Part 6 matters more than it looks. A prompt that says "build me the whole thing"
 ## Rules
 
 - **Second person, imperative.** "Build me…", not "The user would like…".
-- **Name real Snowflake features** from the archetype. Not "AI" — `Cortex Search`, `AI_EXTRACT`, `dynamic tables`.
+- **Name real Snowflake features** from the archetype. Not "AI" - `Cortex Search`, `AI_EXTRACT`, `dynamic tables`.
 - **Never invent identifiers.** No fabricated database, schema, table or column names. Refer to their data descriptively and instruct CoCo to inspect it.
 - **Include the guide URL in full**, from `guides-index.md`. Never a slug alone, never a guessed URL.
 - **Never assume data exists.** If Round 2 said "not sure yet", the prompt must open by generating or loading sample data.
@@ -52,7 +52,7 @@ I'm a {role} at a {sector} organisation and I want to build {poc_name}.
 
 MY DATA
 {data_description}. Before you build anything, inspect what's actually there
-and tell me what you found — don't assume table or column names, and ask me
+and tell me what you found - don't assume table or column names, and ask me
 if something's ambiguous.
 
 BUILD THIS
@@ -73,19 +73,19 @@ Don't build it all at once. Start by {first_step}, show me the result, and
 confirm the plan with me before going further.
 ```
 
-## Worked example — `ask-my-documents`
+## Worked example - `ask-my-documents`
 
 Visitor: Sarah, Information Governance Officer, public sector. Pain: "the answer's buried in documents nobody reads." Data: a pile of documents. Audience: a department.
 
 ```
 I'm an Information Governance Officer at a public sector organisation and I
-want to build Policy Answers — a way for my team to ask questions of our
+want to build Policy Answers - a way for my team to ask questions of our
 policy documents and get answers with citations.
 
 MY DATA
 I have a collection of policy documents as PDFs. Before you build anything,
 help me load a few into a stage, inspect what's actually in them, and tell me
-what you found — don't assume a structure, and ask me if something's ambiguous.
+what you found - don't assume a structure, and ask me if something's ambiguous.
 
 BUILD THIS
 A chat app where someone types a question in plain English and gets an answer
@@ -109,14 +109,14 @@ extracted text so I can check the quality, then confirm the plan with me
 before indexing the rest.
 ```
 
-## Worked example — no data yet
+## Worked example - no data yet
 
 When `R2.Q1` was "Honestly, not sure yet", the prompt must not pretend otherwise:
 
 ```
 MY DATA
 I don't have a dataset ready yet. Start by creating a small, realistic sample
-table I can experiment with — about 200 rows of {domain} data — and show it to
+table I can experiment with - about 200 rows of {domain} data - and show it to
 me so I can tell you how it differs from the real thing.
 ```
 
@@ -146,5 +146,5 @@ Every one of these must pass:
 - [ ] Named at least two real Snowflake features
 - [ ] Cost constraint present
 - [ ] A single, small, verifiable first step
-- [ ] 150–250 words
+- [ ] 150 - 250 words
 - [ ] Reads as the visitor's own words, not Snowflake marketing

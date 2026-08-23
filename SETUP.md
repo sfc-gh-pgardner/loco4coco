@@ -25,22 +25,28 @@ for the human. The optional "Ask CoCo one thing" stop adds about 35s.
    ACCOUNTADMIN is simplest. **Cortex must be enabled.**
 3. Your **account region**, e.g. `AWS_EU_WEST_2`. Write it down.
 4. A Google account for sending blueprints (your own Gmail).
-5. *(Optional, recommended)* `cortex` CLI on the booth laptop and reachable —
-   this is what powers Tier 0 (agentic marketplace search, see Step 6). Not
+5. *(Optional, recommended)* `cortex` CLI on the booth laptop and reachable - this is what powers Tier 0 (agentic marketplace search, see Step 6). Not
    required for the booth app to run: Tier 0 degrades silently to Tier 1/2 if
    `cortex` is missing, times out, or `marketplace.agentic.enabled` is false.
    "Agentic search on the Snowflake Marketplace" (PrPr) in Snowsight's
    Discover tab is the same underlying skill, useful for ad-hoc research, and
    needs `SNOWFLAKE.COPILOT_USER` plus `SNOWFLAKE.CORTEX_USER` or
-   `SNOWFLAKE.CORTEX_AGENT_USER` — but that account flag is not what Tier 0
+   `SNOWFLAKE.CORTEX_AGENT_USER` - but that account flag is not what Tier 0
    depends on.
 
 ## Step 1: install the tools
 
-Install the Snowflake CLI and Cortex Code, then the three Python packages:
+Install the Snowflake CLI and Cortex Code, then the four Python packages:
 
 ```bash
 pip3 install snowflake-connector-python python-docx PyYAML segno
+```
+
+Once you have cloned the repo (Step 3) you can install the same four from the
+pinned list instead, which is the more reliable route:
+
+```bash
+pip3 install -r requirements.txt
 ```
 
 Check all three answer:
@@ -76,6 +82,20 @@ git clone https://github.com/snow-paddy/loco4coco.git ~/.snowflake/cortex/plugin
 cd ~/.snowflake/cortex/plugins/loco4coco
 ```
 
+That is the simplest arrangement and the one the rest of this guide assumes.
+If you would rather keep the checkout somewhere you actually look at, such as
+`~/Desktop/Loco4CoCo`, clone it there and symlink the plugin path at it
+instead. Cortex Code follows the symlink, so the plugin still loads and you
+only have one copy of the code:
+
+```bash
+git clone https://github.com/snow-paddy/loco4coco.git ~/Desktop/Loco4CoCo
+ln -s ~/Desktop/Loco4CoCo ~/.snowflake/cortex/plugins/loco4coco
+```
+
+Whichever you pick, keep exactly one checkout. Two copies drift, and the
+`git status` you are reading will not be the code that is running.
+
 ## Step 4: add your account as a deploy target
 
 Open `deploy/manifest.yml`. It ships with `LONDON` and `US_WEST_DEMO`. Copy one block and
@@ -109,14 +129,13 @@ Edit `game/config.json`:
 | `snowflake.connection_name` | Your connection (bootstrap normally sets this) |
 
 **About the Marketplace preview:** the game now uses three tiers, in order.
-Tier 0 is agentic: `cortex exec` calls the `marketplace-search` skill —
-the same skill behind Snowsight's Discover-tab "Agentic search on the
-Snowflake Marketplace" (PrPr) — fired the moment a visitor submits THE
+Tier 0 is agentic: `cortex exec` calls the `marketplace-search` skill - the same skill behind Snowsight's Discover-tab "Agentic search on the
+Snowflake Marketplace" (PrPr) - fired the moment a visitor submits THE
 LETTER, personalised to their actual problem statement, racing THE LIBRARY
 for time to finish. **It ships disabled** (`marketplace.agentic.enabled:
 false`): measured on `PG_LONDON` it took 70-110s and timed out on 2 of 3
 runs, which is too slow to reliably beat a visitor walking one stall. The
-code is left dormant — re-enable it only once someone has actually timed
+code is left dormant - re-enable it only once someone has actually timed
 real visitors through THE LIBRARY.
 
 So the live chain is Tier 1 (live `SHOW AVAILABLE LISTINGS`,
@@ -124,7 +143,7 @@ region-filtered, cached) then Tier 2 (curated `marketplace-index.md`, six
 verified listings per industry, all currently Free) as the offline-safe net.
 That chain runs exactly as it always has and needs nothing from Tier 0. If
 Tier 0 is ever re-enabled there is deliberately no call cap: watch spend in
-`game/cost.jsonl` (`kind: marketplace_agentic`) and flip it off by hand — a
+`game/cost.jsonl` (`kind: marketplace_agentic`) and flip it off by hand - a
 cross-event spend rollup across booth laptops/accounts is a known future
 work item, not yet built.
 

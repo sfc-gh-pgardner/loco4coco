@@ -1,14 +1,34 @@
 #!/usr/bin/env python3
 """Benchmark SNOWFLAKE.CORTEX.COMPLETE latency + reply quality for the hybrid
-direct-inference path. Times each model via `snow sql -c PG_LONDON`. Bounded:
+direct-inference path. Times each model via `snow sql`. Bounded:
 one simple-turn prompt across several models + a workshop-JSON feasibility check
 on two. Records wall time (minus a snow-sql baseline) and the reply text.
+
+The connection defaults to snowflake.connection_name in game/config.json, so
+this runs on whichever account the booth is pointed at rather than a
+hardcoded one. Override with: python3 bench2.py MYCONN
 """
 import json
+import os
 import subprocess
+import sys
 import time
 
-CONN = "PG_LONDON"
+
+def _default_conn():
+    here = os.path.dirname(os.path.abspath(__file__))
+    try:
+        with open(os.path.join(here, "config.json"), encoding="utf-8") as f:
+            return ((json.load(f).get("snowflake") or {})
+                    .get("connection_name")) or ""
+    except (OSError, json.JSONDecodeError):
+        return ""
+
+
+CONN = sys.argv[1] if len(sys.argv) > 1 else _default_conn()
+if not CONN:
+    sys.exit("No connection. Pass one as an argument, or set "
+             "snowflake.connection_name in game/config.json.")
 
 SIMPLE_MODELS = ["claude-3-5-haiku", "llama3.1-8b", "llama3.3-70b",
                  "mistral-large2", "claude-3-5-sonnet"]

@@ -3,9 +3,9 @@ name: loco4coco-ops
 description: "Booth operator skill for Loco for CoCo: one-time setup, the pre-flight check before doors open, resetting between visitors, end-of-day lead export, live booth analytics, and refreshing the guides index. Triggers: booth setup, preflight, pre-flight, is the booth ready, loco4coco setup, export leads, booth analytics, reset the booth, refresh guides index, booth costs."
 ---
 
-# Loco for CoCo — booth ops
+# Loco for CoCo - booth ops
 
-**Why this skill:** The visitor-facing skill assumes a working environment. This one creates it, proves it before doors open, and gets the leads out afterwards. Run pre-flight every morning of the event — the failure modes are boring and entirely avoidable.
+**Why this skill:** The visitor-facing skill assumes a working environment. This one creates it, proves it before doors open, and gets the leads out afterwards. Run pre-flight every morning of the event - the failure modes are boring and entirely avoidable.
 
 **Not for:** Running a session. That is `loco4coco`.
 
@@ -17,13 +17,13 @@ Each check must **prove** the capability, not merely observe that something exis
 |---|---|---|---|
 | 1 | Snowflake connection | `SELECT CURRENT_ACCOUNT(), CURRENT_WAREHOUSE()` | Fix the connection; nothing works without it |
 | 2 | Table reachable | `SELECT COUNT(*) FROM LOCO4COCO.BOOTH.SESSIONS` | Re-run setup |
-| 3 | Warehouse + monitor | `SHOW WAREHOUSES LIKE 'LOCO4COCO_WH'` — confirm `X-Small`, `auto_suspend 60`, `resource_monitor LOCO4COCO_RM` | Re-bind the monitor |
-| 4 | Monitor has quota **and** notify_users | `SHOW RESOURCE MONITORS LIKE 'LOCO4COCO_RM'` — `notify_at` must show `75%,90%`, `suspend_at 100%`, and `notify_users` must be **non-empty** | A monitor with empty `notify_users` is silent. Re-create it |
-| 5 | **Gmail send works end to end** | Send one real blueprint to a **genuinely external, non-Snowflake** address and confirm arrival | See below — this is the highest-risk check |
-| 6 | Guides index valid | `python3 scripts/build_guides_index.py` — expect `0 failing, 0 redirecting` | Fix slugs before any visitor sees one |
+| 3 | Warehouse + monitor | `SHOW WAREHOUSES LIKE 'LOCO4COCO_WH'` - confirm `X-Small`, `auto_suspend 60`, `resource_monitor LOCO4COCO_RM` | Re-bind the monitor |
+| 4 | Monitor has quota **and** notify_users | `SHOW RESOURCE MONITORS LIKE 'LOCO4COCO_RM'` - `notify_at` must show `75%,90%`, `suspend_at 100%`, and `notify_users` must be **non-empty** | A monitor with empty `notify_users` is silent. Re-create it |
+| 5 | **Gmail send works end to end** | Send one real blueprint to a **genuinely external, non-Snowflake** address and confirm arrival | See below - this is the highest-risk check |
+| 6 | Guides index valid | `python3 scripts/build_guides_index.py` - expect `0 failing, 0 redirecting` | Fix slugs before any visitor sees one |
 | 7 | Docs lookup | One `snowflake_product_docs` query | Venue network. Degrade to naming features without links |
 | 8 | Write path | Insert a row with an apostrophe and an accent, read it back, delete it | Escaping regression |
-| 9 | **Delivery, automated** | `curl -s http://127.0.0.1:4747/api/delivery/check \| python3 -m json.tool` — expect `"ok": true` | See below. This one check covers checks 1-2 of delivery and is the fastest way to clear a stand |
+| 9 | **Delivery, automated** | `curl -s http://127.0.0.1:4747/api/delivery/check \| python3 -m json.tool` - expect `"ok": true` | See below. This one check covers checks 1-2 of delivery and is the fastest way to clear a stand |
 
 ### Check 9 in detail: the automated delivery preflight
 
@@ -50,7 +50,7 @@ Verified 2026-08-05: Google Drive sharing to any external address is **blocked b
 
 So:
 
-- Test with a **real external address you control** — a personal Outlook or Gmail. A colleague on `@snowflake.com` would pass while the real case fails.
+- Test with a **real external address you control** - a personal Outlook or Gmail. A colleague on `@snowflake.com` would pass while the real case fails.
 - Confirm the mail **arrives**, that the prompt block **copies cleanly on a phone**, and that it did not land in spam.
 - HTTP MCPs need OAuth on first connect **and a fresh session** before their tools appear. If the Gmail tools are missing, restart CoCo before concluding anything is broken.
 - If it cannot be made to work, the booth still runs: skip the email field, show the blueprint on screen, let visitors photograph it. Say so in the opening rather than collecting an address you cannot deliver to.
@@ -61,9 +61,9 @@ Already applied to `SFSEEUROPE-PG_LONDON` on 2026-08-05:
 
 - `LOCO4COCO` database, `BOOTH` schema
 - `LOCO4COCO.BOOTH.SESSIONS` table (see `../loco4coco/references/session-log.md`)
-- `LOCO4COCO.BOOTH.BLUEPRINTS` stage — `SNOWFLAKE_SSE`, directory enabled. Created during the delivery spike; **currently unused** since delivery is email. Keep it: it is the archive location if blueprints ever need retaining, and it is the only verified route to a public no-login URL should a QR ever be wanted.
-- `LOCO4COCO_WH` — X-Small, `AUTO_SUSPEND = 60`, initially suspended
-- `LOCO4COCO_RM` — 20 credit quota, notify at 75% and 90%, suspend at 100%, suspend-immediate at 110%, notifying `PGARDNER`
+- `LOCO4COCO.BOOTH.BLUEPRINTS` stage - `SNOWFLAKE_SSE`, directory enabled. Created during the delivery spike; **currently unused** since delivery is email. Keep it: it is the archive location if blueprints ever need retaining, and it is the only verified route to a public no-login URL should a QR ever be wanted.
+- `LOCO4COCO_WH` - X-Small, `AUTO_SUSPEND = 60`, initially suspended
+- `LOCO4COCO_RM` - 20 credit quota, notify at 75% and 90%, suspend at 100%, suspend-immediate at 110%, notifying `PGARDNER`
 
 For Paris, re-run against the account being used and change `event_city`.
 
@@ -71,22 +71,22 @@ For Paris, re-run against the account being used and change `event_city`.
 
 Default posture is **off**. `LOCO4COCO_WH` is created suspended with a 60-second auto-suspend.
 
-The booth workload is trivial — one INSERT per visitor plus the occasional analytics query. The genuine exposure is **an idle warehouse left running across a conference day**, which the 60-second suspend kills. Note `LOCO4COCO_WH` is Gen2, which bills around 1.35 credits/hour rather than 1.0, so do not be alarmed if credits exceed a naive X-Small estimate.
+The booth workload is trivial - one INSERT per visitor plus the occasional analytics query. The genuine exposure is **an idle warehouse left running across a conference day**, which the 60-second suspend kills. Note `LOCO4COCO_WH` is Gen2, which bills around 1.35 credits/hour rather than 1.0, so do not be alarmed if credits exceed a naive X-Small estimate.
 
-The 20-credit quota is deliberately generous against an expected spend of a few credits across the event. If it trips, something is wrong — investigate rather than raising it.
+The 20-credit quota is deliberately generous against an expected spend of a few credits across the event. If it trips, something is wrong - investigate rather than raising it.
 
 **The real cost is CoCo tokens, not Snowflake credits.** Each session is a multi-turn agent conversation. Measure token spend across the dry runs, multiply by expected footfall, and confirm the number before the event. Snowflake compute will not be the expensive part.
 
 ## Between visitors
 
-Start a fresh session per visitor. Do not carry context over — the previous visitor's sector and pain will bias the next resolution, and their details must not leak into someone else's blueprint.
+Start a fresh session per visitor. Do not carry context over - the previous visitor's sector and pain will bias the next resolution, and their details must not leak into someone else's blueprint.
 
 Quick reset: confirm the last row landed (`SELECT MAX(session_ts) ...`), then start a new conversation.
 
 ## Deploying to a new account
 
 Every Snowflake object is defined as code in `deploy/`, as a DCM project. Nothing
-is hand-created any more — the tracking table silently drifted away from the app
+is hand-created any more - the tracking table silently drifted away from the app
 once already because it was.
 
 ```bash
@@ -101,7 +101,7 @@ python3 deploy/bootstrap.py --target <NAME> -c <CONNECTION>
 ```
 
 `bootstrap.py` refuses to run if the connection is not actually on the account
-the target names — deploying booth objects to the wrong account is not something
+the target names - deploying booth objects to the wrong account is not something
 to discover afterwards. It then creates the project schema, archives any pre-v2
 `SESSIONS`, plans, deploys, creates the resource monitor, repoints
 `game/config.json`, and runs `smoke_test.py` so the account is **proven, not
@@ -150,8 +150,7 @@ nobody has received yet. `--yes` overrides. **Records are always moved to
 | `BOOTH.TURNS` | One row per location per visitor | Which beat is slow and what it costs |
 | `BOOTH.SESSIONS_V1_ARCHIVE` | The 3 pre-v2 dry-run rows | History only, not written to |
 
-**`READINESS_SCORE` is internal.** It is deliberately never shown to a visitor —
-no score appears in the email, the `.docx`, or on screen, and the browser payload
+**`READINESS_SCORE` is internal.** It is deliberately never shown to a visitor - no score appears in the email, the `.docx`, or on screen, and the browser payload
 strips it. It exists so the lead export can rank warmest-first. What the visitor
 sees instead is a **Considerations** section: three or four specific things to
 think about, stored in `CONSIDERATIONS`.
@@ -160,7 +159,7 @@ Because the score is private, the model is told to be honest rather than kind
 when setting it.
 
 `DELIVERY_STATUS` is `QUEUED` on send, `DRAFTED` only if a Gmail draft was
-confirmed, and **`SENT` only when the drain actually presses Send** — see below.
+confirmed, and **`SENT` only when the drain actually presses Send** - see below.
 The app can never set `SENT` itself, by design.
 
 Measured on a real run, which is why `TURNS` exists:
@@ -176,7 +175,7 @@ The postbox is the longest wait and it lands last. Input tokens are ~53k per
 turn but ~48k of that is cache reads, so the token cost is low; the problem is
 latency, not spend.
 
-## Draining the outbox (the email route — no longer the only one)
+## Draining the outbox (the email route - no longer the only one)
 
 Since the confirmation card now shows a QR code to the presigned document, a visitor
 already has their blueprint before you drain anything. The drain is what turns that
@@ -186,7 +185,7 @@ into an email they can find again next week. It is important, not load-bearing.
 The game does not send email. It cannot, and the reasons are settled rather than
 open questions:
 
-- The Gmail MCP exposes **`create_draft` only** — no send tool, and **no
+- The Gmail MCP exposes **`create_draft` only** - no send tool, and **no
   attachment parameter**.
 - Those Gmail tools **do not load under `cortex exec`**. Verified with
   `--bypass` and persistent tool search: Calendar's tools load, Gmail's never
@@ -200,7 +199,7 @@ holding `to`, `subject`, `body_html`, `document_url` and `document_local`. The
 game's own state stays honest about this: `queued` goes true, while
 `email_sent` stays **false** until a draft genuinely exists.
 
-**Drain it from an interactive CoCo session** — not from `exec`, which cannot
+**Drain it from an interactive CoCo session** - not from `exec`, which cannot
 see the Gmail tools:
 
 1. Read the oldest unsent record in `game/outbox/`.
@@ -208,7 +207,7 @@ see the Gmail tools:
    `isHtml: true`. Pass the body **verbatim**; it is already valid HTML and
    already escaped.
 3. Confirm the response carries `labelIds: ["DRAFT"]`.
-4. Open Gmail and press **Send**. Creating a draft is not sending — never tell
+4. Open Gmail and press **Send**. Creating a draft is not sending - never tell
    a visitor their present is on its way until you have actually sent it.
 5. Set `"sent": true` in the record so it is not drafted twice.
 6. Mark it in Snowflake, so the record reflects what actually reached the
@@ -231,11 +230,11 @@ mailbox through Google, so SPF and DKIM align and DMARC passes for any
 recipient, internal or external.
 
 If a visitor asks when it arrives, the truthful answer is "shortly, once we post
-it" — not "it's in your inbox".
+it" - not "it's in your inbox".
 
 ## End of day
 
-Lead export — use the follow-up query in `session-log.md`, which orders by readiness descending so the warmest leads surface first.
+Lead export - use the follow-up query in `session-log.md`, which orders by readiness descending so the warmest leads surface first.
 
 Then sanity-check the day:
 
@@ -290,8 +289,8 @@ link in a document a visitor keeps is worse than no link.
 
 Guides are published constantly, so the curated index has a shelf life. Before each event:
 
-1. `python3 scripts/build_guides_index.py` — verifies every curated slug still returns 200 and reports redirects.
-2. For a full corpus refresh, follow the browser harvest procedure documented in that script's docstring. Note the listing's `?page=` parameters are **ignored server-side** — plain HTTP paging returns 15 guides, not 565 — so the harvest genuinely needs a browser. An earlier version of the script did this over HTTP and exited successfully having found 15 of 565.
+1. `python3 scripts/build_guides_index.py` - verifies every curated slug still returns 200 and reports redirects.
+2. For a full corpus refresh, follow the browser harvest procedure documented in that script's docstring. Note the listing's `?page=` parameters are **ignored server-side** - plain HTTP paging returns 15 guides, not 565 - so the harvest genuinely needs a browser. An earlier version of the script did this over HTTP and exited successfully having found 15 of 565.
 3. Update `guides-index.md`, re-run the verifier, and only then ship.
 
 Never ship an unverified slug. A broken link in the one artefact a visitor keeps undoes the whole five minutes.

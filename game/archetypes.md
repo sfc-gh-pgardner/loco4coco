@@ -6,10 +6,10 @@ needs no inference.
 
 Two jobs:
 
-1. **Defaults** — features, and a concrete first step. If the background stage
+1. **Defaults** - features, and a concrete first step. If the background stage
    fails entirely, a blueprint assembled from these alone is still complete and
    correct, just less tailored.
-2. **A considerations pool** — numbered candidate considerations per archetype.
+2. **A considerations pool** - numbered candidate considerations per archetype.
    The background stage returns *indices* rather than four sentences of prose,
    which is where most of the output tokens went.
 

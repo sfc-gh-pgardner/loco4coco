@@ -1,4 +1,4 @@
-# Loco4CoCo game v2 — persona audit report
+# Loco4CoCo game v2 - persona audit report
 
 **Date:** 2026-08-06 · **Harness:** `http://127.0.0.1:4747/` (`python3 server.py`)
 **Method:** two agentic-browser passes walking the app as a visitor, plus an
@@ -10,7 +10,7 @@ agentic-browser fallback was used rather than introducing a JS toolchain.
 
 | Lens | Instantiated as | What a pass proves |
 |---|---|---|
-| End-user | The booth visitor — a data or service lead with five minutes and no Snowflake account | They reach a named POC and leave with something usable, without typing much |
+| End-user | The booth visitor - a data or service lead with five minutes and no Snowflake account | They reach a named POC and leave with something usable, without typing much |
 | Economic buyer | The visitor's own director, who reads the email later | The blueprint is credible, specific to their sector, and honest about gaps |
 | Champion | The SE running the booth | Nothing on screen embarrasses them; the reasoning stream is a feature, not a leak |
 | Author/owner | Paddy | The app matches the brief and never presents a queued email as a sent one |
@@ -25,7 +25,7 @@ agentic-browser fallback was used rather than introducing a JS toolchain.
 |---|---|---|
 | Reset leaked visitor 1's name, employer and email to visitor 2 | **Blocker** | `NEW VISITOR` control + `write_state(replace=True)` |
 | `write_state` merged `poc: {}` instead of replacing, so reset never cleared the POC | **Blocker** | `replace` flag; proven zero residue for `dave`/`camden`/`policy` |
-| Reasoning tray broke character — "the user wants me to respond as CoCo the Snowflake penguin" — and named internal tools | High | `_TRAY_BLOCK` filter; 0 leaks across four sectors |
+| Reasoning tray broke character - "the user wants me to respond as CoCo the Snowflake penguin" - and named internal tools | High | `_TRAY_BLOCK` filter; 0 leaks across four sectors |
 | The blueprint was built but never shown to the visitor | High | `/api/blueprint` + on-screen reveal at the postbox |
 | Panel clipped ~40% at small windows, `CONFIRM` unreachable | High | Overlay fixed to viewport, card `max-height: 88vh` |
 | Canvas sized once at load, wrong after any resize | Medium | `fitCanvas()` on `resize` |
@@ -48,7 +48,7 @@ agentic-browser fallback was used rather than introducing a JS toolchain.
 
 CoCo wait totals **126s of the 300s budget** (library 26s, marketplace 18s,
 workshop 32s, postbox 50s), leaving ~174s for reading, choosing and walking.
-Feasible but tight — the postbox is the longest wait and lands last.
+Feasible but tight - the postbox is the longest wait and lands last.
 
 ## Carried items
 

@@ -1,6 +1,6 @@
 ---
 name: poc-archetypes
-description: "The ten POC shapes Loco4CoCo routes a visitor to. Each carries a plain-English visitor framing, the Snowflake features it uses, the guide to fork, doc topics, and a kick-off prompt skeleton. This is the spine of the quiz — Round 1 and Round 2 answers resolve to exactly one archetype."
+description: "The ten POC shapes Loco4CoCo routes a visitor to. Each carries a plain-English visitor framing, the Snowflake features it uses, the guide to fork, doc topics, and a kick-off prompt skeleton. This is the spine of the quiz - Round 1 and Round 2 answers resolve to exactly one archetype."
 ---
 
 # POC archetypes
@@ -11,29 +11,29 @@ Ten shapes. Every visitor leaves mapped to exactly one, chosen by their Round 1 
 
 **Q2 (the pain) wins by default. Q3 (the dream) shapes the deliverable, it does not usually replace the archetype.**
 
-This precedence is deliberate and was corrected after dry-running: treating Q3 as a blunt override throws away the pain signal, which is the more reliable of the two. A visitor who says "too much comes in to sort by hand" and then "show me a picture I can act on" wants a *triage view* — they do not want the classification silently dropped in favour of a generic dashboard. The pain is what they came to the stand about; the dream is how they picture the fix.
+This precedence is deliberate and was corrected after dry-running: treating Q3 as a blunt override throws away the pain signal, which is the more reliable of the two. A visitor who says "too much comes in to sort by hand" and then "show me a picture I can act on" wants a *triage view* - they do not want the classification silently dropped in favour of a generic dashboard. The pain is what they came to the stand about; the dream is how they picture the fix.
 
 Apply in this order:
 
 1. **Resolve from Q2.** It maps near one-to-one onto an archetype.
-2. **Check whether that archetype already delivers the Q3 dream.** Usually it does — most primary forks already include a UI, and several already answer in plain English. If so, **keep the Q2 archetype** and let Q3 choose the fork variant and shape the deliverable sentence.
-3. **Only override when genuinely incompatible** — when the Q2 archetype cannot produce the Q3 dream at all. In practice this is narrow:
+2. **Check whether that archetype already delivers the Q3 dream.** Usually it does - most primary forks already include a UI, and several already answer in plain English. If so, **keep the Q2 archetype** and let Q3 choose the fork variant and shape the deliverable sentence.
+3. **Only override when genuinely incompatible** - when the Q2 archetype cannot produce the Q3 dream at all. In practice this is narrow:
 
 | Q2 archetype | Q3 answer | Verdict |
 |---|---|---|
-| any | "Do the whole task, not just tell me about it" | **Override** to `an-agent-that-acts` — no other archetype acts |
-| any | "Let me share it safely with others" | **Override** to `share-without-copying` — a distinct outcome |
-| `talk-to-my-data` / `ask-my-documents` | "Warn me before it goes wrong" | **Override** to `predict-what-happens-next` — asking is not forecasting |
-| `triage-and-classify` | "Show me a picture I can act on" | **Keep** — its primary fork is already a dashboard |
-| `join-the-silos` | "Answer questions in plain English" | **Keep** — unify first; note the semantic view as the obvious phase two |
-| `watch-it-live` | "Warn me before it goes wrong" | **Keep** — alerting is already the point |
-| `extract-from-paperwork` | "Show me a picture I can act on" | **Keep** — add a summary view to the deliverable |
+| any | "Do the whole task, not just tell me about it" | **Override** to `an-agent-that-acts` - no other archetype acts |
+| any | "Let me share it safely with others" | **Override** to `share-without-copying` - a distinct outcome |
+| `talk-to-my-data` / `ask-my-documents` | "Warn me before it goes wrong" | **Override** to `predict-what-happens-next` - asking is not forecasting |
+| `triage-and-classify` | "Show me a picture I can act on" | **Keep** - its primary fork is already a dashboard |
+| `join-the-silos` | "Answer questions in plain English" | **Keep** - unify first; note the semantic view as the obvious phase two |
+| `watch-it-live` | "Warn me before it goes wrong" | **Keep** - alerting is already the point |
+| `extract-from-paperwork` | "Show me a picture I can act on" | **Keep** - add a summary view to the deliverable |
 
 4. **Round 2 tunes, never re-routes.** Data on hand and audience set scope, choose between the primary and an alternate fork, and feed the readiness score.
 
 When two archetypes remain genuinely tied, prefer the one whose **primary feature matches the data they actually have**. A POC they can start beats a more impressive one they cannot.
 
-When you keep the Q2 archetype but Q3 pointed elsewhere, **say so in the reveal** — "we'll get you the picture too, but the win is sorting it first". This shows you listened rather than silently discarding their answer.
+When you keep the Q2 archetype but Q3 pointed elsewhere, **say so in the reveal** - "we'll get you the picture too, but the win is sorting it first". This shows you listened rather than silently discarding their answer.
 
 Never show the archetype ID to the visitor. Show the friendly name and their own words back.
 
@@ -102,7 +102,7 @@ Never show the archetype ID to the visitor. Show the friendly name and their own
 - **Features:** ML forecasting, anomaly detection, Snowflake ML
 - **Doc topics:** `ml functions forecasting`, `anomaly detection`
 - **Fork:** `ml-forecasting-ad`
-- **Needs from them:** a time series — a date column and a value column, ideally 12+ months.
+- **Needs from them:** a time series - a date column and a value column, ideally 12+ months.
 - **Prompt skeleton:** forecast `<their measure>` for the next `<horizon>` from `<their table>` and flag anything anomalous.
 
 ## 7. join-the-silos
@@ -142,18 +142,18 @@ Never show the archetype ID to the visitor. Show the friendly name and their own
 
 ## Readiness score (out of 5)
 
-Award one point each. Show the score, and name the weakest point as "the thing to firm up" — this is the diagnostic that makes the blueprint useful rather than flattering.
+Award one point each. Show the score, and name the weakest point as "the thing to firm up" - this is the diagnostic that makes the blueprint useful rather than flattering.
 
-**Score strictly.** Dry-running three realistic personas against a looser rubric produced two 5s and a 3, which is useless: if almost everyone scores full marks the number carries no information, the visitor gets no next step, and the SE gets no opening. Typical should be **3**. A 5 should be rare and mean the person could genuinely start on Monday. When in doubt, withhold the point — an honest 3 with a clear "firm this up" beats a flattering 5.
+**Score strictly.** Dry-running three realistic personas against a looser rubric produced two 5s and a 3, which is useless: if almost everyone scores full marks the number carries no information, the visitor gets no next step, and the SE gets no opening. Typical should be **3**. A 5 should be rare and mean the person could genuinely start on Monday. When in doubt, withhold the point - an honest 3 with a clear "firm this up" beats a flattering 5.
 
 | Point | Award only when | Do NOT award when |
 |---|---|---|
 | Data on hand | They named data they can **access themselves today**, without raising a request | "Not sure yet", or it needs someone else's permission or an export |
 | Clear user | They named a **specific** person or team who feels the pain | "The whole organisation", "everyone", or the user is themselves in the abstract |
-| Measurable outcome | They can point to a number that **exists today** and would move — a volume, a delay, a cost | The benefit is real but unquantified ("it'd save loads of time") |
+| Measurable outcome | They can point to a number that **exists today** and would move - a volume, a delay, a cost | The benefit is real but unquantified ("it'd save loads of time") |
 | Feature fit | The archetype's primary feature works on the **shape** of data they described | They have tables but the archetype needs documents, or vice versa |
 | Realistic scope | Achievable on a free trial in about a fortnight | Multiple source systems, org-wide rollout, or anything needing procurement |
 
-Expected distribution across a booth day: mostly 2–3, some 4, a 5 occasionally. If a session is producing 5s routinely, the scoring has drifted — re-read the "do NOT award" column.
+Expected distribution across a booth day: mostly 2 - 3, some 4, a 5 occasionally. If a session is producing 5s routinely, the scoring has drifted - re-read the "do NOT award" column.
 
-A low score is not a failure and must never be presented as one. Frame it as "here's what to nail down first" — that framing is the honest, useful version, it gives the visitor a genuine next step, and it is the SE's opening for a follow-up conversation.
+A low score is not a failure and must never be presented as one. Frame it as "here's what to nail down first" - that framing is the honest, useful version, it gives the visitor a genuine next step, and it is the SE's opening for a follow-up conversation.

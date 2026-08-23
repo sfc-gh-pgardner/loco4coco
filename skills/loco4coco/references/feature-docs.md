@@ -5,12 +5,12 @@ description: "Closed list of Snowflake features the Workshop may name, each with
 
 # Feature documentation map
 
-**Verified:** 2026-08-06 — every URL returned HTTP 200 on that date.
+**Verified:** 2026-08-06 - every URL returned HTTP 200 on that date.
 **Count:** 53 features.
 
 ## Why a closed list
 
-Features used to arrive as free text from the model, so there was nothing reliable to link. The Workshop prompt now selects **only** from the names below, which means every feature in a blueprint has a working link by construction. A name outside this list is dropped rather than rendered bare — silently omitting one is better than shipping a guess.
+Features used to arrive as free text from the model, so there was nothing reliable to link. The Workshop prompt now selects **only** from the names below, which means every feature in a blueprint has a working link by construction. A name outside this list is dropped rather than rendered bare - silently omitting one is better than shipping a guess.
 
 Match on the exact name in the first column.
 

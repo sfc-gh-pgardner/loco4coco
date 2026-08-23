@@ -1,0 +1,25 @@
+# Loco for CoCo runtime dependencies.
+#
+# Install with:  pip3 install -r requirements.txt
+#
+# Versions are the ones the booth has actually been run and smoke-tested
+# against (macOS, Python 3.11, 2026-08-23). Lower bounds rather than pins, so
+# a fresh machine gets security fixes, with an upper bound on the connector
+# because that is the one that has broken us on a major bump before.
+#
+# Everything else the game uses is in the Python standard library. There is no
+# npm, no bundler and no build step: the client is one HTML file served by
+# Python's own ThreadingHTTPServer.
+
+# Cortex inference over a held-open connection, and row logging.
+snowflake-connector-python>=4.6.0,<5
+
+# Writes the .docx blueprint the visitor takes away.
+python-docx>=1.2.0
+
+# Reads deploy/manifest.yml.
+PyYAML>=6.0.2
+
+# Draws the QR codes. Without it the primary handover degrades to a link,
+# so it is not optional at a booth.
+segno>=1.6.6

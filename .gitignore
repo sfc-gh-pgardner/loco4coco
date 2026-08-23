@@ -1,4 +1,4 @@
-# Runtime state — never commit
+# Runtime state - never commit
 game/state.json
 game/cost.jsonl*
 game/outbox/*

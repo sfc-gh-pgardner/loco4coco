@@ -184,7 +184,7 @@ def write_md(results):
         "",
         "# Feature documentation map",
         "",
-        f"**Verified:** {date.today().isoformat()} — every URL returned HTTP 200 "
+        f"**Verified:** {date.today().isoformat()} - every URL returned HTTP 200 "
         "on that date.",
         f"**Count:** {len(results)} features.",
         "",
@@ -194,7 +194,7 @@ def write_md(results):
         "nothing reliable to link. The Workshop prompt now selects **only** from "
         "the names below, which means every feature in a blueprint has a working "
         "link by construction. A name outside this list is dropped rather than "
-        "rendered bare — silently omitting one is better than shipping a guess.",
+        "rendered bare - silently omitting one is better than shipping a guess.",
         "",
         "Match on the exact name in the first column.",
         "",

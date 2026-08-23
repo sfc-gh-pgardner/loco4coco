@@ -45,6 +45,33 @@ mkt = cfg['marketplace']
 inds = cfg['industries']
 plats = (cfg.get('platforms') or {}).get('options') or []
 locs = cfg['locations']
+
+# ---- the REAL curated marketplace listings, read from marketplace-index.md.
+# industries.<key>.marketplace in config.json is dead data - the game's own
+# locations.marketplace.source is "marketplace_index", so that config field
+# is never read at runtime. Parsing it here instead of the real file was
+# exactly the kind of drift this generator exists to prevent.
+MARKET_PATH = os.path.join(os.path.dirname(HERE), 'skills', 'loco4coco',
+                           'references', 'marketplace-index.md')
+market = {}
+_cur_ind = None
+_row_re = re.compile(r"^\|\s*\[(?P<title>.+?)\]\((?P<url>[^)]+)\)\s*\|"
+                     r"\s*(?P<prov>[^|]+?)\s*\|\s*(?P<acc>[^|]+?)\s*\|"
+                     r"\s*`(?P<gname>[^`]+)`\s*\|")
+for line in io.open(MARKET_PATH, encoding='utf-8').read().splitlines():
+    h = re.match(r"^##\s+([a-z_]+)\s*$", line.strip())
+    if h:
+        _cur_ind = h.group(1)
+        market.setdefault(_cur_ind, [])
+        continue
+    if not _cur_ind:
+        continue
+    rm = _row_re.match(line.strip())
+    if rm:
+        market[_cur_ind].append({'title': rm.group('title').strip(),
+                                 'provider': rm.group('prov').strip(),
+                                 'access': rm.group('acc').strip()})
+
 O = []
 w = O.append
 
@@ -95,8 +122,8 @@ w('MARKETPLACE')
 w('  live listings matched on industry keywords  (min %d results)'
   % mkt.get('min_live_results', 0))
 w('  falls back to %d-%d curated options per industry'
-  % (min(len(v.get('marketplace') or []) for v in inds.values()),
-     max(len(v.get('marketplace') or []) for v in inds.values())))
+  % (min(len(v) for v in market.values()),
+     max(len(v) for v in market.values())))
 w('        |')
 w('WORKSHOP')
 w('  one line  ->  model picks 1 of %d archetypes' % len(arch))
@@ -116,7 +143,7 @@ w('For each industry: what the library offers, what the marketplace offers as '
 w('')
 for key, v in inds.items():
     ds = v.get('data_sources') or []
-    mk = v.get('marketplace') or []
+    mk = market.get(key) or []
     kw = (mkt.get('industry_keywords') or {}).get(key) or []
     pin = (mkt.get('pinned') or {}).get(key) or []
     w('### %s' % v.get('name', key))
@@ -133,10 +160,11 @@ for key, v in inds.items():
     w('')
     w('**Marketplace - curated joins (the fallback when live search is thin)**')
     w('')
-    w('| Option | Note shown under it |')
-    w('|---|---|')
+    w('| Listing | Provider | Access |')
+    w('|---|---|---|')
     for d in mk:
-        w('| %s | %s |' % (d.get('label', ''), d.get('note', '')))
+        w('| %s | %s | %s |' % (d.get('title', ''), d.get('provider', ''),
+                                d.get('access', '')))
     w('')
     w('**Live-search keywords** (%d): %s' % (len(kw), ', '.join(kw) or '_none_'))
     w('')
@@ -196,9 +224,9 @@ for key, v in inds.items():
         gaps.append('**%s** has no pinned listings, so if live search returns '
                     'nothing recognisable there is no guaranteed good result.'
                     % nm)
-    if len(v.get('marketplace') or []) < 5:
+    if len(market.get(key) or []) < 5:
         gaps.append('**%s** offers only %d curated joins.'
-                    % (nm, len(v.get('marketplace') or [])))
+                    % (nm, len(market.get(key) or [])))
 for g in gaps:
     w('- %s' % g)
 if not gaps:

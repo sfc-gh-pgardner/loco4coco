@@ -13,3 +13,6 @@ venv/
 # OS / editor
 .DS_Store
 *.swp
+
+# Cortex Code session/plan metadata, not project code
+.snowflake/

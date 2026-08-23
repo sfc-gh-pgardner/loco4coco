@@ -35,7 +35,9 @@ fails, timings = [], {}
 
 post("/api/reset")
 r = post("/api/intake", {"first_name": "Sarah", "company": "Lloyds Bank",
-                         "email": "sarah.test@example.org"})
+                         "email": "sarah.test@example.org",
+                         "problem": "We want to spot customers heading for "
+                                    "payment trouble before they miss one."})
 assert r["industry"] == "financial", f"industry inference: {r['industry']}"
 print(f"intake        : {r['industry_name']}")
 
@@ -186,6 +188,48 @@ total = sum(v for v in timings.values() if v)
 print(f"\nCoCo wait total: {total}s of the {300}s budget")
 print("outbox files   :", len(box))
 print("blueprint keys :", sorted(k for k, v in bp.items() if v))
+
+# --- Tier 0 (agentic marketplace), fired at intake -------------------------
+# The rest of the visitor flow finishes in under a minute; Tier 0 measured
+# 70-110s+ on PG_LONDON (2026-08-23), so it is almost always STILL RUNNING
+# in the background when the flow above completes. Wait for it specifically
+# rather than assuming it's already in cost.jsonl - this only checks it
+# FIRED and eventually finished, not that it won its race with a real
+# visitor, which the tier chain does not depend on either way (see the
+# deterministic fallback check below).
+cost_path = os.path.join(GAME, "cost.jsonl")
+
+
+def agentic_logged():
+    if not os.path.exists(cost_path):
+        return False
+    with open(cost_path, encoding="utf-8") as f:
+        return any(json.loads(l).get("kind") == "marketplace_agentic"
+                  for l in f if l.strip())
+
+
+fired = agentic_logged()
+t0 = time.time()
+while not fired and time.time() - t0 < 130:
+    time.sleep(5)
+    fired = agentic_logged()
+print(f"tier 0 fired   : {fired} ({round(time.time() - t0, 1)}s waited)")
+if not fired:
+    fails.append("marketplace_agentic never appeared in cost.jsonl within "
+                 "130s - start_agentic_search() did not run from /api/intake")
+
+sys.path.insert(0, GAME)
+import server as _srv                                            # noqa: E402
+_cfg = _srv.load_config()
+# session_id=None must skip Tier 0 by construction (listings_agentic returns
+# [] with no session) and fall through to Tier 1/2 - proves the chain never
+# depends on Tier 0 actually completing.
+fallback = _srv.listings_for(_cfg, "healthcare", session_id=None)
+if not fallback:
+    fails.append("listings_for() with no session_id returned nothing - "
+                 "Tier 1/2 fallback is broken")
+else:
+    print(f"tier 1/2 fallback: {len(fallback)} listings with session_id=None")
 
 if fails:
     print("\nFAIL")

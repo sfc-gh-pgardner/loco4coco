@@ -25,10 +25,15 @@ for the human. The optional "Ask CoCo one thing" stop adds about 35s.
    ACCOUNTADMIN is simplest. **Cortex must be enabled.**
 3. Your **account region**, e.g. `AWS_EU_WEST_2`. Write it down.
 4. A Google account for sending blueprints (your own Gmail).
-5. *(Optional, recommended)* "Agentic search on the Snowflake Marketplace" (PrPr)
-   enabled on the account, with `SNOWFLAKE.COPILOT_USER` and either
-   `SNOWFLAKE.CORTEX_USER` or `SNOWFLAKE.CORTEX_AGENT_USER` granted. This is
-   **not** required for the booth app to run — see the note under Step 6.
+5. *(Optional, recommended)* `cortex` CLI on the booth laptop and reachable —
+   this is what powers Tier 0 (agentic marketplace search, see Step 6). Not
+   required for the booth app to run: Tier 0 degrades silently to Tier 1/2 if
+   `cortex` is missing, times out, or `marketplace.agentic.enabled` is false.
+   "Agentic search on the Snowflake Marketplace" (PrPr) in Snowsight's
+   Discover tab is the same underlying skill, useful for ad-hoc research, and
+   needs `SNOWFLAKE.COPILOT_USER` plus `SNOWFLAKE.CORTEX_USER` or
+   `SNOWFLAKE.CORTEX_AGENT_USER` — but that account flag is not what Tier 0
+   depends on.
 
 ## Step 1: install the tools
 
@@ -103,15 +108,20 @@ Edit `game/config.json`:
 | `event.region` | **Must match your account region.** Filters the Marketplace stall to listings the visitor can actually attach. Wrong value = empty stall. |
 | `snowflake.connection_name` | Your connection (bootstrap normally sets this) |
 
-**About the Marketplace preview:** the game's live tier already queries the real
-catalogue itself (`SHOW AVAILABLE LISTINGS`, region-filtered, cached), with the
-curated `marketplace-index.md` as an offline-safe fallback — that fallback chain
-runs unattended and needs nothing from this preview. "Agentic search on the
-Snowflake Marketplace" (verified working on `PG_LONDON`, 2026-08-23) is a
-Snowsight **Discover tab chat**, not an API, so `server.py` cannot call it from
-the booth. Use it beforehand instead: it's the fastest way to research listings
-for your event's industries while you build or refresh `marketplace-index.md`,
-and to sanity-check the live tier is finding what a human would find.
+**About the Marketplace preview:** the game now uses three tiers, in order.
+Tier 0 is agentic: `cortex exec` calls the `marketplace-search` skill —
+the same skill behind Snowsight's Discover-tab "Agentic search on the
+Snowflake Marketplace" (PrPr) — fired the moment a visitor submits THE
+LETTER, personalised to their actual problem statement, racing THE LIBRARY
+for time to finish. If it isn't ready, errors, or is disabled, Tier 1 (live
+`SHOW AVAILABLE LISTINGS`, region-filtered, cached) takes over, then Tier 2
+(curated `marketplace-index.md`) as the offline-safe net — that fallback
+chain runs exactly as it always has and needs nothing from Tier 0. Turn
+Tier 0 off with `marketplace.agentic.enabled: false` in `config.json` if
+`cortex` isn't reliably available on a booth laptop. There is deliberately
+no call cap: watch spend in `game/cost.jsonl` (`kind: marketplace_agentic`)
+and flip it off by hand if needed — a cross-event spend rollup across
+booth laptops/accounts is a known future work item, not yet built.
 
 ## Step 7: run it and prove it
 

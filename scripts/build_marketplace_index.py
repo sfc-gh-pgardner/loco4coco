@@ -58,12 +58,11 @@ LISTINGS = {
                        "met-office-postcode-sector-weather-forecasts"),
     "GZSTZ67BY9OQW":  ("Snowflake", "Free",
                        "snowflake-pubmed-biomedical-research-corpus"),
-    "GZSTZJUPD23":    ("Element Data", "Paid",
-                       "element-data-healthcare-common-procedure-coding-system-level-ii-hcpcs"),
+    "GZ2FRZQNY1":     ("Facts and Dimensions Ltd", "Free",
+                       "facts-and-dimensions-ltd-uk-health-facts-and-dimensions-sample"),
+    "GZSVZ1K7UU":     ("CACI Ltd", "Free", ""),
     "GZTSZ290BVCAO":  ("Snowflake Public Data Products", "Free 60-day trial",
                        "snowflake-public-data-products-snowflake-public-data-foreign-exchange-rates"),
-    "GZTSZ290BVSAO":  ("Snowflake Public Data Products", "Free 60-day trial",
-                       "snowflake-public-data-products-snowflake-public-data-core-weather-data"),
     "GZTDZ7DJU9":     ("Turnleaf Analytics", "Free",
                        "turnleaf-analytics-inflation-forecasting-headline-core-cpi-by-country"),
     "GZ2FSZH8URW":    ("North Data GmbH", "Free 7-day trial",
@@ -72,38 +71,65 @@ LISTINGS = {
                        "ibisworld-industry-classification-systems-naics-anzsic-isic-uk-sic-etc"),
     "GZT0ZI0XJ6Q":    ("CSRHub LLC", "Free 30-day trial",
                        "csrhub-llc-csrhub-esg-environment-social-governance-fast-start"),
+    "GZTYZAPS3FP":    ("InSights", "Free", ""),
     "GZT0Z4CM1E9L4":  ("CARTO", "Free", "carto-carto-boundaries"),
     "GZT0Z4CM1E9KJ":  ("CARTO", "Free", "carto-overture-maps-transportation"),
+    "GZT0Z4CM1E9NA":  ("CARTO", "Free", "carto-carto-analytics-toolbox"),
+    "GZT0ZKUCHKL":    ("CARTO", "Free", ""),
     "GZTSZRC7HQ3":    ("CEIC Data", "Free", "ceic-data-ceic-commodities-data"),
-    "GZ1MMZD99V46":   ("YuzeData", "Free",
-                       "yuzedata-carbon-footprint-data-scope-1-2-3-sustainability-performance-reporting"),
     "GZSOZ71OJH":     ("Yes Energy", "Free", "yes-energy-yes-energy-sample-data"),
-    "GZSVZ5WLU0":     ("Kpler", "Free", "kpler-coal-global-data"),
-    "GZT0Z12POH90":   ("Sports Innovation Lab", "Free",
-                       "sports-innovation-lab-over-the-top-ott-market-analysis-purchase-behavior-of-sports-fans"),
+    "GZSVZ8MX1I":     ("Rystad Energy", "Free", ""),
+    "GZSYZSRWU5":     ("Weather Solutions", "Free", ""),
+    "GZTDZ1PNFO":     ("General Index", "Free Trial", ""),
+    "GZ1MOZBWYYT":    ("Ordnance Survey", "Free", ""),
+    "GZT0ZGCQ51RQ":   ("FactSet", "Free", ""),
+    "GZT0ZPWB4J7":    ("Dun & Bradstreet", "Free", ""),
+    "GZU6Z630VEJ0W":  ("Solid Data LLC", "Free 30-day trial", ""),
+    "GZT1ZFQ0JE5":    ("Socialgist", "Free", ""),
+    "GZSNZ4PHA6":     ("data.world, Inc", "Free", ""),
 }
 
 # Curated per industry. Keys match config.json industries.
 # Deliberately excluded: Factori mobility data (GZT8Z4NUG5) - its page showed no
 # access terms at all, and an unlabelled listing is a dead end for a visitor on
 # a trial. Better to offer four we can describe than five we cannot.
+#
+# 2026-08-23: added a 6th, free-weighted pick per industry (agentic search,
+# offline - see game/agentic-marketplace-enhancement.md Path D). Verified the
+# same way as every entry above, PLUS one check this script was missing until
+# today: "is_ready_for_import" - a listing can pass region/by-request/
+# discover-only and still be genuinely unattachable if this is false.
+#
+# That check also caught PRE-EXISTING drift, not just new picks: five
+# already-curated listings turned out not importable - "Snowflake Public
+# Data: Core Weather Data" (used in manufacturing/media/other, and already
+# flagged as drifted by verify_marketplace_index.py's own header comment),
+# "Carbon Footprint Data" (manufacturing/energy), "Coal Global Data"
+# (energy), the OTT Market Analysis listing (media), and - notably -
+# healthcare's one Paid listing, Element Data HCPCS, which was not just
+# expensive but not actually attachable either. All five were dropped and
+# replaced. healthcare is now 6-for-6 free. media and other are also 6-for-6
+# free. manufacturing and energy are 5 free + 1 free-trial each (one
+# genuinely relevant pick per industry had a stated trial rather than a
+# permanent-free term - kept per the file's rule that stated terms are what
+# matter, not zero cost).
 CURATED = {
     "healthcare":    ["GZSVZAJO3", "GZSVZ1K7VF", "GZTDZJKVCY", "GZSTZ67BY9OQW",
-                      "GZSTZJUPD23"],
+                      "GZ2FRZQNY1", "GZSVZ1K7UU"],
     "financial":     ["GZTSZ290BVCAO", "GZTDZ7DJU9", "GZ2FSZH8URW",
-                      "GZSTZLT2II6", "GZT0ZI0XJ6Q"],
+                      "GZSTZLT2II6", "GZT0ZI0XJ6Q", "GZTYZAPS3FP"],
     "retail":        ["GZTDZJKVCY", "GZSVZ1K7VF", "GZSVZ1K7UA", "GZSVZAJO3",
-                      "GZSTZLT2II6"],
+                      "GZSTZLT2II6", "GZT0ZKUCHKL"],
     "public":        ["GZSVZAJO3", "GZSVZ1K7UQ", "GZT0Z4CM1E9L4", "GZSVZ1K7VF",
-                      "GZTDZJKVCU"],
-    "manufacturing": ["GZTSZRC7HQ3", "GZ2FSZH8URW", "GZTSZ290BVSAO",
-                      "GZ1MMZD99V46", "GZT0Z4CM1E9KJ"],
-    "energy":        ["GZTDZJKVCY", "GZTDZJKVCU", "GZSOZ71OJH", "GZSVZ5WLU0",
-                      "GZ1MMZD99V46"],
-    "media":         ["GZSVZ1K7VF", "GZSVZAJO3", "GZT0Z12POH90",
-                      "GZTSZ290BVSAO", "GZT0Z4CM1E9L4"],
-    "other":         ["GZTSZ290BVSAO", "GZSVZAJO3", "GZ2FSZH8URW",
-                      "GZT0Z4CM1E9L4", "GZTSZ290BVCAO"],
+                      "GZTDZJKVCU", "GZ1MOZBWYYT"],
+    "manufacturing": ["GZTSZRC7HQ3", "GZ2FSZH8URW", "GZT0Z4CM1E9KJ",
+                      "GZT0ZGCQ51RQ", "GZT0ZPWB4J7", "GZU6Z630VEJ0W"],
+    "energy":        ["GZTDZJKVCY", "GZTDZJKVCU", "GZSOZ71OJH", "GZSVZ8MX1I",
+                      "GZSYZSRWU5", "GZTDZ1PNFO"],
+    "media":         ["GZSVZ1K7VF", "GZSVZAJO3", "GZT0Z4CM1E9L4",
+                      "GZT0ZKUCHKL", "GZT1ZFQ0JE5", "GZSNZ4PHA6"],
+    "other":         ["GZSVZAJO3", "GZ2FSZH8URW", "GZT0Z4CM1E9L4",
+                      "GZTSZ290BVCAO", "GZT0Z4CM1E9NA", "GZSVZ1K7VF"],
 }
 
 
@@ -119,7 +145,17 @@ def show_listings():
 
 def regions_of(row):
     regs = str(row.get("regions") or "")
+    if regs.strip().upper() == "ALL":
+        return ["ALL"]
     return sorted({r.split(".")[-1] for r in regs.split(",") if r.strip()})
+
+
+def available_in(row, region):
+    """"ALL" means literally every region, not a comma list to substring-match -
+    a plain `in` check on the raw string missed this and wrongly failed
+    universally-available listings (found 2026-08-23)."""
+    regs = str(row.get("regions") or "")
+    return regs.strip().upper() == "ALL" or region in regs
 
 
 def url_for(g):
@@ -141,7 +177,7 @@ def main():
         kw = a.candidates.lower()
         hits = [(g, r) for g, r in catalog.items()
                 if kw in str(r.get("title")).lower()
-                and "AWS_EU_WEST_2" in str(r.get("regions") or "")]
+                and available_in(r, "AWS_EU_WEST_2")]
         print(f"\n{len(hits)} London-available listings matching {kw!r}:")
         for g, r in sorted(hits, key=lambda x: str(x[1].get("title"))):
             print(f"  {str(r.get('title'))[:62]:64} {g}")
@@ -164,7 +200,13 @@ def main():
             problems.append((g, "now by-request only"))
         if str(row.get("discover_only")).lower() == "true":
             problems.append((g, "now discover-only"))
-        if "AWS_EU_WEST_2" not in str(row.get("regions") or ""):
+        # is_ready_for_import is the flag that actually decides whether a
+        # visitor can attach it - region/by-request/discover-only can all
+        # pass while this is false. Missed until 2026-08-23; see the comment
+        # above CURATED.
+        if str(row.get("is_ready_for_import")).lower() != "true":
+            problems.append((g, "is_ready_for_import is false - not actually importable"))
+        if not available_in(row, "AWS_EU_WEST_2"):
             problems.append((g, "no longer available in London (eu-west-2)"))
 
     for g, why in problems:

@@ -5,7 +5,7 @@ description: "Curated Snowflake Marketplace listings offered to booth visitors, 
 
 # Curated Marketplace listings
 
-**Catalogue checked:** 2026-08-06 — every listing below is present in `SHOW AVAILABLE LISTINGS`, is not by-request or discover-only, and is available in `AWS_EU_WEST_2`.
+**Catalogue checked:** 2026-08-23 — every listing below is present in `SHOW AVAILABLE LISTINGS`, is not by-request or discover-only, and is available in `AWS_EU_WEST_2`.
 **Providers and access terms read from the listing pages:** 2026-08-06.
 
 ## What is verified, and what is not
@@ -36,7 +36,8 @@ Provider names cannot be re-derived by script: SQL exposes `organization_profile
 | [Acorn - Geodemographic Segmentation in the UK](https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF/caci-ltd-acorn-geodemographic-segmentation-in-the-uk) | CACI Ltd | Free | `GZSVZ1K7VF` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +28 |
 | [Postcode Sector Weather Forecasts](https://app.snowflake.com/marketplace/listing/GZTDZJKVCY/met-office-postcode-sector-weather-forecasts) | Met Office | Free 14-day trial | `GZTDZJKVCY` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +29 |
 | [PubMed Biomedical Research Corpus](https://app.snowflake.com/marketplace/listing/GZSTZ67BY9OQW/snowflake-pubmed-biomedical-research-corpus) | Snowflake | Free | `GZSTZ67BY9OQW` | AWS_AP_NORTHEAST_1, AWS_AP_SOUTHEAST_1, AWS_AP_SOUTHEAST_2, AWS_EU_CENTRAL_1 +8 |
-| [Healthcare Common Procedure Coding System Level II (HCPCS)](https://app.snowflake.com/marketplace/listing/GZSTZJUPD23/element-data-healthcare-common-procedure-coding-system-level-ii-hcpcs) | Element Data | Paid | `GZSTZJUPD23` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +28 |
+| [UK Health Facts and Dimensions Sample](https://app.snowflake.com/marketplace/listing/GZ2FRZQNY1/facts-and-dimensions-ltd-uk-health-facts-and-dimensions-sample) | Facts and Dimensions Ltd | Free | `GZ2FRZQNY1` | AWS_EU_CENTRAL_1, AWS_EU_WEST_2, AZURE_UKSOUTH, GCP_EUROPE_WEST2 |
+| [Household Acorn – geodemographic segmentation at household level SAMPLE DATA](https://app.snowflake.com/marketplace/listing/GZSVZ1K7UU) | CACI Ltd | Free | `GZSVZ1K7UU` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +39 |
 
 ## financial
 
@@ -47,6 +48,7 @@ Provider names cannot be re-derived by script: SQL exposes `organization_profile
 | [Company Data UK (incl. Guernsey) - XL Dataset](https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW/north-data-gmbh-company-data-uk-incl-guernsey-xl-dataset) | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +33 |
 | [Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.)](https://app.snowflake.com/marketplace/listing/GZSTZLT2II6/ibisworld-industry-classification-systems-naics-anzsic-isic-uk-sic-etc) | IBISWorld | Free | `GZSTZLT2II6` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +33 |
 | [CSRHub ESG (Environment, Social, Governance) Fast Start](https://app.snowflake.com/marketplace/listing/GZT0ZI0XJ6Q/csrhub-llc-csrhub-esg-environment-social-governance-fast-start) | CSRHub LLC | Free 30-day trial | `GZT0ZI0XJ6Q` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +28 |
+| [Banking Analytics Bundle](https://app.snowflake.com/marketplace/listing/GZTYZAPS3FP) | InSights | Free | `GZTYZAPS3FP` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +31 |
 
 ## retail
 
@@ -57,6 +59,7 @@ Provider names cannot be re-derived by script: SQL exposes `organization_profile
 | [PayCheck – UK household income estimates at postcode level - SAMPLE data](https://app.snowflake.com/marketplace/listing/GZSVZ1K7UA/caci-ltd-paycheck-%E2%80%93-uk-household-income-estimates-at-postcode-level-sample-data) | CACI Ltd | Free | `GZSVZ1K7UA` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +39 |
 | [UK (England and Wales only) Census 2021 - Trial](https://app.snowflake.com/marketplace/listing/GZSVZAJO3/jaywing-uk-england-and-wales-only-census-2021-trial) | Jaywing | Free | `GZSVZAJO3` | AWS_EU_WEST_1, AWS_EU_WEST_2, AZURE_UKSOUTH, GCP_EUROPE_WEST2 |
 | [Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.)](https://app.snowflake.com/marketplace/listing/GZSTZLT2II6/ibisworld-industry-classification-systems-naics-anzsic-isic-uk-sic-etc) | IBISWorld | Free | `GZSTZLT2II6` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +33 |
+| [Spatial Features (GBR, Quadgrid 15 and H3 Res. 8)](https://app.snowflake.com/marketplace/listing/GZT0ZKUCHKL) | CARTO | Free | `GZT0ZKUCHKL` | AWS_EU_WEST_1, AWS_EU_WEST_2, AWS_US_EAST_1 |
 
 ## public
 
@@ -67,6 +70,7 @@ Provider names cannot be re-derived by script: SQL exposes `organization_profile
 | [CARTO Boundaries](https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4/carto-carto-boundaries) | CARTO | Free | `GZT0Z4CM1E9L4` | AWS_EU_WEST_2, AWS_US_EAST_1 |
 | [Acorn - Geodemographic Segmentation in the UK](https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF/caci-ltd-acorn-geodemographic-segmentation-in-the-uk) | CACI Ltd | Free | `GZSVZ1K7VF` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +28 |
 | [National Severe Weather Warning Service](https://app.snowflake.com/marketplace/listing/GZTDZJKVCU/met-office-national-severe-weather-warning-service) | Met Office | Free | `GZTDZJKVCU` | AWS_AF_SOUTH_1, AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3 +50 |
+| [Administrative boundaries - Great Britain: Boundary Line - Open](https://app.snowflake.com/marketplace/listing/GZ1MOZBWYYT) | Ordnance Survey | Free | `GZ1MOZBWYYT` | ALL |
 
 ## manufacturing
 
@@ -74,9 +78,10 @@ Provider names cannot be re-derived by script: SQL exposes `organization_profile
 |---|---|---|---|---|
 | [CEIC Commodities Data](https://app.snowflake.com/marketplace/listing/GZTSZRC7HQ3/ceic-data-ceic-commodities-data) | CEIC Data | Free | `GZTSZRC7HQ3` | AWS_AF_SOUTH_1, AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3 +38 |
 | [Company Data UK (incl. Guernsey) - XL Dataset](https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW/north-data-gmbh-company-data-uk-incl-guernsey-xl-dataset) | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +33 |
-| [Snowflake Public Data: Core Weather Data](https://app.snowflake.com/marketplace/listing/GZTSZ290BVSAO/snowflake-public-data-products-snowflake-public-data-core-weather-data) | Snowflake Public Data Products | Free 60-day trial | `GZTSZ290BVSAO` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +49 |
-| [Carbon Footprint Data Scope 1/2/3 | Sustainability & Performance Reporting](https://app.snowflake.com/marketplace/listing/GZ1MMZD99V46/yuzedata-carbon-footprint-data-scope-1-2-3-sustainability-performance-reporting) | YuzeData | Free | `GZ1MMZD99V46` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +42 |
-| [Overture Maps - Transportation](https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9KJ/carto-overture-maps-transportation) | CARTO | Free | `GZT0Z4CM1E9KJ` | AWS_AP_NORTHEAST_1, AWS_CA_CENTRAL_1, AWS_EU_CENTRAL_1, AWS_EU_NORTH_1 +10 |
+| [Overture Maps - Transportation](https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9KJ/carto-overture-maps-transportation) | CARTO | Free | `GZT0Z4CM1E9KJ` | AWS_AP_NORTHEAST_1, AWS_CA_CENTRAL_1, AWS_EU_CENTRAL_1, AWS_EU_NORTH_1 +11 |
+| [FactSet Supply Chain Relationships (sample)](https://app.snowflake.com/marketplace/listing/GZT0ZGCQ51RQ) | FactSet | Free | `GZT0ZGCQ51RQ` | ALL |
+| [D&B Shipping Insights Sample](https://app.snowflake.com/marketplace/listing/GZT0ZPWB4J7) | Dun & Bradstreet | Free | `GZT0ZPWB4J7` | ALL |
+| [Solid United Nations Codes for Trade and Transport Locations](https://app.snowflake.com/marketplace/listing/GZU6Z630VEJ0W) | Solid Data LLC | Free 30-day trial | `GZU6Z630VEJ0W` | AWS_AF_SOUTH_1, AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3 +52 |
 
 ## energy
 
@@ -85,8 +90,9 @@ Provider names cannot be re-derived by script: SQL exposes `organization_profile
 | [Postcode Sector Weather Forecasts](https://app.snowflake.com/marketplace/listing/GZTDZJKVCY/met-office-postcode-sector-weather-forecasts) | Met Office | Free 14-day trial | `GZTDZJKVCY` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +29 |
 | [National Severe Weather Warning Service](https://app.snowflake.com/marketplace/listing/GZTDZJKVCU/met-office-national-severe-weather-warning-service) | Met Office | Free | `GZTDZJKVCU` | AWS_AF_SOUTH_1, AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3 +50 |
 | [Yes Energy - Sample Data](https://app.snowflake.com/marketplace/listing/GZSOZ71OJH/yes-energy-yes-energy-sample-data) | Yes Energy | Free | `GZSOZ71OJH` | AWS_CA_CENTRAL_1, AWS_EU_CENTRAL_1, AWS_EU_NORTH_1, AWS_EU_WEST_1 +22 |
-| [Coal Global Data](https://app.snowflake.com/marketplace/listing/GZSVZ5WLU0/kpler-coal-global-data) | Kpler | Free | `GZSVZ5WLU0` | AWS_EU_WEST_1, AWS_EU_WEST_2, AWS_EU_WEST_3, AWS_US_EAST_1 +1 |
-| [Carbon Footprint Data Scope 1/2/3 | Sustainability & Performance Reporting](https://app.snowflake.com/marketplace/listing/GZ1MMZD99V46/yuzedata-carbon-footprint-data-scope-1-2-3-sustainability-performance-reporting) | YuzeData | Free | `GZ1MMZD99V46` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +42 |
+| [Sample of GasMarketCube - Global Gas Supply, Demand and Trade](https://app.snowflake.com/marketplace/listing/GZSVZ8MX1I) | Rystad Energy | Free | `GZSVZ8MX1I` | ALL |
+| [Wind Power Forecast, Day-ahead - Sample](https://app.snowflake.com/marketplace/listing/GZSYZSRWU5) | Weather Solutions | Free | `GZSYZSRWU5` | ALL |
+| [Crude oil price data](https://app.snowflake.com/marketplace/listing/GZTDZ1PNFO) | General Index | Free Trial | `GZTDZ1PNFO` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +34 |
 
 ## media
 
@@ -94,16 +100,18 @@ Provider names cannot be re-derived by script: SQL exposes `organization_profile
 |---|---|---|---|---|
 | [Acorn - Geodemographic Segmentation in the UK](https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF/caci-ltd-acorn-geodemographic-segmentation-in-the-uk) | CACI Ltd | Free | `GZSVZ1K7VF` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +28 |
 | [UK (England and Wales only) Census 2021 - Trial](https://app.snowflake.com/marketplace/listing/GZSVZAJO3/jaywing-uk-england-and-wales-only-census-2021-trial) | Jaywing | Free | `GZSVZAJO3` | AWS_EU_WEST_1, AWS_EU_WEST_2, AZURE_UKSOUTH, GCP_EUROPE_WEST2 |
-| [Over-the-Top (OTT) Market Analysis: Purchase Behavior Of Sports Fans](https://app.snowflake.com/marketplace/listing/GZT0Z12POH90/sports-innovation-lab-over-the-top-ott-market-analysis-purchase-behavior-of-sports-fans) | Sports Innovation Lab | Free | `GZT0Z12POH90` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +38 |
-| [Snowflake Public Data: Core Weather Data](https://app.snowflake.com/marketplace/listing/GZTSZ290BVSAO/snowflake-public-data-products-snowflake-public-data-core-weather-data) | Snowflake Public Data Products | Free 60-day trial | `GZTSZ290BVSAO` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +49 |
 | [CARTO Boundaries](https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4/carto-carto-boundaries) | CARTO | Free | `GZT0Z4CM1E9L4` | AWS_EU_WEST_2, AWS_US_EAST_1 |
+| [Spatial Features (GBR, Quadgrid 15 and H3 Res. 8)](https://app.snowflake.com/marketplace/listing/GZT0ZKUCHKL) | CARTO | Free | `GZT0ZKUCHKL` | AWS_EU_WEST_1, AWS_EU_WEST_2, AWS_US_EAST_1 |
+| [GLP-1 Social Conversations Sample Dataset](https://app.snowflake.com/marketplace/listing/GZT1ZFQ0JE5) | Socialgist | Free | `GZT1ZFQ0JE5` | AWS_AF_SOUTH_1, AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3 +41 |
+| [American Community Survey, 2016](https://app.snowflake.com/marketplace/listing/GZSNZ4PHA6) | data.world, Inc | Free | `GZSNZ4PHA6` | ALL |
 
 ## other
 
 | Listing | Provider | Access | Global name | Regions |
 |---|---|---|---|---|
-| [Snowflake Public Data: Core Weather Data](https://app.snowflake.com/marketplace/listing/GZTSZ290BVSAO/snowflake-public-data-products-snowflake-public-data-core-weather-data) | Snowflake Public Data Products | Free 60-day trial | `GZTSZ290BVSAO` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +49 |
 | [UK (England and Wales only) Census 2021 - Trial](https://app.snowflake.com/marketplace/listing/GZSVZAJO3/jaywing-uk-england-and-wales-only-census-2021-trial) | Jaywing | Free | `GZSVZAJO3` | AWS_EU_WEST_1, AWS_EU_WEST_2, AZURE_UKSOUTH, GCP_EUROPE_WEST2 |
 | [Company Data UK (incl. Guernsey) - XL Dataset](https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW/north-data-gmbh-company-data-uk-incl-guernsey-xl-dataset) | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +33 |
 | [CARTO Boundaries](https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4/carto-carto-boundaries) | CARTO | Free | `GZT0Z4CM1E9L4` | AWS_EU_WEST_2, AWS_US_EAST_1 |
 | [Snowflake Public Data: Foreign Exchange Rates](https://app.snowflake.com/marketplace/listing/GZTSZ290BVCAO/snowflake-public-data-products-snowflake-public-data-foreign-exchange-rates) | Snowflake Public Data Products | Free 60-day trial | `GZTSZ290BVCAO` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +47 |
+| [CARTO Analytics Toolbox](https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9NA/carto-carto-analytics-toolbox) | CARTO | Free | `GZT0Z4CM1E9NA` | AWS_AP_NORTHEAST_1, AWS_AP_SOUTHEAST_3, AWS_CA_CENTRAL_1, AWS_EU_CENTRAL_1 +27 |
+| [Acorn - Geodemographic Segmentation in the UK](https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF/caci-ltd-acorn-geodemographic-segmentation-in-the-uk) | CACI Ltd | Free | `GZSVZ1K7VF` | AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +28 |

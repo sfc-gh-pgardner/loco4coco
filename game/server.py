@@ -499,10 +499,10 @@ def infer_industry(cfg, company):
 def options_for(cfg, loc_id, state):
     """The checklist a location shows.
 
-    The Marketplace reads the verified listing index rather than config, so the
-    visitor is offered real listings with real providers. This is where the
-    Agentic Marketplace Discovery PrPr substitutes itself: same contract,
-    different source.
+    The Marketplace reads the verified listing index rather than config, so
+    the visitor is offered real listings with real providers - Tier 0
+    agentic first if it finished in time, then Tier 1 live, then Tier 2
+    curated. See listings_for().
     """
     loc = (cfg.get("locations") or {}).get(loc_id) or {}
     src = loc.get("source")
@@ -514,7 +514,7 @@ def options_for(cfg, loc_id, state):
                  "note": f"{r['provider']} \u00b7 {r['access']}",
                  "url": r["url"], "provider": r["provider"],
                  "access": r["access"]}
-                for r in listings_for(cfg, ind)]
+                for r in listings_for(cfg, ind, state.get("session_id"))]
     industries = cfg.get("industries") or {}
     block = industries.get(ind) or industries.get("other") or {}
     return block.get(src) or []
@@ -707,6 +707,119 @@ def load_marketplace():
 _live_cache = {"at": 0, "rows": [], "error": ""}
 _live_lock = threading.Lock()
 
+# Tier 0: agentic marketplace search, fired once per visitor from _intake()
+# (THE LETTER), racing THE LIBRARY. Single-visitor state, so a session_id
+# guard is enough - no per-session dict needed. See listings_for().
+_agentic_cache = {"session_id": None, "status": "idle", "rows": [], "at": 0}
+_agentic_lock = threading.Lock()
+
+
+def run_agentic_search(cfg, industry, problem):
+    """Ask the marketplace-search skill for listings matched to what this
+    visitor actually typed, not just their industry bucket.
+
+    Deliberately does not go through run_exec(): that pushes live reasoning
+    into state.reasoning for the visible turn on screen, and this call runs
+    silently in the background while the visitor is elsewhere in the flow.
+    Same NDJSON parsing, no UI side effects.
+
+    Returns (rows, usage, ok, seconds). Never raises - every failure mode
+    (CLI missing, timeout, bad JSON, empty result) comes back as ([], {}, False, t).
+    """
+    ac = (cfg.get("marketplace") or {}).get("agentic") or {}
+    c = cfg.get("coco") or {}
+    ind_name = industry_name(cfg, industry) or industry
+    prompt = (
+        f"Use the marketplace-search skill to find Snowflake Marketplace "
+        f"listings relevant to this problem from a visitor in {ind_name}: "
+        f"\"{problem}\". Return ONLY a JSON array (no prose, no code fence) "
+        f"of objects with keys: title, provider, description, and "
+        f"global_name if you know it.")
+    cmd = [c.get("binary", "cortex"), "exec", prompt, "--format", "json",
+           "--bypass", "--no-history"]
+    conn = ac.get("connection") or (cfg.get("snowflake") or {}).get("connection_name")
+    if conn:
+        cmd += ["--connection", conn]
+    timeout = float(ac.get("timeout_seconds", 70))
+    started = time.time()
+    final, usage, ok = "", {}, False
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True,
+                           timeout=timeout, cwd=HERE)
+        for raw in (p.stdout or "").splitlines():
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                ev = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if ev.get("type") == "result":
+                final = (ev.get("result") or "").strip()
+                usage = ev.get("usage") or {}
+                ok = not ev.get("is_error")
+    except subprocess.TimeoutExpired:
+        pass
+    except Exception:                                            # noqa: BLE001
+        pass
+    seconds = time.time() - started
+    log_cost(cfg, "marketplace_agentic", seconds, usage, ok, "exec")
+    rows = []
+    if ok and final:
+        m = re.search(r"\[.*\]", final, re.S)
+        if m:
+            try:
+                data = json.loads(m.group(0))
+                rows = [{"title": str(r.get("title") or "").strip(),
+                         "provider": str(r.get("provider") or "Snowflake Marketplace").strip(),
+                         "access": "Suggested by agentic search",
+                         "url": LISTING_URL + str(r.get("global_name") or ""),
+                         "global_name": str(r.get("global_name") or ""),
+                         "regions": ""}
+                        for r in data if isinstance(r, dict) and r.get("title")]
+            except (json.JSONDecodeError, TypeError):
+                rows = []
+    return rows, usage, ok, seconds
+
+
+def start_agentic_search(cfg, session_id, industry, problem):
+    """Fire-and-forget: called from _intake() the moment THE LETTER is
+    submitted. Runs on a daemon thread so the Letter response is never
+    delayed. See run_agentic_search() and listings_agentic()."""
+    ac = (cfg.get("marketplace") or {}).get("agentic") or {}
+    if not ac.get("enabled") or not (problem or "").strip():
+        return
+
+    def job():
+        with _agentic_lock:
+            _agentic_cache.update(session_id=session_id, status="pending",
+                                  rows=[], at=time.time())
+        rows, _usage, ok, _s = run_agentic_search(cfg, industry, problem)
+        with _agentic_lock:
+            if _agentic_cache.get("session_id") != session_id:
+                return              # a new visitor started while we ran
+            _agentic_cache.update(
+                status="ready" if (ok and rows) else "failed",
+                rows=rows, at=time.time())
+
+    threading.Thread(target=job, daemon=True).start()
+
+
+def listings_agentic(cfg, session_id):
+    """Tier 0 read path. Ready only if this visitor's call finished, matched
+    the deny list Tier 1 already uses, and actually returned rows."""
+    if not session_id:
+        return []
+    with _agentic_lock:
+        if (_agentic_cache.get("session_id") != session_id
+                or _agentic_cache.get("status") != "ready"):
+            return []
+        rows = list(_agentic_cache.get("rows") or [])
+    mk = cfg.get("marketplace") or {}
+    deny = [w.lower() for w in (mk.get("exclude") or [])]
+    return [r for r in rows
+            if not any(d in (r.get("title") or "").lower() for d in deny)]
+
 
 def region_short(cfg):
     return ((cfg.get("event") or {}).get("region") or "").strip().split(".")[-1]
@@ -802,26 +915,34 @@ def listings_live(cfg, industry):
     return out, ""
 
 
-def listings_for(cfg, industry):
-    """Tier chain: live catalogue first, curated index as the booth-safe net.
+def listings_for(cfg, industry, session_id=None):
+    """Tier chain: agentic first if it's ready, live catalogue next, curated
+    index as the booth-safe net.
 
-    Tier 1 live   - real, current, region-filtered, importable.
-    Tier 2 curated- marketplace-index.md, used when live is cold, fails, or is
-                    too thin to fill a stall. Offline safe and quality checked.
+    Tier 0 agentic  - cortex exec calling the marketplace-search skill,
+                     started from _intake() at THE LETTER and racing THE
+                     LIBRARY. Personalised to what this visitor actually
+                     typed, not just their industry bucket. Used only if it
+                     finished in time - see listings_agentic().
+    Tier 1 live     - real, current, region-filtered, importable.
+    Tier 2 curated  - marketplace-index.md, used when live is cold, fails, or
+                     is too thin to fill a stall. Offline safe and quality
+                     checked.
 
     "Agentic search on the Snowflake Marketplace" (PrPr) was verified working
-    on PG_LONDON on 2026-08-23 - CoCo's Discover tab in Snowsight returns real,
-    well-grouped listing cards. It is NOT a third tier here: it is a Snowsight
-    chat experience with no SQL/API surface, so server.py cannot call it from
-    an unattended booth. Its value is upstream, before the event: use it to
-    research listings faster while building marketplace-index.md (Tier 2), and
-    to sanity-check that the live tier's SHOW AVAILABLE LISTINGS query is
-    finding the same things a human would. The runtime fallback chain below is
-    unaffected by whether this preview is enabled on the booth account.
+    on PG_LONDON on 2026-08-23 via both Snowsight's Discover tab AND
+    `cortex exec` calling the same marketplace-search skill from the CLI -
+    the latter is what Tier 0 actually calls. It never blocks a visitor: if
+    it hasn't finished, errored, or `marketplace.agentic.enabled` is false,
+    this falls straight through to Tier 1 then Tier 2 exactly as before.
     """
     loc = ((cfg.get("locations") or {}).get("marketplace") or {})
     mk = cfg.get("marketplace") or {}
     want = int(mk.get("min_live_results", 3))
+    agentic = listings_agentic(cfg, session_id)
+    if len(agentic) >= want:
+        _live_cache["tier"] = "agentic"
+        return agentic[:max(want, 6)]
     if (loc.get("discovery") or "manual") == "live":
         live, err = listings_live(cfg, industry)
         if len(live) >= want:
@@ -1824,7 +1945,7 @@ def run_checklist(cfg, loc_id, labels, job_id):
         # name the provider and link the listing. Anything typed into "Other"
         # stays a plain string - we will not guess a provider for it.
         ind = (state.get("visitor") or {}).get("industry") or "other"
-        by_title = {r["title"]: r for r in listings_for(cfg, ind)}
+        by_title = {r["title"]: r for r in listings_for(cfg, ind, state.get("session_id"))}
         patch["joined_listings"] = [by_title[l] for l in labels if l in by_title]
     write_state(patch)
     state = read_state()
@@ -2253,6 +2374,10 @@ class Handler(BaseHTTPRequestHandler):
             "stage": "library", "unlocked": ["library"], "reasoning": [],
             "session_id": uuid.uuid4().hex,
         })
+        # Fire Tier 0 now, while the visitor still has THE LIBRARY ahead of
+        # them - see start_agentic_search()/listings_for(). Never delays
+        # this response: it's a daemon thread, and a no-op if disabled.
+        start_agentic_search(cfg, st.get("session_id"), industry, problem)
         return self._json({"ok": True, "industry": industry,
                            "industry_name": industry_name(cfg, industry),
                            "state": st})

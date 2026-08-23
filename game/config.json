@@ -832,6 +832,12 @@
     "_comment": "Live discovery needs NO private preview: SHOW AVAILABLE LISTINGS piped through RESULT_SCAN gives 188 importable listings in AWS_EU_WEST_2 (of 4327 total, 799 region-available). Measured 2026-08-17. The curated index stays as the offline-safe fallback.",
     "min_live_results": 3,
     "cache_minutes": 120,
+    "agentic": {
+      "_comment": "Tier 0, ahead of live. Built and end-to-end tested on PG_LONDON 2026-08-23, then DISABLED the same day: measured latency 70-110s+ (2 of 3 runs timed out) is too high and too variable to trust against an unmeasured Library dwell time (see BOOTH-RUNBOOK.md). Replaced for now by a precompute pass instead - the same PrPr agentic search run offline, once, to add a verified 6th free-weighted pick per industry to marketplace-index.md (Tier 2). Code left in place and dormant; re-enable once real Library timing data exists or latency improves. No cap by design if re-enabled: an SE watches spend in cost.jsonl (kind=marketplace_agentic) and flips enabled back off by hand if needed.",
+      "enabled": false,
+      "timeout_seconds": 120,
+      "connection": null
+    },
     "industry_keywords": {
       "healthcare": [
         "clinical",

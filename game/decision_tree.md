@@ -29,7 +29,7 @@ LIBRARY   (precomputed per industry)
         |
 MARKETPLACE
   live listings matched on industry keywords  (min 3 results)
-  falls back to 5-5 curated options per industry
+  falls back to 6-6 curated options per industry
         |
 WORKSHOP
   one line  ->  model picks 1 of 9 archetypes
@@ -44,7 +44,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 ### Healthcare & Life Sciences
 
-`healthcare` - 6 data sources, 5 curated joins, 16 live-search keywords, 0 pinned listings
+`healthcare` - 6 data sources, 6 curated joins, 16 live-search keywords, 0 pinned listings
 
 **Library - data they already hold**
 
@@ -59,19 +59,20 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 **Marketplace - curated joins (the fallback when live search is thin)**
 
-| Option | Note shown under it |
-|---|---|
-| Population & demographics | Census and small-area statistics to risk-adjust by catchment |
-| Deprivation & social determinants | Index of Multiple Deprivation to explain outcome variation |
-| Geospatial & travel time | Boundaries and drive times for access and coverage analysis |
-| Weather & air quality | Correlate respiratory admissions with pollution and cold snaps |
-| Drug & medical reference data | Coding systems and terminologies for normalising records |
+| Listing | Provider | Access |
+|---|---|---|
+| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
+| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
+| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial |
+| PubMed Biomedical Research Corpus | Snowflake | Free |
+| UK Health Facts and Dimensions Sample | Facts and Dimensions Ltd | Free |
+| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free |
 
 **Live-search keywords** (16): clinical, patient, nhs, health, disease, epidemiolog, population health, prescrib, wellbeing, mortality, hospital, medic, pharma, drug, life science, biotech
 
 ### Financial Services
 
-`financial` - 6 data sources, 5 curated joins, 12 live-search keywords, 0 pinned listings
+`financial` - 6 data sources, 6 curated joins, 12 live-search keywords, 0 pinned listings
 
 **Library - data they already hold**
 
@@ -86,19 +87,20 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 **Marketplace - curated joins (the fallback when live search is thin)**
 
-| Option | Note shown under it |
-|---|---|
-| Market & pricing data | Prices and reference data to value positions |
-| Company financials & firmographics | Counterparty and SME lending enrichment |
-| Macroeconomic indicators | Rates, inflation and employment for scenario modelling |
-| ESG & climate risk | Physical and transition risk against a loan book |
-| Sanctions & adverse media | Screening and enhanced due diligence signals |
+| Listing | Provider | Access |
+|---|---|---|
+| Snowflake Public Data: Foreign Exchange Rates | Snowflake Public Data Products | Free 60-day trial |
+| Inflation Forecasting - Headline & Core CPI by Country | Turnleaf Analytics | Free |
+| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial |
+| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free |
+| CSRHub ESG (Environment, Social, Governance) Fast Start | CSRHub LLC | Free 30-day trial |
+| Banking Analytics Bundle | InSights | Free |
 
 **Live-search keywords** (12): foreign exchange, inflation, credit, risk, equity, market, macro, payments, fraud, interest rate, economic, commodit
 
 ### Retail & Consumer Goods
 
-`retail` - 6 data sources, 5 curated joins, 11 live-search keywords, 2 pinned listings
+`retail` - 6 data sources, 6 curated joins, 11 live-search keywords, 2 pinned listings
 
 **Library - data they already hold**
 
@@ -113,13 +115,14 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 **Marketplace - curated joins (the fallback when live search is thin)**
 
-| Option | Note shown under it |
-|---|---|
-| Weather observations & forecast | The single biggest driver of short-term demand |
-| Population & demographics | Catchment profiling for store and range decisions |
-| Mobility & footfall | High street and retail park movement patterns |
-| Competitor & commodity prices | Price positioning and input cost exposure |
-| Holidays & events calendars | Bank holidays and fixtures that move demand |
+| Listing | Provider | Access |
+|---|---|---|
+| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial |
+| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
+| PayCheck – UK household income estimates at postcode level - SAMPLE data | CACI Ltd | Free |
+| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
+| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free |
+| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free |
 
 **Live-search keywords** (11): consumer, footfall, spend, household income, demographic, acorn, basket, weather, postcode, segmentation, price
 
@@ -127,7 +130,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 ### Public Sector & Government
 
-`public` - 6 data sources, 5 curated joins, 11 live-search keywords, 3 pinned listings
+`public` - 6 data sources, 6 curated joins, 11 live-search keywords, 3 pinned listings
 
 **Library - data they already hold**
 
@@ -142,13 +145,14 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 **Marketplace - curated joins (the fallback when live search is thin)**
 
-| Option | Note shown under it |
-|---|---|
-| Census & population statistics | Small-area demographics for needs assessment |
-| Deprivation indices | Target interventions where need is greatest |
-| Boundaries & geospatial reference | Wards, LSOAs, postcodes and lookups |
-| Weather & flood risk | Resilience planning and winter pressures |
-| Transport & accessibility | Public transport access to services |
+| Listing | Provider | Access |
+|---|---|---|
+| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
+| Address Spine – UK address level property information - Sample Data | CACI Ltd | Free |
+| CARTO Boundaries | CARTO | Free |
+| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
+| National Severe Weather Warning Service | Met Office | Free |
+| Administrative boundaries - Great Britain: Boundary Line - Open | Ordnance Survey | Free |
 
 **Live-search keywords** (11): census, postcode, deprivation, boundary, population, geospatial, planning, crime, education, transport, uprn
 
@@ -156,7 +160,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 ### Manufacturing & Industrial
 
-`manufacturing` - 6 data sources, 5 curated joins, 20 live-search keywords, 0 pinned listings
+`manufacturing` - 6 data sources, 6 curated joins, 20 live-search keywords, 0 pinned listings
 
 **Library - data they already hold**
 
@@ -171,19 +175,20 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 **Marketplace - curated joins (the fallback when live search is thin)**
 
-| Option | Note shown under it |
-|---|---|
-| Commodity & input prices | Raw material cost exposure |
-| Weather observations | Ambient conditions against yield and energy use |
-| Freight & shipping data | Port congestion and route disruption |
-| Supplier firmographics & risk | Financial health of the supply base |
-| Emissions & ESG factors | Scope 3 reporting and carbon intensity |
+| Listing | Provider | Access |
+|---|---|---|
+| CEIC Commodities Data | CEIC Data | Free |
+| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial |
+| Overture Maps - Transportation | CARTO | Free |
+| FactSet Supply Chain Relationships (sample) | FactSet | Free |
+| D&B Shipping Insights Sample | Dun & Bradstreet | Free |
+| Solid United Nations Codes for Trade and Transport Locations | Solid Data LLC | Free 30-day trial |
 
 **Live-search keywords** (20): supply chain, logistics, commodit, shipping, freight, industrial, manufactur, materials, energy price, trade, tariff, production, inventory, supplier, port, vessel, steel, metal, company data, economic
 
 ### Energy & Utilities
 
-`energy` - 6 data sources, 5 curated joins, 11 live-search keywords, 3 pinned listings
+`energy` - 6 data sources, 6 curated joins, 11 live-search keywords, 3 pinned listings
 
 **Library - data they already hold**
 
@@ -198,13 +203,14 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 **Marketplace - curated joins (the fallback when live search is thin)**
 
-| Option | Note shown under it |
-|---|---|
-| Weather & forecast data | The primary driver of both demand and renewable output |
-| Energy market prices | Wholesale price exposure and settlement |
-| Geospatial & terrain | Network planning and vegetation risk |
-| Population & property data | Premise characteristics for demand modelling |
-| Climate projections | Long-run asset resilience planning |
+| Listing | Provider | Access |
+|---|---|---|
+| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial |
+| National Severe Weather Warning Service | Met Office | Free |
+| Yes Energy - Sample Data | Yes Energy | Free |
+| Sample of GasMarketCube - Global Gas Supply, Demand and Trade | Rystad Energy | Free |
+| Wind Power Forecast, Day-ahead - Sample | Weather Solutions | Free |
+| Crude oil price data | General Index | Free Trial |
 
 **Live-search keywords** (11): weather, climate, emission, carbon, grid, renewable, solar, wind, temperature, energy, net zero
 
@@ -212,7 +218,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 ### Media, Telco & Entertainment
 
-`media` - 6 data sources, 5 curated joins, 10 live-search keywords, 0 pinned listings
+`media` - 6 data sources, 6 curated joins, 10 live-search keywords, 0 pinned listings
 
 **Library - data they already hold**
 
@@ -227,19 +233,20 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 **Marketplace - curated joins (the fallback when live search is thin)**
 
-| Option | Note shown under it |
-|---|---|
-| Population & demographics | Audience profiling and coverage gaps |
-| Mobility & location | Where demand sits against network build |
-| Sports & events calendars | Fixtures that drive traffic and churn |
-| Social & sentiment signals | Title buzz ahead of release |
-| Weather observations | Weather against viewing and network load |
+| Listing | Provider | Access |
+|---|---|---|
+| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
+| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
+| CARTO Boundaries | CARTO | Free |
+| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free |
+| GLP-1 Social Conversations Sample Dataset | Socialgist | Free |
+| American Community Survey, 2016 | data.world, Inc | Free |
 
 **Live-search keywords** (10): audience, media, broadband, mobile, advertising, viewership, telco, subscriber, content, social
 
 ### Something else
 
-`other` - 6 data sources, 5 curated joins, 6 live-search keywords, 1 pinned listings
+`other` - 6 data sources, 6 curated joins, 6 live-search keywords, 1 pinned listings
 
 **Library - data they already hold**
 
@@ -254,13 +261,14 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 **Marketplace - curated joins (the fallback when live search is thin)**
 
-| Option | Note shown under it |
-|---|---|
-| Population & demographics | Context for wherever you operate |
-| Weather observations | Surprisingly often the missing variable |
-| Company & firmographic data | Enrich anything B2B |
-| Geospatial reference | Boundaries, postcodes and lookups |
-| Economic indicators | Trend against the wider economy |
+| Listing | Provider | Access |
+|---|---|---|
+| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
+| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial |
+| CARTO Boundaries | CARTO | Free |
+| Snowflake Public Data: Foreign Exchange Rates | Snowflake Public Data Products | Free 60-day trial |
+| CARTO Analytics Toolbox | CARTO | Free |
+| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
 
 **Live-search keywords** (6): weather, census, demographic, postcode, economic, geospatial
 

@@ -81,19 +81,6 @@ the blueprint is linked. Keep them in sync.
 4. Decide how it fails safely when a downstream system is down.
 5. Start read-only. Earn the write.
 
-## dashboard-that-explains-itself
-
-| field | value |
-|---|---|
-| features | Streamlit in Snowflake, Cortex Analyst, Semantic Views |
-| first_step | Pick the one decision this dashboard should change, and design backwards from it. |
-
-1. Decide who opens this on a Monday morning, and build for them specifically.
-2. A number without context starts an argument. Show the comparison alongside it.
-3. Agree the refresh the audience actually needs before engineering for real time.
-4. If nobody can say what action a chart leads to, cut the chart.
-5. Check the underlying definitions match the ones used in existing reports.
-
 ## predict-what-happens-next
 
 | field | value |

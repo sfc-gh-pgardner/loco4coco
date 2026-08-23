@@ -25,6 +25,10 @@ for the human. The optional "Ask CoCo one thing" stop adds about 35s.
    ACCOUNTADMIN is simplest. **Cortex must be enabled.**
 3. Your **account region**, e.g. `AWS_EU_WEST_2`. Write it down.
 4. A Google account for sending blueprints (your own Gmail).
+5. *(Optional, recommended)* "Agentic search on the Snowflake Marketplace" (PrPr)
+   enabled on the account, with `SNOWFLAKE.COPILOT_USER` and either
+   `SNOWFLAKE.CORTEX_USER` or `SNOWFLAKE.CORTEX_AGENT_USER` granted. This is
+   **not** required for the booth app to run — see the note under Step 6.
 
 ## Step 1: install the tools
 
@@ -98,6 +102,16 @@ Edit `game/config.json`:
 | `event.city`, `event.language` | What the visitor sees |
 | `event.region` | **Must match your account region.** Filters the Marketplace stall to listings the visitor can actually attach. Wrong value = empty stall. |
 | `snowflake.connection_name` | Your connection (bootstrap normally sets this) |
+
+**About the Marketplace preview:** the game's live tier already queries the real
+catalogue itself (`SHOW AVAILABLE LISTINGS`, region-filtered, cached), with the
+curated `marketplace-index.md` as an offline-safe fallback — that fallback chain
+runs unattended and needs nothing from this preview. "Agentic search on the
+Snowflake Marketplace" (verified working on `PG_LONDON`, 2026-08-23) is a
+Snowsight **Discover tab chat**, not an API, so `server.py` cannot call it from
+the booth. Use it beforehand instead: it's the fastest way to research listings
+for your event's industries while you build or refresh `marketplace-index.md`,
+and to sanity-check the live tier is finding what a human would find.
 
 ## Step 7: run it and prove it
 

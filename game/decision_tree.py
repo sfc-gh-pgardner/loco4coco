@@ -74,8 +74,8 @@ w('| 4. The workshop | Types one line describing the MVP | Free text | No - '
 w('| 5. The postbox | Posts it | - | - |')
 w('')
 w('The two runtime decisions are: which live Marketplace listings match the '
-  'industry keywords, and which of the ten archetypes the model picks from the '
-  "visitor's one-line description. Everything else is ours to set.")
+  'industry keywords, and which of the %d archetypes the model picks from the '
+  "visitor's one-line description. Everything else is ours to set." % len(arch))
 w('')
 
 # ------------------------------------------------------------------ the tree
@@ -160,7 +160,7 @@ for p in plats:
 w('')
 
 # --------------------------------------------------------- archetypes
-w('## The ten archetypes')
+w('## The %d archetypes' % len(arch))
 w('')
 w('The workshop is free text, but it resolves to exactly one of these. '
   'Features and the first step are precomputed, so they are instant and always '
@@ -207,9 +207,9 @@ w('')
 w('Two structural gaps worth a decision rather than a count:')
 w('')
 w('- **No industry biases the archetype choice.** A hospital and a bank get the '
-  'same ten archetypes with the same weighting. A per-industry ordering, or two '
+  'same %d archetypes with the same weighting. A per-industry ordering, or two '
   'or three likely archetypes per industry, would make the forge both faster '
-  'and more plausible.')
+  'and more plausible.' % len(arch))
 w('- **The data held does not narrow the marketplace suggestion.** Someone who '
   'ticked "clinical notes" is offered the same joins as someone who ticked '
   '"estates and operations". A held-to-join mapping is the highest-value '

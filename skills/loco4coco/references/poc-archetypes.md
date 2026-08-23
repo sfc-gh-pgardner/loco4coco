@@ -94,18 +94,7 @@ Never show the archetype ID to the visitor. Show the friendly name and their own
 - **Needs from them:** a described process with a clear trigger and outcome.
 - **Prompt skeleton:** build a Cortex Agent that, given `<their trigger>`, does `<their steps>` and returns `<their outcome>`.
 
-## 6. dashboard-that-explains-itself
-**ID** `dashboard-that-explains-itself` · **Friendly** "A dashboard that explains itself"
-
-- **Visitor pain:** "We have dashboards nobody looks at." / "People see the number but not the why."
-- **What gets built:** a Streamlit app that charts the data and narrates what changed.
-- **Features:** Streamlit in Snowflake, AI_COMPLETE, AI_AGG
-- **Doc topics:** `streamlit in snowflake`, `ai_complete`
-- **Fork:** `build-ai-apps-with-streamlit-and-snowflake-cortex`
-- **Needs from them:** one table worth charting, ideally with a time column.
-- **Prompt skeleton:** build a Streamlit app over `<their table>` showing `<their metric>` and write a short plain-English explanation of what changed and why.
-
-## 7. predict-what-happens-next
+## 6. predict-what-happens-next
 **ID** `predict-what-happens-next` · **Friendly** "See it coming"
 
 - **Visitor pain:** "We react instead of planning." / "We find out after it's gone wrong."
@@ -116,7 +105,7 @@ Never show the archetype ID to the visitor. Show the friendly name and their own
 - **Needs from them:** a time series — a date column and a value column, ideally 12+ months.
 - **Prompt skeleton:** forecast `<their measure>` for the next `<horizon>` from `<their table>` and flag anything anomalous.
 
-## 8. join-the-silos
+## 7. join-the-silos
 **ID** `join-the-silos` · **Friendly** "Join up the silos"
 
 - **Visitor pain:** "Our data is in five systems." / "Someone rebuilds the same spreadsheet every month."
@@ -127,7 +116,7 @@ Never show the archetype ID to the visitor. Show the friendly name and their own
 - **Needs from them:** two or more sources that share a key.
 - **Prompt skeleton:** combine `<their sources>` into one table keyed on `<their key>`, refreshing automatically.
 
-## 9. share-without-copying
+## 8. share-without-copying
 **ID** `share-without-copying` · **Friendly** "Share without sending files"
 
 - **Visitor pain:** "Partners email us CSVs." / "We can't share without copying data out."
@@ -138,7 +127,7 @@ Never show the archetype ID to the visitor. Show the friendly name and their own
 - **Needs from them:** a dataset and someone to share it with.
 - **Prompt skeleton:** publish `<their dataset>` as a governed share for `<their audience>` without copying it.
 
-## 10. watch-it-live
+## 9. watch-it-live
 **ID** `watch-it-live` · **Friendly** "Watch it live"
 
 - **Visitor pain:** "We find out too late." / "Reporting is yesterday's news."

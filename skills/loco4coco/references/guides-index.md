@@ -67,16 +67,7 @@ demolish's prior-art step hands ranked keywords to a human who eyeballs the guid
 | Multi-Agent Orchestration in Snowflake CoWork | `multi-agent-orchestration-cowork` | CoCo · ambitious |
 | Self-Improving Agents with CoCo | `self-improving-agents-with-coco` | CoCo · advanced |
 
-## 6. dashboard-that-explains-itself
-
-| Guide | Slug | Notes |
-|---|---|---|
-| Build AI Apps with Streamlit and Snowflake Cortex | `build-ai-apps-with-streamlit-and-snowflake-cortex` | **Primary fork** |
-| Build a Data Application with Marketplace, Notebooks and Streamlit | `data-apps-summit-lab` | Wants external data too |
-| Build a Multi-Tool AI Agent App with Streamlit and Cortex | `build-multi-tool-ai-agent-app-with-streamlit-and-snowflake-cortex` | More ambitious |
-| Build an Agentic Analytics Dashboard App with Streamlit and Postgres | `build-an-agentic-analytics-dashboard-app` | Operational data |
-
-## 7. predict-what-happens-next
+## 6. predict-what-happens-next
 
 | Guide | Slug | Notes |
 |---|---|---|
@@ -85,7 +76,7 @@ demolish's prior-art step hands ranked keywords to a human who eyeballs the guid
 | Credit card fraud detection using Snowflake ML | `credit-card-fraud-detection-using-snowflake-ml` | Fraud/risk framing |
 | Getting Started with CoCo CLI for Data Science ML | `getting-started-with-coco-cli-for-data-science-ml` | CoCo · technical visitor |
 
-## 8. join-the-silos
+## 7. join-the-silos
 
 | Guide | Slug | Notes |
 |---|---|---|
@@ -95,14 +86,14 @@ demolish's prior-art step hands ranked keywords to a human who eyeballs the guid
 | Data Engineering using Snowflake Notebooks | `data-engineering-with-notebooks` | Notebook-led |
 | Build an End-to-End Application Using CoCo on Snowflake | `sfguide-build-end-to-end-ai-app-on-snowflake` | CoCo · full stack |
 
-## 9. share-without-copying
+## 8. share-without-copying
 
 | Guide | Slug | Notes |
 |---|---|---|
 | Intra-Company Data Sharing With The Snowflake Internal Marketplace | `internal-marketplace-intra-org-sharing` | **Primary fork** |
 | Sharing Data and AI on the Snowflake Internal Marketplace | `sharing-data-and-ai-on-snowflake-internal-marketplace` | Sharing AI assets too |
 
-## 10. watch-it-live
+## 9. watch-it-live
 
 | Guide | Slug | Notes |
 |---|---|---|

@@ -92,7 +92,7 @@ Options: `Public sector`, `Financial services`, `Health & life sciences`, `Retai
 |---|---|
 | "Answer questions in plain English" | confirms `talk-to-my-data` / `ask-my-documents` |
 | "Do the whole task, not just tell me about it" | overrides to `an-agent-that-acts` |
-| "Show me a picture I can act on" | overrides to `dashboard-that-explains-itself` |
+| "Show me a picture I can act on" | overrides to `talk-to-my-data` |
 | "Warn me before it goes wrong" | overrides to `predict-what-happens-next` / `watch-it-live` |
 | "Let me share it safely with others" | overrides to `share-without-copying` |
 

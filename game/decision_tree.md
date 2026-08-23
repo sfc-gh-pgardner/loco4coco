@@ -14,7 +14,7 @@ Five choices decide the whole blueprint. Three of them are precomputed by us and
 | 4. The workshop | Types one line describing the MVP | Free text | No - but the archetype it maps to is |
 | 5. The postbox | Posts it | - | - |
 
-The two runtime decisions are: which live Marketplace listings match the industry keywords, and which of the ten archetypes the model picks from the visitor's one-line description. Everything else is ours to set.
+The two runtime decisions are: which live Marketplace listings match the industry keywords, and which of the 9 archetypes the model picks from the visitor's one-line description. Everything else is ours to set.
 
 ## The tree, top to bottom
 
@@ -32,7 +32,7 @@ MARKETPLACE
   falls back to 5-5 curated options per industry
         |
 WORKSHOP
-  one line  ->  model picks 1 of 10 archetypes
+  one line  ->  model picks 1 of 9 archetypes
              ->  features + first step come from archetypes.md, no inference
         |
 POSTBOX   ->  blueprint (.docx today, HTML alongside it) + QR + email
@@ -282,7 +282,7 @@ Asked once in the library, one tap, universal across industries. Each chip write
 | Already in Snowflake | Nothing to move. Point the proof of concept at the existing tables and spend the saved time on the model and the interface instead. |
 | Not sure yet | Worth ten minutes with whoever owns the source before you build. The answer changes the effort more than any other decision here. |
 
-## The ten archetypes
+## The 9 archetypes
 
 The workshop is free text, but it resolves to exactly one of these. Features and the first step are precomputed, so they are instant and always correct; only the summary and the considerations need the model.
 
@@ -293,7 +293,6 @@ The workshop is free text, but it resolves to exactly one of these. Features and
 | extract-from-paperwork | AI_EXTRACT, AI_PARSE_DOCUMENT, Dynamic Tables | 5 |
 | triage-and-classify | AI_CLASSIFY, Dynamic Tables, Streams | 5 |
 | an-agent-that-acts | Cortex Agents, Snowflake Intelligence, Semantic Views | 5 |
-| dashboard-that-explains-itself | Streamlit in Snowflake, Cortex Analyst, Semantic Views | 5 |
 | predict-what-happens-next | ML Forecasting, ML Anomaly Detection, Snowflake Notebooks | 5 |
 | join-the-silos | Dynamic Tables, Snowflake Marketplace, Semantic Views | 5 |
 | share-without-copying | Secure Data Sharing, Snowflake Marketplace, Dynamic Tables | 5 |
@@ -306,7 +305,6 @@ The workshop is free text, but it resolves to exactly one of these. Features and
 - **extract-from-paperwork** - List the fields you actually need, then test extraction on your ugliest ten documents rather than your cleanest.
 - **triage-and-classify** - Agree the categories with the people who act on them, then hand-label two hundred examples as your yardstick.
 - **an-agent-that-acts** - Pick one action worth automating, and write down exactly what the agent must never do.
-- **dashboard-that-explains-itself** - Pick the one decision this dashboard should change, and design backwards from it.
 - **predict-what-happens-next** - Check you have enough history for the thing you want to predict before modelling anything.
 - **join-the-silos** - Find the one key that links your two most important systems, and check how often it is missing.
 - **share-without-copying** - Pick one dataset and one partner, and write down exactly which columns they may see.
@@ -324,6 +322,6 @@ Computed, not editorial - these are the counts that stand out.
 
 Two structural gaps worth a decision rather than a count:
 
-- **No industry biases the archetype choice.** A hospital and a bank get the same ten archetypes with the same weighting. A per-industry ordering, or two or three likely archetypes per industry, would make the forge both faster and more plausible.
+- **No industry biases the archetype choice.** A hospital and a bank get the same 9 archetypes with the same weighting. A per-industry ordering, or two or three likely archetypes per industry, would make the forge both faster and more plausible.
 - **The data held does not narrow the marketplace suggestion.** Someone who ticked "clinical notes" is offered the same joins as someone who ticked "estates and operations". A held-to-join mapping is the highest-value precompute still missing.
 

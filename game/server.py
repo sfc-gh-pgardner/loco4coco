@@ -808,7 +808,16 @@ def listings_for(cfg, industry):
     Tier 1 live   - real, current, region-filtered, importable.
     Tier 2 curated- marketplace-index.md, used when live is cold, fails, or is
                     too thin to fill a stall. Offline safe and quality checked.
-    Tier 3 future - agentic discovery when that preview lands; same contract.
+
+    "Agentic search on the Snowflake Marketplace" (PrPr) was verified working
+    on PG_LONDON on 2026-08-23 - CoCo's Discover tab in Snowsight returns real,
+    well-grouped listing cards. It is NOT a third tier here: it is a Snowsight
+    chat experience with no SQL/API surface, so server.py cannot call it from
+    an unattended booth. Its value is upstream, before the event: use it to
+    research listings faster while building marketplace-index.md (Tier 2), and
+    to sanity-check that the live tier's SHOW AVAILABLE LISTINGS query is
+    finding the same things a human would. The runtime fallback chain below is
+    unaffected by whether this preview is enabled on the booth account.
     """
     loc = ((cfg.get("locations") or {}).get("marketplace") or {})
     mk = cfg.get("marketplace") or {}

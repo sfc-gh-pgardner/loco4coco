@@ -1,6 +1,6 @@
 ---
 name: loco4coco
-description: "Loco for CoCo — the five-minute booth activation for Snowflake World Tour. Welcomes a visitor to Cortex Code, reads their fortune, asks five light multiple-choice questions, resolves their idea to one of ten POC archetypes, and emails them a blueprint: the plan in their own words, the Snowflake developer guide to fork, the features with doc links, a POC readiness score, and a ready-to-paste CoCo kick-off prompt for a free trial. Triggers: loco for coco, loco4coco, five minute poc, 5 minute poc, whats my fortune, what's my fortune, booth demo, world tour activation, read my fortune, build me a poc plan, poc blueprint."
+description: "Loco for CoCo — the five-minute booth activation for Snowflake World Tour. Welcomes a visitor to Cortex Code, reads their fortune, asks five light multiple-choice questions, resolves their idea to one of nine POC archetypes, and emails them a blueprint: the plan in their own words, the Snowflake developer guide to fork, the features with doc links, a POC readiness score, and a ready-to-paste CoCo kick-off prompt for a free trial. Triggers: loco for coco, loco4coco, five minute poc, 5 minute poc, whats my fortune, what's my fortune, booth demo, world tour activation, read my fortune, build me a poc plan, poc blueprint."
 ---
 
 # Loco for CoCo

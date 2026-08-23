@@ -113,15 +113,25 @@ Tier 0 is agentic: `cortex exec` calls the `marketplace-search` skill —
 the same skill behind Snowsight's Discover-tab "Agentic search on the
 Snowflake Marketplace" (PrPr) — fired the moment a visitor submits THE
 LETTER, personalised to their actual problem statement, racing THE LIBRARY
-for time to finish. If it isn't ready, errors, or is disabled, Tier 1 (live
-`SHOW AVAILABLE LISTINGS`, region-filtered, cached) takes over, then Tier 2
-(curated `marketplace-index.md`) as the offline-safe net — that fallback
-chain runs exactly as it always has and needs nothing from Tier 0. Turn
-Tier 0 off with `marketplace.agentic.enabled: false` in `config.json` if
-`cortex` isn't reliably available on a booth laptop. There is deliberately
-no call cap: watch spend in `game/cost.jsonl` (`kind: marketplace_agentic`)
-and flip it off by hand if needed — a cross-event spend rollup across
-booth laptops/accounts is a known future work item, not yet built.
+for time to finish. **It ships disabled** (`marketplace.agentic.enabled:
+false`): measured on `PG_LONDON` it took 70-110s and timed out on 2 of 3
+runs, which is too slow to reliably beat a visitor walking one stall. The
+code is left dormant — re-enable it only once someone has actually timed
+real visitors through THE LIBRARY.
+
+So the live chain is Tier 1 (live `SHOW AVAILABLE LISTINGS`,
+region-filtered, cached) then Tier 2 (curated `marketplace-index.md`, six
+verified listings per industry, all currently Free) as the offline-safe net.
+That chain runs exactly as it always has and needs nothing from Tier 0. If
+Tier 0 is ever re-enabled there is deliberately no call cap: watch spend in
+`game/cost.jsonl` (`kind: marketplace_agentic`) and flip it off by hand — a
+cross-event spend rollup across booth laptops/accounts is a known future
+work item, not yet built.
+
+Known and unfixed: the Tier 1 query filters `regions LIKE '%<region>%'`,
+which never matches the literal `ALL` Snowflake returns for
+universally-available listings, so those are invisible to live search
+account-wide. Tier 2 is unaffected.
 
 ## Step 7: run it and prove it
 

@@ -1,5 +1,56 @@
 {
   "name": "loco4coco",
   "description": "Loco for CoCo - a sub-five-minute, quiz-driven booth activation for Snowflake World Tour. A visitor answers five light questions and leaves with a POC blueprint: their idea in their own words, the Snowflake developer guide to fork, the features it uses with doc links, a POC readiness score, and a ready-to-paste CoCo kick-off prompt for their free trial. Two self-contained skills: loco4coco (the visitor game) and loco4coco-ops (booth setup, pre-flight, lead analytics, index maintenance). Copy is externalised into a language deck so Paris is a translation, not a rebuild. No dependency on other plugins.",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "context": {
+    "note": "The definitive closed lists the activation may name: Marketplace listings, developer guides, feature doc links, POC archetypes and integration routes. Declared here so they are retrievable without a running booth server and without MCP, which is not guaranteed on a borrowed laptop.",
+    "retrieval": "Deterministic keyword scoring in game/context.py, NOT a search service. The corpus is ~150 rows, so scoring it in process is instant, offline-safe and repeatable - which a Snowflake-branded stand requires. Entry points: resolve_archetype(text) routes a visitor's own words to one of nine POC shapes via the archetype pain text; shortlist_block(text, industry) returns a prompt-ready block of only the listings, features and guides that turn may use.",
+    "reaches_cortex_exec_by": "Prompt injection of the shortlist, not tool access. `cortex exec` cannot be given tools except through MCP, and the shortlist is ~220 tokens, so the model is handed the candidates instead of being asked to search for them.",
+    "sources": [
+      {
+        "layer": 1,
+        "kind": "snowflake",
+        "objects": [
+          "LOCO4COCO.BOOTH.LISTINGS",
+          "LOCO4COCO.BOOTH.GUIDES",
+          "LOCO4COCO.BOOTH.FEATURES",
+          "LOCO4COCO.BOOTH.ARCHETYPES",
+          "LOCO4COCO.BOOTH.ROUTES",
+          "LOCO4COCO.BOOTH.CONTEXT_MANIFEST"
+        ],
+        "why": "Current and shareable. How another SE's laptop, or Paris, gets the same lists without pulling a git branch. CONTEXT_MANIFEST holds a SHA-256 per source file so any laptop can prove parity."
+      },
+      {
+        "layer": 2,
+        "kind": "bundle",
+        "path": "skills/loco4coco/references/context-bundle.json",
+        "generated_by": "python3 game/context.py --bundle",
+        "why": "Committed on purpose. The offline path, and committing it means drift from the markdown shows up in review rather than silently on the stand. Do not hand-edit."
+      },
+      {
+        "layer": 3,
+        "kind": "markdown",
+        "paths": [
+          "skills/loco4coco/references/marketplace-index.md",
+          "skills/loco4coco/references/guides-index.md",
+          "skills/loco4coco/references/feature-docs.md",
+          "skills/loco4coco/references/poc-archetypes.md"
+        ],
+        "why": "The human-editable source of truth and the last resort. Edit these, then regenerate the bundle and run deploy/load_context.py."
+      }
+    ],
+    "counts": {
+      "listings": 48,
+      "guides": 40,
+      "features": 53,
+      "archetypes": 9,
+      "routes": 9
+    },
+    "rules": [
+      "A feature absent from feature-docs.md is DROPPED rather than rendered without a link. Omitting one beats shipping a guess in something a visitor keeps.",
+      "Only listings in marketplace-index.md may ever be named.",
+      "All curated listings are free to acquire; 11 of 48 are time-limited trials rather than perpetual Free. Nothing Paid ships.",
+      "Every layer returning the same counts is asserted by the parity check. A mismatch means the bundle or the tables are stale."
+    ]
+  }
 }

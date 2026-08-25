@@ -94,15 +94,18 @@ w('| 1. The letter | Types name, company, industry, **and the problem in two '
 w('| 2. The library | Ticks data they hold, then taps the platforms it sits on '
   '| `industries.<key>.data_sources` + `config.platforms` | **Yes - fully '
   'precomputed** |')
-w('| 3. The marketplace | Ticks data to join | `industries.<key>.marketplace` '
-  'as the fallback, but **live listings first** | Partly - see below |')
+w('| 3. The marketplace | Ticks data to join | `marketplace-index.md`, '
+  '6 verified listings per industry | **Yes - fully precomputed** |')
 w('| 4. The workshop | Types one line describing the MVP | Free text | No - '
   'but the archetype it maps to is |')
 w('| 5. The postbox | Posts it | - | - |')
 w('')
-w('The two runtime decisions are: which live Marketplace listings match the '
-  'industry keywords, and which of the %d archetypes the model picks from the '
-  "visitor's one-line description. Everything else is ours to set." % len(arch))
+w('With `discovery: manual` there is now only ONE runtime decision: which '
+  'of the %d archetypes the visitor is routed to. Even that is no longer purely '
+  "the model's - `game/context.py` resolves it deterministically from the "
+  'visitor\'s own words scored against each archetype\'s pain text, and the '
+  'model chooses from that shortlist. Everything else on this page is ours to '
+  'set.' % len(arch))
 w('')
 
 # ------------------------------------------------------------------ the tree
@@ -119,27 +122,37 @@ w('  platform  ->  %d universal chips -> integration path in the blueprint'
   % len(plats))
 w('        |')
 w('MARKETPLACE')
-w('  live listings matched on industry keywords  (min %d results)'
-  % mkt.get('min_live_results', 0))
-w('  falls back to %d-%d curated options per industry'
-  % (min(len(v) for v in market.values()),
-     max(len(v) for v in market.values())))
+# Read the discovery mode from config rather than asserting one: this section
+# said "live listings first" for weeks after discovery was switched to manual.
+_disc = ((cfg.get('locations') or {}).get('marketplace') or {}).get('discovery',
+                                                                   'manual')
+if _disc == 'manual':
+    w('  %d-%d curated, region-verified options per industry  (discovery: manual)'
+      % (min(len(v) for v in market.values()),
+         max(len(v) for v in market.values())))
+    w('  every one is checked is_ready_for_import, so a visitor can attach it')
+else:
+    w('  live listings matched on industry keywords  (min %d results)'
+      % mkt.get('min_live_results', 0))
+    w('  falls back to %d-%d curated options per industry'
+      % (min(len(v) for v in market.values()),
+         max(len(v) for v in market.values())))
 w('        |')
 w('WORKSHOP')
 w('  one line  ->  model picks 1 of %d archetypes' % len(arch))
 w('             ->  features + first step come from archetypes.md, no inference')
 w('        |')
-w('POSTBOX   ->  blueprint (.docx today, HTML alongside it) + QR + email')
+w('POSTBOX   ->  blueprint (.docx today, HTML alongside it) + QR. No email.')
 w('```')
 w('')
 
 # --------------------------------------------------------- per industry
 w('## Per industry')
 w('')
-w('For each industry: what the library offers, what the marketplace offers as '
-  'the curated fallback, and the keywords used to find live listings. The '
-  'keywords are the lever on live results - a thin keyword list is why an '
-  'industry falls back to the curated list.')
+w('For each industry: what the library offers, and the six curated Marketplace '
+  'listings it offers. Every listing is verified importable in the event region, '
+  'so nothing here is a dead end. The live-search keywords are listed too, but '
+  'they only bite if `locations.marketplace.discovery` is set back to `live`.')
 w('')
 for key, v in inds.items():
     ds = v.get('data_sources') or []
@@ -158,7 +171,7 @@ for key, v in inds.items():
     for d in ds:
         w('| %s | %s |' % (d.get('label', ''), d.get('note', '')))
     w('')
-    w('**Marketplace - curated joins (the fallback when live search is thin)**')
+    w('**Marketplace - the six curated joins offered, all verified importable**')
     w('')
     w('| Listing | Provider | Access |')
     w('|---|---|---|')
@@ -185,6 +198,42 @@ for p in plats:
     blurb, url = paths.get(p, ('_no route defined - falls back to the generic '
                                'connector line_', ''))
     w('| %s | %s |' % (p, blurb))
+w('')
+
+# ---- combinations. The single-chip table above is not the whole story: the
+# question is multi-select, so the doc has to state what a COMBINATION produces
+# or nobody can predict what a visitor walks away with.
+_pcfg = cfg.get('platforms') or {}
+_excl = _pcfg.get('exclusive') or []
+_cap = _pcfg.get('max_routes') or 4
+w('### Combinations, and the guardrails on them')
+w('')
+w('The chips are multi-select, so most visitors tap more than one. Before the '
+  'guardrails, **16 of the 36 possible pairs produced a self-contradicting '
+  'document** and **10 printed "Openflow" twice**. Both are fixed, and both are '
+  'enforced twice - in the browser on tap, and again on the server when the '
+  'blueprint is built - so a bypassed or mis-clicked UI still cannot produce a '
+  'contradictory hand-out.')
+w('')
+w('| Selection | What the blueprint prints | Why |')
+w('|---|---|---|')
+w('| One cloud, e.g. **AWS** | That one route | The simple case |')
+w('| **Azure + AWS** | Both routes, Azure first | Genuinely different routes; '
+  'config order decides which is printed first, so it is the same document '
+  'every time regardless of tap order |')
+for e in _excl:
+    w('| **%s** alone | Its own line, no route | A legitimate answer on its own |'
+      % e)
+    w('| **%s** + any named source | The named source only; "%s" is dropped |'
+      ' A named source is actionable, so it wins - printing both said "nothing '
+      'to move" and "here is how to move it" in the same document |' % (e, e))
+w('| More than %d chips | The first %d in config order | Caps the ingestion '
+  'section so it reads as a plan, not a checklist. All 9 chips used to print 9 '
+  'route paragraphs |' % (_cap, _cap))
+w('')
+w('Verified by exhausting every single, pair and triple combination: '
+  '**0 contradictions and 0 cap overruns**, worst case bounded at %d routes.'
+  % _cap)
 w('')
 
 # --------------------------------------------------------- archetypes
@@ -242,6 +291,133 @@ w('- **The data held does not narrow the marketplace suggestion.** Someone who '
   'ticked "clinical notes" is offered the same joins as someone who ticked '
   '"estates and operations". A held-to-join mapping is the highest-value '
   'precompute still missing.')
+w('')
+
+# ---- transport and latency ---------------------------------------------------
+# Read from config so this section cannot drift from what the booth will do.
+_coco = cfg.get('coco') or {}
+_locs = cfg.get('locations') or {}
+w('## Where the visitor\'s time goes')
+w('')
+w('A stop is only as good as the wait in front of it, so the transport each one '
+  'uses is part of the decision tree, not an implementation detail.')
+w('')
+w('| Stop | Transport asked for | Ceiling |')
+w('|---|---|---|')
+for _k in (cfg.get('unlock_order') or list(_locs)):
+    _l = _locs.get(_k) or {}
+    if not _l:
+        continue
+    w('| %s | `%s` | %ss |' % (_l.get('name') or _k,
+                               _l.get('transport') or 'exec',
+                               _l.get('timeout') or _coco.get('turn_timeout', 60)))
+w('')
+w('**Measured before any of this was built** (5 visits, `game/cost.jsonl`): the '
+  'Workshop stop was 75% of all model wait at a 26.0s median, because it was '
+  'the only stop running a real `cortex exec`.')
+w('')
+w('`cortex exec` is a one-shot CI/CD entry point with no `--resume`, no '
+  '`--session` and no `--daemon`, so every call is a cold process. Timed on a '
+  'trivial prompt: 22.7s default, 19.4s with `--no-mcp`, 18.1s with every flag '
+  'that helps. **About 18 seconds of that is startup, not thinking.**')
+w('')
+w('So the booth now leads with a warm `cortex mcp serve` process, which is the '
+  'same binary in server mode, held open between visitors:')
+w('')
+w('| | cold `cortex exec` | warm agent |')
+w('|---|---|---|')
+w('| startup | ~18s, every call | 1.3s, once |')
+w('| a turn | ~26s | **~3.4s** |')
+w('')
+w('### Four layers, because a stand is not a laptop at a desk')
+w('')
+w('1. **warm agent** - `cortex mcp serve`, ~3.4s.')
+w('2. **`cortex exec`** - a cold one-shot. Not started unless 20s of budget remain.')
+w('3. **`COMPLETE`** - `SNOWFLAKE.CORTEX.COMPLETE`. Fast, non-agentic.')
+w('4. **precomputed** - the archetype defaults in this document. No model at all.')
+w('')
+w('Layer 4 is why this document matters operationally: on a flat venue network '
+  'with a suspended warehouse, what a visitor leaves with is exactly the '
+  'precomputed content listed above. It is the floor, so it has to read well '
+  'on its own.')
+w('')
+w('### Two constraints that are not negotiable')
+w('')
+w('- **One in-flight agent call at a time.** Two calls were issued on one warm '
+  'process without waiting: one asked for ALPHA, one asked for BRAVO, and both '
+  'received ALPHA. Concurrent calls mis-correlate, which on a stand means one '
+  'visitor\'s content in another visitor\'s document with no error raised. The '
+  'pool holds a mutex; a second caller waits.')
+w('- **Every turn has a wall-clock ceiling** (%ss by default). The Library has '
+  'been measured at a 127.3s outlier against a 2.2s median. Past the ceiling '
+  'the visitor is better served by layer 4 than by a better sentence.'
+  % _coco.get('turn_timeout', 60))
+w('')
+w('### Retrieval is deterministic on purpose')
+w('')
+w('The closed lists reach the model as **content in the prompt**, not as a tool: '
+  '`cortex exec` takes no tools except through MCP, and MCP is not guaranteed on '
+  'a borrowed booth laptop. The corpus is ~150 rows, so `game/context.py` scores '
+  'it in process and injects only the slice that matches the visitor\'s own '
+  'words (~220 tokens).')
+w('')
+w('No search service, deliberately. At a Snowflake-branded event the same input '
+  'must give the same document, and a visitor\'s pain language is bridged to our '
+  'feature names through the archetype **pain** text - "we retype invoices all '
+  'day" shares no token with `AI_EXTRACT`, but plenty with the pain line.')
+w('')
+
+# ---- flagged for review -----------------------------------------------------
+# Kept in the generator, not typed into the published copy, so it survives the
+# next regeneration. Anything hand-added to the Google Doc is lost on the next run.
+w('## Flagged for review')
+w('')
+w('Decisions for a human, not code changes. None of these stop the booth running.')
+w('')
+w('- **Geo weighting is London-only.** The curated picks are scored with %d UK '
+  'preference terms and %d non-UK demotion terms (`marketplace.geo`). Re-weight '
+  'before Paris, or a French room is offered UK postcode data.'
+  % (len(((cfg.get('marketplace') or {}).get('geo') or {}).get('prefer') or []),
+     len(((cfg.get('marketplace') or {}).get('geo') or {}).get('demote') or [])))
+_acc = {}
+for _v in market.values():
+    for _r in _v:
+        _acc[_r.get('access', '')] = _acc.get(_r.get('access', ''), 0) + 1
+_trials = sum(n for a, n in _acc.items() if 'trial' in a.lower())
+_total = sum(_acc.values())
+w('- **%d of the %d curated slots are time-limited trials** rather than '
+  'perpetual Free. Everything is free to acquire and nothing is Paid, but some '
+  'expire before a visitor is likely to act on it.' % (_trials, _total))
+_titles = {}
+for _v in market.values():
+    for _r in _v:
+        _titles[_r.get('title')] = _titles.get(_r.get('title'), 0) + 1
+_reused = sorted(((n, t) for t, n in _titles.items() if n > 2), reverse=True)
+if _reused:
+    w('- **The curated set repeats across industries.** %d slots are filled by '
+      'only %d distinct listings. Most reused: %s. This is the "why am I being '
+      'offered the same thing again" problem, and it is content curation work '
+      'rather than a bug.'
+      % (_total, len(_titles),
+         '; '.join('%s (%d industries)' % (t, n) for n, t in _reused[:4])))
+w('- **`is_ready_for_import` is the flag that decides whether a visitor can '
+  'actually attach a listing**, and it is stricter than it looks. Measured on '
+  'the London account: of 4,347 visible listings only 671 are importable. Every '
+  'one of those is also not-by-request. The trap is the middle group - 2,594 '
+  'listings are NOT by-request and still NOT importable, so they look freely '
+  'available and cannot be mounted. Checking only region and by-request passes '
+  'listings a visitor cannot use; that is how five unattachable entries once sat '
+  'in the curated index undetected. `deploy/verify_context.py --listings` now '
+  'checks the flag directly, and all %d distinct curated listings pass it.'
+  % len(_titles))
+w('- **The agentic marketplace tier stays disabled.** Re-timed 2026-08-24 at '
+  '**117.1s** for one search - slower than the 70-110s originally measured, and '
+  'far slower than a visitor walking one stall. It does return better matches '
+  '(a "poor data quality" problem returned Ataccama Data Quality and Semarchy '
+  'xDM rather than an industry keyword guess), but it does NOT verify region or '
+  '`is_ready_for_import`, so its suggestions can be dead ends. Warming does not '
+  'rescue it: the 117s is inference and tool time, not the ~18s of process '
+  'startup.')
 w('')
 
 io.open(os.path.join(HERE, 'decision_tree.md'), 'w',

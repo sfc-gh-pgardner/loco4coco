@@ -123,7 +123,7 @@ LISTINGS = {
 # That check also caught PRE-EXISTING drift, not just new picks: five
 # already-curated listings turned out not importable - "Snowflake Public
 # Data: Core Weather Data" (used in manufacturing/media/other, and already
-# flagged as drifted by verify_marketplace_index.py's own header comment),
+# flagged as drifted; that check now lives in deploy/verify_context.py --listings),
 # "Carbon Footprint Data" (manufacturing/energy), "Coal Global Data"
 # (energy), the OTT Market Analysis listing (media), and - notably -
 # healthcare's one Paid listing, Element Data HCPCS, which was not just

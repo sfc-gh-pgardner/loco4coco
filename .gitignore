@@ -16,3 +16,11 @@ venv/
 
 # Cortex Code session/plan metadata, not project code
 .snowflake/
+
+# Playwright persona-audit runtime. package.json and playwright.config.js ARE
+# committed so another SE can run the suite; the installed tree and the run
+# output are not.
+node_modules/
+test-results/
+playwright-report/
+.playwright/

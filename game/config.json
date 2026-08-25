@@ -14,7 +14,9 @@
     "title": "Loco for CoCo",
     "subtitle": "Five minutes to your next data product",
     "time_limit_seconds": 300,
-    "byline": "by Paddy Gardner"
+    "byline": "by Paddy Gardner",
+    "operator": "",
+    "_operator_comment": "Who is running THIS stand, and which stand it is. Written to SESSIONS.SE_OPERATOR on every visitor. It was read by the server but never defined here, which is why all 52 existing rows have it empty. Set it per laptop before doors open: it cannot be reconstructed afterwards, and without it 'which stand produced the best conversations' is unanswerable. Format: 'Name / Stand label', e.g. 'P Gardner / Stand 2'."
   },
   "snowflake": {
     "connection_name": "PG_LONDON",
@@ -31,7 +33,11 @@
     "timeout_seconds": 180,
     "stream": true,
     "cost_log": "cost.jsonl",
-    "complete_model": "mistral-large2"
+    "complete_model": "mistral-large2",
+    "warm_agent": true,
+    "warm_agent_comment": "Hold a `cortex mcp serve` process open between visitors. Measured ~3.4s per turn against ~26s for a cold `cortex exec`, because exec has no --resume/--session and pays ~18s of process startup every call. Strictly one in-flight call: concurrent calls on one process were proven to mis-correlate and return another call's answer. Set false to fall straight through to exec.",
+    "turn_timeout": 60,
+    "turn_timeout_comment": "Wall-clock ceiling per turn. The Library has been measured at a 127.3s outlier against a 2.2s median; past the ceiling the visitor is better served by the precomputed answer than a better sentence."
   },
   "delivery": {
     "_comment": "Verified constraints: the Gmail MCP exposes create_draft only - no send tool, no attachment parameter - AND its tools do not load under `cortex exec` even with --bypass, though they work in an interactive CoCo session. snowflake.com also publishes DMARC p=reject, so third-party senders are rejected outright. So the game writes a fully-composed email to outbox/ and the operator's interactive session drains it via the loco4coco-ops skill. Swap transport to gmail_api once an OAuth client is proven against Workspace policy.",
@@ -59,21 +65,10 @@
         "id": "company",
         "label": "Where you work",
         "placeholder": "e.g. NHS Trust, Barclays, Tesco"
-      },
-      {
-        "id": "email",
-        "label": "Where to post it",
-        "placeholder": "e.g. priya@company.com",
-        "type": "email"
       }
     ],
     "industry_question": "And what world do you work in? I'll fill the library with the right shelves.",
     "confirm_industry": "I'm guessing {industry} from {company} - have I got that right?",
-    "wake": {
-      "head": "Sending a CoCo POC to my friend",
-      "flavor": "Somewhere in the Arctic. (Yes, penguins live in Antarctica, but CoCo is special!)",
-      "line": "CoCo stirs in his igloo, he dreams of sending his friend a *CoCo POC* (proof of concept) present - *that friend is you!*"
-    },
     "letter": {
       "_comment": "The opening is a sequence, not a form: CoCo is home, a letter arrives, and the letter itself IS the intake. Every phase is click-skippable so a booth operator is never trapped in an animation.",
       "arctic": "Somewhere in the Arctic...",
@@ -86,9 +81,9 @@
         "We're particularly interested in {industry} and wanted to understand what an MVP/POC would look like for this on Snowflake.",
         "Could you help us out?"
       ],
-      "signoff": "Signed {email}",
+      "signoff": "Signed {first_name}",
       "button": "THAT'S BETTER",
-      "line1": "Not sure why {first_name} always signs off with their email like that...",
+      "line1": "A letter, from my friend {first_name}! Better get to work...",
       "line2": "Anyway, let's go and get this show on the road.",
       "map_line": "First stop is my Data Library. That's where I keep all the unstructured, semi-structured and structured data that would be useful for {first_name} and {company}.",
       "bubble": "Wow, a letter from my friend! Shame I can't make out some of these words...\n(Please fill this in with your details)"
@@ -136,33 +131,6 @@
           "label": "Estates & operations",
           "note": "Beds, theatres, staffing rotas, supplies"
         }
-      ],
-      "marketplace": [
-        {
-          "id": "population",
-          "label": "Population & demographics",
-          "note": "Census and small-area statistics to risk-adjust by catchment"
-        },
-        {
-          "id": "deprivation",
-          "label": "Deprivation & social determinants",
-          "note": "Index of Multiple Deprivation to explain outcome variation"
-        },
-        {
-          "id": "geo",
-          "label": "Geospatial & travel time",
-          "note": "Boundaries and drive times for access and coverage analysis"
-        },
-        {
-          "id": "weather",
-          "label": "Weather & air quality",
-          "note": "Correlate respiratory admissions with pollution and cold snaps"
-        },
-        {
-          "id": "drug_ref",
-          "label": "Drug & medical reference data",
-          "note": "Coding systems and terminologies for normalising records"
-        }
       ]
     },
     "financial": {
@@ -197,33 +165,6 @@
           "id": "regulatory",
           "label": "Regulatory reporting",
           "note": "Submissions and the reconciliations behind them"
-        }
-      ],
-      "marketplace": [
-        {
-          "id": "market_data",
-          "label": "Market & pricing data",
-          "note": "Prices and reference data to value positions"
-        },
-        {
-          "id": "firmographics",
-          "label": "Company financials & firmographics",
-          "note": "Counterparty and SME lending enrichment"
-        },
-        {
-          "id": "macro",
-          "label": "Macroeconomic indicators",
-          "note": "Rates, inflation and employment for scenario modelling"
-        },
-        {
-          "id": "esg",
-          "label": "ESG & climate risk",
-          "note": "Physical and transition risk against a loan book"
-        },
-        {
-          "id": "sanctions",
-          "label": "Sanctions & adverse media",
-          "note": "Screening and enhanced due diligence signals"
         }
       ]
     },
@@ -260,33 +201,6 @@
           "label": "Reviews & customer service",
           "note": "Free text feedback, returns reasons, contact logs"
         }
-      ],
-      "marketplace": [
-        {
-          "id": "weather",
-          "label": "Weather observations & forecast",
-          "note": "The single biggest driver of short-term demand"
-        },
-        {
-          "id": "population",
-          "label": "Population & demographics",
-          "note": "Catchment profiling for store and range decisions"
-        },
-        {
-          "id": "footfall",
-          "label": "Mobility & footfall",
-          "note": "High street and retail park movement patterns"
-        },
-        {
-          "id": "prices",
-          "label": "Competitor & commodity prices",
-          "note": "Price positioning and input cost exposure"
-        },
-        {
-          "id": "events",
-          "label": "Holidays & events calendars",
-          "note": "Bank holidays and fixtures that move demand"
-        }
       ]
     },
     "public": {
@@ -321,33 +235,6 @@
           "id": "performance",
           "label": "Performance & statutory returns",
           "note": "KPIs and central government reporting"
-        }
-      ],
-      "marketplace": [
-        {
-          "id": "census",
-          "label": "Census & population statistics",
-          "note": "Small-area demographics for needs assessment"
-        },
-        {
-          "id": "deprivation",
-          "label": "Deprivation indices",
-          "note": "Target interventions where need is greatest"
-        },
-        {
-          "id": "geo",
-          "label": "Boundaries & geospatial reference",
-          "note": "Wards, LSOAs, postcodes and lookups"
-        },
-        {
-          "id": "weather",
-          "label": "Weather & flood risk",
-          "note": "Resilience planning and winter pressures"
-        },
-        {
-          "id": "transport",
-          "label": "Transport & accessibility",
-          "note": "Public transport access to services"
         }
       ]
     },
@@ -384,33 +271,6 @@
           "label": "Energy consumption",
           "note": "Meter data by line and site"
         }
-      ],
-      "marketplace": [
-        {
-          "id": "commodity",
-          "label": "Commodity & input prices",
-          "note": "Raw material cost exposure"
-        },
-        {
-          "id": "weather",
-          "label": "Weather observations",
-          "note": "Ambient conditions against yield and energy use"
-        },
-        {
-          "id": "logistics",
-          "label": "Freight & shipping data",
-          "note": "Port congestion and route disruption"
-        },
-        {
-          "id": "firmographics",
-          "label": "Supplier firmographics & risk",
-          "note": "Financial health of the supply base"
-        },
-        {
-          "id": "esg",
-          "label": "Emissions & ESG factors",
-          "note": "Scope 3 reporting and carbon intensity"
-        }
       ]
     },
     "energy": {
@@ -445,33 +305,6 @@
           "id": "fieldwork",
           "label": "Field engineer reports",
           "note": "Free text inspection and repair notes"
-        }
-      ],
-      "marketplace": [
-        {
-          "id": "weather",
-          "label": "Weather & forecast data",
-          "note": "The primary driver of both demand and renewable output"
-        },
-        {
-          "id": "prices",
-          "label": "Energy market prices",
-          "note": "Wholesale price exposure and settlement"
-        },
-        {
-          "id": "geo",
-          "label": "Geospatial & terrain",
-          "note": "Network planning and vegetation risk"
-        },
-        {
-          "id": "population",
-          "label": "Population & property data",
-          "note": "Premise characteristics for demand modelling"
-        },
-        {
-          "id": "climate",
-          "label": "Climate projections",
-          "note": "Long-run asset resilience planning"
         }
       ]
     },
@@ -508,33 +341,6 @@
           "label": "Customer support interactions",
           "note": "Call transcripts and chat logs"
         }
-      ],
-      "marketplace": [
-        {
-          "id": "population",
-          "label": "Population & demographics",
-          "note": "Audience profiling and coverage gaps"
-        },
-        {
-          "id": "mobility",
-          "label": "Mobility & location",
-          "note": "Where demand sits against network build"
-        },
-        {
-          "id": "events",
-          "label": "Sports & events calendars",
-          "note": "Fixtures that drive traffic and churn"
-        },
-        {
-          "id": "social",
-          "label": "Social & sentiment signals",
-          "note": "Title buzz ahead of release"
-        },
-        {
-          "id": "weather",
-          "label": "Weather observations",
-          "note": "Weather against viewing and network load"
-        }
       ]
     },
     "other": {
@@ -569,33 +375,6 @@
           "id": "sensors",
           "label": "Device or sensor data",
           "note": "Anything machine-generated and high volume"
-        }
-      ],
-      "marketplace": [
-        {
-          "id": "population",
-          "label": "Population & demographics",
-          "note": "Context for wherever you operate"
-        },
-        {
-          "id": "weather",
-          "label": "Weather observations",
-          "note": "Surprisingly often the missing variable"
-        },
-        {
-          "id": "firmographics",
-          "label": "Company & firmographic data",
-          "note": "Enrich anything B2B"
-        },
-        {
-          "id": "geo",
-          "label": "Geospatial reference",
-          "note": "Boundaries, postcodes and lookups"
-        },
-        {
-          "id": "macro",
-          "label": "Economic indicators",
-          "note": "Trend against the wider economy"
         }
       ]
     }
@@ -669,9 +448,9 @@
       "heading": "What shall we join to your data?",
       "hint": "Live listings, filtered to what you can attach in this region. No ETL, no storage cost, always current. The same door works outwards: this is how you share your own data without handing over a copy.",
       "other_label": "Something else you'd join",
-      "other_placeholder": "e.g. competitor pricing",
-      "discovery": "live",
-      "_discovery_comment": "live = SHOW AVAILABLE LISTINGS filtered to event.region + is_ready_for_import, matched against marketplace.industry_keywords, pinned entries first. Falls back to the curated marketplace-index.md if the live tier is cold, fails, or returns fewer than marketplace.min_live_results. Set to 'manual' to force the curated index.",
+      "other_placeholder": "e.g. UK postcode boundaries, company registry data",
+      "discovery": "manual",
+      "_discovery_comment": "manual = serve the CURATED marketplace-index.md, which is what the offline agentic-search precompute produced: 6 verified, free, UK-weighted, importability-checked picks per industry. This is deliberate for a branded event. MEASURED with discovery='live': public sector returned three Met Office weather products plus 'India Economic Monitor', because live matching ranked raw keyword hits with no geography and pinned two weather listings; after adding geo weighting and per-industry avoid terms it returned only 4 results, two of them weak ('UN Codes for Trade and Transport', 'Overture Maps'). Curation beats liveness on a stand: the stall must be predictable and defensible. Set to 'live' to use SHOW AVAILABLE LISTINGS (region + is_ready_for_import + geo weighting + industry_avoid), falling back here below min_live_results.",
       "narrative": "This is the Snowflake Marketplace, and every stall is a real company's data. You attach it and query it live, seconds later. You never copy it, you never build a pipeline for it, and you never pay to store it.",
       "prompt": "The visitor's stated problem is: \"{problem}\". Keep your answer pointed at it.\nThe visitor works in {industry} at {company} and holds: {held}. In THE MARKETPLACE they chose to join these real Snowflake Marketplace listings: {selection}. Reply in at most 2 short sentences: say what joining those lets them answer that they cannot answer today. Refer to the datasets only by the names given above; do not invent any other listing or provider name. Plain English, no bullet points, no em dashes.",
       "transport": "complete"
@@ -708,7 +487,7 @@
       "mode": "send",
       "heading": "Shall I post it?",
       "hint": "I'll write it up properly and put it in the post.",
-      "narrative": "Wrapped, labelled and ready. Say the word and it's in the post to {email}.",
+      "narrative": "Wrapped, labelled and ready. Say the word and I'll put it in your hands.",
       "button": "POST IT TO ME"
     }
   },
@@ -809,7 +588,7 @@
     "body": [
       "This is a fun way to experience the power of Cortex Code (CoCo) through the medium of an arcade game.",
       "You have 5 minutes to explore the key aspects of building out a Proof of Concept on Snowflake with CoCo as your tour guide on our features, marketplace datasets and how enterprise-grade AI can bring your ideas to life.",
-      "After 5 minutes you will have a personalised action plan (sent to you via email) to building out a project on Snowflake - be daring! This is a fun, flexible process with a very real and useful outcome!"
+      "After 5 minutes you will have a personalised action plan (scan it and keep it) to building out a project on Snowflake - be daring! This is a fun, flexible process with a very real and useful outcome!"
     ]
   },
   "ask": {
@@ -961,9 +740,9 @@
         "GZTDZJKVCY"
       ],
       "public": [
-        "GZTDZJKVCU",
-        "GZTDZJKVCY",
-        "GZSVZAJO3"
+        "GZSVZAJO3",
+        "GZ1MOZBWYYT",
+        "GZSVZ1K7UQ"
       ],
       "retail": [
         "GZTDZJKVCY",
@@ -990,7 +769,70 @@
       "trial - ",
       "demo"
     ],
-    "_exclude_comment": "Keyword matching pulls in tools and apps, not just data. A healthcare stall offering 'Snowflake Health Check Dashboard' reads as broken, so obvious non-dataset titles are dropped."
+    "_exclude_comment": "Keyword matching pulls in tools and apps, not just data. A healthcare stall offering 'Snowflake Health Check Dashboard' reads as broken, so obvious non-dataset titles are dropped.",
+    "_geo_comment": "The event is a UK stand, so a UK visitor must not be offered 'India Economic Monitor' or 'All International Postal Codes' ahead of the ONS census. `prefer` terms score a listing UP, `demote` terms score it DOWN, and keyword matches are ranked by that score instead of catalogue order. Change these when the event moves country - nothing here is hardcoded.",
+    "geo": {
+      "prefer": [
+        "uk",
+        "united kingdom",
+        "great britain",
+        " gb ",
+        "england",
+        "wales",
+        "scotland",
+        "northern ireland",
+        "british",
+        "nhs",
+        "ordnance survey",
+        "ons",
+        "hmrc",
+        "dvla",
+        "companies house",
+        "postcode",
+        "uprn",
+        "lsoa",
+        "msoa"
+      ],
+      "demote": [
+        "india",
+        "united states",
+        " usa",
+        "u.s.",
+        "brazil",
+        "canada",
+        "australia",
+        "japan",
+        "china",
+        "germany",
+        "france",
+        "spain",
+        "italy",
+        "mexico",
+        "international",
+        "worldwide",
+        "global",
+        "all countries",
+        "emea",
+        "apac"
+      ]
+    },
+    "_avoid_comment": "Per-industry veto. The public-sector keyword 'postcode' was matching 'Postcode Sector Weather Forecasts' - a weather product - so three of the six public-sector picks were Met Office. These terms drop a listing from an industry even when a keyword hit.",
+    "industry_avoid": {
+      "public": [
+        "weather",
+        "forecast",
+        "meteorolog",
+        "climate"
+      ],
+      "financial": [
+        "weather",
+        "forecast"
+      ],
+      "healthcare": [
+        "weather",
+        "forecast"
+      ]
+    }
   },
   "sourcing": {
     "_comment": "Where data can come from when the visitor is NOT yet a Snowflake customer. Ordnance Survey lives here rather than in the Marketplace because it is not listed there in any region (checked 2026-08-17); Open UPRN exists but is not available in AWS_EU_WEST_2.",
@@ -1032,6 +874,12 @@
       "SaaS apps (Salesforce, Workday, etc.)",
       "Already in Snowflake",
       "Not sure yet"
-    ]
+    ],
+    "exclusive": [
+      "Already in Snowflake",
+      "Not sure yet"
+    ],
+    "max_routes": 4,
+    "_guardrail": "`exclusive` chips cannot be combined with a named source: \"Already in Snowflake\" prints \"nothing to move\" and \"Not sure yet\" prints \"go and ask\", so pairing either with Oracle or AWS made the blueprint contradict itself. The UI clears the other group on tap and the server re-normalises, so a bypassed UI cannot produce a contradictory document. `max_routes` caps the ingestion section: 8 chips printed 8 route paragraphs and 5 Openflow mentions, which read as a template rather than a plan."
   }
 }

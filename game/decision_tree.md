@@ -10,11 +10,11 @@ Five choices decide the whole blueprint. Three of them are precomputed by us and
 |---|---|---|---|
 | 1. The letter | Types name, company, industry, **and the problem in two sentences** | Industry list in `config.industries` | Yes - the list |
 | 2. The library | Ticks data they hold, then taps the platforms it sits on | `industries.<key>.data_sources` + `config.platforms` | **Yes - fully precomputed** |
-| 3. The marketplace | Ticks data to join | `industries.<key>.marketplace` as the fallback, but **live listings first** | Partly - see below |
+| 3. The marketplace | Ticks data to join | `marketplace-index.md`, 6 verified listings per industry | **Yes - fully precomputed** |
 | 4. The workshop | Types one line describing the MVP | Free text | No - but the archetype it maps to is |
 | 5. The postbox | Posts it | - | - |
 
-The two runtime decisions are: which live Marketplace listings match the industry keywords, and which of the 9 archetypes the model picks from the visitor's one-line description. Everything else is ours to set.
+With `discovery: manual` there is now only ONE runtime decision: which of the 9 archetypes the visitor is routed to. Even that is no longer purely the model's - `game/context.py` resolves it deterministically from the visitor's own words scored against each archetype's pain text, and the model chooses from that shortlist. Everything else on this page is ours to set.
 
 ## The tree, top to bottom
 
@@ -28,19 +28,19 @@ LIBRARY   (precomputed per industry)
   platform  ->  9 universal chips -> integration path in the blueprint
         |
 MARKETPLACE
-  live listings matched on industry keywords  (min 3 results)
-  falls back to 6-6 curated options per industry
+  6-6 curated, region-verified options per industry  (discovery: manual)
+  every one is checked is_ready_for_import, so a visitor can attach it
         |
 WORKSHOP
   one line  ->  model picks 1 of 9 archetypes
              ->  features + first step come from archetypes.md, no inference
         |
-POSTBOX   ->  blueprint (.docx today, HTML alongside it) + QR + email
+POSTBOX   ->  blueprint (.docx today, HTML alongside it) + QR. No email.
 ```
 
 ## Per industry
 
-For each industry: what the library offers, what the marketplace offers as the curated fallback, and the keywords used to find live listings. The keywords are the lever on live results - a thin keyword list is why an industry falls back to the curated list.
+For each industry: what the library offers, and the six curated Marketplace listings it offers. Every listing is verified importable in the event region, so nothing here is a dead end. The live-search keywords are listed too, but they only bite if `locations.marketplace.discovery` is set back to `live`.
 
 ### Healthcare & Life Sciences
 
@@ -57,7 +57,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 | Imaging & diagnostics | Scan metadata and reports |
 | Estates & operations | Beds, theatres, staffing rotas, supplies |
 
-**Marketplace - curated joins (the fallback when live search is thin)**
+**Marketplace - the six curated joins offered, all verified importable**
 
 | Listing | Provider | Access |
 |---|---|---|
@@ -85,7 +85,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 | Customer communications | Call transcripts, complaints, chat logs |
 | Regulatory reporting | Submissions and the reconciliations behind them |
 
-**Marketplace - curated joins (the fallback when live search is thin)**
+**Marketplace - the six curated joins offered, all verified importable**
 
 | Listing | Provider | Access |
 |---|---|---|
@@ -113,7 +113,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 | Supplier & logistics data | Purchase orders, lead times, delivery performance |
 | Reviews & customer service | Free text feedback, returns reasons, contact logs |
 
-**Marketplace - curated joins (the fallback when live search is thin)**
+**Marketplace - the six curated joins offered, all verified importable**
 
 | Listing | Provider | Access |
 |---|---|---|
@@ -143,7 +143,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 | Finance & procurement | Budgets, spend over threshold, contracts |
 | Performance & statutory returns | KPIs and central government reporting |
 
-**Marketplace - curated joins (the fallback when live search is thin)**
+**Marketplace - the six curated joins offered, all verified importable**
 
 | Listing | Provider | Access |
 |---|---|---|
@@ -156,7 +156,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 
 **Live-search keywords** (11): census, postcode, deprivation, boundary, population, geospatial, planning, crime, education, transport, uprn
 
-**Pinned listings**: GZTDZJKVCU, GZTDZJKVCY, GZSVZAJO3
+**Pinned listings**: GZSVZAJO3, GZ1MOZBWYYT, GZSVZ1K7UQ
 
 ### Manufacturing & Industrial
 
@@ -173,7 +173,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 | Supplier & inbound logistics | Component lead times and quality by supplier |
 | Energy consumption | Meter data by line and site |
 
-**Marketplace - curated joins (the fallback when live search is thin)**
+**Marketplace - the six curated joins offered, all verified importable**
 
 | Listing | Provider | Access |
 |---|---|---|
@@ -201,7 +201,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 | Customer & billing | Accounts, tariffs, arrears, vulnerability flags |
 | Field engineer reports | Free text inspection and repair notes |
 
-**Marketplace - curated joins (the fallback when live search is thin)**
+**Marketplace - the six curated joins offered, all verified importable**
 
 | Listing | Provider | Access |
 |---|---|---|
@@ -231,7 +231,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 | Advertising & campaign data | Impressions, fill rate, yield |
 | Customer support interactions | Call transcripts and chat logs |
 
-**Marketplace - curated joins (the fallback when live search is thin)**
+**Marketplace - the six curated joins offered, all verified importable**
 
 | Listing | Provider | Access |
 |---|---|---|
@@ -259,7 +259,7 @@ For each industry: what the library offers, what the marketplace offers as the c
 | Emails, calls & tickets | Free text interactions |
 | Device or sensor data | Anything machine-generated and high volume |
 
-**Marketplace - curated joins (the fallback when live search is thin)**
+**Marketplace - the six curated joins offered, all verified importable**
 
 | Listing | Provider | Access |
 |---|---|---|
@@ -289,6 +289,22 @@ Asked once in the library, one tap, universal across industries. Each chip write
 | SaaS apps (Salesforce, Workday, etc.) | Openflow has connectors for the common SaaS sources, and the Marketplace carries some of them as ready-made shares. Check the Marketplace first - it is the cheaper answer when it exists. |
 | Already in Snowflake | Nothing to move. Point the proof of concept at the existing tables and spend the saved time on the model and the interface instead. |
 | Not sure yet | Worth ten minutes with whoever owns the source before you build. The answer changes the effort more than any other decision here. |
+
+### Combinations, and the guardrails on them
+
+The chips are multi-select, so most visitors tap more than one. Before the guardrails, **16 of the 36 possible pairs produced a self-contradicting document** and **10 printed "Openflow" twice**. Both are fixed, and both are enforced twice - in the browser on tap, and again on the server when the blueprint is built - so a bypassed or mis-clicked UI still cannot produce a contradictory hand-out.
+
+| Selection | What the blueprint prints | Why |
+|---|---|---|
+| One cloud, e.g. **AWS** | That one route | The simple case |
+| **Azure + AWS** | Both routes, Azure first | Genuinely different routes; config order decides which is printed first, so it is the same document every time regardless of tap order |
+| **Already in Snowflake** alone | Its own line, no route | A legitimate answer on its own |
+| **Already in Snowflake** + any named source | The named source only; "Already in Snowflake" is dropped | A named source is actionable, so it wins - printing both said "nothing to move" and "here is how to move it" in the same document |
+| **Not sure yet** alone | Its own line, no route | A legitimate answer on its own |
+| **Not sure yet** + any named source | The named source only; "Not sure yet" is dropped | A named source is actionable, so it wins - printing both said "nothing to move" and "here is how to move it" in the same document |
+| More than 4 chips | The first 4 in config order | Caps the ingestion section so it reads as a plan, not a checklist. All 9 chips used to print 9 route paragraphs |
+
+Verified by exhausting every single, pair and triple combination: **0 contradictions and 0 cap overruns**, worst case bounded at 4 routes.
 
 ## The 9 archetypes
 
@@ -332,4 +348,56 @@ Two structural gaps worth a decision rather than a count:
 
 - **No industry biases the archetype choice.** A hospital and a bank get the same 9 archetypes with the same weighting. A per-industry ordering, or two or three likely archetypes per industry, would make the forge both faster and more plausible.
 - **The data held does not narrow the marketplace suggestion.** Someone who ticked "clinical notes" is offered the same joins as someone who ticked "estates and operations". A held-to-join mapping is the highest-value precompute still missing.
+
+## Where the visitor's time goes
+
+A stop is only as good as the wait in front of it, so the transport each one uses is part of the decision tree, not an implementation detail.
+
+| Stop | Transport asked for | Ceiling |
+|---|---|---|
+| The Data Library | `complete` | 60s |
+| The Marketplace | `complete` | 60s |
+| The Workshop | `exec` | 60s |
+| The Postbox | `exec` | 60s |
+
+**Measured before any of this was built** (5 visits, `game/cost.jsonl`): the Workshop stop was 75% of all model wait at a 26.0s median, because it was the only stop running a real `cortex exec`.
+
+`cortex exec` is a one-shot CI/CD entry point with no `--resume`, no `--session` and no `--daemon`, so every call is a cold process. Timed on a trivial prompt: 22.7s default, 19.4s with `--no-mcp`, 18.1s with every flag that helps. **About 18 seconds of that is startup, not thinking.**
+
+So the booth now leads with a warm `cortex mcp serve` process, which is the same binary in server mode, held open between visitors:
+
+| | cold `cortex exec` | warm agent |
+|---|---|---|
+| startup | ~18s, every call | 1.3s, once |
+| a turn | ~26s | **~3.4s** |
+
+### Four layers, because a stand is not a laptop at a desk
+
+1. **warm agent** - `cortex mcp serve`, ~3.4s.
+2. **`cortex exec`** - a cold one-shot. Not started unless 20s of budget remain.
+3. **`COMPLETE`** - `SNOWFLAKE.CORTEX.COMPLETE`. Fast, non-agentic.
+4. **precomputed** - the archetype defaults in this document. No model at all.
+
+Layer 4 is why this document matters operationally: on a flat venue network with a suspended warehouse, what a visitor leaves with is exactly the precomputed content listed above. It is the floor, so it has to read well on its own.
+
+### Two constraints that are not negotiable
+
+- **One in-flight agent call at a time.** Two calls were issued on one warm process without waiting: one asked for ALPHA, one asked for BRAVO, and both received ALPHA. Concurrent calls mis-correlate, which on a stand means one visitor's content in another visitor's document with no error raised. The pool holds a mutex; a second caller waits.
+- **Every turn has a wall-clock ceiling** (60s by default). The Library has been measured at a 127.3s outlier against a 2.2s median. Past the ceiling the visitor is better served by layer 4 than by a better sentence.
+
+### Retrieval is deterministic on purpose
+
+The closed lists reach the model as **content in the prompt**, not as a tool: `cortex exec` takes no tools except through MCP, and MCP is not guaranteed on a borrowed booth laptop. The corpus is ~150 rows, so `game/context.py` scores it in process and injects only the slice that matches the visitor's own words (~220 tokens).
+
+No search service, deliberately. At a Snowflake-branded event the same input must give the same document, and a visitor's pain language is bridged to our feature names through the archetype **pain** text - "we retype invoices all day" shares no token with `AI_EXTRACT`, but plenty with the pain line.
+
+## Flagged for review
+
+Decisions for a human, not code changes. None of these stop the booth running.
+
+- **Geo weighting is London-only.** The curated picks are scored with 19 UK preference terms and 20 non-UK demotion terms (`marketplace.geo`). Re-weight before Paris, or a French room is offered UK postcode data.
+- **11 of the 48 curated slots are time-limited trials** rather than perpetual Free. Everything is free to acquire and nothing is Paid, but some expire before a visitor is likely to act on it.
+- **The curated set repeats across industries.** 48 slots are filled by only 30 distinct listings. Most reused: UK (England and Wales only) Census 2021 - Trial (5 industries); Acorn - Geodemographic Segmentation in the UK (5 industries); Postcode Sector Weather Forecasts (3 industries); Company Data UK (incl. Guernsey) - XL Dataset (3 industries). This is the "why am I being offered the same thing again" problem, and it is content curation work rather than a bug.
+- **`is_ready_for_import` is the flag that decides whether a visitor can actually attach a listing**, and it is stricter than it looks. Measured on the London account: of 4,347 visible listings only 671 are importable. Every one of those is also not-by-request. The trap is the middle group - 2,594 listings are NOT by-request and still NOT importable, so they look freely available and cannot be mounted. Checking only region and by-request passes listings a visitor cannot use; that is how five unattachable entries once sat in the curated index undetected. `deploy/verify_context.py --listings` now checks the flag directly, and all 30 distinct curated listings pass it.
+- **The agentic marketplace tier stays disabled.** Re-timed 2026-08-24 at **117.1s** for one search - slower than the 70-110s originally measured, and far slower than a visitor walking one stall. It does return better matches (a "poor data quality" problem returned Ataccama Data Quality and Semarchy xDM rather than an industry keyword guess), but it does NOT verify region or `is_ready_for_import`, so its suggestions can be dead ends. Warming does not rescue it: the 117s is inference and tool time, not the ~18s of process startup.
 

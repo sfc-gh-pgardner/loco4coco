@@ -35,6 +35,12 @@ import threading
 import time
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+# The booth's closed lists, with their own three-layer fallback (Snowflake, the
+# committed bundle, then this repo's markdown). Kept in a separate module because
+# the ops pre-flight and the loader both need it without starting a web server.
+import context as bctx
+import agent_pool
 from urllib.parse import parse_qs, urlparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -380,13 +386,31 @@ def run_complete(cfg, prompt, kind, job_id=None, model=None, timeout=None):
     mdl = model or c.get("complete_model") or "mistral-large2"
     started = time.time()
     write_state({"reasoning": []})
-    reply, err = "", ""
+    reply, err, usage = "", "", {}
     try:
         cur = sf_conn(cfg).cursor()
         try:
-            cur.execute("SELECT SNOWFLAKE.CORTEX.COMPLETE(%s, %s)", (mdl, prompt))
+            # The three-argument form, not COMPLETE(model, prompt). The two-arg
+            # version returns a bare string with no usage, which is why every
+            # COMPLETE turn logged 0 input and 0 output tokens while the agentic
+            # turn logged real ones - so "cost per visitor" was only ever
+            # counting the Workshop. This form returns choices plus usage.
+            cur.execute(
+                "SELECT SNOWFLAKE.CORTEX.COMPLETE(%s, "
+                "ARRAY_CONSTRUCT(OBJECT_CONSTRUCT('role','user',"
+                "'content',%s)), OBJECT_CONSTRUCT()) ", (mdl, prompt))
             row = cur.fetchone()
-            reply = (row[0] if row else "" or "").strip()
+            raw = row[0] if row else ""
+            if isinstance(raw, str):
+                raw = json.loads(raw) if raw.strip().startswith("{") else {}
+            if isinstance(raw, dict):
+                ch = (raw.get("choices") or [{}])[0]
+                reply = str(ch.get("messages") or ch.get("message") or "").strip()
+                u = raw.get("usage") or {}
+                usage = {"input_tokens": int(u.get("prompt_tokens") or 0),
+                         "output_tokens": int(u.get("completion_tokens") or 0)}
+            else:
+                reply = str(raw or "").strip()
         finally:
             cur.close()
     except Exception as e:                                       # noqa: BLE001
@@ -394,8 +418,8 @@ def run_complete(cfg, prompt, kind, job_id=None, model=None, timeout=None):
 
     secs = time.time() - started
     ok = bool(reply) and not err
-    log_cost(cfg, kind, secs, {}, ok, "complete", mdl)
-    meta = {"seconds": round(secs, 1), "usage": {}, "ok": ok,
+    log_cost(cfg, kind, secs, usage, ok, "complete", mdl)
+    meta = {"seconds": round(secs, 1), "usage": usage, "ok": ok,
             "transport": "complete", "model": mdl}
     if err:
         meta["error"] = err
@@ -408,30 +432,106 @@ def run_complete(cfg, prompt, kind, job_id=None, model=None, timeout=None):
     return True, reply, meta
 
 
+def turn_budget(cfg, loc, timeout=None):
+    """Wall-clock ceiling for one turn, in seconds.
+
+    A ceiling is not a nicety. The Library stop has been measured at a 127.3s
+    outlier against a 2.2s median, on a stop budgeted for a few seconds, inside a
+    five-minute visit with a queue waiting. Past the ceiling the visitor is
+    better served by the precomputed answer than by a better sentence.
+    """
+    coco = cfg.get("coco") or {}
+    return int(timeout
+               or loc.get("timeout")
+               or coco.get("turn_timeout")
+               or 60)
+
+
 def run_turn(cfg, prompt, kind, loc=None, job_id=None, use_mcp=False,
              timeout=None):
-    """Dispatch a turn to the transport its location asks for.
+    """Dispatch a turn, with four layers of fallback beneath it.
 
-    location.transport == "complete" -> fast, non-agentic (reflection turns)
-    anything else                    -> real `cortex exec` (judgement + tools)
+        1. warm agent   `cortex mcp serve`, held open between visitors. ~3.4s.
+        2. cortex exec  a cold one-shot process. ~26s, of which ~18s is startup.
+        3. COMPLETE     SNOWFLAKE.CORTEX.COMPLETE. Fast, non-agentic.
+        4. precomputed  the archetype's own defaults, no model at all.
 
-    A failed COMPLETE falls back to exec so a booth can never dead-end on a
-    model or region problem.
+    Which layer leads depends on what the location asks for. A reflection turn
+    wants COMPLETE and does not need judgement; the Workshop wants judgement and
+    so leads with the warm agent. Every layer falls through, so a flat network, a
+    suspended warehouse or a model outage degrades the visit rather than ending
+    it - layer 4 needs nothing but this repo.
+
+    Returns (ok, reply, meta). meta["transport"] records which layer answered,
+    which is what makes the cost log worth reading afterwards.
     """
     loc = loc or {}
-    if (loc.get("transport") or "exec") == "complete":
+    budget = turn_budget(cfg, loc, timeout)
+    coco = cfg.get("coco") or {}
+    wants = (loc.get("transport") or "exec")
+    started = time.time()
+    meta = None
+
+    def remaining():
+        return max(4, budget - int(time.time() - started))
+
+    if wants == "complete":
         ok, reply, meta = run_complete(cfg, prompt, kind, job_id=job_id,
                                        model=loc.get("complete_model"))
         if ok or meta.get("ok"):
             return ok, reply, meta
-        if meta.get("error"):
-            print(f"[loco4coco] COMPLETE failed for {kind}, falling back to "
-                  f"exec: {meta['error']}")
-        else:
+        if not meta.get("error"):
             return ok, reply, meta          # superseded, not a failure
-    return run_exec(cfg, prompt, kind, job_id=job_id, use_mcp=use_mcp,
-                    timeout=timeout, effort=loc.get("effort"),
-                    tools=loc.get("tools"), max_turns=loc.get("max_turns"))
+        print(f"[loco4coco] COMPLETE failed for {kind}, falling back: "
+              f"{meta['error']}")
+
+    # Layer 1: the warm agent. Skipped when disabled in config, and skipped
+    # quietly when the process will not start - nobody at the stand should ever
+    # be able to tell which layer answered.
+    elif coco.get("warm_agent", True):
+        agent = agent_pool.get_agent(
+            connection=coco_connection(), model=coco.get("model"),
+            workdir=HERE, log=lambda m: print("[loco4coco] " + m))
+        if agent.alive() or agent.start():
+            ok, reply, meta = agent.ask(prompt, timeout=remaining())
+            # log_cost lives inside run_exec and run_complete, so the warm path
+            # has to record its own turn or the Workshop - the stop this whole
+            # transport exists for - would vanish from the cost log entirely.
+            log_cost(cfg, kind, meta.get("seconds") or 0, {}, ok, "warm",
+                     coco.get("model"))
+            if ok:
+                return True, reply, meta
+            print("[loco4coco] warm agent failed for %s (%s), falling back to "
+                  "exec" % (kind, meta.get("error")))
+
+    # Layer 2: a cold one-shot process. Needs ~20s just to start, so it is not
+    # worth beginning if the budget cannot cover that.
+    if remaining() > 20:
+        ok, reply, meta = run_exec(
+            cfg, prompt, kind, job_id=job_id, use_mcp=use_mcp,
+            timeout=remaining(), effort=loc.get("effort"),
+            tools=loc.get("tools"), max_turns=loc.get("max_turns"))
+        if ok:
+            return ok, reply, meta
+        print("[loco4coco] exec failed for %s (%s)"
+              % (kind, (meta or {}).get("error")))
+    else:
+        meta = {"transport": "skipped", "error": "no budget left for exec"}
+        print("[loco4coco] skipping exec for %s: %ss of %ss budget used"
+              % (kind, int(time.time() - started), budget))
+
+    # Layer 3: COMPLETE, if it was not already the lead.
+    if wants != "complete":
+        ok3, reply3, meta3 = run_complete(cfg, prompt, kind, job_id=job_id,
+                                          model=loc.get("complete_model"))
+        if ok3:
+            meta3["transport"] = "complete-fallback"
+            return True, reply3, meta3
+
+    # Layer 4 is the caller's business: it holds the archetype and its defaults,
+    # so it can answer with no model at all. Returning not-ok is how it is asked.
+    return False, "", (meta or {"transport": "none",
+                                "error": "all layers failed"})
 
 
 def base_context(cfg, state):
@@ -530,6 +630,17 @@ def load_guides():
     global _guides_cache
     if _guides_cache is not None:
         return _guides_cache
+    try:
+        rows = bctx.load(conn=coco_connection())[0].get("guides") or []
+        prim = {}
+        for r in rows:
+            if r.get("is_primary") and r.get("archetype") not in prim:
+                prim[r["archetype"]] = (r.get("title"), r.get("slug"))
+        if prim:
+            _guides_cache = prim
+            return _guides_cache
+    except Exception:
+        pass
     out, current = {}, None
     try:
         with open(GUIDES_PATH, encoding="utf-8") as f:
@@ -566,6 +677,21 @@ def guide_for(cfg, archetype):
 _features_cache = None
 
 
+def coco_connection():
+    """The Snowflake connection name the booth is configured to use.
+
+    Read from config rather than passed down: the context loaders are called
+    from a dozen places, several of them before any request exists, and
+    threading a connection through all of them buys nothing.
+    """
+    try:
+        cfg = load_config()
+        return ((cfg.get("coco") or {}).get("connection")
+                or (cfg.get("snowflake") or {}).get("connection_name") or None)
+    except Exception:
+        return None
+
+
 def load_features():
     """Parse feature-docs.md into {feature name: docs url}.
 
@@ -577,6 +703,17 @@ def load_features():
     global _features_cache
     if _features_cache is not None:
         return _features_cache
+    # Prefer the shared context (Snowflake, then the committed bundle) so a
+    # laptop that never pulled this branch still gets the current closed list.
+    # context.load() falls back to this same markdown, so the try below is the
+    # last resort of a last resort rather than a duplicate path.
+    try:
+        rows = bctx.load(conn=coco_connection())[0].get("features") or []
+        if rows:
+            _features_cache = {r["name"]: r["docs_url"] for r in rows}
+            return _features_cache
+    except Exception:
+        pass
     out = {}
     try:
         with open(FEATURES_PATH, encoding="utf-8") as f:
@@ -674,6 +811,22 @@ def load_marketplace():
     global _market_cache
     if _market_cache is not None:
         return _market_cache
+    try:
+        rows = bctx.load(conn=coco_connection())[0].get("listings") or []
+        if rows:
+            grouped = {}
+            for r in sorted(rows, key=lambda x: (x.get("industry") or "",
+                                                 x.get("ordinal") or 0)):
+                grouped.setdefault(r.get("industry"), []).append({
+                    "title": r.get("title"), "provider": r.get("provider"),
+                    "access": r.get("access"), "url": r.get("url"),
+                    "global_name": r.get("global_name"),
+                    "regions": r.get("regions") or "",
+                })
+            _market_cache = grouped
+            return _market_cache
+    except Exception:
+        pass
     out, current = {}, None
     row_re = re.compile(r"^\|\s*\[(?P<title>.+?)\]\((?P<url>[^)]+)\)\s*\|"
                         r"\s*(?P<prov>[^|]+?)\s*\|\s*(?P<acc>[^|]+?)\s*\|"
@@ -899,19 +1052,52 @@ def listings_live(cfg, industry):
         r["provider"] = names.get(r.get("profile") or "", "Snowflake Marketplace")
         return r
 
+    # Geographic relevance. MEASURED: a public-sector visitor at a UK stand was
+    # offered "India Economic Monitor" and "Weather Data - All International
+    # Postal Codes" because keyword matches were taken in raw catalogue order
+    # with no notion of where the event is. Config-driven so moving the event to
+    # another country is a config change, not a code change.
+    geo = (mk.get("geo") or {})
+    prefer = [w.lower() for w in (geo.get("prefer") or [])]
+    demote = [w.lower() for w in (geo.get("demote") or [])]
+    # Per-industry veto: "postcode" is a legitimate public-sector keyword but it
+    # matched "Postcode Sector Weather Forecasts", which is how three of the six
+    # public-sector picks ended up being Met Office weather products.
+    avoid = [w.lower() for w in
+             ((mk.get("industry_avoid") or {}).get(industry) or [])]
+
+    def relevance(r):
+        """Higher is better. (geo_score, keyword_hits) decides the order."""
+        hay = ((r.get("title") or "") + " " +
+               (names.get(r.get("profile") or "", ""))).lower()
+        g = sum(2 for w in prefer if w in hay) - sum(3 for w in demote if w in hay)
+        k = sum(1 for w in words if w in hay)
+        return (g, k)
+
     out, seen = [], set()
     for gn in pins:
         r = by_gn.get(gn)
         if r:
             out.append(named(r))
             seen.add(gn)
+    cands = []
     for r in rows:
         if r["global_name"] in seen:
             continue
         t = (r["title"] or "").lower()
-        if any(w in t for w in words) and not blocked(t):
-            out.append(named(r))
-            seen.add(r["global_name"])
+        if not any(w in t for w in words) or blocked(t):
+            continue
+        if any(a in t for a in avoid):
+            continue
+        cands.append(r)
+    # Deterministic: sort by relevance, then title, so the same catalogue always
+    # produces the same stall. Ties used to fall out in whatever order SHOW
+    # happened to return, which made the booth unpredictable between visitors.
+    cands.sort(key=lambda r: (relevance(r), (r.get("title") or "").lower()),
+               reverse=True)
+    for r in cands:
+        out.append(named(r))
+        seen.add(r["global_name"])
     return out, ""
 
 
@@ -968,7 +1154,15 @@ def listings_curated(cfg, industry):
     short = region.split(".")[-1]
     keep = []
     for r in rows:
-        regs = r.get("regions") or ""
+        regs = (r.get("regions") or "").strip()
+        # "ALL" means every region. MEASURED: this was being substring-matched
+        # like a region list, so it matched nothing and silently dropped the
+        # listing - which is how public sector shipped 5 picks instead of 6 and
+        # lost Ordnance Survey Boundary Line, one of the best UK public-sector
+        # datasets on the Marketplace.
+        if regs.upper() == "ALL":
+            keep.append(r)
+            continue
         # A truncated "+N" list means we cannot prove absence, so keep it.
         if short in regs or "+" in regs:
             keep.append(r)
@@ -1155,8 +1349,8 @@ def blueprint_html(cfg, state):
     if url:
         parts += ["<p style=\"margin-top:24px\">A Word version is here: "
                   f"<a href=\"{e(url)}\">download the document</a>. "
-                  "That link expires in seven days, but this email will not. "
-                  "Everything you need is above.</p>"]
+                  "That link expires in seven days. Everything you need is "
+                  "written out above, so keep this page.</p>"]
     parts += ["<p style=\"margin-top:24px;color:#667\">See you next time.<br>"
               "CoCo</p>", "</div>"]
     return "\n".join(parts)
@@ -1214,10 +1408,52 @@ INTEGRATION_PATHS = {
 }
 
 
+def normalise_platforms(cfg, plats):
+    """Resolve a raw platform selection into a predictable, non-contradictory set.
+
+    MEASURED before this existed: of the 36 possible pairs, 16 were logically
+    contradictory and 10 printed "Openflow" twice. Selecting "Already in
+    Snowflake" alongside Oracle produced a blueprint that said "Nothing to move"
+    AND gave move instructions; "Not sure yet" plus AWS said "go and ask whoever
+    owns the source" next to a concrete S3 route. At a Snowflake-branded event
+    the document has to be defensible, so the contradiction is resolved here
+    rather than left to chance.
+
+    Rules, in order:
+      1. Keep only chips the config actually offers, de-duplicated.
+      2. Restore config order, so the same taps always produce the same document
+         regardless of the order they were tapped in.
+      3. An `exclusive` chip ("nothing to move" / "go and ask") survives only if
+         NOTHING else was picked. A named source is actionable and wins.
+      4. Cap at `max_routes` so the ingestion section stays a plan, not a list.
+
+    The UI enforces 3 on tap as well; this is the backstop, because the document
+    is the thing that leaves the stand.
+    """
+    cfgp = (cfg.get("platforms") or {})
+    offered = list(cfgp.get("options") or [])
+    excl = set(cfgp.get("exclusive") or [])
+    cap = int(cfgp.get("max_routes") or 4)
+
+    seen, kept = set(), []
+    for p in (plats or []):
+        if p in offered and p not in seen:
+            seen.add(p)
+            kept.append(p)
+    kept.sort(key=offered.index)                  # deterministic output
+
+    named = [p for p in kept if p not in excl]
+    if named:
+        kept = named                              # a real source beats "not sure"
+    else:
+        kept = kept[:1]                           # at most one exclusive answer
+    return kept[:cap]
+
+
 def integration_paths(state):
     """The route into Snowflake for each platform the visitor named."""
     out = []
-    for p in state.get("platforms") or []:
+    for p in normalise_platforms(load_config(), state.get("platforms")):
         hit = INTEGRATION_PATHS.get(p)
         if hit:
             out.append((p, hit[0], hit[1]))
@@ -1634,7 +1870,10 @@ def log_session(cfg, state):
         "FIRST_NAME": vis.get("first_name", ""),
         "COMPANY": vis.get("company", ""),
         "INDUSTRY": industry_name(cfg, vis.get("industry")),
-        "EMAIL": vis.get("email", ""),
+        # The label is what a human reads in a report; the key is what
+        # groups reliably. Storing only the label meant "Something else"
+        # and a renamed industry were indistinguishable after the fact.
+        "INDUSTRY_KEY": vis.get("industry") or "",
         "DATA_HELD": state.get("held") or [],
         "MARKETPLACE_JOINED": state.get("joined") or [],
         "POC_ARCHETYPE": poc.get("archetype", ""),
@@ -1806,9 +2045,13 @@ class OutboxTransport:
         if drafted:
             reply = detail or "Drafted and ready. It will be with you shortly."
         else:
-            reply = (f"Wrapped, labelled and in the postbox for "
-                     f"{vis.get('email')}. It goes out shortly. I do not send "
-                     f"it myself from in here.")
+            # No address to name any more: the letter stopped asking for one and
+            # the QR is the delivery. Point at the code on screen rather than
+            # promising a post that is not coming.
+            name = (vis.get("first_name") or "").strip()
+            who = f", {name}" if name else ""
+            reply = (f"Wrapped and labelled{who}. Scan the code on screen and "
+                     f"it is yours - the link works for seven days.")
         if err and not url:
             reply += " The Word version could not be attached this time."
         return True, reply
@@ -1826,7 +2069,13 @@ class OutboxTransport:
             sid = (read_state().get("session_id") or "")[:8]
             rec = {
                 "queued_at": time.time(),
-                "to": vis.get("email"),
+                "to": vis.get("email") or "",
+                # The letter does not ask for an email: the QR is the delivery
+                # that cannot fail. A record with no address is a complete
+                # blueprint the operator can still file - it is just not
+                # postable, so mark it rather than leaving a null `to` for the
+                # ops drain to trip over.
+                "postable": bool(vis.get("email")),
                 "subject": subject,
                 "is_html": True,
                 "body_html": body,
@@ -1966,6 +2215,26 @@ def run_workshop(cfg, text, job_id):
     feature_list = ", ".join(sorted(load_features()))
     body = fill(loc.get("prompt", ""), cfg, state, input=text,
                 feature_list=feature_list)
+    # Deterministic shortlist appended to the prompt: the likely POC shape, the
+    # listings for their industry, and the features that shape actually uses.
+    #
+    # This is how the closed lists reach `cortex exec` - as content, not as a
+    # tool. exec takes no tools except through MCP, which is not guaranteed on a
+    # borrowed booth laptop, and at ~220 tokens injecting the slice is cheaper
+    # than any lookup would be. The full feature list above is deliberately kept
+    # as well: narrowing it would risk excluding the right feature when the
+    # archetype guess is wrong, and tokens are not the bottleneck here - the
+    # ~18s process startup is.
+    try:
+        vis = (state.get("visitor") or {})
+        hint_block = bctx.shortlist_block(
+            " ".join([str(vis.get("problem") or ""), str(text or "")]),
+            industry=vis.get("industry"), conn=coco_connection())
+        if hint_block:
+            body += ("\n\nFor reference, resolved server-side from their own "
+                     "words:\n" + hint_block)
+    except Exception:
+        pass  # Guidance only. The prompt above already stands on its own.
     # Optional invitation to actually USE a tool. Measured: --bypass alone
     # produces NO tool calls, because the feature list is injected and guides
     # are resolved server-side, so CoCo has no reason to reach for one. Inviting
@@ -2362,8 +2631,12 @@ class Handler(BaseHTTPRequestHandler):
         # field on the form: it is the only place the visitor says WHY, and it
         # arrives before they have walked anywhere.
         problem = (b.get("problem") or "").strip()[:400]
-        if not first or not email or "@" not in email:
-            return self._json({"error": "need a first name and an email"}, 400)
+        # Email is optional and no longer collected by the letter. Keep
+        # accepting it so an operator-run intake can still supply one.
+        if email and "@" not in email:
+            email = ""
+        if not first:
+            return self._json({"error": "need a first name"}, 400)
         industry = b.get("industry") or infer_industry(cfg, company)
         if industry not in (cfg.get("industries") or {}):
             industry = "other"
@@ -2449,8 +2722,10 @@ class Handler(BaseHTTPRequestHandler):
     def _post_it(self):
         cfg = load_config()
         st = read_state()
-        if not (st.get("visitor") or {}).get("email"):
-            return self._json({"error": "no email on file"}, 400)
+        # No email gate. The letter no longer asks for one: the QR handover is
+        # the delivery that cannot fail, and the outbox draft is a bonus an
+        # operator drains when there IS an address. Requiring one here is what
+        # made SEND MY POC dead-end with a 400 on every press.
         if not st.get("poc"):
             return self._json({"error": "no POC to send yet"}, 400)
         # Already delivered for this visitor: hand back the same result rather
@@ -2552,11 +2827,40 @@ def main():
     print(f"  account   : {cfg['snowflake']['connection_name']}")
     print(f"  transport : {(cfg.get('delivery') or {}).get('transport')}")
     print(f"  guides    : {len(load_guides())} primary forks loaded")
+    # Stand identity is the one field that cannot be reconstructed after the
+    # event. Every row is stamped with it at write time, so an empty value means
+    # a day's conversations arrive with no way to tell which stand produced them.
+    # Warn loudly rather than refuse: a booth that will not start is worse than
+    # one with a gap in its reporting.
+    _op = (cfg.get("event") or {}).get("operator", "")
+    if str(_op).strip():
+        print(f"  stand     : {_op}")
+    else:
+        print("  stand     : *** event.operator IS EMPTY *** every visitor row "
+              "will be unattributable. Set it in game/config.json now - it "
+              "cannot be added afterwards.")
     # Warm the model so the first real visitor does not pay cold-start latency.
-    # Raw subprocess (not run_exec) so it never writes to the shared game state.
+    #
+    # This used to spawn a throwaway `cortex exec`, which warmed almost nothing:
+    # exec has no --resume or --session, so the next call was a cold process
+    # again regardless. Now it starts the persistent `cortex mcp serve` process
+    # and takes one cheap turn on it, because the first call on a fresh process
+    # is measurably slower than the rest (~9.4s against ~6.0s, and ~3.4s once
+    # settled). That cost belongs before doors open, not on visitor one.
     if (cfg.get("coco") or {}).get("warm_up", True):
         def _warm():
             c = cfg.get("coco") or {}
+            if c.get("warm_agent", True):
+                agent = agent_pool.get_agent(
+                    connection=coco_connection(), model=c.get("model"),
+                    workdir=HERE, log=lambda m: print("[loco4coco] " + m))
+                ok, note = agent.warm()
+                print("  warm-up   : warm agent %s (%s)"
+                      % ("ready" if ok else "FAILED", note))
+                if ok:
+                    return
+                # Fall through: if the pool will not start, the booth is about to
+                # run on `cortex exec`, so warm whatever that can benefit from.
             cmd = [c.get("binary", "cortex"), "exec",
                    "Reply with the single word: ready.", "--no-mcp"]
             conn = (cfg.get("snowflake") or {}).get("connection_name")
@@ -2570,7 +2874,7 @@ def main():
             except Exception:                                    # noqa: BLE001
                 pass
         threading.Thread(target=_warm, daemon=True).start()
-        print("  warm-up   : model warm-up dispatched")
+        print("  warm-up   : dispatched")
     # Open the Snowflake connection now so the first visitor's fast-path turn
     # pays ~2s, not the ~5s that includes connection setup.
     def _warm_conn():

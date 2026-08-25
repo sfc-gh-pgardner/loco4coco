@@ -1,10 +1,15 @@
 # Loco for CoCo
 
-A five-minute Cortex Code activation for Snowflake World Tour. A visitor drives a penguin
-round an arctic map, answers a few light questions, and leaves with an emailed POC
-blueprint: their idea in their own words, the Snowflake developer guide to fork, the
+A five-minute Cortex Code activation for **Snowflake World Tour**. A visitor drives a penguin
+round an arctic map, answers a few light questions, and leaves with the scaffolding for a POC:
+their idea in their own words, the Snowflake developer guide to fork, the
 features with doc links, a readiness score, and a kick-off prompt to paste into Cortex Code
-on a free trial.
+on a free trial. They take it away by **scanning a QR code** with their own phone.
+
+> **Read [CONSTRAINTS.md](CONSTRAINTS.md) before designing or changing any feature.**
+> It states what the event is, who the visitor is, and the six venue properties
+> every change is checked against. They are properties of the stand, not
+> preferences, and they have been broken before.
 
 It uses **real** Cortex Code and real Snowflake Marketplace listings. It runs on a laptop:
 a Python standard-library server plus a browser canvas. No npm, no build step, nothing hosted.
@@ -34,6 +39,11 @@ pre-flight before doors open.
 | `game/config.json` | Everything tunable: copy, locations, transports, models, guardrails. |
 | `game/smoke_test.py` | End-to-end proof. Run it after any change. |
 | `game/bench.py`, `game/bench2.py` | Latency benchmarks (agentic path, and direct inference). |
+| `deploy/verify_context.py` | **Pre-flight gate.** Closed lists, doc links, live listings. Exits with the failure count. |
+| `deploy/load_context.py` | Loads the reference markdown into the shared Snowflake context tables. |
+| `game/context.py` | The closed lists, their three-layer fallback, and deterministic keyword retrieval. |
+| `game/agent_pool.py` | The warm Cortex Code agent. One in-flight call, always. |
+| `audit/` | Chromium persona suite (`npx playwright test`), 35 stories over 8 industries. |
 | `game/state_cli.py` | Reset between visitors, purge rows. |
 | `deploy/` | DCM project that builds the Snowflake objects on any account. |
 | `skills/` | The `loco4coco` visitor flow and `loco4coco-ops` operator skills. |

@@ -4,6 +4,12 @@ For someone who has never run this, on a fresh laptop, against a brand new Snowf
 
 Last updated 2026-08-10.
 
+> **Before you change anything, read [CONSTRAINTS.md](CONSTRAINTS.md).** It states
+> what the event is (Snowflake World Tour, a booth stand, five minutes, one
+> visitor at a time, who is not a developer) and the six venue properties every
+> change is checked against. Setting the thing up does not require it; changing
+> it does.
+
 ## What you end up with
 
 A local booth game. A visitor drives a penguin round an arctic map, answers a few light

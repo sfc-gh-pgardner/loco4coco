@@ -62,7 +62,6 @@ DEFINE TABLE {{db}}.{{schema}}.SESSIONS (
   FIRST_NAME          TEXT,
   COMPANY             TEXT,
   INDUSTRY            TEXT          COMMENT 'Inferred from company, confirmable by the visitor',
-  EMAIL               TEXT,
 
   DATA_HELD           ARRAY         COMMENT 'Library picks - data they already hold',
   MARKETPLACE_JOINED  ARRAY         COMMENT 'Marketplace picks - data to enhance it',
@@ -96,7 +95,11 @@ DEFINE TABLE {{db}}.{{schema}}.SESSIONS (
   -- in this table is a pick from a list we wrote; these are the only columns an
   -- SDR can quote back to them.
   PROBLEM_STATEMENT   TEXT          COMMENT 'Two sentences, typed by the visitor at the letter stage',
-  PLATFORMS           ARRAY         COMMENT 'Where the data lives today - decides the integration path'
+  PLATFORMS           ARRAY         COMMENT 'Where the data lives today - decides the integration path',
+  -- Appended, because DCM's CREATE OR ALTER cannot add a column before the end
+  -- of the list. INDUSTRY holds the human label; this holds the config key,
+  -- which is what groups reliably when a label is reworded.
+  INDUSTRY_KEY        TEXT          COMMENT 'config.industries key, e.g. public | healthcare | other'
 )
   COMMENT = 'One row per booth visitor.';
 
@@ -118,3 +121,79 @@ DEFINE TABLE {{db}}.{{schema}}.TURNS (
   SUCCEEDED         BOOLEAN
 )
   COMMENT = 'Per-turn latency and token cost for each visitor.';
+
+-- ------------------------------------------------------- shared booth context
+-- The five tables below are the *shared* half of the activation: the closed
+-- lists that decide what a blueprint may name. The repo markdown under
+-- skills/loco4coco/references/ stays the source of truth and the offline
+-- fallback; these tables are how that content reaches another SE's laptop, or
+-- Paris, without asking them to pull a git branch.
+--
+-- They are deliberately NOT an MCP server. MCP is not guaranteed on a borrowed
+-- booth laptop (managed settings can disable user and plugin servers), whereas
+-- a Snowflake connection is already a hard requirement. Sharing these is then
+-- an ordinary secure share or listing.
+--
+-- Loaded by deploy/load_context.py, which parses the markdown and MERGEs. The
+-- server reads them at boot and falls back to the markdown on any failure, so
+-- an empty table is degraded, never broken.
+
+DEFINE TABLE {{db}}.{{schema}}.LISTINGS (
+  INDUSTRY     TEXT    COMMENT 'Config industry key: public | healthcare | retail | ...',
+  ORDINAL      NUMBER(4,0) COMMENT 'Display order within the industry, 1-based',
+  TITLE        TEXT,
+  PROVIDER     TEXT    COMMENT 'Recorded constant - SQL exposes a provider for only a minority of listings',
+  ACCESS       TEXT    COMMENT 'Every curated listing is free to acquire, but the value varies: "Free" is perpetual, "Free 14-day trial" and friends expire. Nothing Paid ships.',
+  GLOBAL_NAME  TEXT    COMMENT 'Marketplace global name, e.g. GZSVZAJO3',
+  REGIONS      TEXT    COMMENT 'Region availability, or ALL',
+  URL          TEXT
+)
+  COMMENT = 'Closed list of Marketplace listings the booth may name, by industry. Mirror of marketplace-index.md.';
+
+DEFINE TABLE {{db}}.{{schema}}.GUIDES (
+  ARCHETYPE    TEXT    COMMENT 'POC archetype key, e.g. talk-to-my-data',
+  TITLE        TEXT,
+  SLUG         TEXT    COMMENT 'Appended to delivery.guides_base to form the URL',
+  IS_PRIMARY   BOOLEAN COMMENT 'TRUE for the primary fork; alternates are FALSE'
+)
+  COMMENT = 'Snowflake developer guides a visitor may be sent to fork. Mirror of guides-index.md.';
+
+DEFINE TABLE {{db}}.{{schema}}.FEATURES (
+  NAME         TEXT    COMMENT 'Exact spelling the model must copy',
+  DOCS_URL     TEXT
+)
+  COMMENT = 'CLOSED list of Snowflake features a blueprint may name. A feature absent here is dropped rather than rendered without a link. Mirror of feature-docs.md.';
+
+DEFINE TABLE {{db}}.{{schema}}.ARCHETYPES (
+  ID               TEXT   COMMENT 'e.g. talk-to-my-data',
+  ORDINAL          NUMBER(4,0),
+  FRIENDLY         TEXT   COMMENT 'Shown to the visitor. The ID never is',
+  WHAT_GETS_BUILT  TEXT,
+  FEATURES         TEXT   COMMENT 'Comma-separated, all of which must exist in FEATURES',
+  FORK_SLUG        TEXT,
+  NEEDS_FROM_THEM  TEXT,
+  PROMPT_SKELETON  TEXT,
+  -- Appended rather than placed next to FRIENDLY where it reads better: DCM's
+  -- CREATE OR ALTER cannot add a column before the end of the list. Physical
+  -- order does not matter, because the loader names its columns.
+  VISITOR_PAIN     TEXT   COMMENT 'The complaint in the visitor''s own language. This is what keyword retrieval matches against - "we retype invoices all day" shares no words with AI_EXTRACT, but plenty with this.'
+)
+  COMMENT = 'The nine POC shapes a visitor can be routed to. Mirror of poc-archetypes.md.';
+
+DEFINE TABLE {{db}}.{{schema}}.ROUTES (
+  PLATFORM     TEXT   COMMENT 'Platform chip label, e.g. AWS, Microsoft / Azure',
+  GUIDANCE     TEXT   COMMENT 'How their existing stack reaches Snowflake',
+  DOCS_URL     TEXT
+)
+  COMMENT = 'Integration guidance per platform the visitor says they are on. Mirror of INTEGRATION_PATHS in game/server.py.';
+
+DEFINE TABLE {{db}}.{{schema}}.CONTEXT_MANIFEST (
+  SOURCE_FILE  TEXT   COMMENT 'Repo-relative path the rows were parsed from',
+  TARGET_TABLE TEXT,
+  CONTENT_SHA  TEXT   COMMENT 'SHA-256 of the source file, so a laptop can prove parity',
+  ROW_COUNT    NUMBER(8,0),
+  LOADED_AT    TIMESTAMP_LTZ,
+  LOADED_BY    TEXT,
+  GIT_REF      TEXT   COMMENT 'Commit the load was made from, when available'
+)
+  COMMENT = 'Provenance for the shared context tables. Lets any laptop check its markdown matches the account without diffing content.';

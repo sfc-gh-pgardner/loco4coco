@@ -20,6 +20,16 @@
      board is re-fitted under the visitor and the whole page appears to slide
      downwards as CoCo's reply lands. */
   #bubble, #tray, #hud, #stagebar { flex:0 0 auto; }
+
+  /* While a POV location panel is open, the chrome above the board is dead
+     weight: the panel restates CoCo's question and carries its own status, so
+     the bubble and the work tray are duplicating themselves while stealing
+     ~150px from the interior. On a 768-tall laptop that was the difference
+     between a room and a letterbox slot - sizePovCard() floored the scene at
+     190px because the chrome plus the panel's 340px reservation left nothing.
+     Hidden with display:none rather than visibility, so the flex column
+     actually gives the height back. Restored the moment the panel closes. */
+  #wrap.povfocus #bubble, #wrap.povfocus #tray { display:none; }
   .rail { width:100%; max-width:1056px; }
 
   /* ---------- CoCo's thought bubble: the ONLY place narrative appears ------- */
@@ -98,7 +108,6 @@
     border-color:var(--edge); box-shadow:0 -8px 40px rgba(0,0,0,.75); }
   /* The wake igloo is the first thing a visitor sees, so let it read: a soft
      vignette instead of the near-opaque default overlay. */
-  #ov-wake { background:linear-gradient(rgba(6,12,18,.20),rgba(6,12,18,.62)); }
   /* CoCo's in-scene reply, embedded as a quiet quote (a left accent bar) rather
      than a boxed border that clashed with the panel edge. */
   .say { display:none; margin:4px 0 12px; padding:2px 0 2px 12px;
@@ -157,10 +166,6 @@
     animation:shimmer 3.2s linear infinite; }
   @keyframes shimmer { to { background-position:200% center; } }
   /* roomier spacing on the combined wake + details card */
-  #ov-wake #i-prompt { margin:12px 0 12px; font-size:13px; }
-  #ov-wake .fld { margin-bottom:13px; }
-  #ov-wake .fld label { margin-bottom:5px; }
-  #ov-wake .go { margin-top:14px; }
   .card { width:min(700px,94vw); max-height:88vh; overflow:auto; background:var(--panel);
     border:3px solid var(--warm); border-radius:10px; padding:14px 18px 16px; }
   .card h2 { margin:0; font-size:11px; letter-spacing:.18em; text-transform:uppercase;
@@ -228,7 +233,6 @@
   .go .primary:disabled { animation:none;
     box-shadow:0 0 0 1px rgba(232,134,60,.20); }
   input.invalid { border-color:#FF7A7A !important; }
-  #i-hint.err { color:#FF7A7A; }
 
   /* ---------- the take-it-with-you handover ---------- */
   #bp-hand { display:none; gap:14px; margin-top:14px; padding:12px;
@@ -467,35 +471,6 @@
     <!-- CoCo speaking over the house scene, between the letter and the map -->
     <div id="h-say" class="hsay"></div>
 
-    <!-- CoCo wakes AND takes your details on one screen -->
-    <div class="ov" id="ov-wake"><div class="card" style="border-color:var(--edge)">
-      <h2 id="w-head" style="color:var(--edge)"></h2>
-      <div class="hint" id="w-flavor" style="margin-top:2px"></div>
-      <div class="q" id="w-line" style="margin-top:8px"></div>
-      <div class="q" id="i-open" style="font-size:14px"></div>
-      <div class="hint" id="i-prompt"></div>
-      <div class="fld"><label>Your first name</label>
-        <input type="text" id="i-first" autocomplete="off" spellcheck="false"></div>
-      <div class="fld"><label>Where you work</label>
-        <input type="text" id="i-company" autocomplete="off" spellcheck="false"></div>
-      <div class="fld"><label>Where to post it</label>
-        <input type="email" id="i-email" autocomplete="off" spellcheck="false"></div>
-      <div class="fld"><label>Your industry (optional - I'll guess)</label>
-        <select id="i-industry"></select></div>
-      <!-- The highest-value field on the form. It is the only place the visitor
-           says WHY, and it is captured before they have walked anywhere, so the
-           library, marketplace and workshop prompts all get to lean on it and
-           can therefore be shorter than they were. -->
-      <div class="fld"><label id="i-problab"></label>
-        <textarea id="i-problem" rows="3" spellcheck="false"
-          style="width:100%;resize:vertical;font:inherit;font-size:13px;
-                 line-height:1.4;padding:8px 10px;background:#0A141C;
-                 color:var(--ink);border:1px solid var(--line);
-                 border-radius:5px"></textarea></div>
-      <div class="go"><button class="primary" id="w-go">WAKE UP COCO</button>
-        <span class="keys" id="i-hint">ENTER to continue</span></div>
-    </div></div>
-
     <!-- per-location panel -->
     <div class="ov" id="ov-loc"><div class="card">
       <!-- Scroll region + fixed footer. A sticky footer inside one scroll box
@@ -548,18 +523,15 @@
       <p id="b-sub">PRESS START</p></div>
   </div>
 
-  <!-- the finished blueprint, on screen: the email depends on an operator
-       draining the outbox, so the visitor must be able to read it here -->
-  <!-- The final window: a short, link-free summary of the POC that will be
-       emailed. Demo laptops keep nothing local, so the brief, the Cortex Code
-       prompt and the Word document all travel by email, not by download. -->
+  <!-- The finished blueprint, on screen. The QR handover IS the delivery: demo
+       laptops keep nothing local, so the brief, the Cortex Code prompt and the
+       Word document all travel by presigned link, scanned off the screen. -->
   <div class="ov" id="ov-bp"><div class="card">
     <h2 id="bp-h2">Ready to post</h2>
     <div class="sub" id="bp-sub"></div>
     <div id="bp"></div>
-    <!-- Tier 2 handover. The email depends on an operator draining the outbox,
-         so the visitor must be able to take the document away from the stand
-         itself. This block is the thing that cannot fail. -->
+    <!-- Tier 2 handover. This block is the thing that cannot fail: it is the
+         only way the visitor takes the document away from the stand. -->
     <div id="bp-hand">
       <img id="bp-qr" alt="Scan to download your blueprint" width="150" height="150">
       <div class="handtxt">
@@ -572,7 +544,7 @@
       </div>
     </div>
     <div class="go"><button class="primary" id="bp-send">SEND MY POC</button>
-      <span class="keys" id="bp-keys">Builds your document and the email</span></div>
+      <span class="keys" id="bp-keys">Builds your document and your QR code</span></div>
   </div></div>
   <div class="ov" id="ov-done" style="display:none"><div class="card" style="max-width:420px;text-align:center;padding:28px 24px">
     <div style="font-size:32px;color:#29B5E8;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:14px">
@@ -658,7 +630,6 @@ const P={ x:11,y:11,px:11,py:11,dir:'down',frame:0,moving:0,fromX:11,fromY:11 };
 const keys={};
 let reopenLock=0;
 const blocking = () => panelOpen || $('ov-title').classList.contains('on')
-  || $('ov-wake').classList.contains('on')
   || $('ov-arctic').classList.contains('on')
   || $('ov-letter').classList.contains('on')
   || $('ov-ask').classList.contains('on')
@@ -1457,13 +1428,24 @@ function drawScene(kind){
       // wide scene is most of a metre away - so the hammer and the torch read as
       // floating tools operating themselves. It is now within a flipper's reach,
       // and both tools are drawn with an arm holding them.
-      // Far enough to CoCo's left that the hammer swings in clear air. At
-      // cu*7.2 the head passed straight through his eye on the downstroke.
-      const ax2=ccx+cu*12.5, ay2=BN-h*0.04;
-      // Shoulder height, not head height: the first version started the arm at
-      // ccy-cu*4.4, which put it level with the visor, so the torch appeared to
-      // come out from behind CoCo's head.
-      const shx=ccx+cu*2.8, shy=ccy-cu*3.4;
+      // MEASURED IN CHROMIUM: at ccx+cu*2.8 the shoulder sits INSIDE the body
+      // (the mask is cu*7.6 wide, so the silhouette is +/-cu*3.8) and ccy-cu*3.4
+      // is exactly eye height - so the arm ROOT was painting over CoCo's right
+      // eye on every frame. The hammer itself never touched the face; the arm
+      // did. Rooted outboard of the silhouette and below the eye line instead.
+      const shx=ccx+cu*4.2, shy=ccy-cu*2.0;
+      // The anvil is placed WHERE THE HAMMER LANDS rather than at a guessed
+      // offset. The hammer is a rigid tool rotating about the flipper's grip, so
+      // its reach is fixed geometry - deriving the anvil from it is what makes
+      // the head meet the workpiece instead of stopping short of it or driving
+      // through it. HGRIP/HSHAFT/HSTRUCK are shared with the hammering branch.
+      const HGX=shx+cu*2.6, HGY=shy+cu*1.6;      // the grip, and the pivot
+      const HSHAFT=cu*7.2;                        // grip to head centre
+      // Struck angle kept shallow: the bench line BN is only ~cu*4.6 below
+      // CoCo, so a steeper downswing drives the anvil through the bench.
+      const HRAISED=-1.08, HSTRUCK=0.30;          // radians: up, and down
+      const ax2=HGX+Math.cos(HSTRUCK)*HSHAFT+cu*0.6,
+            ay2=HGY+Math.sin(HSTRUCK)*HSHAFT+cu*1.7+12;
       const flip=(gx,gy)=>{                      // one flipper, shoulder to grip
         // In CoCo's own blue, brightened. Drawn in #1F4258 it was the same value
         // as the wall shading and read as a shadow, not a limb.
@@ -1477,6 +1459,11 @@ function drawScene(kind){
         g.fillRect(gx-cu*1.0,gy-cu*0.9,cu*2.0,cu*1.8);
       };
       const WELD = Math.floor(tick/200)%2===0;
+      // MEASURED: drawn after the tools, the bubble covered ~60% of the raised
+      // hammer head (head clamped to the bubble's bottom edge, pixel count
+      // halved). It is CoCo's thought - the tool he is swinging belongs in front
+      // of it, so it goes down first.
+      drawThinkBubble(g,w*0.5,BN-h*0.055,S*1.9);
 
       // ---- the anvil is furniture: it stays for both jobs.
       g.fillStyle='#3A3A42'; g.fillRect(ax2-18,ay2-8,36,8);   // face
@@ -1544,20 +1531,36 @@ function drawScene(kind){
           g.fillRect(spx,spy,S*1.3,S*1.3);
         }
       } else {
-        // ---- hammering. THE BUG: the head was drawn at hamY-24 while the shaft
-        // ran hamY-20 to hamY+2, so the HANDLE was what reached the anvil. The
-        // head is now at the striking end and its bottom edge lands exactly on
-        // the workpiece at the bottom of the swing.
-        const ph=Math.sin(tick/6);                   // -1 up, +1 struck
+        // ---- hammering. CoCo HOLDS the hammer: it is drawn as one rigid
+        // tool rotating about the point his flipper grips, so the grip, the
+        // shaft and the head can never drift apart.
+        //
+        // THE BUG THIS REPLACES: the shaft was drawn as a fixed vertical bar in
+        // PIXEL offsets (handle 34px above the head) while CoCo's body is placed
+        // in fractions of h. On a short scene h collapses but 34px does not, so
+        // the raised shaft climbed straight through his face. Everything here is
+        // in cu units, which scale with the sprite, so the geometry holds at any
+        // scene height.
+        const ph=Math.sin(tick/6);                   // -1 raised, +1 struck
         const strikeY=ay2-12;                        // top of the workpiece
-        const headBot=strikeY-24+ph*24;              // ph=1 -> touching
-        g.fillStyle='#6A6A72'; g.fillRect(ax2-10,headBot-9,20,9);   // head
-        g.fillStyle='#8A8A94'; g.fillRect(ax2-10,headBot-9,20,2);   // highlight
-        g.fillStyle='#4C4C56'; g.fillRect(ax2+6,headBot-9,4,9);     // peen
-        g.fillStyle='#5A3D22'; g.fillRect(ax2-2,headBot-34,4,25);   // handle up
-        g.fillStyle='#77522F'; g.fillRect(ax2-2,headBot-34,2,25);
-        // Mid-handle, so the grip sits ON the shaft at every point of the swing.
-        flip(ax2-1,headBot-22);
+        // The grip: just beyond the shoulder, on the anvil side. The arm reaches
+        // here and the tool pivots here, so the two are locked together.
+        const gx2=HGX, gy2=HGY;
+        // Raised at -62 degrees, struck at +30. The arc is deliberately kept on
+        // the anvil side of the grip so no part of the swing crosses the head.
+        const ang=HRAISED+(ph+1)/2*(HSTRUCK-HRAISED);
+        const SHAFT=HSHAFT;                          // grip to head centre
+        g.save();
+        g.translate(gx2,gy2); g.rotate(ang);
+        // shaft runs along +x from the grip, head sits at the far end
+        g.fillStyle='#5A3D22'; g.fillRect(0,-cu*0.45,SHAFT,cu*0.9);
+        g.fillStyle='#77522F'; g.fillRect(0,-cu*0.45,SHAFT,cu*0.3);
+        g.fillStyle='#6A6A72'; g.fillRect(SHAFT-cu*0.6,-cu*1.7,cu*2.4,cu*3.4);
+        g.fillStyle='#8A8A94'; g.fillRect(SHAFT-cu*0.6,-cu*1.7,cu*2.4,cu*0.6);
+        g.fillStyle='#4C4C56'; g.fillRect(SHAFT+cu*1.8,-cu*1.1,cu*0.7,cu*2.2);
+        g.restore();
+        // The arm last, so the grip reads as closing over the shaft.
+        flip(gx2,gy2);
         if(ph>0.90){
           // The burst used to be nine long-lived sparks plus a fat translucent
           // disc, which at the first frame of the phase piled up over the hammer
@@ -1577,7 +1580,6 @@ function drawScene(kind){
           g.beginPath(); g.arc(ax2,strikeY+cu*0.6,cu*1.5,0,7); g.fill();
         }
       }
-      drawThinkBubble(g,w*0.5,BN-h*0.055,S*1.9);
     }
     g.fillStyle='rgba(41,181,232,.16)';
     g.fillRect(w*0.5-38,BN-h*0.16,76,h*0.16);
@@ -1674,6 +1676,7 @@ function closeScene(){
   // Nothing put it back, so the MAP inherited the interior's aspect and arrived
   // squashed. Only the interiors were meant to change shape.
   $('ov-loc').classList.remove('pov');
+  $('wrap').classList.remove('povfocus');
   fitCanvas();
 }
 // Tie the POV desk panel to the scene: same width as the canvas, and capped so
@@ -1694,7 +1697,15 @@ function sizePovCard(){
   // proportion, syncSceneBuffer() reshapes the pixel buffer to match this box
   // so the pixels stay square, and measureSafe() reads the panel's live top
   // edge each frame and keeps the furniture line under it.
-  const PAD=10, LAP=26, WIDE=0.42, MAXW=1320, PANEL_MIN=340;
+  // The LIBRARY panel carries two questions - what data you hold, AND the
+  // platform chips for where it sits today - so it needs more room than the
+  // other stops or the second question lands below the fold and gets missed.
+  // That chip answer is what drives the ingestion route in the blueprint, so a
+  // visitor scrolling past it costs the most useful section of the document.
+  const PAD=10, LAP=26, MAXW=1320;
+  const TWO_Q = panelLoc==='library';
+  const WIDE = TWO_Q ? 0.42 : 0.55;          // shorter room, taller panel
+  const PANEL_MIN = TWO_Q ? 460 : 340;
   const ov=$('ov-loc');
   // Measured from where the canvas actually starts, not from the top of the
   // window - the HUD sits above it, and assuming otherwise once put the panel
@@ -1728,7 +1739,12 @@ function syncSceneBuffer(){
   const sc=$('scene'), cv=$('cv'); if(!sc || !cv) return;
   const bw=parseFloat(cv.style.width)||COLS*T*S,
         bh=parseFloat(cv.style.height)||ROWS*T*S;
-  const W=COLS*T*S, H=Math.max(300,Math.round(W*bh/bw));
+  // NO FLOOR ON H. MEASURED in Chromium at 1512x800: a 300px floor while the box
+  // was 288px tall gave a buffer ratio of 0.284 against a CSS ratio of 0.218, so
+  // every interior was stretched ~30% vertically - the exact "aspect ratio is
+  // wrong" symptom. The floor was protecting against a degenerate 0-height
+  // buffer; guard that directly instead and let the ratio hold.
+  const W=COLS*T*S, H=Math.max(8,Math.round(W*bh/bw));
   if(sc.width===W && sc.height===H) return;
   sc.width=W; sc.height=H; sceneW=W; sceneH=H;
   // Resizing a canvas resets its context state, including the smoothing flag -
@@ -1736,8 +1752,7 @@ function syncSceneBuffer(){
   sceneCtx=sc.getContext('2d'); sceneCtx.imageSmoothingEnabled=false;
 }
 
-// ---------------- opening title + combined wake/intake ----------------
-let wokeUp=false;
+// ---------------- opening title + the letter ----------------
 // Convert *phrases* wrapped in asterisks into shimmering spans. Content is our
 // own config copy, so escaping first keeps it safe.
 function sparkle(s){ return esc(s).replace(/\*([^*]+)\*/g,'<span class="spark">$1</span>'); }
@@ -1862,6 +1877,14 @@ async function submitLetter(){
   $('l-go').disabled=true;
   try{
     await post('/api/intake',{first_name:first,company:company,industry:industry,problem:problem});
+    // Re-fetch the checklists: /api/options is keyed on the visitor's INDUSTRY,
+    // and until the letter is submitted the server does not know it, so the
+    // boot-time fetch returns the generic "Something else" set. Without this a
+    // healthcare visitor was offered "Core operational records" instead of
+    // "Patient records" and "Clinical notes" - the industry tailoring existed
+    // in config and on the server, and was thrown away by a stale client cache.
+    await loadOptions();
+    await poll();
     $('ov-letter').classList.remove('on');
     setPhase('line1');
   }catch(e){ showErr('cannot reach server'); }
@@ -1873,76 +1896,6 @@ $('ov-letter').addEventListener('keydown',e=>{
   if(e.key==='Enter') submitLetter();
 });
 
-// CoCo waking and taking the visitor's details are now one screen.
-function openWake(){
-  const k=CFG.intake||{}, wk=k.wake||{};
-  $('w-head').textContent=wk.head||'Sending a CoCo POC to my friend';
-  $('w-flavor').textContent=wk.flavor||'';
-  $('w-line').innerHTML=sparkle(wk.line||'');
-  const op=k.opening||'';
-  $('i-open').innerHTML=sparkle(op);
-  $('i-open').style.display=op?'block':'none';
-  $('i-prompt').textContent=k.prompt||'';
-  (k.fields||[]).forEach(f=>{ const el=$('i-'+(f.id==='first_name'?'first':f.id));
-    if(el) el.placeholder=f.placeholder||''; });
-  const ik=CFG.intake||{};
-  $('i-problab').textContent=ik.problem_label
-    ||'The problem you want to solve (two sentences)';
-  $('i-problem').placeholder=ik.problem_placeholder||'';
-  const s=$('i-industry');
-  if(!s.options.length){
-    // Blank first, with "Let CoCo guess" as an explicit option; both submit null
-    // so CoCo infers the industry from the company.
-    s.innerHTML='<option value="" selected></option>'+
-      '<option value="">Let CoCo guess</option>'+
-      Object.entries(CFG.industries).map(([k2,v])=>`<option value="${k2}">${esc(v.name)}</option>`).join('');
-  }
-  openScene('wake');
-  $('ov-wake').classList.add('on');
-  setTimeout(()=>$('i-first').focus(),40);
-}
-
-async function submitIntake(){
-  const body={ first_name:$('i-first').value.trim(), company:$('i-company').value.trim(),
-    email:$('i-email').value.trim(), industry:$('i-industry').value||null,
-    problem:$('i-problem').value.trim() };
-  // Inline, next to the button, and mark the offending field - the old error
-  // landed in a tiny corner nobody looks at, so a blank email read as "stuck".
-  const hint=$('i-hint');
-  $('i-first').classList.toggle('invalid',!body.first_name);
-  const emailBad = !body.email || !body.email.includes('@');
-  $('i-email').classList.toggle('invalid',emailBad);
-  if(!body.first_name || emailBad){
-    hint.classList.add('err');
-    hint.textContent = !body.first_name
-      ? 'I need your first name to address it'
-      : 'I need an email to post it to';
-    ($('i-first').classList.contains('invalid')?$('i-first'):$('i-email')).focus();
-    return;
-  }
-  hint.classList.remove('err'); hint.textContent='Waking CoCo...';
-  $('w-go').disabled=true;
-  try{
-    const r=await fetch('/api/intake',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body)});
-    if(!r.ok){ hint.classList.add('err');
-      hint.textContent='Something went wrong: '+(await r.text()).slice(0,80);
-      $('w-go').disabled=false; return; }
-    wokeUp=true;
-    showErr(''); $('ov-wake').classList.remove('on'); closeScene();
-    await loadOptions(); await poll();
-  }catch(e){ hint.classList.add('err'); hint.textContent='Cannot reach the server - is it running?'; }
-  $('w-go').disabled=false;
-}
-$('w-go').addEventListener('click',submitIntake);
-// Clear the warning as soon as they start fixing the field.
-['i-first','i-email'].forEach(id=>$(id).addEventListener('input',()=>{
-  $(id).classList.remove('invalid');
-  $('i-hint').classList.remove('err'); $('i-hint').textContent='ENTER to continue';
-}));
-['i-first','i-company','i-email'].forEach(id=>$(id).addEventListener('keydown',e=>{
-  e.stopPropagation(); if(e.key==='Enter') submitIntake(); }));
-$('i-industry').addEventListener('keydown',e=>e.stopPropagation());
 
 // ---------------- location panel ----------------
 const POV_LOCS=['library','marketplace','workshop'];
@@ -2016,8 +1969,13 @@ function openPanel(id){
   // POV locations get the drawn interior behind a low "desk" panel; others use
   // the plain modal.
   const pov=isPov(id);
-  if(pov){ openScene(id); $('ov-loc').classList.add('pov'); sizePovCard(); }
+  if(pov){ openScene(id); $('ov-loc').classList.add('pov');
+           // Drop the bubble and tray BEFORE measuring: sizePovCard() reads
+           // the canvas's live top edge, so it must see the reclaimed space.
+           $('wrap').classList.add('povfocus');
+           sizePovCard(); }
   else { closeScene(); $('ov-loc').classList.remove('pov');
+    $('wrap').classList.remove('povfocus');
     const card=document.querySelector('#ov-loc .card');
     if(card){ card.style.width=''; card.style.maxHeight='';
               card.style.marginTop=''; } }
@@ -2069,9 +2027,24 @@ function openPanel(id){
       `<div class="chip" data-p="${i}">${esc(o)}</div>`).join('');
     [...$('c-plats').children].forEach(el=>{
       el.addEventListener('click',()=>{
-        const i=+el.dataset.p;
-        if(plats.has(i)) plats.delete(i); else plats.add(i);
-        el.classList.toggle('on',plats.has(i));
+        const i=+el.dataset.p, opt=pcfg.options[i],
+              excl=(pcfg.exclusive||[]), isExcl=excl.includes(opt);
+        if(plats.has(i)) plats.delete(i);
+        else{
+          plats.add(i);
+          // GUARDRAIL. "Already in Snowflake" prints "nothing to move" and
+          // "Not sure yet" prints "go and ask"; pairing either with a named
+          // source made the blueprint contradict itself (16 of the 36 possible
+          // pairs did). Tapping one group clears the other, so the visitor
+          // cannot build a contradictory answer. The server re-normalises too.
+          pcfg.options.forEach((o2,j)=>{
+            if(j===i) return;
+            const otherExcl=excl.includes(o2);
+            if(isExcl ? true : otherExcl) plats.delete(j);
+          });
+        }
+        [...$('c-plats').children].forEach((c,j)=>
+          c.classList.toggle('on',plats.has(j)));
       });
     });
   }
@@ -2093,6 +2066,7 @@ function syncGo(){
 }
 function closePanel(){ cancelAutoLeave();
   panelOpen=false; panelLoc=null; reopenLock=Date.now()+700;
+  $('wrap').classList.remove('povfocus');   // give the chrome back first
   fitCanvas();                              // restore natural scene size
   inSceneLoc=null; inScenePhase=null;
   $('ov-loc').classList.remove('on','pov'); closeScene(); }
@@ -2104,7 +2078,7 @@ async function showBp(){
   const p=d.poc||{}; if(!p.poc_name) return;
   window.__bp=d;
   const li=a=>(a||[]).map(x=>`<li>${esc(x)}</li>`).join('');
-  // Names only, no links: everything actionable arrives in the email.
+  // Names only, no links: everything actionable arrives with the document.
   const featNames=(d.features||[]).map(f=>f.name||f).filter(Boolean);
   const joinNames=(d.joined||[]);
   renderBpBody(d,featNames,joinNames,li);
@@ -2120,16 +2094,17 @@ function renderBpBody(d,featNames,joinNames,li){
     ${featNames.length?`<h3>Snowflake features in play</h3><ul>${li(featNames.slice(0,4))}</ul>`:''}
     <div style="margin-top:12px;font-size:13px;color:#9FC2D6;line-height:1.5">
       The full brief, the Cortex Code prompt${p.guide_title?', the guide to fork':''}
-      and your Word document all travel with the blueprint. Take it from the
-      code below now, and it goes to your inbox too.</div>`;
+      and your Word document all travel with the blueprint. Scan the code
+      below to take it with you.</div>`;
 }
 function paintSendBtn(d){
   const btn=$('bp-send'), sub=$('bp-sub'), keys=$('bp-keys'), h2=$('bp-h2');
   if(d.queued || d.draft_created){
     h2.textContent='Your blueprint is ready';
-    // Honest: the email is queued for the stand to send, and the document
-    // itself is available right now. Claiming "SENT" was never true from here.
-    sub.textContent=`Queued for ${d.email} \u2014 and ready to take away below.`;
+    // Honest: the document is staged and available right now. Claiming
+    // "SENT" was never true from here, and there is no longer an address to
+    // send to - the QR is the delivery.
+    sub.textContent='Ready to take away below.';
     // Was disabled: a dead control at the emotional high point. It now plays
     // the posting beat and ends the visit.
     const ready=!!d.document_url;
@@ -2139,9 +2114,9 @@ function paintSendBtn(d){
                           :'Staging your document\u2026';
   } else {
     h2.textContent='Ready to post';
-    sub.textContent=`I\u2019ll build it and queue it for ${d.email}.`;
+    sub.textContent='I\u2019ll build your document and hand it straight to you.';
     btn.disabled=false; btn.textContent='SEND MY POC';
-    keys.textContent='Builds your document and the email';
+    keys.textContent='Builds your document and your QR code';
   }
   paintHandover(d);
 }
@@ -2797,7 +2772,7 @@ function onState(s){
   [...bar.children].forEach((d,i)=>{
     d.className = visited.has(ids[i])?'on':(nearId===ids[i]?'cur':''); });
 
-  const opening = $('ov-wake').classList.contains('on') || $('ov-title').classList.contains('on')
+  const opening = $('ov-title').classList.contains('on')
     || $('ov-arctic').classList.contains('on') || $('ov-letter').classList.contains('on')
     || openingActive();
   $('banner').classList.toggle('on', !haveVisitor() && !opening);

@@ -14,9 +14,10 @@
     "title": "Loco for CoCo",
     "subtitle": "Five minutes to your next data product",
     "time_limit_seconds": 300,
-    "byline": "by Paddy Gardner",
+    "byline": "",
     "operator": "",
-    "_operator_comment": "Who is running THIS stand, and which stand it is. Written to SESSIONS.SE_OPERATOR on every visitor. It was read by the server but never defined here, which is why all 52 existing rows have it empty. Set it per laptop before doors open: it cannot be reconstructed afterwards, and without it 'which stand produced the best conversations' is unanswerable. Format: 'Name / Stand label', e.g. 'P Gardner / Stand 2'."
+    "_operator_comment": "Who is running THIS stand, and which stand it is. Written to SESSIONS.SE_OPERATOR on every visitor. It was read by the server but never defined here, which is why all 52 existing rows have it empty. Set it per laptop before doors open: it cannot be reconstructed afterwards, and without it 'which stand produced the best conversations' is unanswerable. Format: 'Name / Stand label', e.g. 'P Gardner / Stand 2'.",
+    "_byline_comment": "Shown under the title on the start screen. Left EMPTY by default so a fresh cloner does not ship someone else's name at their own event. Set it to your own, or leave blank to show nothing."
   },
   "snowflake": {
     "connection_name": "PG_LONDON",

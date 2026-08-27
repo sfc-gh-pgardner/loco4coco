@@ -83,17 +83,20 @@ w('_Generated from the live `config.json`, `archetypes.md` and `server.py`. '
 w('')
 w('## Why this document exists')
 w('')
-w('Five choices decide the whole blueprint. Three of them are precomputed by '
-  'us and two are decided at runtime, and it matters which is which - only the '
-  'precomputed ones can be improved by editing config.')
+w('A home stage and five screens shape the blueprint. All but one are '
+  'precomputed by us; only the archetype is decided at runtime, and it matters '
+  'which is which - only the precomputed ones can be improved by editing config.')
 w('')
 w('| Step | What the visitor does | Where the options come from | Tunable? |')
 w('|---|---|---|---|')
+w('| 0. The home stage | Answers where their data lives (platforms), which '
+  'country they are in, and where their data and AI may run (residency) | '
+  '`config.platforms`, `config.country`, `config.residency`, `config.sovereignty` '
+  '| **Yes - fully precomputed** |')
 w('| 1. The letter | Types name, company, industry, **and the problem in two '
   'sentences** | Industry list in `config.industries` | Yes - the list |')
-w('| 2. The library | Ticks data they hold, then taps the platforms it sits on '
-  '| `industries.<key>.data_sources` + `config.platforms` | **Yes - fully '
-  'precomputed** |')
+w('| 2. The library | Ticks the data they hold | `industries.<key>.data_sources` '
+  '| **Yes - fully precomputed** |')
 w('| 3. The marketplace | Ticks data to join | `marketplace-index.md`, '
   '6 verified listings per industry | **Yes - fully precomputed** |')
 w('| 4. The workshop | Types one line describing the MVP | Free text | No - '
@@ -112,14 +115,20 @@ w('')
 w('## The tree, top to bottom')
 w('')
 w('```')
+w('HOME STAGE   (precomputed; CoCo reacts to each with a pre-written line)')
+w('  platform  ->  %d universal chips -> integration path in the blueprint'
+  % len(plats))
+w('  country   ->  %d options -> region logic'
+  % len((cfg.get('country') or {}).get('options') or []))
+w('  residency ->  %d options (sovereignty-framed) -> blueprint sovereignty section'
+  % len((cfg.get('residency') or {}).get('options_template') or []))
+w('        |')
 w('LETTER')
 w('  industry  ->  one of %d' % len(inds))
 w('  problem   ->  free text, 400 chars, threaded into every later prompt')
 w('        |')
 w('LIBRARY   (precomputed per industry)')
 w('  data held ->  6 options per industry + "something else"')
-w('  platform  ->  %d universal chips -> integration path in the blueprint'
-  % len(plats))
 w('        |')
 w('MARKETPLACE')
 # Read the discovery mode from config rather than asserting one: this section
@@ -142,7 +151,7 @@ w('WORKSHOP')
 w('  one line  ->  model picks 1 of %d archetypes' % len(arch))
 w('             ->  features + first step come from archetypes.md, no inference')
 w('        |')
-w('POSTBOX   ->  blueprint (.docx today, HTML alongside it) + QR. No email.')
+w('POSTBOX   ->  QA review, then blueprint (.docx) + QR. No email, no local record.')
 w('```')
 w('')
 
@@ -188,7 +197,7 @@ for key, v in inds.items():
 # --------------------------------------------------------- platforms
 w('## The platform question, and what it produces')
 w('')
-w('Asked once in the library, one tap, universal across industries. Each chip '
+w('Asked once on the home stage, one tap, universal across industries. Each chip '
   'writes a concrete route into the blueprint, so this is the section that '
   'turns "we have the data somewhere" into a first task.')
 w('')
@@ -365,6 +374,121 @@ w('No search service, deliberately. At a Snowflake-branded event the same input 
   'must give the same document, and a visitor\'s pain language is bridged to our '
   'feature names through the archetype **pain** text - "we retype invoices all '
   'day" shares no token with `AI_EXTRACT`, but plenty with the pain line.')
+w('')
+
+# ---- pre-prepared scripts ---------------------------------------------------
+# Every fixed, visitor-facing string CoCo shows or says, read verbatim from
+# config.json so marketing can review the exact words. This is the copy that is
+# guaranteed the same for every visitor; the per-turn replies at the Library,
+# Marketplace and Workshop are NOT here because they are model-generated (see the
+# note below). Read, not restated, so it cannot drift from what the booth shows.
+def _q(s):
+    # Show placeholders like {country}/{platform}/{region} literally. Lists
+    # (e.g. the multi-paragraph letter body) are joined into one line.
+    if isinstance(s, (list, tuple)):
+        s = ' '.join(str(x) for x in s)
+    return (s or '').replace('\n', ' ').strip()
+
+
+w('## Pre-prepared scripts (for marketing review)')
+w('')
+w('Every fixed line a visitor sees or hears, in running order, straight from '
+  '`config.json`. **These are pre-written and identical for every visitor.** '
+  'The one-line replies CoCo speaks at the Library, Marketplace and Workshop are '
+  'NOT listed here: they are generated per visit by the model (SNOWFLAKE.CORTEX.'
+  'COMPLETE, `%s`), reflecting back what the visitor just picked. The model '
+  'PICKS from closed lists and REFLECTS; it never writes the copy below, and it '
+  'cannot invent a feature, guide or listing that is not in the curated lists.'
+  % ((cfg.get('coco') or {}).get('complete_model', 'mistral-large2')))
+w('')
+w('Placeholders in braces - `{country}`, `{platform}`, `{region}`, `{first_name}` '
+  '- are filled from the visitor\'s own answers at runtime.')
+w('')
+
+_intro = cfg.get('intro') or {}
+w('### Intro card')
+w('')
+w('- **Title:** %s' % _q(_intro.get('title')))
+w('- **Button:** %s' % _q(_intro.get('button')))
+for _b in (_intro.get('body') or []):
+    w('- %s' % _q(_b))
+w('')
+
+_L = (cfg.get('intake') or {}).get('letter') or {}
+w('### Home stage - CoCo\'s narrative')
+w('')
+w('The penguin arrives, reads a letter, and walks the visitor to the questions. '
+  'Every line is fixed:')
+w('')
+for _k in ['arctic', 'arctic_sub', 'greeting', 'body', 'signoff', 'button',
+           'line1', 'line2', 'map_line', 'bubble']:
+    if _L.get(_k):
+        w('- **%s:** %s' % (_k, _q(_L.get(_k))))
+w('')
+
+w('### Home stage - the three questions')
+w('')
+for _sec, _optkey in [('platforms', 'options'), ('country', 'options'),
+                      ('residency', 'options_template')]:
+    _b = cfg.get(_sec) or {}
+    w('**%s**' % _q(_b.get('heading')))
+    w('')
+    if _b.get('hint'):
+        w('- _Hint:_ %s' % _q(_b.get('hint')))
+    for _o in (_b.get(_optkey) or []):
+        w('- %s' % _q(_o))
+    w('')
+
+_sov = cfg.get('sovereignty') or {}
+w('### Sovereignty - CoCo\'s reactions and blueprint pillars')
+w('')
+w('CoCo answers each home-stage choice with a fixed reassurance (`react`); the '
+  'four `pillars` are reused verbatim in the blueprint\'s sovereignty section.')
+w('')
+w('Reactions:')
+for _k, _v in (_sov.get('react') or {}).items():
+    w('- **%s:** %s' % (_k, _q(_v)))
+w('')
+w('Pillars:')
+for _k, _v in (_sov.get('pillars') or {}).items():
+    w('- **%s:** %s' % (_k, _q(_v)))
+w('')
+
+_ik = cfg.get('intake') or {}
+w('### The letter - what the visitor types')
+w('')
+w('- **Prompt:** %s' % _q(_ik.get('prompt')))
+for _f in (_ik.get('fields') or []):
+    w('- **%s** (`%s`)%s' % (_q(_f.get('label')), _f.get('id', ''),
+                             ' - ' + _q(_f.get('placeholder')) if _f.get('placeholder') else ''))
+w('- Industry is picked from the %d-item list; the problem is free text '
+  '(threaded into every later prompt and into the document).' % len(inds))
+if (cfg.get('sourcing') or {}).get('synthetic_hint'):
+    w('- **Library synthetic-data hint:** %s'
+      % _q(cfg['sourcing']['synthetic_hint']))
+w('')
+
+_ask = cfg.get('ask') or {}
+w('### The workshop - the one line we ask for')
+w('')
+for _k in ['heading', 'hint', 'placeholder', 'button', 'skip']:
+    if _ask.get(_k):
+        w('- **%s:** %s' % (_k, _q(_ask.get(_k))))
+w('')
+
+# Postbox / delivery lines. Kept explicit here (mirroring QRDelivery.deliver in
+# server.py) rather than parsed: the reply is assembled from concatenated f-string
+# fragments, so a regex over the class body pulls in code and the docstring. Two
+# lines only, so a human check against server.py on change is trivial.
+w('### The postbox - delivery lines')
+w('')
+w('CoCo speaks one of these when the visitor presses send (`{first_name}` is '
+  'filled in if given):')
+w('')
+w('- **On success:** Wrapped and labelled, {first_name}. Scan the code on screen '
+  'and it is yours - the link works for seven days.')
+w('- **If staging fails:** I could not wrap it up this time - grab a Snowflake '
+  'person and we will sort it.')
 w('')
 
 # ---- flagged for review -----------------------------------------------------

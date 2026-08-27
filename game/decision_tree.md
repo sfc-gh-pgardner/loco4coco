@@ -4,12 +4,13 @@ _Generated from the live `config.json`, `archetypes.md` and `server.py`. Every o
 
 ## Why this document exists
 
-Five choices decide the whole blueprint. Three of them are precomputed by us and two are decided at runtime, and it matters which is which - only the precomputed ones can be improved by editing config.
+A home stage and five screens shape the blueprint. All but one are precomputed by us; only the archetype is decided at runtime, and it matters which is which - only the precomputed ones can be improved by editing config.
 
 | Step | What the visitor does | Where the options come from | Tunable? |
 |---|---|---|---|
+| 0. The home stage | Answers where their data lives (platforms), which country they are in, and where their data and AI may run (residency) | `config.platforms`, `config.country`, `config.residency`, `config.sovereignty` | **Yes - fully precomputed** |
 | 1. The letter | Types name, company, industry, **and the problem in two sentences** | Industry list in `config.industries` | Yes - the list |
-| 2. The library | Ticks data they hold, then taps the platforms it sits on | `industries.<key>.data_sources` + `config.platforms` | **Yes - fully precomputed** |
+| 2. The library | Ticks the data they hold | `industries.<key>.data_sources` | **Yes - fully precomputed** |
 | 3. The marketplace | Ticks data to join | `marketplace-index.md`, 6 verified listings per industry | **Yes - fully precomputed** |
 | 4. The workshop | Types one line describing the MVP | Free text | No - but the archetype it maps to is |
 | 5. The postbox | Posts it | - | - |
@@ -19,13 +20,17 @@ With `discovery: manual` there is now only ONE runtime decision: which of the 9 
 ## The tree, top to bottom
 
 ```
+HOME STAGE   (precomputed; CoCo reacts to each with a pre-written line)
+  platform  ->  9 universal chips -> integration path in the blueprint
+  country   ->  8 options -> region logic
+  residency ->  4 options (sovereignty-framed) -> blueprint sovereignty section
+        |
 LETTER
   industry  ->  one of 8
   problem   ->  free text, 400 chars, threaded into every later prompt
         |
 LIBRARY   (precomputed per industry)
   data held ->  6 options per industry + "something else"
-  platform  ->  9 universal chips -> integration path in the blueprint
         |
 MARKETPLACE
   6-6 curated, region-verified options per industry  (discovery: manual)
@@ -35,7 +40,7 @@ WORKSHOP
   one line  ->  model picks 1 of 9 archetypes
              ->  features + first step come from archetypes.md, no inference
         |
-POSTBOX   ->  blueprint (.docx today, HTML alongside it) + QR. No email.
+POSTBOX   ->  QA review, then blueprint (.docx) + QR. No email, no local record.
 ```
 
 ## Per industry
@@ -276,7 +281,7 @@ For each industry: what the library offers, and the six curated Marketplace list
 
 ## The platform question, and what it produces
 
-Asked once in the library, one tap, universal across industries. Each chip writes a concrete route into the blueprint, so this is the section that turns "we have the data somewhere" into a first task.
+Asked once on the home stage, one tap, universal across industries. Each chip writes a concrete route into the blueprint, so this is the section that turns "we have the data somewhere" into a first task.
 
 | Chip | Route the blueprint prints |
 |---|---|
@@ -390,6 +395,114 @@ Layer 4 is why this document matters operationally: on a flat venue network with
 The closed lists reach the model as **content in the prompt**, not as a tool: `cortex exec` takes no tools except through MCP, and MCP is not guaranteed on a borrowed booth laptop. The corpus is ~150 rows, so `game/context.py` scores it in process and injects only the slice that matches the visitor's own words (~220 tokens).
 
 No search service, deliberately. At a Snowflake-branded event the same input must give the same document, and a visitor's pain language is bridged to our feature names through the archetype **pain** text - "we retype invoices all day" shares no token with `AI_EXTRACT`, but plenty with the pain line.
+
+## Pre-prepared scripts (for marketing review)
+
+Every fixed line a visitor sees or hears, in running order, straight from `config.json`. **These are pre-written and identical for every visitor.** The one-line replies CoCo speaks at the Library, Marketplace and Workshop are NOT listed here: they are generated per visit by the model (SNOWFLAKE.CORTEX.COMPLETE, `mistral-large2`), reflecting back what the visitor just picked. The model PICKS from closed lists and REFLECTS; it never writes the copy below, and it cannot invent a feature, guide or listing that is not in the curated lists.
+
+Placeholders in braces - `{country}`, `{platform}`, `{region}`, `{first_name}` - are filled from the visitor's own answers at runtime.
+
+### Intro card
+
+- **Title:** Loco for CoCo
+- **Button:** START
+- This is a fun way to experience the power of Cortex Code (CoCo) through the medium of an arcade game.
+- You have 5 minutes to explore the key aspects of building out a Proof of Concept on Snowflake with CoCo as your tour guide on our features, marketplace datasets and how enterprise-grade AI can bring your ideas to life.
+- After 5 minutes you will have a personalised action plan (scan it and keep it) to building out a project on Snowflake - be daring! This is a fun, flexible process with a very real and useful outcome!
+- Anything you type stays private - it is shared only with you and Snowflake, and never sold on or shared with anyone else.
+
+### Home stage - CoCo's narrative
+
+The penguin arrives, reads a letter, and walks the visitor to the questions. Every line is fixed:
+
+- **arctic:** Somewhere in the Arctic...
+- **arctic_sub:** (Yes, penguins live in Antarctica, but CoCo is special!)
+- **greeting:** Hey CoCo,
+- **body:** It's your friend {first_name}! I've heard you and the Cortex Crew have been cooking up some amazing products recently. Me and my team at {company} wanted to learn more. We're particularly interested in {industry} and wanted to understand what an MVP/POC would look like for this on Snowflake. Could you help us out?
+- **signoff:** Signed {first_name}
+- **button:** THAT'S BETTER
+- **line1:** A letter, from my friend {first_name}! Better get to work...
+- **line2:** Anyway, let's go and get this show on the road.
+- **map_line:** First stop is my Data Library. That's where I keep all the unstructured, semi-structured and structured data that would be useful for {first_name} and {company}.
+- **bubble:** Wow, a letter from my friend! Shame I can't make out some of these words... (Please fill this in with your details)
+
+### Home stage - the three questions
+
+**Where does your data live today?**
+
+- _Hint:_ Tap every platform it sits on. This is what decides how we get it into Snowflake.
+- Microsoft / Azure
+- AWS
+- Google Cloud
+- Oracle
+- SAP
+- On-premise / our own servers
+- SaaS apps (Salesforce, Workday, etc.)
+- Already in Snowflake
+- Not sure yet
+
+**And where is your company based?**
+
+- _Hint:_ One tap. It helps me keep your data where your rules need it.
+- United Kingdom
+- Ireland
+- France
+- Germany
+- Netherlands
+- Nordics
+- Rest of EU
+- Somewhere else
+
+**Where are your data and AI models allowed to run?**
+
+- _Hint:_ This shapes the region we build in. One tap.
+- {country} only
+- Anywhere in the EU is fine
+- The US is fine too
+- Not sure yet
+
+### Sovereignty - CoCo's reactions and blueprint pillars
+
+CoCo answers each home-stage choice with a fixed reassurance (`react`); the four `pillars` are reused verbatim in the blueprint's sovereignty section.
+
+Reactions:
+- **platform_already:** Perfect - it's already in Snowflake, so we skip the plumbing and go straight to building.
+- **platform_unsure:** No problem - we'll work the plumbing out together, it's usually the easy part.
+- **platform_named:** Good - I know exactly how to get data out of {platform} and into Snowflake, in region and without copying it around.
+- **country:** {country}, lovely. I'll keep everything where {country}'s rules need it.
+- **residency_country_only:** Understood - everything stays in {country}. Your data, the AI models, all of it.
+- **residency_eu:** Great - we'll keep it inside the EU. Data and models both, no border crossings.
+- **residency_us_ok:** Plenty of room to work with, then - and it still stays wherever you choose.
+- **residency_unsure:** We'll keep it close to home by default - you can always widen it later.
+
+Pillars:
+- **data:** Your data never leaves {region}: it stays in your own Snowflake account, in region, not copied out to be processed.
+- **models:** Cortex runs the AI models where your data already lives, so nothing crosses a border to be understood.
+- **marketplace:** Marketplace data is shared live rather than copied, and you are only ever offered listings available in {region}.
+- **governance:** One set of controls - role-based access, masking, row-level policies - governs all of it, in one place.
+
+### The letter - what the visitor types
+
+- **Prompt:** Please enter your details:
+- **Your first name** (`first_name`) - e.g. Priya
+- **Where you work** (`company`) - e.g. NHS Trust, Barclays, Tesco
+- Industry is picked from the 8-item list; the problem is free text (threaded into every later prompt and into the document).
+- **Library synthetic-data hint:** CoCo can mimic any shelf as synthetic data so a POC can start before the real feed exists. Generate it in Snowflake with GENERATOR and RANDOM, or let Cortex fabricate realistic rows from a description.
+
+### The workshop - the one line we ask for
+
+- **heading:** Ask CoCo one thing
+- **hint:** Optional. One question about your POC and CoCo will look it up properly.
+- **placeholder:** e.g. what would we need before we could trust the predictions?
+- **button:** ASK COCO
+- **skip:** SKIP THIS
+
+### The postbox - delivery lines
+
+CoCo speaks one of these when the visitor presses send (`{first_name}` is filled in if given):
+
+- **On success:** Wrapped and labelled, {first_name}. Scan the code on screen and it is yours - the link works for seven days.
+- **If staging fails:** I could not wrap it up this time - grab a Snowflake person and we will sort it.
 
 ## Flagged for review
 

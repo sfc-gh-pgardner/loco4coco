@@ -1347,10 +1347,10 @@ def build_coco_prompt(cfg, state):
 
 # ------------------------------------------------------------------- blueprint
 
-# The blueprint email body (blueprint_html) was removed with the outbox
-# on 2026-08-27: nothing composes an email any more, the QR to the
-# presigned .docx is the delivery, and the on-screen read surface is
-# blueprint_page below.
+# HTML output is gone entirely. The email body (blueprint_html) went with
+# the outbox, and the on-screen page (blueprint_page) plus its /blueprint
+# route went on 2026-08-27: the QR to the presigned .docx is the only
+# delivery surface, so there is one artifact to review, not two.
 
 
 INTEGRATION_PATHS = {
@@ -1538,138 +1538,6 @@ SNOWFLAKE_SVG = (
         'fill="#29B5E8"/></g>' % (i * 60) for i in range(6))
     + '<path d="M0 -15 L15 0 L0 15 L-15 0 Z" fill="#29B5E8"/>'
       '<path d="M0 -6 L6 0 L0 6 L-6 0 Z" fill="#F4F8FB"/></svg>')
-
-
-def blueprint_page(cfg, state):
-    """The blueprint as a standalone page, written to a temp file.
-
-    Same data as the .docx, different medium. Three things it can do that the
-    document cannot: render instantly on the phone that scanned the QR, make
-    every doc link tappable, and put a copy button on the CoCo prompt - which is
-    the one part of the blueprint the visitor has to move somewhere else.
-    """
-    e = html.escape
-    vis = state.get("visitor") or {}
-    poc = state.get("poc") or {}
-    d = cfg.get("delivery") or {}
-    held = state.get("held") or []
-    joined = state.get("joined") or []
-    listings = state.get("joined_listings") or []
-    prompt = build_coco_prompt(cfg, state)
-    signup = d.get("signup_url", "")
-    city = ((cfg.get("event") or {}).get("city") or "")
-
-    P = []
-    a = P.append
-    a("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">")
-    a("<meta name=\"viewport\" content=\"width=device-width,"
-      "initial-scale=1\">")
-    a("<title>%s</title>" % e(poc.get("poc_name") or "Your Snowflake POC"))
-    a("<style>%s</style></head><body><div class=\"wrap\">" % BLUEPRINT_CSS)
-
-    a("<header>" + SNOWFLAKE_SVG)
-    a("<h1>%s</h1>" % e(poc.get("poc_name") or "Your proof of concept"))
-    who = e(vis.get("first_name") or "you")
-    if vis.get("company"):
-        who += " at " + e(vis["company"])
-    a("<p class=\"for\">For %s%s</p>" % (
-        who, " &middot; Snowflake World Tour " + e(city) if city else ""))
-    if poc.get("summary"):
-        a("<p class=\"lede\">%s</p>" % e(poc["summary"]))
-    a("</header>")
-
-    # The prompt goes FIRST on the page. It is the only thing that has to travel
-    # somewhere else, and burying it under four reference sections on a phone is
-    # how it gets lost.
-    a("<section><h2>Start here</h2><ol>")
-    a("<li>Start a free Snowflake trial%s.</li>"
-      % (" at <a href=\"%s\">%s</a>" % (e(signup), e(signup)) if signup else ""))
-    a("<li>Open Cortex Code.</li>")
-    a("<li>Paste the prompt below as your first message.</li></ol>")
-    a("<pre id=\"p\">%s</pre>" % e(prompt))
-    a("<button class=\"btn\" id=\"c\" style=\"margin-top:12px\">"
-      "Copy the prompt</button>")
-    if signup:
-        a("<a class=\"btn alt\" href=\"%s\">Start a free trial</a>" % e(signup))
-    a("</section>")
-
-    if poc.get("first_step"):
-        a("<section><h2>Your first step</h2><p style=\"margin:0\">%s</p>"
-          "</section>" % e(poc["first_step"]))
-
-    if held:
-        a("<section><h2>Data you already hold</h2><ul>")
-        for h in held:
-            a("<li>%s</li>" % e(h))
-        a("</ul></section>")
-
-    paths = integration_paths(state)
-    if paths:
-        a("<section><h2>Getting that data into Snowflake</h2><ul>")
-        for plat, howto, url in paths:
-            a("<li><b>%s</b><span class=\"note\">%s</span>"
-              "<a href=\"%s\">%s</a></li>" % (e(plat), e(howto), e(url),
-                                             e(url)))
-        a("</ul></section>")
-
-    sov = sovereignty_lines(cfg, state)
-    if sov:
-        a("<section><h2>Sovereignty and security</h2><ul>")
-        for line in sov:
-            a("<li>%s</li>" % e(line))
-        a("</ul></section>")
-
-    if listings or joined:
-        a("<section><h2>Attach from the Marketplace</h2><ul>")
-        named = set()
-        for r in listings:
-            named.add(r["title"])
-            a("<li><a href=\"%s\"><b>%s</b></a>"
-              "<span class=\"note\">%s &middot; %s</span></li>"
-              % (e(r["url"]), e(r["title"]), e(r["provider"]), e(r["access"])))
-        for j in joined:
-            if j not in named:
-                a("<li><b>%s</b><span class=\"note\">Search the Marketplace "
-                  "for a provider</span></li>" % e(j))
-        a("</ul></section>")
-
-    feats = link_features(poc.get("features") or [])
-    if feats:
-        a("<section><h2>Features you will use</h2><ul>")
-        for name, docurl in feats:
-            a("<li><a href=\"%s\"><b>%s</b></a></li>" % (e(docurl), e(name)))
-        a("</ul></section>")
-
-    cons = poc.get("considerations") or []
-    if cons:
-        a("<section><h2>Worth thinking about</h2><ul>")
-        for c in cons:
-            a("<li>%s</li>" % e(str(c)))
-        a("</ul></section>")
-
-    problem = (vis.get("problem") or "").strip()
-    if problem:
-        a("<section><h2>The problem you described</h2>"
-          "<p style=\"margin:0\">%s</p></section>" % e(problem))
-
-    a("<footer>Built with you at the Snowflake booth.</footer>")
-    a("</div><script>")
-    # No inline handler and no remote script: this file gets served from a
-    # presigned URL, so it has to be self-contained and boring.
-    a("document.getElementById('c').addEventListener('click',function(){"
-      "var t=document.getElementById('p').textContent;"
-      "var b=this;navigator.clipboard&&navigator.clipboard.writeText(t)"
-      ".then(function(){b.textContent='Copied';"
-      "setTimeout(function(){b.textContent='Copy the prompt';},1800);});});")
-    a("</script></body></html>")
-
-    name = re.sub(r"[^A-Za-z0-9]+", "-",
-                  (vis.get("first_name") or "visitor")).strip("-") or "visitor"
-    path = os.path.join(tempfile.gettempdir(),
-                        "loco4coco-%s-%d.html" % (name, int(time.time())))
-    with open(path, "w", encoding="utf-8") as f:
-        f.write("\n".join(P))
-    return path
 
 
 def blueprint_docx(cfg, state):
@@ -2267,7 +2135,16 @@ def refine_poc(cfg, text):
             "most relevant candidates above, \"readiness\": integer 1-5}\n"
             "Score readiness strictly: only award 4 or 5 if they named specific "
             "data, a specific question and a specific user. Nobody sees the "
-            "number, so be honest rather than kind."
+            "number, so be honest rather than kind.\n\n"
+            # Prevention, not just detection. This text is printed and handed to
+            # a stranger at a public booth, and a real blueprint came back with
+            # the word "die" in it. The QA bot repairs that as a backstop; this
+            # is the instruction meant to stop it being written at all.
+            "Word choice matters: this goes into a document handed to a visitor "
+            "at a public booth. Never use the words die, dies, dying, kill, "
+            "killed, killing, suicide, cripple or crippled, and never use "
+            "violent or morbid metaphors for systems failing. Say fails, stops, "
+            "degrades or goes down instead. Keep the register plain and calm."
         )
         loc = {"transport": "complete"}
         ok, raw, _meta = run_turn(cfg, prompt, "workshop_refine", loc=loc)
@@ -2433,6 +2310,46 @@ def qa_review(cfg, state, poc):
         elif relevant is None:
             note("relevance_skipped", "info",
                  "relevance check did not complete; delivery proceeded")
+
+    # 9. Banned words. A booth document goes home with a stranger, so a few
+    # words are simply not acceptable in it however apt the model thought they
+    # were - "die" turned up in a real blueprint. Prevention lives in the exec
+    # prompts (see locations.workshop.prompt); this is the backstop that catches
+    # it when the model ignores them. Repaired in place, and logged, because
+    # silently shipping it is the one outcome we cannot have.
+    for field, replacement in (("die", "fail"), ("dies", "fails"),
+                               ("dying", "failing"), ("kill", "stop"),
+                               ("killed", "stopped"), ("killing", "stopping"),
+                               ("suicide", "self-inflicted outage"),
+                               ("cripple", "degrade"), ("crippled", "degraded")):
+        pat = re.compile(r"\b" + re.escape(field) + r"\b", re.I)
+
+        def _sub(m, rep=replacement):
+            # Match the case we found, so a sentence-initial "Kill" does not
+            # become a lower-case "stop" and leave the prose looking broken.
+            got = m.group(0)
+            if got.isupper():
+                return rep.upper()
+            if got[:1].isupper():
+                return rep[:1].upper() + rep[1:]
+            return rep
+
+        for key in ("poc_name", "summary", "why_now", "first_step"):
+            val = poc.get(key)
+            if not isinstance(val, str) or not pat.search(val):
+                continue
+            fixed = pat.sub(_sub, val)
+            note("banned_word", "flag",
+                 f"{field!r} removed from {key}", True, val, fixed)
+            poc[key] = fixed
+        steps = poc.get("steps")
+        if isinstance(steps, list):
+            for i, s in enumerate(steps):
+                if isinstance(s, str) and pat.search(s):
+                    fixed = pat.sub(_sub, s)
+                    note("banned_word", "flag",
+                         f"{field!r} removed from steps[{i}]", True, s, fixed)
+                    steps[i] = fixed
 
     repairs = sum(1 for f in findings if f["repaired"])
     flags = sum(1 for f in findings if f["severity"] == "flag")
@@ -2607,24 +2524,6 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(501, b"segno not installed")
             except Exception as e:                                # noqa: BLE001
                 return self._send(500, str(e)[:200].encode("utf-8"))
-        if path == "/blueprint":
-            # The HTML blueprint, served by US with a real content type.
-            # WHY THIS EXISTS: a presigned stage URL always serves
-            # application/octet-stream (measured - GET_PRESIGNED_URL gives no way
-            # to set it), so a QR pointing at the staged .html makes a phone
-            # DOWNLOAD the file instead of rendering it. The QR therefore points
-            # at the .docx, and the same markup renders here, on the booth screen,
-            # and as the body of the email. This is the surface to replace the
-            # day there is an SPCS or Streamlit endpoint to host it on.
-            try:
-                cfg, st = load_config(), read_state()
-                page = blueprint_page(cfg, st)
-                if not page:
-                    return self._send(404, b"no blueprint yet")
-                with open(page, "rb") as fh:
-                    return self._send(200, fh.read(), MIME[".html"])
-            except Exception as e:                                # noqa: BLE001
-                return self._send(500, str(e)[:200].encode("utf-8"))
         if path == "/api/delivery/check":
             return self._delivery_check()
         if path in ("/", "/index.html"):
@@ -2775,7 +2674,24 @@ class Handler(BaseHTTPRequestHandler):
         vis = dict(cur.get("visitor") or {})
         vis["company_country"] = country
         vis["residency"] = residency
-        st = write_state({"platforms": plats[:8], "visitor": vis})
+        # The house is a location now, so its exchanges belong in the history
+        # the visitor can scroll back through. The client sends the wording it
+        # actually displayed, so the recalled reply matches what they saw. Only
+        # the region and residency questions are logged - the identity answers
+        # (company, persona name) are deliberately not recallable.
+        turns = list(cur.get("turns") or [])
+        for ex in (b.get("exchanges") or [])[:4]:
+            if not isinstance(ex, dict):
+                continue
+            txt = str(ex.get("text") or "").strip()[:240]
+            rep = str(ex.get("reply") or "").strip()[:1200]
+            if txt and rep:
+                turns.append({"location": "house", "text": txt,
+                              "reply": rep, "at": time.time()})
+        patch = {"platforms": plats[:8], "visitor": vis}
+        if len(turns) != len(cur.get("turns") or []):
+            patch["turns"] = turns
+        st = write_state(patch)
         return self._json({"ok": True, "state": st})
 
     def _select(self):

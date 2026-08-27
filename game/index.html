@@ -49,7 +49,7 @@
      pushing the canvas and tray off-screen. */
   /* min-height reserves the space a three-line reply needs, so short and long
      messages occupy the same box and the chrome budget stays constant. */
-  #bubble .msg { margin-top:4px; font-size:15px; line-height:1.5;
+  #bubble .msg { margin-top:4px; font-size:17px; line-height:1.55;
     white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
     min-height:68px; max-height:18vh; overflow-y:auto; }
   #hist { display:flex; gap:5px; align-items:center; }
@@ -118,8 +118,8 @@
      than a boxed border that clashed with the panel edge. */
   .say { display:none; margin:4px 0 12px; padding:2px 0 2px 12px;
     border-left:3px solid var(--edge); background:transparent;
-    font-size:14px; line-height:1.5; white-space:pre-wrap; word-break:break-word;
-    max-height:20vh; overflow-y:auto; }
+    font-size:16px; line-height:1.55; white-space:pre-wrap; word-break:break-word;
+    max-height:24vh; overflow-y:auto; }
   .say.on { display:block; }
   .say b { color:var(--warm); font-size:10px; letter-spacing:.16em;
     text-transform:uppercase; display:block; margin-bottom:3px; }
@@ -171,14 +171,19 @@
     -webkit-text-fill-color:transparent; color:transparent; font-weight:700;
     animation:shimmer 3.2s linear infinite; }
   @keyframes shimmer { to { background-position:200% center; } }
+  /* A flat highlight colour, not the shimmer: used for the privacy promise in
+     the intro, which needs to stand out without looking like marketing. */
+  .ihl { color:#6FD3F2; font-weight:700; }
   /* roomier spacing on the combined wake + details card */
   .card { width:min(700px,94vw); max-height:88vh; overflow:auto; background:var(--panel);
     border:3px solid var(--warm); border-radius:10px; padding:14px 18px 16px; }
   .card h2 { margin:0; font-size:11px; letter-spacing:.18em; text-transform:uppercase;
     color:var(--warm); }
   .card .sub { font-size:12px; color:var(--dim); margin-top:2px; }
-  .card .q { margin:11px 0 3px; font-size:16px; }
-  .card .hint { font-size:12px; color:var(--dim); margin-bottom:9px; }
+  /* Booth reading distance: the visitor is standing, often a metre back, so the
+     words CoCo says and the question being asked both run larger than chrome. */
+  .card .q { margin:11px 0 3px; font-size:18px; }
+  .card .hint { font-size:13.5px; color:var(--dim); margin-bottom:9px; }
 
   /* checklist: the panel carries STRUCTURE, never the narrative */
   .opts { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
@@ -211,8 +216,8 @@
   button.primary:disabled { opacity:.45; cursor:default; filter:none; }
   .go .keys { font-size:11px; color:#5E8399; }
   .chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:4px; }
-  .chip { padding:5px 9px; border:1px solid var(--line); border-radius:12px;
-    background:#0A141C; color:#8FB4CB; font:600 11px/1 var(--ff);
+  .chip { padding:6px 11px; border:1px solid var(--line); border-radius:12px;
+    background:#0A141C; color:#8FB4CB; font:600 13px/1 var(--ff);
     cursor:pointer; user-select:none; }
   .chip:hover { border-color:var(--edge); }
   .chip.on { background:var(--edge); border-color:var(--edge); color:#08131B; }
@@ -560,8 +565,6 @@
         <div class="handp" id="bp-handp">Scan this with your phone camera to
           download your Word blueprint. The link works for seven days.</div>
         <a id="bp-link" class="handlink" target="_blank" rel="noopener"></a>
-        <a id="bp-read" class="handlink" target="_blank" rel="noopener"
-          style="display:none;margin-left:12px">Read it on screen →</a>
       </div>
     </div>
     <div class="go"><button class="primary" id="bp-send">POST IT TO ME</button>
@@ -839,7 +842,12 @@ function render(){
     drawStructure(g,l.kind,l.tile[0],l.tile[1],visited.has(id)));
   drawPenguin(g,P.px*T*S,P.py*T*S);
   drawRoute(g);
-  drawLabels(g); drawSnowfall(g);
+  drawLabels(g);
+  // Snow belongs outdoors. While the visitor is inside a location the board is
+  // covered by #scene, so this only ever wasted frames - but gating it means
+  // snow can never bleed into the library or the workshop, whatever changes
+  // later to the scene canvas's opacity or size.
+  if(!sceneActive) drawSnowfall(g);
 }
 
 // A gentle "go here next" cue: chevrons marching from the penguin toward the
@@ -980,7 +988,9 @@ function drawThinkBubble(g,cx,cy,u){
   g.fillRect(bx+2*u,by-u,bw-4*u,bh+2*u);
   // three puffs shrinking along the diagonal from the crown up to the cloud
   g.fillStyle='#9FC2D6';
-  const puffs=[[0.30,2.2],[0.62,1.6],[0.86,1.1]];
+  // Smallest puff at the crown, growing toward the cloud: the trail should
+  // read as a thought expanding outward, not shrinking into his head.
+  const puffs=[[0.30,1.1],[0.62,1.6],[0.86,2.2]];
   for(const [t,s] of puffs){
     const px=ax+(bx+2*u-ax)*t, py=ay+(by+bh-ay)*t;
     g.fillRect(px-s*u/2, py-s*u/2, s*u, s*u);
@@ -1690,10 +1700,21 @@ function drawScene(kind){
     g.fillStyle='#3A2A1C'; g.fillRect(bx+bw*0.36,by+bh*0.55,bw*0.28,bh*0.45);
     g.fillStyle='#C4553E'; g.fillRect(bx,by,bw,bh*0.60);
     g.fillStyle='#A6412F'; g.fillRect(bx,by,bw,6);
-    g.fillStyle='#16222E'; g.fillRect(bx+bw*0.18,by+bh*0.22,bw*0.64,7);   // slot
-    // the envelope: arcs across, tips into the slot, then it is gone
+    // The envelope, the hole and the red lip all have to agree. Previously the
+    // hole was a fixed fraction of the box and the letter was a fraction of the
+    // stage, so the letter came out WIDER than the lip; and the lip was painted
+    // last, so the letter sank behind it. Now the hole is sized from the letter
+    // it has to swallow, and the letter is drawn ON TOP of the lip going in.
     const slotX=bx+bw*0.5, slotY=by+bh*0.22;
     const ew=w*0.075, eh=h*0.052;
+    const holeW=Math.max(bw*0.64, ew+w*0.014);       // never narrower than the letter
+    const holeH=Math.max(9,eh*0.30);
+    const holeX=slotX-holeW/2;
+    g.fillStyle='#16222E'; g.fillRect(holeX,slotY,holeW,holeH);          // the hole
+    if(p>0.60){                                                          // the lip
+      g.fillStyle='#A6412F';
+      g.fillRect(holeX,slotY-(p<0.72?4:0),holeW,7);
+    }
     if(p<0.62){
       const t=p/0.62;
       const ex_start=w*0.30, ex_end=slotX-ew/2;
@@ -1709,10 +1730,6 @@ function drawScene(kind){
       const t=(p-0.62)/0.16;                         // sinking into the slot
       g.fillStyle='#EADFC6';
       g.fillRect(slotX-ew/2,slotY-eh*(1-t),ew,eh*(1-t));
-    }
-    if(p>0.60){                                      // flap knock, then sparkle
-      g.fillStyle='#A6412F';
-      g.fillRect(bx+bw*0.18,slotY-(p<0.72?4:0),bw*0.64,7);
     }
     if(p>0.74){
       for(let i=0;i<9;i++){
@@ -1836,7 +1853,9 @@ function sparkle(s){ return esc(s).replace(/\*([^*]+)\*/g,'<span class="spark">$
 function openTitle(){
   const t=(CFG.intro)||{};
   $('t-title').textContent=t.title||'Loco for CoCo';
-  $('t-body').innerHTML=(t.body||[]).map(p=>`<p style="margin:0 0 10px">${esc(p)}</p>`).join('');
+  // Asterisked phrases become a flat highlight, so the privacy promise reads
+  // as a fact rather than a banner. Escaped first, so config copy stays safe.
+  $('t-body').innerHTML=(t.body||[]).map(p=>`<p style="margin:0 0 10px">${esc(p).replace(/\*([^*]+)\*/g,'<span class="ihl">$1</span>')}</p>`).join('');
   $('t-go').textContent=t.button||'START';
   $('ov-title').classList.add('on');
 }
@@ -1851,21 +1870,27 @@ $('t-go').addEventListener('click',()=>{
 let openPhase='', openT=0;
 const OPEN_DUR={arctic:2800,house:1000,post:1200,walk:1400,letter:0,
                 line1:3000,line2:2600,trust:0,leave:1600};
-// Three things worth saying before the visitor leaves the house, and the reason
-// they get NO timer: each one is a claim a buyer will want to actually read, and
-// a 3s beat that snatches away "nothing trains external models" is worse than
-// not saying it. So these advance on a click or a key, at whatever pace suits.
+// Three things worth saying before the visitor leaves the house. They are
+// delivered in the house panel's own chat bubble, exactly like every other
+// thing CoCo says indoors, rather than as a separate captioned beat with a
+// "click to carry on" prompt. Nobody should have to click their way out of a
+// conversation. Each line auto-advances on a timer scaled to its own length,
+// so a long claim gets long enough to actually read, and a click still skips.
 const TRUST_LINES=[
-  'One more thing before we go. Snowflake does not ask you to leave anything '
-  +'behind - it talks to what you already run, and Iceberg means your tables '
-  +'stay in open formats you can read with other engines.',
-  'It is built on open standards on purpose. No proprietary lock on your data, '
-  +'no one-way door: if you ever want to take it elsewhere, you can.',
-  'And the part people ask me about most: what you send to the AI is yours. '
-  +'Your prompts, your data and the answers are never used to train external '
-  +'models, and they do not leave your account\u2019s boundary.'
+  'While we are here, one thing worth saying: you will not have to move house '
+  +'to do any of this. Snowflake talks to the systems you already run, and with '
+  +'Iceberg your tables stay in open formats other engines can read.',
+  'That is on purpose, not a happy accident. Open standards mean there is no '
+  +'one way door, so if you ever want to take your data somewhere else, you can.',
+  'And the question I get asked most, so I will answer it before you ask. What '
+  +'you send the AI stays yours. Your prompts, your data and the answers are '
+  +'never used to train external models, and they never leave your account.'
 ];
-let trustIdx=0;
+// The residency reply leads the sequence, so the whole beat reads as one
+// continuous exchange instead of a reply followed by an advert.
+let trustSeq=[], trustIdx=0;
+// Long enough to read, not so long the booth stalls.
+function trustDur(s){ return Math.max(3600,Math.min(9000,3000+String(s||'').length*38)); }
 function openProg(){
   const d=OPEN_DUR[openPhase]||1;
   return Math.max(0,Math.min(1,(Date.now()-openT)/d));
@@ -1897,7 +1922,7 @@ function setPhase(p){
     say.classList.add('on');
     say.textContent=fillTpl(p==='line1'?L().line1:L().line2);
   } else if(p==='trust'){
-    trustIdx=0; paintTrustLine();
+    trustIdx=0; homeReplyMode(true); paintTrustLine();
   } else { $('h-say').classList.remove('on'); }
   if(p==='map'){
     closeScene();
@@ -1919,19 +1944,30 @@ function nextPhase(){
   if(i<0||openPhase==='map') return;
   if(openPhase==='letter') return;            // blocked until the form is sent
   if(openPhase==='questions') return;         // blocked until the gate is answered
-  // The trust beat walks through its own lines first, one per press, and only
-  // then hands on to the door.
-  if(openPhase==='trust' && trustIdx < TRUST_LINES.length-1){
+  // The trust beat walks through its own lines first, then closes the house
+  // panel and hands on to the door.
+  if(openPhase==='trust' && trustIdx < trustSeq.length-1){
     trustIdx++; openT=Date.now(); paintTrustLine(); return;
   }
+  if(openPhase==='trust'){ homeReplyMode(false); $('ov-home').classList.remove('on'); }
   setPhase(order[i+1]);
 }
+// Reply mode: the house panel keeps its chat bubble and drops the question
+// furniture, so CoCo's closing lines look like part of the conversation the
+// visitor was already having rather than a new screen.
+function homeReplyMode(on){
+  for(const id of ['hq-heading','hq-hint','hq-chips']){
+    const el=$(id); if(el) el.style.display=on?'none':'';
+  }
+  const dock=document.querySelector('#ov-home .dock');
+  if(dock) dock.style.display=on?'none':'';
+}
 function paintTrustLine(){
-  const say=$('h-say');
-  say.classList.add('on');
-  const last = trustIdx===TRUST_LINES.length-1;
-  say.textContent=TRUST_LINES[trustIdx]
-    +(last?'  (click to head out)':'  (click to carry on)');
+  $('h-say').classList.remove('on');
+  const b=$('hq-bubble');
+  if(b) b.textContent=trustSeq[trustIdx]||'';
+  clearTimeout(setPhase._t);
+  setPhase._t=setTimeout(nextPhase,trustDur(trustSeq[trustIdx]));
 }
 function openingActive(){ return openPhase && openPhase!=='map'; }
 // Click or any key skips the current beat, except while filling the letter in.
@@ -2014,6 +2050,9 @@ $('ov-letter').addEventListener('keydown',e=>{
 // later reinforces. Nothing here is free-text-required - "Other" is optional.
 let homeStep=0;
 const homeAns={ platforms:new Set(), country:new Set(), countryText:'', residency:new Set() };
+// What the visitor was asked and what CoCo answered, so the house shows up in
+// the scroll-back history alongside the other locations.
+const homeLog=[];
 function countryWord(){
   // Multi-select, so this can be a list. Reads as prose because it lands inside
   // CoCo's spoken line and in the blueprint, not in a form field.
@@ -2034,8 +2073,9 @@ function countryWord(){
 function sov(key){ return ((CFG.sovereignty||{}).react||{})[key]||''; }
 function openHomeQuestions(){
   homeStep=0; homeAns.platforms=new Set(); homeAns.country=new Set();
-  homeAns.countryText=''; homeAns.residency=new Set();
+  homeAns.countryText=''; homeAns.residency=new Set(); homeLog.length=0;
   $('ov-home').classList.add('on');
+  homeReplyMode(false);
   $('hq-bubble').textContent=hqFill('Before we set off, three quick things about '
     +'{company} \u2014 they decide how your blueprint gets built.');
   renderHomeStep();
@@ -2133,6 +2173,7 @@ async function homeContinue(){
     if(picks.some(o=>/already in snowflake/i.test(o))) key='platform_already';
     else if(picks.some(o=>/not sure/i.test(o))) key='platform_unsure';
     $('hq-bubble').textContent=sov(key).replace(/\{platform\}/g,plat);
+    homeLog.push({text:picks.join(', '), reply:$('hq-bubble').textContent});
     homeStep=1; renderHomeStep(); return;
   }
   if(homeStep===1){
@@ -2141,6 +2182,7 @@ async function homeContinue(){
     const other=[...homeAns.country].some(j=>(CFG.country||{}).options[j]===olab);
     if(other) homeAns.countryText=$('hq-other').value.trim().slice(0,60);
     $('hq-bubble').textContent=sov('country').replace(/\{country\}/g,countryWord());
+    homeLog.push({text:countryWord(), reply:$('hq-bubble').textContent});
     homeStep=2; renderHomeStep(); return;
   }
   // step 2: residency
@@ -2151,6 +2193,10 @@ async function homeContinue(){
   const rkeys=['residency_country_only','residency_eu','residency_us_ok','residency_unsure'];
   const strict=[...homeAns.residency].sort((a,b)=>a-b)[0];
   const parting=sov(rkeys[strict]||'residency_unsure').replace(/\{country\}/g,countryWord());
+  const rlabels=((CFG.residency||{}).options_template||[])
+    .map(t=>String(t).replace(/\{country\}/g,countryWord()));
+  homeLog.push({text:[...homeAns.residency].sort((a,b)=>a-b)
+    .map(i=>rlabels[i]).filter(Boolean).join(', '), reply:parting});
   $('hq-go').disabled=true;
   const opts=(CFG.platforms||{}).options||[];
   try{
@@ -2160,14 +2206,16 @@ async function homeContinue(){
       residency:[...homeAns.residency].sort((a,b)=>a-b)
         .map(i=>['country_only','eu','us_ok','unsure'][i]).filter(Boolean)
         .join(', ') || 'unsure',
+      exchanges:homeLog,
     });
   }catch(e){ /* non-fatal: home answers enrich, they do not gate correctness */ }
   await poll();
   $('hq-go').disabled=false;
-  $('ov-home').classList.remove('on');
-  homeParting=parting;
-  // The interoperability, open-standards and AI-privacy beat happens HERE, in
-  // the house, while he still has their attention - not as a nudge on the map.
+  // The panel STAYS open. The interoperability, open-standards and AI-privacy
+  // beat is part of this conversation, so it happens in the same chat bubble,
+  // led by the residency reply. Clearing homeParting stops the map repeating it.
+  trustSeq=[parting].concat(TRUST_LINES);
+  homeParting='';
   setPhase('trust');
 }
 $('hq-go').addEventListener('click',homeContinue);
@@ -2388,7 +2436,8 @@ function paintHandover(d){
   // octet-stream whatever the extension, so a phone downloads the .html rather
   // than rendering it - so this is the booth-screen and email surface, and the
   // .docx is what travels.
-  const rd=$('bp-read'); if(rd){ rd.href='/blueprint'; rd.style.display=''; }
+  // The on-screen HTML blueprint is gone: the Word document behind the QR is
+  // the single artifact, so there is only one thing to review and QA.
   wrap.classList.add('on');
 }
 async function sendPoc(){
@@ -2980,7 +3029,7 @@ function paintBubble(s){
   }
   $('yousaid').classList.toggle('on',!!said);
   if(said) $('yousaid').textContent='You said: '+said;
-  setMessage(msg||'');
+  setMessage(msg||'', histIdx!==null);
 }
 function fillCli(t,s){
   const v=s.visitor||{};
@@ -3054,7 +3103,14 @@ $('a-go').addEventListener('click',async()=>{
 $('a-text').addEventListener('keydown',e=>{ if(e.key==='Enter') $('a-go').click(); });
 
 let typeTarget='',typeI=0;
-function setMessage(m){ if(m===typeTarget) return; typeTarget=m; typeI=0; }
+// Recalled messages render INSTANTLY. The typewriter belongs to a reply that is
+// arriving now; replaying it while scrolling back through history makes an
+// already-read message feel like it is being generated again.
+function setMessage(m,instant){
+  if(m===typeTarget) return;
+  typeTarget=m; typeI=0;
+  if(instant){ typeI=m.length; const el=$('d-msg'); el.textContent=m; el.scrollTop=0; }
+}
 function stepType(){ if(typeI<typeTarget.length){ typeI+=2;
   const el=$('d-msg'); el.textContent=typeTarget.slice(0,typeI);
   // Keep the freshly typed tail visible when a reply is long enough to scroll.

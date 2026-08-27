@@ -593,7 +593,7 @@ def fill(tmpl, cfg, state, **extra):
         "residency": {"country_only": "must stay in their country",
                       "eu": "must stay in the EU", "us_ok": "the US is acceptable too",
                       "unsure": "not yet decided"}.get(
-                          vis.get("residency") or "", "not stated"),
+                          _residency_key(vis), "not stated"),
     }
     vals.update(extra)
     out = tmpl
@@ -1128,6 +1128,22 @@ def listings_live(cfg, industry):
     return out, ""
 
 
+def _residency_key(vis):
+    """The STRICTEST residency rule the visitor picked.
+
+    The home gate is multi-select - a group can be tied to its home country for
+    some data and relaxed about the rest - so this field is now a comma list like
+    "country_only, us_ok". Every consumer here wants the binding constraint, and
+    exact-matching the whole string silently returned "not stated" and dropped
+    the sovereignty section from the blueprint.
+    """
+    got = (vis.get("residency") or "").lower()
+    for k in ("country_only", "eu", "us_ok", "unsure"):
+        if k in got:
+            return k
+    return ""
+
+
 def listings_for(cfg, industry, session_id=None, state=None):
     """Tier chain: agentic first if it's ready, live catalogue next, curated
     index as the booth-safe net.
@@ -1435,7 +1451,7 @@ def sovereignty_lines(cfg, state):
     who skipped the question does not get a generic lecture.
     """
     vis = state.get("visitor") or {}
-    residency = (vis.get("residency") or "").strip().lower()
+    residency = _residency_key(vis)
     country = (vis.get("company_country") or "").strip()
     if not residency and not country and not state.get("platforms"):
         return []
@@ -2401,7 +2417,7 @@ def qa_review(cfg, state, poc):
         note("summary_present", "flag", "no summary produced")
 
     # 7. If they stated a residency rule, the sovereignty section must be there.
-    residency = (vis.get("residency") or "").strip().lower()
+    residency = _residency_key(vis)
     if residency in ("country_only", "eu") and not sovereignty_lines(cfg, state):
         note("sovereignty_consistent", "flag",
              "residency is %r but no sovereignty lines were produced" % residency)
@@ -2746,11 +2762,15 @@ class Handler(BaseHTTPRequestHandler):
         if not isinstance(b, dict):
             return self._json({"error": "invalid json"}, 400)
         plats = [str(x)[:60] for x in (b.get("platforms") or []) if str(x).strip()]
-        country = (b.get("company_country") or "").strip()[:60]
-        # A closed vocabulary, so the blueprint's region logic can rely on it.
-        residency = (b.get("residency") or "").strip().lower()
-        if residency not in ("country_only", "eu", "us_ok", "unsure"):
-            residency = "unsure"
+        country = (b.get("company_country") or "").strip()[:120]
+        # A closed vocabulary of TOKENS, so the blueprint's region logic can
+        # still rely on it while the gate stays multi-select. Validating the
+        # whole string collapsed "country_only, us_ok" to "unsure" and threw the
+        # answer away.
+        allowed = ("country_only", "eu", "us_ok", "unsure")
+        got = (b.get("residency") or "").strip().lower()
+        picks = [k for k in allowed if k in got]
+        residency = ", ".join(picks) if picks else "unsure"
         cur = read_state()
         vis = dict(cur.get("visitor") or {})
         vis["company_country"] = country

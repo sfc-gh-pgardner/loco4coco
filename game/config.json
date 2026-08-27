@@ -891,7 +891,7 @@
   "country": {
     "_comment": "Home-stage question 2. Europe-weighted for London/Paris. Frames the residency follow-up.",
     "heading": "And where is {company} based?",
-    "hint": "One tap. It helps me keep your data where your rules need it.",
+    "hint": "Tap every country you have a base in. It helps me keep your data where your rules need it.",
     "options": [
       "United Kingdom",
       "Ireland",
@@ -907,7 +907,7 @@
   "residency": {
     "_comment": "Home-stage question 3. Sovereignty-framed. {country} is interpolated from the country answer; falls back to 'your country'.",
     "heading": "Where are {company}'s data and AI models allowed to run?",
-    "hint": "This shapes the region we build in, and it goes in your blueprint. One tap.",
+    "hint": "Tap every one that applies. This shapes the region we build in, and it goes in your blueprint.",
     "options_template": [
       "{country} only",
       "Anywhere in the EU is fine",

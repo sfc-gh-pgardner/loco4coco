@@ -592,12 +592,6 @@
     </div>
     <div class="hint" id="done-cardhint" style="margin:8px 0 0">Getting your card
       ready to scan…</div>
-    <!-- Safety net: leaving the blueprint card must not orphan the document, so
-         the link travels here too. -->
-    <div id="done-bp" style="display:none;margin:10px 0 0;font-size:12px;color:#9FC2D6">
-      Your Word blueprint:
-      <a id="done-bplink" class="handlink" target="_blank" rel="noopener">download it again</a>
-    </div>
     <button class="primary" id="done-card" style="margin-top:8px;padding:8px 14px;
       font-size:11px;width:100%;opacity:.55">SAVE A COPY TO THIS MACHINE
       (OPERATOR)</button>
@@ -1147,7 +1141,7 @@ function drawScene(kind){
     // ---- CoCo crosses to the letter, then steps INTO the doorway and out
     let cxF=0.62, scale=1, fade=1;
     if(openPhase==='walk') cxF=0.62-(0.62-0.34)*p;
-    else if(openPhase==='letter'||openPhase==='line1'||openPhase==='line2') cxF=0.34;
+    else if(openPhase==='letter'||openPhase==='line1'||openPhase==='line2'||openPhase==='trust') cxF=0.34;
     else if(openPhase==='leave'){
       const doorF=(dx+dw/2)/w;
       cxF=0.34+(doorF-0.34)*Math.min(1,p*1.35);
@@ -1156,7 +1150,8 @@ function drawScene(kind){
     }
     const cx=w*cxF, cy=FL-h*0.08;
     const holding = openPhase==='letter'||openPhase==='line1'
-                 || openPhase==='line2'||openPhase==='leave';
+                 || openPhase==='line2'||openPhase==='trust'
+                 || openPhase==='leave';
     g.save(); g.globalAlpha=Math.max(0,Math.min(1,fade));
     const bw2=52*scale, bh2=76*scale;
     g.fillStyle='rgba(0,0,0,.28)';
@@ -1417,33 +1412,11 @@ function drawScene(kind){
     // is THREE tools at a size that survives, on a plain timber rack, plus one
     // big slow gear. Fewer things, drawn large enough to recognise.
     (function(){
-      const rkx=w*0.285, rky=BN*0.015, rkw=w*0.40, rkh=BN*0.175;
-      g.fillStyle='#3B2A17'; g.fillRect(rkx,rky,rkw,rkh);              // timber rack
-      g.fillStyle='#5A4023'; g.fillRect(rkx,rky,rkw,3);
-      g.fillStyle='#2A1D10'; g.fillRect(rkx,rky+rkh-4,rkw,4);          // bottom rail
-      const top=rky+6, TH=rkh-14;                                      // tool height
-      // hammer: long handle, heavy head across the top
-      const hx=rkx+rkw*0.13;
-      g.fillStyle='#7C5730'; g.fillRect(hx-2,top+TH*0.22,5,TH*0.78);
-      g.fillStyle='#9BA3AA'; g.fillRect(hx-TH*0.17,top,TH*0.34,TH*0.20);
-      g.fillStyle='#6F787E'; g.fillRect(hx+TH*0.10,top,TH*0.07,TH*0.20);
-      // spanner: shaft with an open jaw at each end
-      const sx=rkx+rkw*0.47;
-      g.fillStyle='#9BA3AA'; g.fillRect(sx-2,top,5,TH);
-      g.fillRect(sx-TH*0.11,top,TH*0.22,TH*0.13);
-      g.fillStyle='#243440'; g.fillRect(sx-TH*0.04,top,TH*0.08,TH*0.07);
-      g.fillStyle='#9BA3AA'; g.fillRect(sx-TH*0.10,top+TH*0.87,TH*0.20,TH*0.13);
-      g.fillStyle='#243440'; g.fillRect(sx-TH*0.035,top+TH*0.93,TH*0.07,TH*0.07);
-      // handsaw: timber grip and a clear triangular blade
-      const wx=rkx+rkw*0.76;
-      g.fillStyle='#7C5730'; g.fillRect(wx-TH*0.09,top,TH*0.18,TH*0.26);
-      g.fillStyle='#B4BBC1'; g.beginPath();
-      g.moveTo(wx-TH*0.06,top+TH*0.26); g.lineTo(wx+TH*0.34,top+TH*0.26);
-      g.lineTo(wx-TH*0.06,top+TH*0.95); g.closePath(); g.fill();
-      g.fillStyle='#8C9399';                                           // teeth
-      for(let t=0;t<7;t++) g.fillRect(wx-TH*0.06+t*TH*0.055,
-        top+TH*0.30+t*TH*0.095, TH*0.05, 2);
-      // one gear, big enough to read as a gear, turning slowly beside the rack
+      // The hand tools are gone. Three attempts at a pegboard, a rack and a
+      // hammer at this scale never read as tools - the band above the bench is
+      // too short for anything with a recognisable silhouette, and a strip of
+      // ambiguous grey shapes is worse than a clean wall. The gear stays: it is
+      // one large circle with teeth and it reads at any size.
       const gx=w*0.235, gy=BN*0.095, rad=w*0.036;
       g.save(); g.translate(gx,gy); g.rotate(tick/60); g.fillStyle='#425C6A';
       for(let t=0;t<10;t++){ g.save(); g.rotate(t/10*Math.PI*2);
@@ -1877,7 +1850,22 @@ $('t-go').addEventListener('click',()=>{
 // click-skippable so a booth operator is never trapped behind an animation.
 let openPhase='', openT=0;
 const OPEN_DUR={arctic:2800,house:1000,post:1200,walk:1400,letter:0,
-                line1:3000,line2:2600,leave:1600};
+                line1:3000,line2:2600,trust:0,leave:1600};
+// Three things worth saying before the visitor leaves the house, and the reason
+// they get NO timer: each one is a claim a buyer will want to actually read, and
+// a 3s beat that snatches away "nothing trains external models" is worse than
+// not saying it. So these advance on a click or a key, at whatever pace suits.
+const TRUST_LINES=[
+  'One more thing before we go. Snowflake does not ask you to leave anything '
+  +'behind - it talks to what you already run, and Iceberg means your tables '
+  +'stay in open formats you can read with other engines.',
+  'It is built on open standards on purpose. No proprietary lock on your data, '
+  +'no one-way door: if you ever want to take it elsewhere, you can.',
+  'And the part people ask me about most: what you send to the AI is yours. '
+  +'Your prompts, your data and the answers are never used to train external '
+  +'models, and they do not leave your account\u2019s boundary.'
+];
+let trustIdx=0;
 function openProg(){
   const d=OPEN_DUR[openPhase]||1;
   return Math.max(0,Math.min(1,(Date.now()-openT)/d));
@@ -1908,6 +1896,8 @@ function setPhase(p){
     const say=$('h-say');
     say.classList.add('on');
     say.textContent=fillTpl(p==='line1'?L().line1:L().line2);
+  } else if(p==='trust'){
+    trustIdx=0; paintTrustLine();
   } else { $('h-say').classList.remove('on'); }
   if(p==='map'){
     closeScene();
@@ -1924,12 +1914,24 @@ function setPhase(p){
   if(d){ clearTimeout(setPhase._t); setPhase._t=setTimeout(nextPhase,d); }
 }
 function nextPhase(){
-  const order=['arctic','house','post','walk','letter','line1','line2','questions','leave','map'];
+  const order=['arctic','house','post','walk','letter','line1','line2','questions','trust','leave','map'];
   const i=order.indexOf(openPhase);
   if(i<0||openPhase==='map') return;
   if(openPhase==='letter') return;            // blocked until the form is sent
   if(openPhase==='questions') return;         // blocked until the gate is answered
+  // The trust beat walks through its own lines first, one per press, and only
+  // then hands on to the door.
+  if(openPhase==='trust' && trustIdx < TRUST_LINES.length-1){
+    trustIdx++; openT=Date.now(); paintTrustLine(); return;
+  }
   setPhase(order[i+1]);
+}
+function paintTrustLine(){
+  const say=$('h-say');
+  say.classList.add('on');
+  const last = trustIdx===TRUST_LINES.length-1;
+  say.textContent=TRUST_LINES[trustIdx]
+    +(last?'  (click to head out)':'  (click to carry on)');
 }
 function openingActive(){ return openPhase && openPhase!=='map'; }
 // Click or any key skips the current beat, except while filling the letter in.
@@ -2011,19 +2013,28 @@ $('ov-letter').addEventListener('keydown',e=>{
 // each answer in the bubble, planting the sovereignty benefits the blueprint
 // later reinforces. Nothing here is free-text-required - "Other" is optional.
 let homeStep=0;
-const homeAns={ platforms:new Set(), country:null, countryText:'', residency:null };
+const homeAns={ platforms:new Set(), country:new Set(), countryText:'', residency:new Set() };
 function countryWord(){
-  const opts=(CFG.country||{}).options||[];
-  if(homeAns.country==null) return (CFG.residency||{}).fallback_country||'your country';
-  const label=opts[homeAns.country]||'';
-  if(label===((CFG.country||{}).other_label) && homeAns.countryText) return homeAns.countryText;
-  if(label===((CFG.country||{}).other_label)) return (CFG.residency||{}).fallback_country||'your country';
-  return label;
+  // Multi-select, so this can be a list. Reads as prose because it lands inside
+  // CoCo's spoken line and in the blueprint, not in a form field.
+  const opts=(CFG.country||{}).options||[], olab=(CFG.country||{}).other_label;
+  const fb=(CFG.residency||{}).fallback_country||'your country';
+  if(!homeAns.country.size) return fb;
+  const names=[];
+  for(const i of [...homeAns.country].sort((a,b)=>a-b)){
+    const label=opts[i]||'';
+    if(label===olab) names.push(homeAns.countryText||fb);
+    else if(label) names.push(label);
+  }
+  const uniq=[...new Set(names)];
+  if(!uniq.length) return fb;
+  if(uniq.length===1) return uniq[0];
+  return uniq.slice(0,-1).join(', ')+' and '+uniq[uniq.length-1];
 }
 function sov(key){ return ((CFG.sovereignty||{}).react||{})[key]||''; }
 function openHomeQuestions(){
-  homeStep=0; homeAns.platforms=new Set(); homeAns.country=null;
-  homeAns.countryText=''; homeAns.residency=null;
+  homeStep=0; homeAns.platforms=new Set(); homeAns.country=new Set();
+  homeAns.countryText=''; homeAns.residency=new Set();
   $('ov-home').classList.add('on');
   $('hq-bubble').textContent=hqFill('Before we set off, three quick things about '
     +'{company} \u2014 they decide how your blueprint gets built.');
@@ -2059,7 +2070,7 @@ function renderHomeStep(){
     $('hq-hint').textContent=hqFill(c.hint||'');
     $('hq-step').textContent='2 of 3';
     wrap.innerHTML=(c.options||[]).map((o,i)=>
-      `<div class="chip${homeAns.country===i?' on':''}" data-i="${i}">${esc(o)}</div>`).join('');
+      `<div class="chip${homeAns.country.has(i)?' on':''}" data-i="${i}">${esc(o)}</div>`).join('');
     [...wrap.children].forEach(el=>el.addEventListener('click',()=>pickCountry(+el.dataset.i)));
   } else {
     const r=CFG.residency||{}, cw=countryWord();
@@ -2068,15 +2079,15 @@ function renderHomeStep(){
     $('hq-step').textContent='3 of 3';
     const opts=(r.options_template||[]).map(t=>t.replace(/\{country\}/g,cw));
     wrap.innerHTML=opts.map((o,i)=>
-      `<div class="chip${homeAns.residency===i?' on':''}" data-i="${i}">${esc(o)}</div>`).join('');
+      `<div class="chip${homeAns.residency.has(i)?' on':''}" data-i="${i}">${esc(o)}</div>`).join('');
     [...wrap.children].forEach(el=>el.addEventListener('click',()=>pickResidency(+el.dataset.i)));
   }
 }
 function paintHomeChips(){
   [...$('hq-chips').children].forEach((c,j)=>{
     const on = homeStep===0 ? homeAns.platforms.has(j)
-             : homeStep===1 ? homeAns.country===j
-             : homeAns.residency===j;
+             : homeStep===1 ? homeAns.country.has(j)
+             : homeAns.residency.has(j);
     c.classList.toggle('on',on);
   });
 }
@@ -2094,13 +2105,23 @@ function togglePlat(i){
   }
   paintHomeChips();
 }
+// Both of these are multi-select. A company with branches is based in more than
+// one country, and "where may this run" is rarely one answer either - a group
+// can be tied to its home country for patient data and relaxed about the rest.
+// Forcing one tap made visitors pick the least wrong option and lose the truth.
 function pickCountry(i){
-  homeAns.country=i;
-  const other = (CFG.country||{}).options[i]===((CFG.country||{}).other_label);
+  if(homeAns.country.has(i)) homeAns.country.delete(i);
+  else homeAns.country.add(i);
+  const olab=(CFG.country||{}).other_label;
+  const other=[...homeAns.country].some(j=>(CFG.country||{}).options[j]===olab);
   $('hq-otherwrap').style.display=other?'':'none';
   paintHomeChips();
 }
-function pickResidency(i){ homeAns.residency=i; paintHomeChips(); }
+function pickResidency(i){
+  if(homeAns.residency.has(i)) homeAns.residency.delete(i);
+  else homeAns.residency.add(i);
+  paintHomeChips();
+}
 async function homeContinue(){
   if($('hq-go').disabled) return;
   if(homeStep===0){
@@ -2115,30 +2136,39 @@ async function homeContinue(){
     homeStep=1; renderHomeStep(); return;
   }
   if(homeStep===1){
-    if(homeAns.country==null){ $('hq-step').textContent='Pick one'; return; }
-    const other=(CFG.country||{}).options[homeAns.country]===((CFG.country||{}).other_label);
+    if(!homeAns.country.size){ $('hq-step').textContent='Tap at least one'; return; }
+    const olab=(CFG.country||{}).other_label;
+    const other=[...homeAns.country].some(j=>(CFG.country||{}).options[j]===olab);
     if(other) homeAns.countryText=$('hq-other').value.trim().slice(0,60);
     $('hq-bubble').textContent=sov('country').replace(/\{country\}/g,countryWord());
     homeStep=2; renderHomeStep(); return;
   }
   // step 2: residency
-  if(homeAns.residency==null){ $('hq-step').textContent='Pick one'; return; }
-  const rkey=['residency_country_only','residency_eu','residency_us_ok','residency_unsure'][homeAns.residency]||'residency_unsure';
-  const parting=sov(rkey).replace(/\{country\}/g,countryWord());
+  if(!homeAns.residency.size){ $('hq-step').textContent='Tap at least one'; return; }
+  // The parting line speaks to the STRICTEST thing they picked: if anything must
+  // stay in country, that is the constraint that shapes the build, whatever else
+  // they also allowed.
+  const rkeys=['residency_country_only','residency_eu','residency_us_ok','residency_unsure'];
+  const strict=[...homeAns.residency].sort((a,b)=>a-b)[0];
+  const parting=sov(rkeys[strict]||'residency_unsure').replace(/\{country\}/g,countryWord());
   $('hq-go').disabled=true;
   const opts=(CFG.platforms||{}).options||[];
   try{
     await post('/api/home',{
       platforms:[...homeAns.platforms].map(i=>opts[i]).filter(Boolean),
       company_country:countryWord(),
-      residency:['country_only','eu','us_ok','unsure'][homeAns.residency]||'unsure',
+      residency:[...homeAns.residency].sort((a,b)=>a-b)
+        .map(i=>['country_only','eu','us_ok','unsure'][i]).filter(Boolean)
+        .join(', ') || 'unsure',
     });
   }catch(e){ /* non-fatal: home answers enrich, they do not gate correctness */ }
   await poll();
   $('hq-go').disabled=false;
   $('ov-home').classList.remove('on');
   homeParting=parting;
-  setPhase('map');
+  // The interoperability, open-standards and AI-privacy beat happens HERE, in
+  // the house, while he still has their attention - not as a nudge on the map.
+  setPhase('trust');
 }
 $('hq-go').addEventListener('click',homeContinue);
 $('ov-home').addEventListener('keydown',e=>{
@@ -2816,8 +2846,6 @@ function showDoneSummary(){
     $('done-cardhint').textContent='Could not build your card.'; }
   $('ov-done').style.display='';
   $('ov-done').classList.add('on');
-  const url=(window.__bp||{}).document_url||'';
-  if(url){ $('done-bplink').href=url; $('done-bp').style.display=''; }
 }
 // Stage the card and show a QR for it. Failure is not fatal: the visitor still
 // has their blueprint QR, and the operator can fall back to the copy button.

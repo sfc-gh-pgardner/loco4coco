@@ -1876,16 +1876,9 @@ const OPEN_DUR={arctic:2800,house:1000,post:1200,walk:1400,letter:0,
 // "click to carry on" prompt. Nobody should have to click their way out of a
 // conversation. Each line auto-advances on a timer scaled to its own length,
 // so a long claim gets long enough to actually read, and a click still skips.
-const TRUST_LINES=[
-  'While we are here, one thing worth saying: you will not have to move house '
-  +'to do any of this. Snowflake talks to the systems you already run, and with '
-  +'Iceberg your tables stay in open formats other engines can read.',
-  'That is on purpose, not a happy accident. Open standards mean there is no '
-  +'one way door, so if you ever want to take your data somewhere else, you can.',
-  'And the question I get asked most, so I will answer it before you ask. What '
-  +'you send the AI stays yours. Your prompts, your data and the answers are '
-  +'never used to train external models, and they never leave your account.'
-];
+// The copy lives in config (sovereignty.trust) so it is reviewable alongside
+// every other scripted line rather than buried in the client.
+function TRUST_LINES(){ return ((CFG.sovereignty||{}).trust)||[]; }
 // The residency reply leads the sequence, so the whole beat reads as one
 // continuous exchange instead of a reply followed by an advert.
 let trustSeq=[], trustIdx=0;
@@ -2214,7 +2207,7 @@ async function homeContinue(){
   // The panel STAYS open. The interoperability, open-standards and AI-privacy
   // beat is part of this conversation, so it happens in the same chat bubble,
   // led by the residency reply. Clearing homeParting stops the map repeating it.
-  trustSeq=[parting].concat(TRUST_LINES);
+  trustSeq=[parting].concat(TRUST_LINES());
   homeParting='';
   setPhase('trust');
 }

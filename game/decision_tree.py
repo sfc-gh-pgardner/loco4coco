@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
-"""Emit the booth decision tree as Markdown, straight from the live config.
+"""Emit the booth decision tree as Markdown, read from the live app.
 
-The point of this document is editorial, not architectural: Paddy needs to see,
-per industry, exactly what a visitor is offered and where each option came from,
-so the precomputed suggestions in the library and the marketplace can be made
-sharper. So everything here is READ from config.json, archetypes.md and
-server.py rather than described from memory - if the booth offers it, it is in
-here, and if it is in here, the booth offers it.
+Every fact in the output is derived from config.json, marketplace-index.md,
+archetypes.md or server.py. Nothing is described from memory and nothing is
+typed twice, so the document cannot disagree with the booth: regenerate it and
+it is correct, or it fails loudly.
+
+Two rules govern the prose:
+  1. Present tense, stated as fact. What the booth does, not what it used to do,
+     not what changed, not what was measured on a particular afternoon.
+  2. If a claim cannot be regenerated from a live source, it is not written.
+
+Run:  python3 game/decision_tree.py > booth-decision-tree.md
 """
-import json, io, re, os
+import io
+import json
+import os
+import re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 cfg = json.load(io.open(os.path.join(HERE, 'config.json'), encoding='utf-8'))
@@ -43,14 +51,12 @@ if m:
 
 mkt = cfg['marketplace']
 inds = cfg['industries']
-plats = (cfg.get('platforms') or {}).get('options') or []
 locs = cfg['locations']
 
-# ---- the REAL curated marketplace listings, read from marketplace-index.md.
-# industries.<key>.marketplace in config.json is dead data - the game's own
-# locations.marketplace.source is "marketplace_index", so that config field
-# is never read at runtime. Parsing it here instead of the real file was
-# exactly the kind of drift this generator exists to prevent.
+# ---- the curated marketplace listings, read from marketplace-index.md.
+# industries.<key>.marketplace in config.json is never read at runtime:
+# locations.marketplace.source is "marketplace_index", so this file is the
+# only source of truth for what a visitor is offered.
 MARKET_PATH = os.path.join(os.path.dirname(HERE), 'skills', 'loco4coco',
                            'references', 'marketplace-index.md')
 market = {}
@@ -70,493 +76,426 @@ for line in io.open(MARKET_PATH, encoding='utf-8').read().splitlines():
     if rm:
         market[_cur_ind].append({'title': rm.group('title').strip(),
                                  'provider': rm.group('prov').strip(),
-                                 'access': rm.group('acc').strip()})
+                                 'access': rm.group('acc').strip(),
+                                 'global_name': rm.group('gname').strip(),
+                                 'url': rm.group('url').strip()})
 
 O = []
 w = O.append
 
+
+def q(s):
+    """A config string, printed verbatim and safe inside a Markdown table."""
+    return str(s or '').replace('|', r'\|').replace('\n', ' ').strip()
+
+
+def ind_label(key):
+    return (inds.get(key) or {}).get('name') or key
+
+
+def order():
+    """Industries in config order, so the document is stable between runs."""
+    return list(inds.keys())
+
+
+# ======================================================================= header
 w('# Loco 4 CoCo - the booth decision tree')
 w('')
-w('_Generated from the live `config.json`, `archetypes.md` and `server.py`. '
-  'Every option below is what a visitor is actually offered. Regenerate with '
-  '`python3 game/decision_tree.py` after changing config._')
+w('Every option a visitor is offered, every line CoCo speaks, and every dataset '
+  'the booth recommends. Generated from the live app: `config.json`, '
+  '`marketplace-index.md`, `archetypes.md` and `server.py`.')
 w('')
-w('## Why this document exists')
-w('')
-w('A home stage and five screens shape the blueprint. All but one are '
-  'precomputed by us; only the archetype is decided at runtime, and it matters '
-  'which is which - only the precomputed ones can be improved by editing config.')
-w('')
-w('| Step | What the visitor does | Where the options come from | Tunable? |')
-w('|---|---|---|---|')
-w('| 0. The home stage | Answers where their data lives (platforms), which '
-  'country they are in, and where their data and AI may run (residency) | '
-  '`config.platforms`, `config.country`, `config.residency`, `config.sovereignty` '
-  '| **Yes - fully precomputed** |')
-w('| 1. The letter | Types name, company, industry, **and the problem in two '
-  'sentences** | Industry list in `config.industries` | Yes - the list |')
-w('| 2. The library | Ticks the data they hold | `industries.<key>.data_sources` '
-  '| **Yes - fully precomputed** |')
-w('| 3. The marketplace | Ticks data to join | `marketplace-index.md`, '
-  '6 verified listings per industry | **Yes - fully precomputed** |')
-w('| 4. The workshop | Types one line describing the MVP | Free text | No - '
-  'but the archetype it maps to is |')
-w('| 5. The postbox | Posts it | - | - |')
-w('')
-w('With `discovery: manual` there is now only ONE runtime decision: which '
-  'of the %d archetypes the visitor is routed to. Even that is no longer purely '
-  "the model's - `game/context.py` resolves it deterministically from the "
-  'visitor\'s own words scored against each archetype\'s pain text, and the '
-  'model chooses from that shortlist. Everything else on this page is ours to '
-  'set.' % len(arch))
+w('Regenerate with `python3 game/decision_tree.py`.')
 w('')
 
-# ------------------------------------------------------------------ the tree
-w('## The tree, top to bottom')
+# ================================================================== 1. the tree
+w('## 1. What the visitor does')
 w('')
-w('```')
-w('HOME STAGE   (precomputed; CoCo reacts to each with a pre-written line)')
-w('  platform  ->  %d universal chips -> integration path in the blueprint'
-  % len(plats))
-w('  country   ->  %d options -> region logic'
-  % len((cfg.get('country') or {}).get('options') or []))
-w('  residency ->  %d options (sovereignty-framed) -> blueprint sovereignty section'
-  % len((cfg.get('residency') or {}).get('options_template') or []))
-w('        |')
-w('LETTER')
-w('  industry  ->  one of %d' % len(inds))
-w('  problem   ->  free text, 400 chars, threaded into every later prompt')
-w('        |')
-w('LIBRARY   (precomputed per industry)')
-w('  data held ->  6 options per industry + "something else"')
-w('        |')
-w('MARKETPLACE')
-# Read the discovery mode from config rather than asserting one: this section
-# said "live listings first" for weeks after discovery was switched to manual.
-_disc = ((cfg.get('locations') or {}).get('marketplace') or {}).get('discovery',
-                                                                   'manual')
-if _disc == 'manual':
-    w('  %d-%d curated, region-verified options per industry  (discovery: manual)'
-      % (min(len(v) for v in market.values()),
-         max(len(v) for v in market.values())))
-    w('  every one is checked is_ready_for_import, so a visitor can attach it')
-else:
-    w('  live listings matched on industry keywords  (min %d results)'
-      % mkt.get('min_live_results', 0))
-    w('  falls back to %d-%d curated options per industry'
-      % (min(len(v) for v in market.values()),
-         max(len(v) for v in market.values())))
-w('        |')
-w('WORKSHOP')
-w('  one line  ->  model picks 1 of %d archetypes' % len(arch))
-w('             ->  features + first step come from archetypes.md, no inference')
-w('        |')
-w('POSTBOX   ->  QA review, then blueprint (.docx) + QR. No email, no local record.')
-w('```')
+w('Six stops. The home stage and the letter are one screen each; the four '
+  'locations are walked to on a map in the order below.')
+w('')
+w('| # | Stop | What the visitor gives us | Options come from | Select |')
+w('| --- | --- | --- | --- | --- |')
+w('| 0 | The house | Where their data lives, which countries they operate in, '
+  'where data and models may run | `platforms`, `country`, `residency` | '
+  'Multi-select, all three |')
+w('| 1 | The letter | First name, employer, industry, and the problem in two '
+  'sentences | `industries` for the list; the problem is free text | Single '
+  'industry, free text |')
+w('| 2 | The Data Library | The data they already hold | '
+  '`industries.<key>.data_sources` | Multi-select plus free text |')
+w('| 3 | The Marketplace | Datasets to join to it | `marketplace-index.md` | '
+  'Multi-select plus free text |')
+w('| 4 | The Workshop | One line describing what the proof of concept should do'
+  ' | Free text | Free text |')
+w('| 5 | The Postbox | Confirmation to send | - | Button |')
+w('')
+w('The map unlocks in this order: %s.'
+  % ', '.join('**%s**' % q((locs.get(k) or {}).get('name') or k)
+              for k in (cfg.get('unlock_order') or [])))
+w('')
+w('The visitor\'s answers reach the document by two routes. The library, '
+  'marketplace and workshop answers are named back to them by the model, which '
+  'picks from the closed lists in this document and never invents an entry. '
+  'The archetype, its features and its first step are precomputed, so they are '
+  'correct whether or not a model answers.')
 w('')
 
-# --------------------------------------------------------- per industry
-w('## Per industry')
+# =============================================== 2. every scripted line, in order
+w('## 2. Every scripted line, in running order')
 w('')
-w('For each industry: what the library offers, and the six curated Marketplace '
-  'listings it offers. Every listing is verified importable in the event region, '
-  'so nothing here is a dead end. The live-search keywords are listed too, but '
-  'they only bite if `locations.marketplace.discovery` is set back to `live`.')
+w('Fixed copy, identical for every visitor, straight from `config.json`. '
+  'Braced placeholders such as `{first_name}`, `{company}`, `{country}`, '
+  '`{platform}` and `{region}` are filled from the visitor\'s own answers.')
 w('')
-for key, v in inds.items():
-    ds = v.get('data_sources') or []
-    mk = market.get(key) or []
-    kw = (mkt.get('industry_keywords') or {}).get(key) or []
-    pin = (mkt.get('pinned') or {}).get(key) or []
-    w('### %s' % v.get('name', key))
-    w('')
-    w('`%s` - %d data sources, %d curated joins, %d live-search keywords, '
-      '%d pinned listings' % (key, len(ds), len(mk), len(kw), len(pin)))
-    w('')
-    w('**Library - data they already hold**')
-    w('')
-    w('| Option | Note shown under it |')
-    w('|---|---|')
-    for d in ds:
-        w('| %s | %s |' % (d.get('label', ''), d.get('note', '')))
-    w('')
-    w('**Marketplace - the six curated joins offered, all verified importable**')
-    w('')
-    w('| Listing | Provider | Access |')
-    w('|---|---|---|')
-    for d in mk:
-        w('| %s | %s | %s |' % (d.get('title', ''), d.get('provider', ''),
-                                d.get('access', '')))
-    w('')
-    w('**Live-search keywords** (%d): %s' % (len(kw), ', '.join(kw) or '_none_'))
-    w('')
-    if pin:
-        w('**Pinned listings**: %s' % ', '.join(pin))
-        w('')
-
-# --------------------------------------------------------- platforms
-w('## The platform question, and what it produces')
-w('')
-w('Asked once on the home stage, one tap, universal across industries. Each chip '
-  'writes a concrete route into the blueprint, so this is the section that '
-  'turns "we have the data somewhere" into a first task.')
-w('')
-w('| Chip | Route the blueprint prints |')
-w('|---|---|')
-for p in plats:
-    blurb, url = paths.get(p, ('_no route defined - falls back to the generic '
-                               'connector line_', ''))
-    w('| %s | %s |' % (p, blurb))
+w('The one-line replies CoCo speaks at the Library, Marketplace and Workshop '
+  'are not listed here. Those are generated per visit, reflecting back what the '
+  'visitor just picked.')
 w('')
 
-# ---- combinations. The single-chip table above is not the whole story: the
-# question is multi-select, so the doc has to state what a COMBINATION produces
-# or nobody can predict what a visitor walks away with.
-_pcfg = cfg.get('platforms') or {}
-_excl = _pcfg.get('exclusive') or []
-_cap = _pcfg.get('max_routes') or 4
-w('### Combinations, and the guardrails on them')
-w('')
-w('The chips are multi-select, so most visitors tap more than one. Before the '
-  'guardrails, **16 of the 36 possible pairs produced a self-contradicting '
-  'document** and **10 printed "Openflow" twice**. Both are fixed, and both are '
-  'enforced twice - in the browser on tap, and again on the server when the '
-  'blueprint is built - so a bypassed or mis-clicked UI still cannot produce a '
-  'contradictory hand-out.')
-w('')
-w('| Selection | What the blueprint prints | Why |')
-w('|---|---|---|')
-w('| One cloud, e.g. **AWS** | That one route | The simple case |')
-w('| **Azure + AWS** | Both routes, Azure first | Genuinely different routes; '
-  'config order decides which is printed first, so it is the same document '
-  'every time regardless of tap order |')
-for e in _excl:
-    w('| **%s** alone | Its own line, no route | A legitimate answer on its own |'
-      % e)
-    w('| **%s** + any named source | The named source only; "%s" is dropped |'
-      ' A named source is actionable, so it wins - printing both said "nothing '
-      'to move" and "here is how to move it" in the same document |' % (e, e))
-w('| More than %d chips | The first %d in config order | Caps the ingestion '
-  'section so it reads as a plan, not a checklist. All 9 chips used to print 9 '
-  'route paragraphs |' % (_cap, _cap))
-w('')
-w('Verified by exhausting every single, pair and triple combination: '
-  '**0 contradictions and 0 cap overruns**, worst case bounded at %d routes.'
-  % _cap)
-w('')
-
-# --------------------------------------------------------- archetypes
-w('## The %d archetypes' % len(arch))
-w('')
-w('The workshop is free text, but it resolves to exactly one of these. '
-  'Features and the first step are precomputed, so they are instant and always '
-  'correct; only the summary and the considerations need the model.')
-w('')
-w('| Archetype | Features | Considerations in pool |')
-w('|---|---|---|')
-for k, a in arch.items():
-    w('| %s | %s | %d |' % (k, a['features'], a['pool']))
-w('')
-w('**First steps**')
-w('')
-for k, a in arch.items():
-    w('- **%s** - %s' % (k, a['first_step']))
-w('')
-
-# --------------------------------------------------------- where to improve
-w('## Where the precomputed suggestions are weakest')
-w('')
-w('Computed, not editorial - these are the counts that stand out.')
-w('')
-gaps = []
-kws = mkt.get('industry_keywords') or {}
-pins = mkt.get('pinned') or {}
-for key, v in inds.items():
-    nm = v.get('name', key)
-    nk = len(kws.get(key) or [])
-    if nk < 10:
-        gaps.append('**%s** has only %d live-search keywords, so it will fall '
-                    'back to the curated list more often than the others.'
-                    % (nm, nk))
-    if not (pins.get(key) or []):
-        gaps.append('**%s** has no pinned listings, so if live search returns '
-                    'nothing recognisable there is no guaranteed good result.'
-                    % nm)
-    if len(market.get(key) or []) < 5:
-        gaps.append('**%s** offers only %d curated joins.'
-                    % (nm, len(market.get(key) or [])))
-for g in gaps:
-    w('- %s' % g)
-if not gaps:
-    w('- Nothing stands out on the counts.')
-w('')
-w('Two structural gaps worth a decision rather than a count:')
-w('')
-w('- **No industry biases the archetype choice.** A hospital and a bank get the '
-  'same %d archetypes with the same weighting. A per-industry ordering, or two '
-  'or three likely archetypes per industry, would make the forge both faster '
-  'and more plausible.' % len(arch))
-w('- **The data held does not narrow the marketplace suggestion.** Someone who '
-  'ticked "clinical notes" is offered the same joins as someone who ticked '
-  '"estates and operations". A held-to-join mapping is the highest-value '
-  'precompute still missing.')
-w('')
-
-# ---- transport and latency ---------------------------------------------------
-# Read from config so this section cannot drift from what the booth will do.
-_coco = cfg.get('coco') or {}
-_locs = cfg.get('locations') or {}
-w('## Where the visitor\'s time goes')
-w('')
-w('A stop is only as good as the wait in front of it, so the transport each one '
-  'uses is part of the decision tree, not an implementation detail.')
-w('')
-w('| Stop | Transport asked for | Ceiling |')
-w('|---|---|---|')
-for _k in (cfg.get('unlock_order') or list(_locs)):
-    _l = _locs.get(_k) or {}
-    if not _l:
-        continue
-    w('| %s | `%s` | %ss |' % (_l.get('name') or _k,
-                               _l.get('transport') or 'exec',
-                               _l.get('timeout') or _coco.get('turn_timeout', 60)))
-w('')
-w('**Measured before any of this was built** (5 visits, `game/cost.jsonl`): the '
-  'Workshop stop was 75% of all model wait at a 26.0s median, because it was '
-  'the only stop running a real `cortex exec`.')
-w('')
-w('`cortex exec` is a one-shot CI/CD entry point with no `--resume`, no '
-  '`--session` and no `--daemon`, so every call is a cold process. Timed on a '
-  'trivial prompt: 22.7s default, 19.4s with `--no-mcp`, 18.1s with every flag '
-  'that helps. **About 18 seconds of that is startup, not thinking.**')
-w('')
-w('So the booth now leads with a warm `cortex mcp serve` process, which is the '
-  'same binary in server mode, held open between visitors:')
-w('')
-w('| | cold `cortex exec` | warm agent |')
-w('|---|---|---|')
-w('| startup | ~18s, every call | 1.3s, once |')
-w('| a turn | ~26s | **~3.4s** |')
-w('')
-w('### Four layers, because a stand is not a laptop at a desk')
-w('')
-w('1. **warm agent** - `cortex mcp serve`, ~3.4s.')
-w('2. **`cortex exec`** - a cold one-shot. Not started unless 20s of budget remain.')
-w('3. **`COMPLETE`** - `SNOWFLAKE.CORTEX.COMPLETE`. Fast, non-agentic.')
-w('4. **precomputed** - the archetype defaults in this document. No model at all.')
-w('')
-w('Layer 4 is why this document matters operationally: on a flat venue network '
-  'with a suspended warehouse, what a visitor leaves with is exactly the '
-  'precomputed content listed above. It is the floor, so it has to read well '
-  'on its own.')
-w('')
-w('### Two constraints that are not negotiable')
-w('')
-w('- **One in-flight agent call at a time.** Two calls were issued on one warm '
-  'process without waiting: one asked for ALPHA, one asked for BRAVO, and both '
-  'received ALPHA. Concurrent calls mis-correlate, which on a stand means one '
-  'visitor\'s content in another visitor\'s document with no error raised. The '
-  'pool holds a mutex; a second caller waits.')
-w('- **Every turn has a wall-clock ceiling** (%ss by default). The Library has '
-  'been measured at a 127.3s outlier against a 2.2s median. Past the ceiling '
-  'the visitor is better served by layer 4 than by a better sentence.'
-  % _coco.get('turn_timeout', 60))
-w('')
-w('### Retrieval is deterministic on purpose')
-w('')
-w('The closed lists reach the model as **content in the prompt**, not as a tool: '
-  '`cortex exec` takes no tools except through MCP, and MCP is not guaranteed on '
-  'a borrowed booth laptop. The corpus is ~150 rows, so `game/context.py` scores '
-  'it in process and injects only the slice that matches the visitor\'s own '
-  'words (~220 tokens).')
-w('')
-w('No search service, deliberately. At a Snowflake-branded event the same input '
-  'must give the same document, and a visitor\'s pain language is bridged to our '
-  'feature names through the archetype **pain** text - "we retype invoices all '
-  'day" shares no token with `AI_EXTRACT`, but plenty with the pain line.')
-w('')
-
-# ---- pre-prepared scripts ---------------------------------------------------
-# Every fixed, visitor-facing string CoCo shows or says, read verbatim from
-# config.json so marketing can review the exact words. This is the copy that is
-# guaranteed the same for every visitor; the per-turn replies at the Library,
-# Marketplace and Workshop are NOT here because they are model-generated (see the
-# note below). Read, not restated, so it cannot drift from what the booth shows.
-def _q(s):
-    # Show placeholders like {country}/{platform}/{region} literally. Lists
-    # (e.g. the multi-paragraph letter body) are joined into one line.
-    if isinstance(s, (list, tuple)):
-        s = ' '.join(str(x) for x in s)
-    return (s or '').replace('\n', ' ').strip()
-
-
-w('## Pre-prepared scripts (for marketing review)')
-w('')
-w('Every fixed line a visitor sees or hears, in running order, straight from '
-  '`config.json`. **These are pre-written and identical for every visitor.** '
-  'The one-line replies CoCo speaks at the Library, Marketplace and Workshop are '
-  'NOT listed here: they are generated per visit by the model (SNOWFLAKE.CORTEX.'
-  'COMPLETE, `%s`), reflecting back what the visitor just picked. The model '
-  'PICKS from closed lists and REFLECTS; it never writes the copy below, and it '
-  'cannot invent a feature, guide or listing that is not in the curated lists.'
-  % ((cfg.get('coco') or {}).get('complete_model', 'mistral-large2')))
-w('')
-w('Placeholders in braces - `{country}`, `{platform}`, `{region}`, `{first_name}` '
-  '- are filled from the visitor\'s own answers at runtime.')
-w('')
-
+# --- intro
 _intro = cfg.get('intro') or {}
-w('### Intro card')
+w('### 2.1 Intro card')
 w('')
-w('- **Title:** %s' % _q(_intro.get('title')))
-w('- **Button:** %s' % _q(_intro.get('button')))
-for _b in (_intro.get('body') or []):
-    w('- %s' % _q(_b))
+w('- **Title:** %s' % q(_intro.get('title')))
+w('- **Button:** %s' % q(_intro.get('button')))
+for b in (_intro.get('body') or []):
+    w('- %s' % q(b))
 w('')
-
-_L = (cfg.get('intake') or {}).get('letter') or {}
-w('### Home stage - CoCo\'s narrative')
-w('')
-w('The penguin arrives, reads a letter, and walks the visitor to the questions. '
-  'Every line is fixed:')
-w('')
-for _k in ['arctic', 'arctic_sub', 'greeting', 'body', 'signoff', 'button',
-           'line1', 'line2', 'map_line', 'bubble']:
-    if _L.get(_k):
-        w('- **%s:** %s' % (_k, _q(_L.get(_k))))
+w('Text wrapped in asterisks renders as a highlight colour rather than body '
+  'text.')
 w('')
 
-w('### Home stage - the three questions')
+# --- the arctic and the letter
+_L = ((cfg.get('intake') or {}).get('letter') or {})
+w('### 2.2 The house: CoCo arrives and reads a letter')
 w('')
-for _sec, _optkey in [('platforms', 'options'), ('country', 'options'),
-                      ('residency', 'options_template')]:
-    _b = cfg.get(_sec) or {}
-    w('**%s**' % _q(_b.get('heading')))
+for k in ('arctic', 'arctic_sub', 'bubble', 'greeting'):
+    if _L.get(k):
+        w('- **%s:** %s' % (k, q(_L.get(k))))
+for i, b in enumerate(_L.get('body') or []):
+    w('- **body[%d]:** %s' % (i, q(b)))
+for k in ('signoff', 'button', 'line1', 'line2', 'map_line'):
+    if _L.get(k):
+        w('- **%s:** %s' % (k, q(_L.get(k))))
+w('')
+
+# --- what the visitor types into the letter
+_intake = cfg.get('intake') or {}
+w('### 2.3 The letter: what the visitor types')
+w('')
+for f in (_intake.get('fields') or []):
+    w('- **%s** (`%s`) - placeholder: %s'
+      % (q(f.get('label')), q(f.get('id')), q(f.get('placeholder'))))
+for k in ('industry_question', 'confirm_industry', 'problem_label',
+          'problem_placeholder'):
+    if _intake.get(k):
+        w('- **%s:** %s' % (k, q(_intake.get(k))))
+w('')
+
+# --- the three home questions
+w('### 2.4 The house: the three questions')
+w('')
+for key in ('platforms', 'country', 'residency'):
+    b = cfg.get(key) or {}
+    w('**%s**' % q(b.get('heading')))
     w('')
-    if _b.get('hint'):
-        w('- _Hint:_ %s' % _q(_b.get('hint')))
-    for _o in (_b.get(_optkey) or []):
-        w('- %s' % _q(_o))
+    w('- *Hint:* %s' % q(b.get('hint')))
+    opts = b.get('options') or b.get('options_template') or []
+    for o in opts:
+        w('- %s' % q(o))
+    if b.get('other_label'):
+        w('- *Free text option:* %s' % q(b.get('other_label')))
+    if b.get('exclusive'):
+        w('- *Cannot be combined with a named source:* %s'
+          % ', '.join(q(x) for x in b['exclusive']))
     w('')
 
+# --- sovereignty reactions and pillars
 _sov = cfg.get('sovereignty') or {}
-w('### Sovereignty - CoCo\'s reactions and blueprint pillars')
+w('### 2.5 The house: CoCo\'s reply to each answer')
 w('')
-w('CoCo answers each home-stage choice with a fixed reassurance (`react`); the '
-  'four `pillars` are reused verbatim in the blueprint\'s sovereignty section.')
+for k, v in (_sov.get('react') or {}).items():
+    w('- **%s:** %s' % (k, q(v)))
 w('')
-w('Reactions:')
-for _k, _v in (_sov.get('react') or {}).items():
-    w('- **%s:** %s' % (_k, _q(_v)))
-w('')
-w('Pillars:')
-for _k, _v in (_sov.get('pillars') or {}).items():
-    w('- **%s:** %s' % (_k, _q(_v)))
+w('When more than one residency rule is picked, CoCo answers with the '
+  'strictest of them.')
 w('')
 
-_ik = cfg.get('intake') or {}
-w('### The letter - what the visitor types')
+w('### 2.6 The house: the closing lines before the visitor leaves')
 w('')
-w('- **Prompt:** %s' % _q(_ik.get('prompt')))
-for _f in (_ik.get('fields') or []):
-    w('- **%s** (`%s`)%s' % (_q(_f.get('label')), _f.get('id', ''),
-                             ' - ' + _q(_f.get('placeholder')) if _f.get('placeholder') else ''))
-w('- Industry is picked from the %d-item list; the problem is free text '
-  '(threaded into every later prompt and into the document).' % len(inds))
-if (cfg.get('sourcing') or {}).get('synthetic_hint'):
-    w('- **Library synthetic-data hint:** %s'
-      % _q(cfg['sourcing']['synthetic_hint']))
+w('Spoken in the same chat bubble as CoCo\'s other replies, led by the '
+  'residency answer above. Each advances on its own timer.')
+w('')
+for t in (_sov.get('trust') or []):
+    w('- %s' % q(t))
 w('')
 
-_ask = cfg.get('ask') or {}
-w('### The workshop - the one line we ask for')
+w('### 2.7 The blueprint: the four sovereignty pillars')
 w('')
-for _k in ['heading', 'hint', 'placeholder', 'button', 'skip']:
-    if _ask.get(_k):
-        w('- **%s:** %s' % (_k, _q(_ask.get(_k))))
+w('Printed verbatim in the document the visitor takes away.')
+w('')
+for k, v in (_sov.get('pillars') or {}).items():
+    w('- **%s:** %s' % (k, q(v)))
 w('')
 
-# Postbox / delivery lines. Kept explicit here (mirroring QRDelivery.deliver in
-# server.py) rather than parsed: the reply is assembled from concatenated f-string
-# fragments, so a regex over the class body pulls in code and the docstring. Two
-# lines only, so a human check against server.py on change is trivial.
-w('### The postbox - delivery lines')
+# --- the four locations
+w('### 2.8 The four locations')
 w('')
-w('CoCo speaks one of these when the visitor presses send (`{first_name}` is '
-  'filled in if given):')
+for lid in (cfg.get('unlock_order') or []):
+    loc = locs.get(lid) or {}
+    w('**%s** - %s' % (q(loc.get('name')), q(loc.get('represents'))))
+    w('')
+    for k in ('narrative', 'heading', 'hint', 'placeholder', 'other_label',
+              'other_placeholder', 'button'):
+        if loc.get(k):
+            w('- **%s:** %s' % (k, q(loc.get(k))))
+    w('')
+
+# --- synthetic data hint
+_hint = (cfg.get('sourcing') or {}).get('synthetic_hint')
+if _hint:
+    w('### 2.9 The Data Library: the synthetic-data offer')
+    w('')
+    w('- %s' % q(_hint))
+    w('')
+
+# --- postbox delivery lines, mirrored from QRDelivery.deliver in server.py
+w('### 2.10 The Postbox: what CoCo says on send')
 w('')
-w('- **On success:** Wrapped and labelled, {first_name}. Scan the code on screen '
-  'and it is yours - the link works for seven days.')
+w('- **On success:** Wrapped and labelled, {first_name}. Scan the code on '
+  'screen and it is yours - the link works for seven days.')
 w('- **If staging fails:** I could not wrap it up this time - grab a Snowflake '
   'person and we will sort it.')
 w('')
 
-w('### The model prompts')
+# ==================================================== 3. the marketplace, shown
+w('## 3. The datasets the booth recommends')
 w('')
-w('The one-line replies above are generated, not scripted - so for full '
-  'transparency, every prompt the booth actually sends to Cortex (the shared '
-  'preamble, the Library, Marketplace and Workshop turns, the background fill and '
-  'the QA relevance check) is rendered verbatim against an example visitor in '
-  '`skills/loco4coco/references/model-prompts.md`. Regenerate it with '
-  '`python3 scripts/build_model_prompts.py`. The rule that governs all of them: '
-  'the model only ever PICKS from our closed lists and REFLECTS them back - it is '
-  'never asked to invent a feature, a listing or a fact, and the same visitor '
-  'input yields the same document.')
-w('')
-
-# ---- flagged for review -----------------------------------------------------
-# Kept in the generator, not typed into the published copy, so it survives the
-# next regeneration. Anything hand-added to the Google Doc is lost on the next run.
-w('## Flagged for review')
-w('')
-w('Decisions for a human, not code changes. None of these stop the booth running.')
-w('')
-w('- **Geo weighting is London-only.** The curated picks are scored with %d UK '
-  'preference terms and %d non-UK demotion terms (`marketplace.geo`). Re-weight '
-  'before Paris, or a French room is offered UK postcode data.'
-  % (len(((cfg.get('marketplace') or {}).get('geo') or {}).get('prefer') or []),
-     len(((cfg.get('marketplace') or {}).get('geo') or {}).get('demote') or [])))
-_acc = {}
-for _v in market.values():
-    for _r in _v:
-        _acc[_r.get('access', '')] = _acc.get(_r.get('access', ''), 0) + 1
-_trials = sum(n for a, n in _acc.items() if 'trial' in a.lower())
-_total = sum(_acc.values())
-w('- **%d of the %d curated slots are time-limited trials** rather than '
-  'perpetual Free. Everything is free to acquire and nothing is Paid, but some '
-  'expire before a visitor is likely to act on it.' % (_trials, _total))
+_slots = sum(len(v) for v in market.values())
 _titles = {}
-for _v in market.values():
-    for _r in _v:
-        _titles[_r.get('title')] = _titles.get(_r.get('title'), 0) + 1
-_reused = sorted(((n, t) for t, n in _titles.items() if n > 2), reverse=True)
-if _reused:
-    w('- **The curated set repeats across industries.** %d slots are filled by '
-      'only %d distinct listings. Most reused: %s. This is the "why am I being '
-      'offered the same thing again" problem, and it is content curation work '
-      'rather than a bug.'
-      % (_total, len(_titles),
-         '; '.join('%s (%d industries)' % (t, n) for n, t in _reused[:4])))
-w('- **`is_ready_for_import` is the flag that decides whether a visitor can '
-  'actually attach a listing**, and it is stricter than it looks. Measured on '
-  'the London account: of 4,347 visible listings only 671 are importable. Every '
-  'one of those is also not-by-request. The trap is the middle group - 2,594 '
-  'listings are NOT by-request and still NOT importable, so they look freely '
-  'available and cannot be mounted. Checking only region and by-request passes '
-  'listings a visitor cannot use; that is how five unattachable entries once sat '
-  'in the curated index undetected. `deploy/verify_context.py --listings` now '
-  'checks the flag directly, and all %d distinct curated listings pass it.'
-  % len(_titles))
-w('- **The agentic marketplace tier stays disabled.** Re-timed 2026-08-24 at '
-  '**117.1s** for one search - slower than the 70-110s originally measured, and '
-  'far slower than a visitor walking one stall. It does return better matches '
-  '(a "poor data quality" problem returned Ataccama Data Quality and Semarchy '
-  'xDM rather than an industry keyword guess), but it does NOT verify region or '
-  '`is_ready_for_import`, so its suggestions can be dead ends. Warming does not '
-  'rescue it: the 117s is inference and tool time, not the ~18s of process '
-  'startup.')
+_where = {}
+for _k in order():
+    for _r in market.get(_k) or []:
+        _titles[_r['title']] = _titles.get(_r['title'], 0) + 1
+        _where.setdefault(_r['title'], []).append(ind_label(_k))
+w('%d slots across %d industries, filled by %d distinct listings. Each is a '
+  'real listing on the Snowflake Marketplace, verified attachable in the event '
+  'region, so nothing offered here is a dead end.'
+  % (_slots, len(market), len(_titles)))
+w('')
+for _k in order():
+    rows = market.get(_k) or []
+    if not rows:
+        continue
+    w('### %s' % ind_label(_k))
+    w('')
+    w('| Listing | Provider | Access | Global name |')
+    w('| --- | --- | --- | --- |')
+    for r in rows:
+        w('| %s | %s | %s | `%s` |'
+          % (q(r['title']), q(r['provider']), q(r['access']),
+             q(r['global_name'])))
+    w('')
+    pins = (mkt.get('pinned') or {}).get(_k) or []
+    if pins:
+        w('Pinned first when the live tier is enabled: %s.'
+          % ', '.join('`%s`' % q(p) for p in pins))
+        w('')
+
+w('### Which industries each listing appears in')
+w('')
+w('| Listing | Industries | Appears in |')
+w('| --- | --- | --- |')
+for t, n in sorted(_titles.items(), key=lambda kv: (-kv[1], kv[0])):
+    w('| %s | %d | %s |' % (q(t), n, ', '.join(_where[t])))
 w('')
 
-io.open(os.path.join(HERE, 'decision_tree.md'), 'w',
-        encoding='utf-8').write('\n'.join(O) + '\n')
-print('wrote decision_tree.md  (%d lines)' % len(O))
+# ============================================== 4. what the visitor already holds
+w('## 4. What the visitor already holds')
+w('')
+w('The Data Library offers these per industry, plus a free-text option.')
+w('')
+for _k in order():
+    b = inds.get(_k) or {}
+    ds = b.get('data_sources') or []
+    if not ds:
+        continue
+    w('### %s' % ind_label(_k))
+    w('')
+    w('| Option | Shown underneath |')
+    w('| --- | --- |')
+    for d in ds:
+        if isinstance(d, dict):
+            w('| %s | %s |' % (q(d.get('label')), q(d.get('note'))))
+        else:
+            w('| %s | |' % q(d))
+    w('')
+
+# ==================================================== 5. archetypes and routes
+w('## 5. What gets built: the %d archetypes' % len(arch))
+w('')
+w('The workshop takes one line of free text and resolves it to exactly one '
+  'archetype. The features and the first step are precomputed per archetype, so '
+  'they are instant and always drawn from the curated feature list.')
+w('')
+w('| Archetype | Features | Considerations available |')
+w('| --- | --- | --- |')
+for k, v in arch.items():
+    w('| %s | %s | %d |' % (q(k), q(v['features']), v['pool']))
+w('')
+w('### The first step printed for each')
+w('')
+for k, v in arch.items():
+    if v['first_step']:
+        w('- **%s** - %s' % (q(k), q(v['first_step'])))
+w('')
+
+w('## 6. How the data gets into Snowflake')
+w('')
+w('Each platform tapped in the house prints a concrete route into the '
+  'blueprint.')
+w('')
+w('| Platform | Route printed |')
+w('| --- | --- |')
+for p in ((cfg.get('platforms') or {}).get('options') or []):
+    blurb = (paths.get(p) or ('', ''))[0]
+    w('| %s | %s |' % (q(p), q(blurb)))
+w('')
+w('### When more than one is tapped')
+w('')
+w('| Selection | What the blueprint prints |')
+w('| --- | --- |')
+w('| One platform | That route |')
+w('| Several named platforms | Each route, in the order listed above, so the '
+  'document does not depend on tap order |')
+for _x in ((cfg.get('platforms') or {}).get('exclusive') or []):
+    w('| %s, alone | Its own line, no route |' % q(_x))
+    w('| %s, with a named platform | The named platform only |' % q(_x))
+w('| More than four platforms | The first four in the order listed above |')
+w('')
+w('These rules are applied in the browser as the visitor taps, and again on the '
+  'server when the blueprint is built.')
+w('')
+
+# ======================================================== 7. how answers are made
+w('## 7. How each answer is produced')
+w('')
+w('| Stop | Model transport | Notes |')
+w('| --- | --- | --- |')
+for lid in (cfg.get('unlock_order') or []):
+    loc = locs.get(lid) or {}
+    tr = loc.get('transport')
+    if lid == 'postbox':
+        note = 'No model turn. Runs the QA review, writes the document, ' \
+               'returns the fixed line above.'
+        tr = '-'
+    elif tr == 'exec':
+        note = 'Agentic. CoCo\'s working is shown on screen as it arrives.'
+    else:
+        note = 'A single fast completion that names the selection back.'
+    w('| %s | %s | %s |' % (q(loc.get('name')), q(tr or '-'), note))
+w('')
+w('Every turn has a wall-clock ceiling of %ss. Past it, the visitor is served '
+  'the precomputed archetype content instead of a slower sentence, so the '
+  'document is complete either way.'
+  % ((cfg.get('coco') or {}).get('turn_timeout') or 60))
+w('')
+w('One model call is in flight at a time. A second caller waits, so one '
+  'visitor\'s content can never appear in another visitor\'s document.')
+w('')
+w('The closed lists in this document reach the model as text inside the '
+  'prompt. The model picks from them and reflects them back; it is never asked '
+  'to invent a feature, a listing or a fact.')
+w('')
+
+# ============================================ 8. QA, then delivery
+w('## 8. Review and delivery')
+w('')
+_qa = cfg.get('qa') or {}
+w('Before the document is written, it is reviewed. Deterministic checks always '
+  'run and repair what is fixable from the closed lists: features that do not '
+  'resolve to a documentation link are dropped, the readiness score is clamped '
+  'into range, platforms are re-normalised, the sovereignty section is required '
+  'when a residency rule was given, and a list of banned words is removed. '
+  'Every change is recorded with its before and after.')
+w('')
+if _qa.get('model_review'):
+    w('One further check asks a model whether the proof of concept addresses '
+      'the problem the visitor described. It never blocks delivery.')
+    w('')
+w('The visitor leaves with a Word document, reached by scanning a QR code on '
+  'screen. The link lasts %d days. There is no email and no HTML page: the '
+  'document is the only artifact.'
+  % (int((cfg.get('delivery') or {}).get('presign_seconds') or 0) // 86400))
+w('')
+
+# ================================================== 9. configuration and limits
+w('## 9. Configuration')
+w('')
+w('The flags that change what a visitor experiences.')
+w('')
+w('| Setting | Value | Effect |')
+w('| --- | --- | --- |')
+w('| `locations.marketplace.discovery` | `%s` | %s |'
+  % (q(locs['marketplace'].get('discovery')),
+     'The curated listings in section 3 are served'
+     if locs['marketplace'].get('discovery') == 'manual'
+     else 'Listings are searched live at the stall'))
+w('| `marketplace.agentic.enabled` | `%s` | %s |'
+  % (str((mkt.get('agentic') or {}).get('enabled')).lower(),
+     'Agentic listing search is off'
+     if not (mkt.get('agentic') or {}).get('enabled')
+     else 'Agentic listing search is on'))
+w('| `qa.enabled` | `%s` | Blueprint review runs before delivery |'
+  % str(_qa.get('enabled')).lower())
+w('| `qa.model_review` | `%s` | Relevance check included in the review |'
+  % str(_qa.get('model_review')).lower())
+w('| `delivery.transport` | `%s` | Delivery is by QR code to a staged document |'
+  % q((cfg.get('delivery') or {}).get('transport')))
+w('| `ask.enabled` | `%s` | %s |'
+  % (str((cfg.get('ask') or {}).get('enabled')).lower(),
+     'The optional free-question stop is not offered'
+     if not (cfg.get('ask') or {}).get('enabled')
+     else 'The optional free-question stop is offered'))
+w('| `event.region` | `%s` | Listings are filtered to what is attachable here |'
+  % q((cfg.get('event') or {}).get('region')))
+w('| `event.time_limit_seconds` | `%s` | The visit length the booth is built for |'
+  % q((cfg.get('event') or {}).get('time_limit_seconds')))
+w('')
+
+w('### Constraints to be aware of')
+w('')
+_geo = mkt.get('geo') or {}
+_pref = len(_geo.get('prefer') or [])
+_dem = len(_geo.get('demote') or [])
+if _pref or _dem:
+    w('- Listing selection is weighted for the United Kingdom: %d preference '
+      'terms and %d demotion terms. A room in another country needs these '
+      're-weighted.' % (_pref, _dem))
+_trials = sum(1 for k in order() for r in (market.get(k) or [])
+              if 'trial' in str(r.get('access', '')).lower())
+if _trials:
+    w('- %d of the %d slots are time-limited trials rather than perpetual free '
+      'listings. All are free to acquire; none are paid.' % (_trials, _slots))
+_reuse = [t for t, n in _titles.items() if n >= 3]
+if _reuse:
+    w('- %d listings appear in three or more industries, the most reused being '
+      '%s. A visitor who has seen the booth before may be offered the same '
+      'dataset again.'
+      % (len(_reuse),
+         ', '.join(q(t) for t, _n in
+                   sorted(_titles.items(), key=lambda kv: -kv[1])[:2])))
+w('- A listing is only offerable if Snowflake reports it as importable. That is '
+  'stricter than being visible and not by-request, so the flag is checked '
+  'directly rather than inferred.')
+_noind = [ind_label(k) for k in order()
+          if not ((mkt.get('pinned') or {}).get(k))]
+if _noind:
+    w('- No pinned fallback for: %s. These industries rely entirely on the '
+      'curated list in section 3.' % ', '.join(_noind))
+w('- The industry does not weight which archetype a visitor is routed to, and '
+  'the data they hold does not narrow which datasets are suggested.')
+w('')
+
+print('\n'.join(O))

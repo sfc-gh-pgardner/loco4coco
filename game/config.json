@@ -933,6 +933,12 @@
       "models": "Cortex runs the AI models where your data already lives, so nothing crosses a border to be understood.",
       "marketplace": "Marketplace data is shared live rather than copied, and you are only ever offered listings available in {region}.",
       "governance": "One set of controls - role-based access, masking, row-level policies - governs all of it, in one place."
-    }
+    },
+    "_trust_comment": "Spoken in the house after the residency answer, in the same chat bubble as CoCo's other replies. Each line auto-advances on a timer scaled to its own length. These are fixed lines, so they belong here rather than in the client, where marketing cannot review them.",
+    "trust": [
+      "While we are here, one thing worth saying: you will not have to move house to do any of this. Snowflake talks to the systems you already run, and with Iceberg your tables stay in open formats other engines can read.",
+      "That is on purpose, not a happy accident. Open standards mean there is no one way door, so if you ever want to take your data somewhere else, you can.",
+      "And the question I get asked most, so I will answer it before you ask. What you send the AI stays yours. Your prompts, your data and the answers are never used to train external models, and they never leave your account."
+    ]
   }
 }

@@ -4,7 +4,7 @@ Read this before designing any feature. These are properties of the **venue**,
 not preferences, and they have already been broken once - by a "SAVE MY CARD"
 button that called `a.download`, which cannot work on the machine it shipped on.
 
-Every change should be checked against all six.
+Every change should be checked against all seven.
 
 ## What this is
 
@@ -99,3 +99,28 @@ Consequences:
   must stand on its own without us stood next to it explaining it.
 - A five-minute clock means CoCo must never make them wait without telling them
   what it is doing. Silence reads as broken.
+
+## 7. Nothing about one visitor may reach the next
+
+The booth is a shared laptop used by a stream of strangers, several of whom may
+be competitors. One visitor's words - their name, their company, the problem they
+typed - must never appear in another visitor's session, screen or document, and
+must not be left lying on the machine after they walk away.
+
+Consequences:
+
+- **The only intended persistence is the Snowflake `SESSIONS`/`TURNS` row**, one
+  per visitor. That is the governed lead-capture product, written to a Snowflake
+  account, not to the booth. Everything else about a visitor is transient.
+- **`state.json` is replaced wholesale on reset**, never merged - a shallow merge
+  is exactly how one visitor's POC once leaked into the next. START AGAIN and NEW
+  VISITOR both reset the server and reload the browser, so client memory goes too.
+- **The warm agent process is recycled on reset.** It probed stateless between
+  calls, but a shared stand cannot merely trust that; restarting it guarantees no
+  model-side context can cross visitors.
+- **No visitor PII is written to local disk.** There is no outbox and no local
+  email record - email was removed, the QR to the presigned stage document is the
+  delivery. The only local files are `state.json` (current visitor, replaced) and
+  `cost.jsonl` (timings and token counts, no PII).
+- A feature that keeps one visitor's content on the booth past their visit is a
+  defect, however convenient it is.

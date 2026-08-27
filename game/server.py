@@ -146,6 +146,26 @@ def read_state():
     return merged
 
 
+def purge_temp_artifacts():
+    """Delete the visitor-named blueprint files this process writes to the OS
+    temp dir (loco4coco-<name>-<ts>.html/.docx). They carry the visitor's first
+    name, so on a shared booth they must not outlive the visit - called on reset
+    so nothing about one visitor is left on disk for the next. Returns a count."""
+    removed = 0
+    tmp = tempfile.gettempdir()
+    try:
+        for n in os.listdir(tmp):
+            if n.startswith("loco4coco-") and n.endswith((".html", ".docx")):
+                try:
+                    os.remove(os.path.join(tmp, n))
+                    removed += 1
+                except OSError:
+                    pass
+    except OSError:
+        pass
+    return removed
+
+
 def write_state(patch, replace=False):
     """Shallow-merge a patch into state.json, atomically.
 
@@ -1252,130 +1272,12 @@ def build_coco_prompt(cfg, state):
 
 # ------------------------------------------------------------------- blueprint
 
-def blueprint_html(cfg, state):
-    vis = state.get("visitor") or {}
-    poc = state.get("poc") or {}
-    d = cfg.get("delivery") or {}
-    e = html.escape
-    prompt = build_coco_prompt(cfg, state)
-    held = state.get("held") or []
-    joined = state.get("joined") or []
-    listings = state.get("joined_listings") or []
-    url = state.get("blueprint_url") or ""
-
-    def ul(items):
-        return "<ul>" + "".join(f"<li>{e(i)}</li>" for i in items) + "</ul>"
-
-    parts = [
-        # 640px is a desktop measure. Almost every one of these is opened on a
-        # phone, so the body is a single 34rem column at 16px - below that,
-        # iOS inflates the text itself and the layout stops being ours.
-        "<div style=\"font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,"
-        "sans-serif;font-size:16px;line-height:1.6;color:#1A242E;"
-        "max-width:34rem;margin:0 auto;padding:0 4px\">",
-        f"<p>Hi {e(vis.get('first_name') or 'there')},</p>",
-        "<p>Here is the POC we sketched out together at the Snowflake booth. "
-        "Everything below is yours to keep.</p>",
-        f"<h2 style=\"color:#29B5E8;font-size:19px;margin:22px 0 6px\">"
-        f"{e(poc.get('poc_name') or 'Your proof of concept')}</h2>",
-        f"<p>{e(poc.get('summary') or '')}</p>",
-    ]
-    if held:
-        parts += ["<h3 style=\"font-size:16px;margin:22px 0 4px\">"
-                  "Data you already hold</h3>", ul(held)]
-
-    ipaths = integration_paths(state)
-    if ipaths:
-        parts.append("<h3 style=\"font-size:16px;margin:22px 0 4px\">"
-                     "Getting that data into Snowflake</h3><ul>")
-        for plat, howto, purl in ipaths:
-            parts.append(
-                f"<li><b>{e(plat)}</b><br><span style=\"color:#5B7382;"
-                f"font-size:14px\">{e(howto)}</span><br>"
-                f"<a href=\"{e(purl)}\">{e(purl)}</a></li>")
-        parts.append("</ul>")
-
-    sov = sovereignty_lines(load_config(), state)
-    if sov:
-        parts.append("<h3 style=\"font-size:16px;margin:22px 0 4px\">"
-                     "Sovereignty and security</h3><ul>")
-        for line in sov:
-            parts.append(f"<li><span style=\"color:#5B7382;font-size:14px\">"
-                         f"{e(line)}</span></li>")
-        parts.append("</ul>")
-
-    # Marketplace: real listing, named provider, working link.
-    if listings or joined:
-        parts.append("<h3 style=\"font-size:15px;margin:20px 0 4px\">"
-                     "To attach from the Snowflake Marketplace</h3><ul>")
-        named = set()
-        for r in listings:
-            named.add(r["title"])
-            parts.append(
-                f"<li><a href=\"{e(r['url'])}\">{e(r['title'])}</a><br>"
-                f"<span style=\"color:#667;font-size:13px\">{e(r['provider'])} "
-                f"&middot; {e(r['access'])}</span></li>")
-        for j in joined:
-            if j not in named:
-                parts.append(f"<li>{e(j)}<br><span style=\"color:#667;"
-                             f"font-size:13px\">You mentioned this one &mdash; "
-                             f"search the Marketplace for a provider</span></li>")
-        parts.append("</ul>")
-
-    # Features, each with a documentation link by construction.
-    feats = link_features(poc.get("features"))
-    if feats:
-        parts.append("<h3 style=\"font-size:15px;margin:20px 0 4px\">"
-                     "Snowflake features you will use</h3><ul>")
-        for name, doc in feats:
-            parts.append(f"<li><a href=\"{e(doc)}\">{e(name)}</a></li>")
-        parts.append("</ul>")
-
-    parts += [
-        "<h3 style=\"font-size:15px;margin:22px 0 4px\">Paste this into Cortex "
-        "Code to begin</h3>",
-        "<p style=\"margin:0 0 10px;color:#55707F\">Start a free trial, open "
-        "Cortex Code, and paste this in as your first message.</p>",
-        # A bare URL is a poor target on a phone. Buttons in email have to be
-        # padded anchors with inline styles - no CSS class survives Gmail.
-        (f"<a href=\"{e(d.get('signup_url',''))}\" style=\"display:block;"
-         "text-align:center;text-decoration:none;padding:15px 18px;"
-         "border-radius:10px;background:#29B5E8;color:#08222E;font-weight:700;"
-         "font-size:16px;margin:0 0 12px\">Start a free trial</a>"
-         if d.get("signup_url") else ""),
-        "<pre style=\"background:#0E1F2B;color:#DDEBF4;border-radius:10px;"
-        "padding:14px;white-space:pre-wrap;overflow-wrap:anywhere;"
-        "font-size:13px;line-height:1.5;"
-        f"font-family:ui-monospace,Menlo,Consolas,monospace\">{e(prompt)}</pre>",
-        "<p style=\"margin:8px 0 0;color:#7B909D;font-size:13px\">"
-        "Long-press the block above to select and copy it.</p>",
-    ]
-    if poc.get("guide_title") and poc.get("guide_url"):
-        parts += ["<h3 style=\"font-size:15px;margin:22px 0 4px\">Start from this "
-                  "guide</h3>",
-                  f"<p><a href=\"{e(poc['guide_url'])}\">{e(poc['guide_title'])}</a></p>"]
-
-    # Considerations, in place of a score. Guidance beats a number.
-    cons = poc.get("considerations") or []
-    if cons:
-        parts += ["<h3 style=\"font-size:15px;margin:22px 0 4px\">Considerations</h3>",
-                  "<p style=\"margin:0 0 6px;color:#556\">Worth thinking about "
-                  "before you start:</p>", ul(cons)]
-    if url:
-        parts += ["<p style=\"margin-top:24px\">A Word version is here: "
-                  f"<a href=\"{e(url)}\">download the document</a>. "
-                  "That link expires in seven days. Everything you need is "
-                  "written out above, so keep this page.</p>"]
-    parts += ["<p style=\"margin-top:24px;color:#667\">See you next time.<br>"
-              "CoCo</p>", "</div>"]
-    return "\n".join(parts)
+# The blueprint email body (blueprint_html) was removed with the outbox
+# on 2026-08-27: nothing composes an email any more, the QR to the
+# presigned .docx is the delivery, and the on-screen read surface is
+# blueprint_page below.
 
 
-# --------------------------------------------------------- integration paths
-
-# One entry per platform the library offers. These are deliberately concrete:
-# "use a connector" is not an answer a visitor can act on, but "Openflow, or
-# Azure Data Factory writing Parquet to an external stage" is.
 INTEGRATION_PATHS = {
     "Microsoft / Azure": (
         "Openflow has a first-party connector for Azure Blob Storage and "
@@ -1500,8 +1402,6 @@ def integration_paths(state):
                         "https://other-docs.snowflake.com/en/connectors"))
     return out
 
-
-# ------------------------------------------------------- the blueprint as a page
 
 # The .docx is a good thing to forward to a colleague and a poor thing to read on
 # a phone: Word on iOS wants a download and an app switch before anyone sees a
@@ -1907,6 +1807,7 @@ def log_session(cfg, state):
     vis = state.get("visitor") or {}
     poc = state.get("poc") or {}
     turns = state.get("turns") or []
+    qa = state.get("qa") or {}
 
     started = state.get("started_at") or time.time()
     payload = {
@@ -1947,19 +1848,62 @@ def log_session(cfg, state):
         # are and what their rules are, useful for follow-up grouping.
         "COMPANY_COUNTRY": vis.get("company_country", ""),
         "RESIDENCY": vis.get("residency", ""),
+        # QA-bot verdict for this blueprint. The per-finding detail is in
+        # QA_FINDINGS; these four are the summary. QA_PASSED/QA_RELEVANT may be
+        # NULL (bot off, or relevance undetermined), which the ::BOOLEAN cast of
+        # a JSON null preserves.
+        "QA_PASSED": qa.get("passed"),
+        "QA_REPAIRS": int(qa.get("repairs") or 0),
+        "QA_RELEVANT": qa.get("relevant"),
+        "QA_NOTE": qa.get("note", ""),
     }
+    bool_cols = ["QA_PASSED", "QA_RELEVANT"]
     arr_cols = ["DATA_HELD", "MARKETPLACE_JOINED", "FEATURES",
                 "CONSIDERATIONS", "PLATFORMS"]
-    cols = [k for k in payload if k not in arr_cols]
+    cols = [k for k in payload if k not in arr_cols and k not in bool_cols]
     num = {"READINESS_SCORE", "DURATION_SECONDS", "COCO_SECONDS",
-           "INPUT_TOKENS", "OUTPUT_TOKENS"}
+           "INPUT_TOKENS", "OUTPUT_TOKENS", "QA_REPAIRS"}
     sel = [f"p:{c}::{'NUMBER' if c in num else 'TEXT'}" for c in cols]
     sel += [f"p:{c}::ARRAY" for c in arr_cols]
+    sel += [f"p:{c}::BOOLEAN" for c in bool_cols]
 
-    sql = (f"INSERT INTO {tbl} (SESSION_TS, {', '.join(cols + arr_cols)}) "
+    sql = (f"INSERT INTO {tbl} (SESSION_TS, {', '.join(cols + arr_cols + bool_cols)}) "
            f"SELECT CURRENT_TIMESTAMP(), {', '.join(sel)} "
            f"FROM (SELECT PARSE_JSON(%s) AS p)")
     return sf_exec(cfg, sql, (json.dumps(payload, ensure_ascii=False),))
+
+
+def log_qa(cfg, session_id, findings):
+    """Write one QA_FINDINGS row per check that fired. This is the audit trail
+    behind the silent repairs: the visitor's document is fixed in place, but the
+    change is recorded here with its before/after. Best-effort - a logging
+    failure must never block a visitor's handover. Returns (ok, error)."""
+    if not findings:
+        return True, ""
+    sf = cfg.get("snowflake") or {}
+    tbl = f"{sf.get('database')}.{sf.get('schema')}.QA_FINDINGS"
+    rows, ok_all, last_err = 0, True, ""
+    for f in findings:
+        payload = {
+            "SESSION_ID": session_id or "",
+            "CHECK_NAME": str(f.get("check") or "")[:120],
+            "SEVERITY": str(f.get("severity") or "")[:20],
+            "DETAIL": str(f.get("detail") or "")[:2000],
+            "REPAIRED": bool(f.get("repaired")),
+            "BEFORE_VAL": f.get("before"),
+            "AFTER_VAL": f.get("after"),
+        }
+        sql = (f"INSERT INTO {tbl} (SESSION_ID, FINDING_TS, CHECK_NAME, SEVERITY, "
+               f"DETAIL, REPAIRED, BEFORE_VAL, AFTER_VAL) SELECT p:SESSION_ID::TEXT, "
+               f"CURRENT_TIMESTAMP(), p:CHECK_NAME::TEXT, p:SEVERITY::TEXT, "
+               f"p:DETAIL::TEXT, p:REPAIRED::BOOLEAN, p:BEFORE_VAL::TEXT, "
+               f"p:AFTER_VAL::TEXT FROM (SELECT PARSE_JSON(%s) AS p)")
+        ok, err = sf_exec(cfg, sql, (json.dumps(payload, ensure_ascii=False),))
+        if ok:
+            rows += 1
+        else:
+            ok_all, last_err = False, err
+    return ok_all, last_err
 
 
 def sf_exec(cfg, sql, args=None):
@@ -1981,12 +1925,10 @@ def sf_exec(cfg, sql, args=None):
 
 
 def delivery_status(state):
-    """Truthful by construction. Nothing here may claim SENT - only the ops
-    drain, which actually presses Send, may set that."""
-    if state.get("draft_created"):
-        return "DRAFTED"
-    if state.get("queued"):
-        return "QUEUED"
+    """Truthful by construction. The QR to the presigned .docx is the delivery,
+    so a staged URL is DELIVERED; anything else has not reached the visitor."""
+    if state.get("blueprint_url"):
+        return "DELIVERED"
     return "FAILED"
 
 
@@ -2019,185 +1961,42 @@ def log_turn(cfg, session_id, loc_id, text, reply, meta):
 
 # ------------------------------------------------------------------- transports
 
-class OutboxTransport:
-    """Route A. Build the .docx, stage it, presign it, compose the email, and
-    write it to outbox/ as the durable record. Then opportunistically ask
-    exec-CoCo to create the Gmail draft.
+class QRDelivery:
+    """The only delivery path: build the .docx, stage it, presign it. The QR the
+    visitor scans points at that presigned URL, which expires in seven days.
 
-    Why an outbox rather than sending directly: the Gmail MCP is reachable from
-    an INTERACTIVE CoCo session but not from `cortex exec` - verified, with
-    --bypass and persistent tool search, the Gmail tools never load headlessly
-    while Calendar's do. The MCP also exposes create_draft only, with no send
-    tool and no attachment parameter. So the game queues a fully-composed
-    email and the operator's interactive session drains it (see the
-    loco4coco-ops skill). Nothing here ever claims an email was sent.
+    There is deliberately NO local record. Email was removed, so the old outbox
+    that wrote a fully-composed message (name, company, problem) to disk on every
+    visit had no purpose left - it was pure liability, PII accumulating on a
+    shared booth laptop between visitors. The governed Snowflake SESSIONS/TURNS
+    row is the one intended persistence; nothing else about a visitor is kept.
     """
 
     last_meta = None
 
     def deliver(self, cfg, state, job_id):
-        d = cfg.get("delivery") or {}
         docx = blueprint_docx(cfg, state)
         url, err = ("", "")
         if docx:
             url, err = stage_and_presign(cfg, docx)
         if url:
             write_state({"blueprint_url": url})
-            state = read_state()
-        # Side by side, deliberately - but the QR still points at the .docx.
-        # MEASURED: a presigned stage URL serves Content-Type
-        # application/octet-stream regardless of extension, and GET_PRESIGNED_URL
-        # gives no way to set it, so a browser DOWNLOADS the .html instead of
-        # rendering it. That makes the page useless as a QR target today. It is
-        # still built and staged, because it is the right artefact the moment
-        # there is somewhere that serves it with a real content type (a Streamlit
-        # or SAR page reading the SESSIONS row), and because the same markup is
-        # what the email body renders - and email is the mobile surface that
-        # works right now.
-        page_url = ""
-        try:
-            page = blueprint_page(cfg, state)
-            if page:
-                page_url, perr = stage_and_presign(cfg, page)
-                if page_url:
-                    write_state({"blueprint_page_url": page_url})
-                    state = read_state()
-                else:
-                    print("[loco] page presign failed:", perr or "?")
-        except Exception as ex:
-            print("[loco] page render failed:", ex)
-
-        body = blueprint_html(cfg, state)
         vis = state.get("visitor") or {}
-        poc = state.get("poc") or {}
-        subject = d.get("subject_template",
-                        "Your Snowflake POC blueprint: {poc_name}").replace(
-            "{poc_name}", poc.get("poc_name") or "your POC")
-
-        # The outbox write is the thing that must not fail silently.
-        queued, qerr = self._queue(cfg, vis, subject, body, url, docx, poc)
-        if not queued:
-            return False, ("I could not wrap it up: " + (qerr or "unknown error")
-                           + " Grab a Snowflake person and we will sort it.")
-
-        # The opportunistic Gmail draft never succeeds under `cortex exec` (the
-        # MCP tools do not load headlessly), so by default we skip it entirely -
-        # it was costing ~50-80s of dead time on the postbox for no gain. The
-        # outbox is what actually delivers. Flip delivery.try_draft to re-enable
-        # it if a future exec build loads MCP tools.
-        if d.get("try_draft"):
-            drafted, detail = self._try_draft(cfg, vis, subject, body, job_id)
-        else:
-            drafted, detail = False, ""
-            self.last_meta = None
-        write_state({"draft_created": drafted, "blueprint_url": url})
-
-        if drafted:
-            reply = detail or "Drafted and ready. It will be with you shortly."
-        else:
-            # No address to name any more: the letter stopped asking for one and
-            # the QR is the delivery. Point at the code on screen rather than
-            # promising a post that is not coming.
-            name = (vis.get("first_name") or "").strip()
-            who = f", {name}" if name else ""
+        name = (vis.get("first_name") or "").strip()
+        who = f", {name}" if name else ""
+        if url:
             reply = (f"Wrapped and labelled{who}. Scan the code on screen and "
                      f"it is yours - the link works for seven days.")
-        if err and not url:
-            reply += " The Word version could not be attached this time."
-        return True, reply
-
-    def _queue(self, cfg, vis, subject, body, url, docx, poc):
-        d = cfg.get("delivery") or {}
-        out = os.path.join(HERE, d.get("outbox_dir", "outbox"))
-        try:
-            os.makedirs(out, exist_ok=True)
-            stamp = time.strftime("%Y%m%d-%H%M%S")
-            safe = re.sub(r"[^A-Za-z0-9]+", "-",
-                          (vis.get("first_name") or "visitor")).strip("-").lower()
-            # Keyed on the session id: a retry replaces the record instead of
-            # queueing the same visitor twice for the operator to send twice.
-            sid = (read_state().get("session_id") or "")[:8]
-            rec = {
-                "queued_at": time.time(),
-                "to": vis.get("email") or "",
-                # The letter does not ask for an email: the QR is the delivery
-                # that cannot fail. A record with no address is a complete
-                # blueprint the operator can still file - it is just not
-                # postable, so mark it rather than leaving a null `to` for the
-                # ops drain to trip over.
-                "postable": bool(vis.get("email")),
-                "subject": subject,
-                "is_html": True,
-                "body_html": body,
-                "document_url": url,
-                "document_local": docx or "",
-                "visitor": vis,
-                "poc_name": poc.get("poc_name"),
-                "sent": False,
-            }
-            name = f"{stamp}-{safe}-{sid}.json" if sid else f"{stamp}-{safe}.json"
-            if sid:                      # replace any earlier record for this id
-                for prior in os.listdir(out):
-                    if prior.endswith(f"-{sid}.json"):
-                        name = prior
-                        break
-            path = os.path.join(out, name)
-            tmp = path + ".tmp"
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(rec, f, indent=1)
-            os.replace(tmp, path)
-            return True, ""
-        except OSError as e:
-            return False, str(e)[:200]
-
-    def _try_draft(self, cfg, vis, subject, body, job_id):
-        """Opportunistic. Expected to fail headlessly; the outbox is the path
-        that actually works, so a failure here is not a visitor-facing error."""
-        prompt = (
-            "Create a Gmail draft using the Gmail MCP create_draft tool.\n\n"
-            f"to: {vis.get('email')}\n"
-            f"subject: {subject}\n"
-            "isHtml: true\n\n"
-            "body (verbatim HTML, do not alter):\n" + body + "\n\n"
-            "Your ENTIRE final message must be one line of minified JSON and "
-            'nothing else:\n{"created": true, "detail": "one short sentence"}\n'
-            "Set created to true ONLY if the create_draft tool actually ran and "
-            "returned success. If the tool is missing, denied or errored, set "
-            "created to false. Creating a draft is not sending, so never claim "
-            "it was sent."
-        )
-        ok, raw, meta = run_exec(cfg, prompt, "send", job_id=job_id, use_mcp=True)
-        self.last_meta = meta
-        # Fail closed: a visitor must never be told their present was posted
-        # when it was not, so anything we cannot positively confirm is False.
-        m = re.search(r'\{.*?"created".*?\}', raw or "", re.S)
-        if not m:
-            return False, ""
-        try:
-            v = json.loads(m.group(0))
-        except json.JSONDecodeError:
-            return False, ""
-        return v.get("created") is True, str(v.get("detail") or "").strip()
-
-
-class GmailApiTransport:
-    """Route B placeholder. A real attachment with no operator step, via an own
-    OAuth client with the gmail.send scope. Deliberately unimplemented: nothing
-    in the booth path depends on it, and it must not be relied on until an
-    OAuth client is proven to clear Workspace policy."""
-
-    def deliver(self, cfg, state, job_id):
-        return False, ("The Gmail API transport is not configured. Switch "
-                       "delivery.transport back to outbox.")
-
-
-TRANSPORTS = {"outbox": OutboxTransport, "draft_link": OutboxTransport,
-              "gmail_api": GmailApiTransport}
+            return True, reply
+        # Presign failed: be honest and point at a person, do not claim delivery.
+        return False, ("I could not wrap it up this time - grab a Snowflake "
+                       "person and we will sort it." + (f" ({err})" if err else ""))
 
 
 def get_transport(cfg):
-    name = (cfg.get("delivery") or {}).get("transport", "outbox")
-    return (TRANSPORTS.get(name) or OutboxTransport)()
+    # One transport now. The setting is kept so a future hosted-delivery build
+    # can register another, but the booth path is QR-to-presigned-stage only.
+    return QRDelivery()
 
 
 # ------------------------------------------------------------------ turn runner
@@ -2460,16 +2259,167 @@ def run_ask(cfg, text, job_id):
     finish_turn(cfg, "ask", text, reply, {"ask_used": True}, meta)
 
 
+def qa_review(cfg, state, poc):
+    """Review the finished blueprint against the request, repair what is safely
+    fixable from the closed lists, and record every change.
+
+    Returns (poc, findings, summary). Repairs are applied to a copy of `poc`;
+    the visitor never sees a failure. Findings and the summary are written to
+    Snowflake for audit (see run_send) - the "log that a change was made" rule.
+
+    Deterministic checks run always; a model relevance turn runs when
+    qa.model_review is on and fails open (never blocks the handover).
+    """
+    poc = dict(poc or {})
+    vis = state.get("visitor") or {}
+    findings = []
+
+    def note(check, severity, detail, repaired=False, before=None, after=None):
+        findings.append({"check": check, "severity": severity, "detail": detail,
+                         "repaired": bool(repaired),
+                         "before": None if before is None else str(before)[:200],
+                         "after": None if after is None else str(after)[:200]})
+
+    # 1. Every feature must resolve to a doc link, or it is dropped.
+    before_feats = list(poc.get("features") or [])
+    kept = [n for n, _u in link_features(before_feats)]
+    if kept != before_feats:
+        dropped = [f for f in before_feats if f not in kept]
+        note("features_in_closed_list", "repair",
+             "dropped feature(s) with no doc link: " + ", ".join(dropped),
+             repaired=True, before=before_feats, after=kept)
+        poc["features"] = kept
+
+    # 2. The guide must resolve; if it fell back, say so.
+    arche = poc.get("archetype") or ""
+    title, url = guide_for(cfg, arche)
+    if not title:
+        title, url = guide_for(cfg, "talk-to-my-data")
+        note("guide_resolves", "repair",
+             "no fork for archetype %r; fell back to talk-to-my-data" % arche,
+             repaired=True, before=arche, after="talk-to-my-data")
+    if poc.get("guide_title") != title:
+        poc["guide_title"], poc["guide_url"] = title, url
+
+    # 3. Does the archetype match the visitor's own words? Flag, do not override -
+    # the model saw the whole sentence and the resolver only scores keywords.
+    problem = " ".join([str(vis.get("problem") or ""),
+                        str(poc.get("_workshop_input") or "")]).strip()
+    if arche and problem:
+        try:
+            hit, _ranked = bctx.resolve_archetype(problem, conn=coco_connection())
+            if hit and hit.get("id") and hit["id"] != arche:
+                note("archetype_matches_pain", "flag",
+                     "model chose %r; pain text resolves to %r"
+                     % (arche, hit["id"]))
+        except Exception:
+            pass
+
+    # 4. Platform selection is normalised at ingest; re-apply the canonical rule
+    # and flag if anything was still off - a cheap guard against a hand-edited
+    # state or a future client sending raw values.
+    plats = state.get("platforms") or []
+    norm = normalise_platforms(cfg, plats)
+    if list(norm) != list(plats):
+        note("platforms_normalised", "flag",
+             "platform set re-normalised for the blueprint",
+             before=plats, after=norm)
+
+    # 5. Readiness in range.
+    try:
+        r = int(poc.get("readiness") or 3)
+    except (TypeError, ValueError):
+        r = 3
+    if r != poc.get("readiness"):
+        note("readiness_in_range", "repair", "readiness coerced to 1-5",
+             repaired=True, before=poc.get("readiness"), after=max(1, min(5, r)))
+    poc["readiness"] = max(1, min(5, r))
+
+    # 6. The visitor must leave with a name and a summary.
+    if not str(poc.get("poc_name") or "").strip():
+        note("poc_name_present", "flag", "no POC name produced")
+    if not str(poc.get("summary") or "").strip():
+        note("summary_present", "flag", "no summary produced")
+
+    # 7. If they stated a residency rule, the sovereignty section must be there.
+    residency = (vis.get("residency") or "").strip().lower()
+    if residency in ("country_only", "eu") and not sovereignty_lines(cfg, state):
+        note("sovereignty_consistent", "flag",
+             "residency is %r but no sovereignty lines were produced" % residency)
+
+    # 8. Model relevance turn - fail open.
+    qacfg = cfg.get("qa") or {}
+    relevant = None
+    if qacfg.get("model_review") and problem:
+        relevant = _qa_relevance(cfg, problem, poc)
+        if relevant is False:
+            note("relevance", "flag",
+                 "model judged the POC does not address the stated problem")
+        elif relevant is None:
+            note("relevance_skipped", "info",
+                 "relevance check did not complete; delivery proceeded")
+
+    repairs = sum(1 for f in findings if f["repaired"])
+    flags = sum(1 for f in findings if f["severity"] == "flag")
+    summary = {"passed": flags == 0 and relevant is not False,
+               "repairs": repairs, "relevant": relevant,
+               "note": "; ".join(f["check"] for f in findings)[:400]}
+    return poc, findings, summary
+
+
+def _qa_relevance(cfg, problem, poc):
+    """One fast COMPLETE call: does the POC address the stated problem? Returns
+    True / False / None (None = could not tell, treated as non-blocking)."""
+    qacfg = cfg.get("qa") or {}
+    model = qacfg.get("model") or (cfg.get("coco") or {}).get("complete_model")
+    prompt = (
+        "You are a strict reviewer. A booth built this proof-of-concept plan for "
+        "a visitor. Judge ONLY whether it addresses the problem they stated.\n\n"
+        "Their problem: \"" + problem[:600] + "\"\n\n"
+        "The POC: name=\"" + str(poc.get("poc_name") or "")[:120] + "\"; "
+        "builds=\"" + str(poc.get("summary") or "")[:400] + "\"; "
+        "features=" + ", ".join(poc.get("features") or []) + "\n\n"
+        "Reply with ONLY minified JSON, nothing else: "
+        '{"relevant": true or false, "issue": "at most 12 words, empty if relevant"}')
+    loc = {"transport": "complete", "complete_model": model,
+           "timeout": int(qacfg.get("timeout_seconds") or 12)}
+    try:
+        ok, raw, _meta = run_turn(cfg, prompt, "qa", loc=loc,
+                                  timeout=loc["timeout"])
+    except Exception:
+        return None
+    if not ok or not raw:
+        return None
+    m = re.search(r"\{.*\}", raw, re.S)
+    if not m:
+        return None
+    try:
+        v = json.loads(m.group(0))
+    except json.JSONDecodeError:
+        return None
+    return bool(v.get("relevant")) if "relevant" in v else None
+
+
 def run_send(cfg, job_id):
     state = read_state()
+
+    # QA bot runs BEFORE delivery so its repairs land in the document the visitor
+    # actually scans. It reviews the finished POC against their stated problem,
+    # fixes what is safely fixable from the closed lists, and records every change.
+    # Config-gated; if it errors it must never block the handover.
+    findings = []
+    if (cfg.get("qa") or {}).get("enabled", True):
+        try:
+            poc2, findings, summary = qa_review(cfg, state, state.get("poc") or {})
+            write_state({"poc": poc2, "qa": summary})
+            state = read_state()
+        except Exception as e:                                   # noqa: BLE001
+            print(f"[loco4coco] QA review error (non-blocking): {e}")
+
     transport = get_transport(cfg)
-    queued, reply = transport.deliver(cfg, state, job_id)
+    delivered, reply = transport.deliver(cfg, state, job_id)
     st = read_state()
-    # email_sent stays truthful: nothing is actually sent until the operator's
-    # interactive session drains the outbox, so a queued present is not a sent
-    # one. Only a confirmed Gmail draft counts as further along than queued.
-    write_state({"queued": bool(queued),
-                 "email_sent": bool(st.get("draft_created"))})
+    write_state({"queued": bool(delivered), "email_sent": False})
 
     # Log BEFORE finish_turn. finish_turn clears `thinking`, which is the signal
     # everything else waits on, so logging after it means the row lands after
@@ -2481,6 +2431,12 @@ def run_send(cfg, job_id):
     else:
         write_state({"logged": False, "log_error": err or "unknown"})
         print(f"[loco4coco] SESSIONS insert FAILED: {err}")
+
+    # Audit trail for the silent repairs. Best-effort - a logging failure here
+    # must not surface to the visitor, but it is printed so the operator sees it.
+    qok, qerr = log_qa(cfg, read_state().get("session_id") or "", findings)
+    if not qok:
+        print(f"[loco4coco] QA_FINDINGS insert FAILED: {qerr}")
 
     finish_turn(cfg, "postbox", "send the blueprint", reply, {"stage": "done"},
                 getattr(transport, "last_meta", None))
@@ -2662,7 +2618,22 @@ class Handler(BaseHTTPRequestHandler):
 
     def _reset(self):
         # replace=True, so nothing from the previous visitor survives.
-        return self._json(write_state(dict(BLANK_STATE), replace=True))
+        st = write_state(dict(BLANK_STATE), replace=True)
+        # Clear the visitor-named blueprint files from the OS temp dir too.
+        purge_temp_artifacts()
+        # Recycle the warm agent too. It probed stateless between calls, but a
+        # shared booth must not merely trust that: restarting the process on
+        # reset makes it impossible for one visitor's words to reach the next,
+        # even if a future CLI build changed the agent's memory behaviour. Only
+        # if it is actually running - do not spawn one when warming is off. Done
+        # off-thread so reset stays instant; it re-warms on the next turn.
+        try:
+            ag = agent_pool.get_agent()
+            if ag.alive():
+                threading.Thread(target=ag.restart, daemon=True).start()
+        except Exception:                                        # noqa: BLE001
+            pass
+        return self._json(st)
 
     def _patch(self):
         patch = self._body()
@@ -2837,18 +2808,6 @@ class Handler(BaseHTTPRequestHandler):
             rows, err = snow_sql(cfg, f"LIST {stage}")
             add("stage_reachable", err == "", err or f"{len(rows or [])} objects")
 
-        out = os.path.join(HERE, d.get("outbox_dir", "outbox"))
-        try:
-            os.makedirs(out, exist_ok=True)
-            probe = os.path.join(out, ".probe")
-            with open(probe, "w", encoding="utf-8") as f:
-                f.write("ok")
-            os.remove(probe)
-            pending = len([p for p in os.listdir(out) if p.endswith(".json")])
-            add("outbox_writable", True, f"{pending} queued record(s)")
-        except OSError as e:
-            add("outbox_writable", False, str(e)[:160])
-
         # End-to-end proof: stage a tiny file and presign it. This is the exact
         # path a visitor's document takes, so a green here means Tier 2 works.
         try:
@@ -2860,12 +2819,11 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:                                    # noqa: BLE001
             add("presign_works", False, str(e)[:160])
 
-        add("email_transport", not d.get("try_draft"),
-            "outbox drain by the operator (Gmail MCP is interactive-only); "
-            "the QR link is the primary handover at the stand")
+        add("delivery_transport", True,
+            "QR to the presigned .docx is the handover; no email, no local record")
 
         ok = all(c["ok"] for c in checks
-                 if c["check"] != "email_transport")
+                 if c["check"] != "delivery_transport")
         return self._json({"ok": ok, "checks": checks,
                            "stage": stage,
                            "transport": d.get("transport")})

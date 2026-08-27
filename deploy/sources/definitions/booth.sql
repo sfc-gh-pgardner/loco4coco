@@ -102,7 +102,13 @@ DEFINE TABLE {{db}}.{{schema}}.SESSIONS (
   INDUSTRY_KEY        TEXT          COMMENT 'config.industries key, e.g. public | healthcare | other',
   -- Home-stage sovereignty answers, appended for the same CREATE OR ALTER reason.
   COMPANY_COUNTRY     TEXT          COMMENT 'Where the visitor says their company is based',
-  RESIDENCY           TEXT          COMMENT 'Data/model residency rule: country_only | eu | us_ok | unsure'
+  RESIDENCY           TEXT          COMMENT 'Data/model residency rule: country_only | eu | us_ok | unsure',
+  -- QA-bot verdict, appended for the same CREATE OR ALTER reason. The per-finding
+  -- detail lives in QA_FINDINGS; these are the at-a-glance summary.
+  QA_PASSED           BOOLEAN       COMMENT 'TRUE when the QA bot found no flags and relevance was not judged false',
+  QA_REPAIRS          NUMBER(4,0)   COMMENT 'How many fixes the QA bot applied to this blueprint',
+  QA_RELEVANT         BOOLEAN       COMMENT 'Model relevance verdict; NULL when the check was off or did not complete',
+  QA_NOTE             TEXT          COMMENT 'Short list of the QA checks that fired'
 )
   COMMENT = 'One row per booth visitor.';
 
@@ -124,6 +130,23 @@ DEFINE TABLE {{db}}.{{schema}}.TURNS (
   SUCCEEDED         BOOLEAN
 )
   COMMENT = 'Per-turn latency and token cost for each visitor.';
+
+-- ---------------------------------------------------------------- qa findings
+-- One row per QA-bot check that fired for a visitor's blueprint. The "log that a
+-- change was made" audit trail: repairs are applied silently to the document the
+-- visitor sees, but every one is recorded here with its before/after so the
+-- change is answerable after the fact. SESSIONS carries the summary.
+DEFINE TABLE {{db}}.{{schema}}.QA_FINDINGS (
+  SESSION_ID   TEXT,
+  FINDING_TS   TIMESTAMP_LTZ,
+  CHECK_NAME   TEXT          COMMENT 'e.g. features_in_closed_list | guide_resolves | relevance',
+  SEVERITY     TEXT          COMMENT 'repair | flag | info',
+  DETAIL       TEXT          COMMENT 'Human-readable description of what was found',
+  REPAIRED     BOOLEAN       COMMENT 'TRUE when the bot changed the blueprint to fix it',
+  BEFORE_VAL   TEXT          COMMENT 'Value before a repair (NULL for flags)',
+  AFTER_VAL    TEXT          COMMENT 'Value after a repair (NULL for flags)'
+)
+  COMMENT = 'Audit trail of QA-bot checks and silent repairs, one row per finding.';
 
 -- ------------------------------------------------------- shared booth context
 -- The five tables below are the *shared* half of the activation: the closed

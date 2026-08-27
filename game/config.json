@@ -40,17 +40,21 @@
     "turn_timeout": 60,
     "turn_timeout_comment": "Wall-clock ceiling per turn. The Library has been measured at a 127.3s outlier against a 2.2s median; past the ceiling the visitor is better served by the precomputed answer than a better sentence."
   },
+  "qa": {
+    "_comment": "The QA bot reviews the finished blueprint before it is staged. Deterministic checks always run and silently repair what is fixable from the closed lists (off-list features dropped, guide fallback, readiness clamped, platforms re-normalised); each change is recorded to LOCO4COCO.BOOTH.QA_FINDINGS with before/after, and a summary lands on the SESSIONS row. model_review adds one fast COMPLETE call judging whether the POC addresses the visitor's stated problem - it fails open, never blocking the handover.",
+    "enabled": true,
+    "model_review": true,
+    "model": "mistral-large2",
+    "timeout_seconds": 12
+  },
   "delivery": {
-    "_comment": "Verified constraints: the Gmail MCP exposes create_draft only - no send tool, no attachment parameter - AND its tools do not load under `cortex exec` even with --bypass, though they work in an interactive CoCo session. snowflake.com also publishes DMARC p=reject, so third-party senders are rejected outright. So the game writes a fully-composed email to outbox/ and the operator's interactive session drains it via the loco4coco-ops skill. Swap transport to gmail_api once an OAuth client is proven against Workspace policy.",
-    "transport": "outbox",
-    "outbox_dir": "outbox",
+    "_comment": "Delivery is a QR code pointing at the visitor's .docx, staged and presigned on @LOCO4COCO.BOOTH.BLUEPRINTS (presign_seconds = 7 days). There is deliberately no email and no local record: email was removed (snowflake.com publishes DMARC p=reject, and the Gmail MCP cannot send or attach under `cortex exec`), so the old outbox that wrote visitor PII to disk on every visit was pure liability on a shared laptop and is gone. The governed Snowflake SESSIONS row is the only kept record of a visitor.",
+    "transport": "qr",
     "stage": "@LOCO4COCO.BOOTH.BLUEPRINTS",
     "presign_seconds": 604800,
-    "subject_template": "Your Snowflake POC blueprint: {poc_name}",
     "signup_url": "https://signup.snowflake.com/",
     "docs_base": "https://docs.snowflake.com/",
-    "guides_base": "https://www.snowflake.com/en/developers/guides/",
-    "try_draft": false
+    "guides_base": "https://www.snowflake.com/en/developers/guides/"
   },
   "intake": {
     "_comment": "CoCo gets up and asks who the present is for. Typing is limited to these three fields plus any 'Other' answers.",

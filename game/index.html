@@ -106,6 +106,12 @@
   .ov.pov .card { margin:0; width:auto; max-height:52vh;
     background:rgba(12,22,31,.97);
     border-color:var(--edge); box-shadow:0 -8px 40px rgba(0,0,0,.75); }
+  /* The home stage borrows the interior card but not sizePovCard(), which is
+     driven by panelLoc and belongs to the locations. It only needs to sit under
+     the house the way an interior panel sits under its room, so it anchors to
+     the bottom and takes a fixed share of the height. */
+  #ov-home.pov { align-items:flex-end; padding-bottom:14px; }
+  #ov-home.pov .card { max-height:46vh; }
   /* The wake igloo is the first thing a visitor sees, so let it read: a soft
      vignette instead of the near-opaque default overlay. */
   /* CoCo's in-scene reply, embedded as a quiet quote (a left accent bar) rather
@@ -474,19 +480,27 @@
     <!-- Home-stage question gate. Between the letter and the map, CoCo asks
          where the data lives, where the company is based, and the residency
          rules. Blocking and click-only: the map stays locked until answered. -->
-    <div class="ov" id="ov-home"><div class="lwrap">
-      <div class="lbubble" id="hq-bubble"></div>
-      <div class="card" style="width:min(560px,94vw)">
-        <div id="hq-heading" style="font-size:19px;font-weight:800"></div>
-        <div id="hq-hint" class="hint" style="margin:6px 0 12px"></div>
-        <div class="chips" id="hq-chips"></div>
-        <div class="fld" id="hq-otherwrap" style="display:none;margin-top:10px">
+    <!-- Shaped like an INTERIOR, deliberately. These three questions used to
+         wear the letter's styling in a centred box, which made them read as
+         paperwork bolted on after the letter rather than as CoCo asking. So it
+         now carries the same furniture as the library, the marketplace and the
+         workshop: CoCo's line in .say, the question in .q, the hint under it,
+         chips in .opts, and the confirm docked at the bottom. -->
+    <div class="ov pov" id="ov-home"><div class="card" style="width:min(1320px,96vw)">
+      <div class="cscroll">
+        <div class="say" id="hq-bubble"></div>
+        <div class="q" id="hq-heading"></div>
+        <div class="hint" id="hq-hint"></div>
+        <div class="opts chips" id="hq-chips"></div>
+      </div>
+      <div class="dock">
+        <div class="fld" id="hq-otherwrap" style="display:none">
           <input type="text" id="hq-other" autocomplete="off" spellcheck="false"
             placeholder="Type it if it's not here"></div>
-        <div class="go" style="margin-top:16px;justify-content:space-between;align-items:center">
-          <span id="hq-step" class="hint"></span>
-          <button class="primary" id="hq-go">CONTINUE</button></div>
-      </div></div></div>
+        <div class="go"><button class="primary" id="hq-go">CONFIRM</button>
+          <span class="keys" id="hq-step"></span></div>
+      </div>
+    </div></div>
 
     <!-- per-location panel -->
     <div class="ov" id="ov-loc"><div class="card">
@@ -578,6 +592,12 @@
     </div>
     <div class="hint" id="done-cardhint" style="margin:8px 0 0">Getting your card
       ready to scan…</div>
+    <!-- Safety net: leaving the blueprint card must not orphan the document, so
+         the link travels here too. -->
+    <div id="done-bp" style="display:none;margin:10px 0 0;font-size:12px;color:#9FC2D6">
+      Your Word blueprint:
+      <a id="done-bplink" class="handlink" target="_blank" rel="noopener">download it again</a>
+    </div>
     <button class="primary" id="done-card" style="margin-top:8px;padding:8px 14px;
       font-size:11px;width:100%;opacity:.55">SAVE A COPY TO THIS MACHINE
       (OPERATOR)</button>
@@ -952,14 +972,25 @@ function drawCoCoFront(g,cx,cy,u){
 // "Processing your request..." was only ever text in the panel, so the scene sat
 // frozen while CoCo appeared to do nothing. Drawn in the same pixel idiom.
 function drawThinkBubble(g,cx,cy,u){
-  const bx=cx+3*u, by=cy-15*u, bw=13*u, bh=7*u;
+  // Classic thought bubble: the cloud sits UP AND TO THE SIDE, with puffs
+  // trailing diagonally back to the crown of his head (drawCoCoFront's head top
+  // is at cy-7u). Two earlier versions each got half of this right - one trailed
+  // from the beak at the correct angle, the other from the head straight up like
+  // a lollipop. Origin is the head, angle is the diagonal.
+  const bw=13*u, bh=7*u;
+  const ax=cx+3*u, ay=cy-7*u;                            // anchor: crown, off-centre
+  const bx=ax+2.5*u, by=cy-20*u;                         // cloud, up and right
   g.fillStyle='rgba(10,20,28,.55)';                      // soft drop
   g.fillRect(bx-u,by+u,bw,bh);
   g.fillStyle='#EAF6FD'; g.fillRect(bx,by,bw,bh);        // cloud body
   g.fillRect(bx+2*u,by-u,bw-4*u,bh+2*u);
-  g.fillStyle='#9FC2D6';                                 // trail toward his head
-  g.fillRect(bx-1.5*u,by+bh+1.5*u,2*u,2*u);
-  g.fillRect(bx-3*u,by+bh+4*u,1.5*u,1.5*u);
+  // three puffs shrinking along the diagonal from the crown up to the cloud
+  g.fillStyle='#9FC2D6';
+  const puffs=[[0.30,2.2],[0.62,1.6],[0.86,1.1]];
+  for(const [t,s] of puffs){
+    const px=ax+(bx+2*u-ax)*t, py=ay+(by+bh-ay)*t;
+    g.fillRect(px-s*u/2, py-s*u/2, s*u, s*u);
+  }
   // three dots, one lit at a time, so it reads as working not stuck
   const lit=Math.floor(tick/9)%3;
   for(let i=0;i<3;i++){
@@ -1039,7 +1070,11 @@ function drawScene(kind){
     // ---- framed photo of the polar bear. The first version was a stack of
     // rectangles, which is fine for a 16px sprite and wrong for a photograph -
     // a bear is all curves. Ellipses and arcs, clipped to the frame.
-    const pfx=w*0.625, pfy=h*0.275, pfw=w*0.105, pfh=h*0.135;
+    // Hung on the clear wall panel BETWEEN the logo and the window, and high
+    // enough that its bottom edge (pfy+pfh) stays above the jar shelf at h*0.42.
+    // It used to sit at w*0.625/h*0.275, which put it on top of the jars AND
+    // over the bottom of the window - the frame was covering two things at once.
+    const pfx=w*0.47, pfy=h*0.255, pfw=w*0.105, pfh=h*0.125;
     g.fillStyle='#4A3118'; g.fillRect(pfx-6,pfy-6,pfw+12,pfh+12);   // frame
     g.fillStyle='#7C5730'; g.fillRect(pfx-3,pfy-3,pfw+6,pfh+6);     // bevel
     const sky=g.createLinearGradient(0,pfy,0,pfy+pfh);
@@ -1198,9 +1233,11 @@ function drawScene(kind){
       g.lineTo(x1+w*0.05,DK); g.lineTo(x0+w*0.05,DK-h*0.08);
       g.closePath(); g.fill();
     }
-    // ---- four shelf tiers, deeper stacks, a few tilted spines
-    for(let row=0;row<4;row++){
-      const y=h*0.02+row*(h*SAFE-h*0.10)/4;
+    // ---- three shelf tiers, deeper stacks, a few tilted spines. Cropped to
+    // three (was four) so the shorter band reads as full shelves, not a squash.
+    const TIERS=3;
+    for(let row=0;row<TIERS;row++){
+      const y=h*0.02+row*(h*SAFE-h*0.10)/TIERS;
       g.fillStyle='#2A3F4C'; g.fillRect(w*0.03,y,w*0.94,h*0.084);      // recess
       g.fillStyle='#3A4F5C'; g.fillRect(w*0.03,y,w*0.94,4);
       shelfBooks(g,w*0.04,y+h*0.084,w*0.92,u,700+row);
@@ -1272,21 +1309,23 @@ function drawScene(kind){
     // ---- striped awning with a scalloped edge
     for(let i=0;i<11;i++){
       g.fillStyle=i%2?'#D0392B':'#F2F7FA';
-      g.fillRect(i*(w/11),0,w/11,h*0.12);
-      g.beginPath(); g.arc(i*(w/11)+w/22,h*0.12,w/22,0,Math.PI); g.fill();
+      g.fillRect(i*(w/11),0,w/11,h*0.15);
+      g.beginPath(); g.arc(i*(w/11)+w/22,h*0.15,w/22,0,Math.PI); g.fill();
     }
-    g.fillStyle='#8A5A2B'; g.fillRect(0,h*0.135,w,7);
-    // ---- bunting slung under the awning
+    g.fillStyle='#8A5A2B'; g.fillRect(0,h*0.17,w,7);
+    // ---- bunting slung under the awning, hung with a deeper swag so it comes
+    // down close to CoCo - feedback: the empty gap between him and the bunting
+    // read as dead space in the shorter room.
     for(let i=0;i<14;i++){
       const bx=w*0.03+i*(w*0.069);
-      const sag=Math.sin(i/2.1)*4;
+      const sag=Math.sin(i/2.1)*5;
       g.fillStyle=['#E8863C','#29B5E8','#F2C14E','#4F9E6A'][i%4];
-      g.beginPath(); g.moveTo(bx,h*0.155+sag);
-      g.lineTo(bx+w*0.03,h*0.155+sag); g.lineTo(bx+w*0.015,h*0.195+sag);
+      g.beginPath(); g.moveTo(bx,h*0.19+sag);
+      g.lineTo(bx+w*0.03,h*0.19+sag); g.lineTo(bx+w*0.015,h*0.34+sag);
       g.closePath(); g.fill();
     }
-    g.fillStyle='#6B4A2B'; g.fillRect(w*0.04,h*0.135,9,CT-h*0.135);   // posts
-    g.fillRect(w*0.92,h*0.135,9,CT-h*0.135);
+    g.fillStyle='#6B4A2B'; g.fillRect(w*0.04,h*0.15,9,CT-h*0.15);     // posts
+    g.fillRect(w*0.92,h*0.15,9,CT-h*0.15);
     // ---- hanging lamp over the counter, warm pool of light
     const px=w*0.22, py=h*0.20;
     g.fillStyle='#3A2A1C'; g.fillRect(px-2,h*0.145,4,py-h*0.145);
@@ -1295,13 +1334,15 @@ function drawScene(kind){
     pg.addColorStop(0,'rgba(255,231,176,.40)');
     pg.addColorStop(1,'rgba(255,231,176,0)');
     g.fillStyle=pg; g.fillRect(0,0,w,h);
-    // ---- CoCo tending the stall, with breath in the cold
-    drawCoCoFront(g,w*0.5,CT-h*0.20,S*1.9);
-    if(sceneThinking) drawThinkBubble(g,w*0.5,CT-h*0.20,S*1.9);
+    // ---- CoCo tending the stall, with breath in the cold. Raised toward the
+    // bunting so the stall reads as one compact unit rather than a figure with
+    // a band of empty sky above him.
+    drawCoCoFront(g,w*0.5,CT-h*0.28,S*1.9);
+    if(sceneThinking) drawThinkBubble(g,w*0.5,CT-h*0.28,S*1.9);
     for(let i=0;i<5;i++){
       const t=(tick*0.9+i*22)%110;
       g.fillStyle='rgba(234,246,253,'+(0.30*(1-t/110))+')';
-      g.fillRect(w*0.5+16+t*0.5,CT-h*0.20-4-t*0.28,S*(1+t/60),S*(1+t/60));
+      g.fillRect(w*0.5+16+t*0.5,CT-h*0.28-4-t*0.28,S*(1+t/60),S*(1+t/60));
     }
     // ---- crates of goods with price tags
     const goods=['#4F9E6A','#3E7DA8','#C9A13B','#8A5FA8','#C4553E'];
@@ -1313,13 +1354,10 @@ function drawScene(kind){
       g.fillStyle='#F2F7FA'; g.fillRect(x+w*0.12-15,cy0+6,13,9);
       g.fillStyle='#7A5433'; g.fillRect(x+w*0.12-15,cy0+6,13,2);
     }
-    // ---- chalkboard price sign propped at the end of the counter
-    const cbx=w*0.78, cby=CT-h*0.185;
-    g.fillStyle='#4A3520'; g.fillRect(cbx-3,cby-3,w*0.16+6,h*0.11+6);
-    g.fillStyle='#16303F'; g.fillRect(cbx,cby,w*0.16,h*0.11);
-    g.fillStyle='rgba(242,247,250,.72)';
-    for(let r=0;r<3;r++) g.fillRect(cbx+7,cby+9+r*11,w*0.16*(0.72-r*0.16),3);
-    // ---- counter
+    // (The chalkboard price sign was removed - it rendered as a stray box of
+    // text lines and added nothing at booth scale.)
+    // ---- counter: a slim wooden lip, not a slab. The bulk of the wood is gone
+    // so the goods and CoCo carry the scene.
     g.fillStyle='#5A3D22'; g.fillRect(0,CT,w,h-CT);
     for(let i=0;i<9;i++){                                              // planks
       g.fillStyle='rgba(0,0,0,.12)';
@@ -1372,14 +1410,58 @@ function drawScene(kind){
         for(let d=0;d<3;d++) g.fillRect(rx+22+d*10,ry+5,6,(BN-h*0.11)/9-14);
       }
     });
+    // ---- classic-workshop touches, so the bench reads as a real workshop and
+    // not only a server room. The previous attempt hung five hand tools and two
+    // gears across a band under a tenth of the scene high: at that size a
+    // hammer is four pixels of grey and the whole strip read as noise. So this
+    // is THREE tools at a size that survives, on a plain timber rack, plus one
+    // big slow gear. Fewer things, drawn large enough to recognise.
+    (function(){
+      const rkx=w*0.285, rky=BN*0.015, rkw=w*0.40, rkh=BN*0.175;
+      g.fillStyle='#3B2A17'; g.fillRect(rkx,rky,rkw,rkh);              // timber rack
+      g.fillStyle='#5A4023'; g.fillRect(rkx,rky,rkw,3);
+      g.fillStyle='#2A1D10'; g.fillRect(rkx,rky+rkh-4,rkw,4);          // bottom rail
+      const top=rky+6, TH=rkh-14;                                      // tool height
+      // hammer: long handle, heavy head across the top
+      const hx=rkx+rkw*0.13;
+      g.fillStyle='#7C5730'; g.fillRect(hx-2,top+TH*0.22,5,TH*0.78);
+      g.fillStyle='#9BA3AA'; g.fillRect(hx-TH*0.17,top,TH*0.34,TH*0.20);
+      g.fillStyle='#6F787E'; g.fillRect(hx+TH*0.10,top,TH*0.07,TH*0.20);
+      // spanner: shaft with an open jaw at each end
+      const sx=rkx+rkw*0.47;
+      g.fillStyle='#9BA3AA'; g.fillRect(sx-2,top,5,TH);
+      g.fillRect(sx-TH*0.11,top,TH*0.22,TH*0.13);
+      g.fillStyle='#243440'; g.fillRect(sx-TH*0.04,top,TH*0.08,TH*0.07);
+      g.fillStyle='#9BA3AA'; g.fillRect(sx-TH*0.10,top+TH*0.87,TH*0.20,TH*0.13);
+      g.fillStyle='#243440'; g.fillRect(sx-TH*0.035,top+TH*0.93,TH*0.07,TH*0.07);
+      // handsaw: timber grip and a clear triangular blade
+      const wx=rkx+rkw*0.76;
+      g.fillStyle='#7C5730'; g.fillRect(wx-TH*0.09,top,TH*0.18,TH*0.26);
+      g.fillStyle='#B4BBC1'; g.beginPath();
+      g.moveTo(wx-TH*0.06,top+TH*0.26); g.lineTo(wx+TH*0.34,top+TH*0.26);
+      g.lineTo(wx-TH*0.06,top+TH*0.95); g.closePath(); g.fill();
+      g.fillStyle='#8C9399';                                           // teeth
+      for(let t=0;t<7;t++) g.fillRect(wx-TH*0.06+t*TH*0.055,
+        top+TH*0.30+t*TH*0.095, TH*0.05, 2);
+      // one gear, big enough to read as a gear, turning slowly beside the rack
+      const gx=w*0.235, gy=BN*0.095, rad=w*0.036;
+      g.save(); g.translate(gx,gy); g.rotate(tick/60); g.fillStyle='#425C6A';
+      for(let t=0;t<10;t++){ g.save(); g.rotate(t/10*Math.PI*2);
+        g.fillRect(-rad*0.18,-rad-5,rad*0.36,9); g.restore(); }
+      g.beginPath(); g.arc(0,0,rad,0,7); g.fill();
+      g.fillStyle='#0E1A24'; g.beginPath(); g.arc(0,0,rad*0.32,0,7); g.fill();
+      g.restore();
+    })();
     // ---- glowing conduits running along the floor into the bench
     for(let i=0;i<3;i++){
       const cy2=BN-h*0.05+i*6;
       g.fillStyle='rgba(41,181,232,'+(0.18+0.10*Math.sin((tick+i*30)/12))+')';
       g.fillRect(w*0.17,cy2,w*0.66,4);
     }
-    // ---- the holographic schematic: a slow-rotating wireframe box
-    const ox=w*0.5, oy=BN*0.44, rw=w*0.15, rh=BN*0.20, a=tick/38;
+    // ---- the holographic schematic: a slow-rotating wireframe box. Kept a touch
+    // smaller and lower so it sits inside the shorter band without clipping, and
+    // pulled in again on feedback so it stops dominating the bench.
+    const ox=w*0.5, oy=BN*0.48, rw=w*0.111, rh=BN*0.136, a=tick/38;
     const eg=g.createRadialGradient(ox,BN,8,ox,BN,h*0.42);             // emitter cone
     eg.addColorStop(0,'rgba(41,181,232,.34)');
     eg.addColorStop(1,'rgba(41,181,232,0)');
@@ -1406,7 +1488,7 @@ function drawScene(kind){
     // ---- articulated arms dipping to the bench, throwing sparks
     [[w*0.26,-1],[w*0.74,1]].forEach((arm,i)=>{
       const ax=arm[0], dip=Math.sin(tick/17+i*2.1);
-      const j1x=ax, j1y=BN*0.16, j2x=ax+arm[1]*w*0.055, j2y=BN*0.52+dip*h*0.03;
+      const j1x=ax, j1y=BN*0.14, j2x=ax+arm[1]*w*0.055, j2y=BN*0.48+dip*h*0.03;
       const tipx=ax+arm[1]*w*0.015, tipy=BN-h*0.045+dip*h*0.018;
       g.strokeStyle='#39525F'; g.lineWidth=9;
       g.beginPath(); g.moveTo(j1x,j1y); g.lineTo(j2x,j2y);
@@ -1716,7 +1798,11 @@ function sizePovCard(){
   // visitor scrolling past it costs the most useful section of the document.
   const PAD=10, LAP=26, MAXW=1320;
   const TWO_Q = panelLoc==='library';
-  const WIDE = TWO_Q ? 0.42 : 0.55;          // shorter room, taller panel
+  // The workshop is the busiest room - racks floor to ceiling, a tool rack, a
+  // hologram and a robot arm - so the flat 0.42 crop squashed it while the
+  // emptier rooms were fine. It gets a little more height back.
+  const TALL = panelLoc==='workshop';
+  const WIDE = TWO_Q ? 0.36 : TALL ? 0.47 : 0.42;   // shorter room, taller panel
   const PANEL_MIN = TWO_Q ? 460 : 340;
   const ov=$('ov-loc');
   // Measured from where the canvas actually starts, not from the top of the
@@ -1726,7 +1812,12 @@ function sizePovCard(){
   const top0=cvTop-ov.getBoundingClientRect().top;
   const total=Math.max(320,innerHeight-cvTop-PAD);
   const boxW=Math.min(innerWidth-PAD*2,MAXW);
-  let sceneH=Math.round(boxW*WIDE);
+  // The scene is the SHORTER of its natural letterbox (boxW*WIDE) and two-fifths
+  // of the available height, so the text box below always gets about three-
+  // fifths. Feedback: the interiors were too tall and the reply box forced a
+  // scroll. Each room is drawn proportionally to this height, so a shorter band
+  // just crops it - which is why the per-room art was thinned to suit.
+  let sceneH=Math.round(Math.min(boxW*WIDE, total*(TALL?0.45:0.40)));
   // The panel takes whatever is left, never less than its floor; if the column
   // then overflows, the SCENE gives the height up, never the panel - a panel
   // whose CONFIRM has scrolled out of sight is a dead end, a shorter room is
@@ -1934,32 +2025,46 @@ function openHomeQuestions(){
   homeStep=0; homeAns.platforms=new Set(); homeAns.country=null;
   homeAns.countryText=''; homeAns.residency=null;
   $('ov-home').classList.add('on');
-  $('hq-bubble').textContent='Before we set off, three quick things.';
+  $('hq-bubble').textContent=hqFill('Before we set off, three quick things about '
+    +'{company} \u2014 they decide how your blueprint gets built.');
   renderHomeStep();
+}
+// The letter is already filled in by the time these are asked, so use it. A
+// question that says the company's name is CoCo remembering what you just told
+// him; a generic "your data" is a form.
+function hqFill(t){
+  const v=(ST.visitor||{});
+  const co=(v.company||'').trim();
+  const ind=((CFG.industries||{})[v.industry]||{}).label||'';
+  return String(t||'')
+    .replace(/\{company\}/g, co||'your organisation')
+    .replace(/\{company_s\}/g, co?(co+(/s$/i.test(co)?'\u2019':'\u2019s')):'your organisation\u2019s')
+    .replace(/\{industry\}/g, ind||'your sector')
+    .replace(/\{first_name\}/g, v.first_name||'there');
 }
 function renderHomeStep(){
   const other=$('hq-otherwrap'); other.style.display='none'; $('hq-other').value='';
   const wrap=$('hq-chips');
   if(homeStep===0){
     const p=CFG.platforms||{};
-    $('hq-heading').textContent=p.heading||'Where does your data live today?';
-    $('hq-hint').textContent=p.hint||'';
+    $('hq-heading').textContent=hqFill(p.heading||'Where does {company} keep its data today?');
+    $('hq-hint').textContent=hqFill(p.hint||'');
     $('hq-step').textContent='1 of 3';
     wrap.innerHTML=(p.options||[]).map((o,i)=>
       `<div class="chip${homeAns.platforms.has(i)?' on':''}" data-i="${i}">${esc(o)}</div>`).join('');
     [...wrap.children].forEach(el=>el.addEventListener('click',()=>togglePlat(+el.dataset.i)));
   } else if(homeStep===1){
     const c=CFG.country||{};
-    $('hq-heading').textContent=c.heading||'Where is your company based?';
-    $('hq-hint').textContent=c.hint||'';
+    $('hq-heading').textContent=hqFill(c.heading||'And where is {company} based?');
+    $('hq-hint').textContent=hqFill(c.hint||'');
     $('hq-step').textContent='2 of 3';
     wrap.innerHTML=(c.options||[]).map((o,i)=>
       `<div class="chip${homeAns.country===i?' on':''}" data-i="${i}">${esc(o)}</div>`).join('');
     [...wrap.children].forEach(el=>el.addEventListener('click',()=>pickCountry(+el.dataset.i)));
   } else {
     const r=CFG.residency||{}, cw=countryWord();
-    $('hq-heading').textContent=r.heading||'Where are your data and models allowed to run?';
-    $('hq-hint').textContent=r.hint||'';
+    $('hq-heading').textContent=hqFill(r.heading||'Where are your data and models allowed to run?');
+    $('hq-hint').textContent=hqFill(r.hint||'');
     $('hq-step').textContent='3 of 3';
     const opts=(r.options_template||[]).map(t=>t.replace(/\{country\}/g,cw));
     wrap.innerHTML=opts.map((o,i)=>
@@ -2214,17 +2319,19 @@ function paintSendBtn(d){
   const btn=$('bp-send'), sub=$('bp-sub'), keys=$('bp-keys'), h2=$('bp-h2');
   if(d.queued || d.draft_created){
     h2.textContent='Your blueprint is ready';
-    // The QR is the delivery: the document is staged and scannable right now.
-    // No second step and no address to send to, so the button retires rather
-    // than offering a confusing "POST IT" second press.
+    // Delivery and FINISHING are two presses, not one. Retiring the button here
+    // stranded the visitor: the posting scene played behind this card and the
+    // closing postcard was only reachable by pressing Escape, which nobody
+    // does. So once the document is staged the button becomes the closing
+    // action - scan first, then post it and watch it go.
     const ready=!!d.document_url;
-    sub.textContent=ready?'Scan the code below to take it with you.'
+    sub.textContent=ready?'Scan the code below, then post it to watch it go.'
                          :'Staging your document\u2026';
-    btn.disabled=true;
-    btn.textContent=ready?'ALL YOURS \u2014 SCAN BELOW':'FINISHING\u2026';
-    keys.textContent=ready?'It is yours to keep - the link works for seven days'
+    btn.disabled=!ready;
+    btn.textContent=ready?((CFG.locations.postbox||{}).button||'POST IT TO ME')
+                         :'FINISHING\u2026';
+    keys.textContent=ready?'Scan it first - then post it and see your card'
                           :'Staging your document\u2026';
-    if(ready && !window.__flourished){ window.__flourished=true; postingFlourish(); }
   } else {
     h2.textContent='Ready to post';
     sub.textContent='I\u2019ll build your document and hand it straight to you.';
@@ -2256,6 +2363,9 @@ function paintHandover(d){
 }
 async function sendPoc(){
   const btn=$('bp-send'); if(btn.disabled) return;
+  // Second press, once the document is already staged: this is the closing
+  // beat, not another build.
+  if((window.__bp||{}).document_url) return finishVisit();
   btn.disabled=true; btn.textContent='BUILDING IT\u2026';
   $('bp-sub').textContent='Writing your document and staging it\u2026';
   try{
@@ -2278,17 +2388,25 @@ async function sendPoc(){
 }
 function closeBp(){
   $('ov-bp').classList.remove('on'); reopenLock=Date.now()+700;
-  // Once the blueprint has been delivered, closing the card is the end of the
-  // visit: show the closing summary and the shareable card. This is why there
-  // is no second "post it" button - finishing is just stepping away.
+  // Escape and outside-click keep working as an operator escape hatch, and land
+  // in the same place the button does.
   const d=window.__bp||{};
-  if(d.document_url){ visited.add('postbox'); showDoneSummary(); }
+  if(d.document_url) finishVisit();
+}
+// The closing beat. The card comes DOWN first so the posting scene is actually
+// visible - playing it behind the blueprint was why nobody ever saw it - and
+// the postcard follows once the letter is in the box.
+let finishing=false;
+function finishVisit(){
+  if(finishing) return; finishing=true;
+  $('ov-bp').classList.remove('on'); reopenLock=Date.now()+700;
+  postingFlourish();
+  setTimeout(showDoneSummary, POST_MS+260);
 }
 $('bp-send').addEventListener('click',sendPoc);
-// The letter physically going in the box - a brief flourish once the blueprint
-// is built. It does NOT clear the card: the QR must stay on screen to be
-// scanned, so the scene plays behind it and the card remains. One action, no
-// second press.
+// The letter physically going in the box, played in the clear on the way to the
+// closing postcard. The blueprint QR is not lost by leaving this card: the
+// postcard stages its own code and carries the document link too.
 function postingFlourish(){
   postT=Date.now(); openScene('postbox');
   visited.add('postbox');
@@ -2698,6 +2816,8 @@ function showDoneSummary(){
     $('done-cardhint').textContent='Could not build your card.'; }
   $('ov-done').style.display='';
   $('ov-done').classList.add('on');
+  const url=(window.__bp||{}).document_url||'';
+  if(url){ $('done-bplink').href=url; $('done-bp').style.display=''; }
 }
 // Stage the card and show a QR for it. Failure is not fatal: the visitor still
 // has their blueprint QR, and the operator can fall back to the copy button.
@@ -2820,11 +2940,15 @@ function paintBubble(s){
   } else {
     // Only an UNLOCKED location may narrate. The penguin starts on the postbox
     // tile, so without this a fresh 0/4 session opened with the closing line.
+    // And the movement hint is gated on the map actually being live: it was
+    // firing throughout the house stage, telling a visitor to walk around with
+    // WASD while they still had no control of anything.
     const l=(nearId&&unlocked(nearId))?CFG.locations[nearId]:null;
+    const onMap = !openingActive();
     msg = l&&l.narrative ? fillCli(l.narrative,s)
-        : (haveVisitor()
+        : (haveVisitor() && onMap
             ? `Use WASD or the arrows, ${esc((s.visitor||{}).first_name)}. Walk up to a place and press E.`
-            : 'Press E when you reach somewhere interesting.');
+            : (onMap ? 'Press E when you reach somewhere interesting.' : ''));
   }
   $('yousaid').classList.toggle('on',!!said);
   if(said) $('yousaid').textContent='You said: '+said;

@@ -868,7 +868,7 @@
   },
   "platforms": {
     "_comment": "Where the data lives today. Asked on CoCo's home stage (moved out of the library 2026-08-25), one tap; decides the integration-path section of the blueprint.",
-    "heading": "Where does your data live today?",
+    "heading": "Where does {company} keep its data today?",
     "hint": "Tap every platform it sits on. This is what decides how we get it into Snowflake.",
     "options": [
       "Microsoft / Azure",
@@ -890,7 +890,7 @@
   },
   "country": {
     "_comment": "Home-stage question 2. Europe-weighted for London/Paris. Frames the residency follow-up.",
-    "heading": "And where is your company based?",
+    "heading": "And where is {company} based?",
     "hint": "One tap. It helps me keep your data where your rules need it.",
     "options": [
       "United Kingdom",
@@ -906,8 +906,8 @@
   },
   "residency": {
     "_comment": "Home-stage question 3. Sovereignty-framed. {country} is interpolated from the country answer; falls back to 'your country'.",
-    "heading": "Where are your data and AI models allowed to run?",
-    "hint": "This shapes the region we build in. One tap.",
+    "heading": "Where are {company}'s data and AI models allowed to run?",
+    "hint": "This shapes the region we build in, and it goes in your blueprint. One tap.",
     "options_template": [
       "{country} only",
       "Anywhere in the EU is fine",

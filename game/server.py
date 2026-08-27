@@ -24,6 +24,7 @@ Delivery is Route A behind a transport interface. See config.delivery.
 import argparse
 import base64
 import binascii
+import hashlib
 import html
 import json
 import os
@@ -640,7 +641,7 @@ def options_for(cfg, loc_id, state):
                  "note": f"{r['provider']} \u00b7 {r['access']}",
                  "url": r["url"], "provider": r["provider"],
                  "access": r["access"]}
-                for r in listings_for(cfg, ind, state.get("session_id"))]
+                for r in listings_for(cfg, ind, state.get("session_id"), state)]
     industries = cfg.get("industries") or {}
     block = industries.get(ind) or industries.get("other") or {}
     return block.get(src) or []
@@ -1127,7 +1128,7 @@ def listings_live(cfg, industry):
     return out, ""
 
 
-def listings_for(cfg, industry, session_id=None):
+def listings_for(cfg, industry, session_id=None, state=None):
     """Tier chain: agentic first if it's ready, live catalogue next, curated
     index as the booth-safe net.
 
@@ -1163,20 +1164,78 @@ def listings_for(cfg, industry, session_id=None):
         print(f"[loco4coco] live marketplace thin for {industry} "
               f"({len(live)} hits{', ' + err if err else ''}), using curated index")
     _live_cache["tier"] = "curated"
-    return listings_curated(cfg, industry)
+    return listings_curated(cfg, industry, state)
 
 
-def listings_curated(cfg, industry):
-    """Curated listings for an industry, filtered to the event region.
+def _problem_tokens(state):
+    """Content words from what the visitor actually typed, for matching titles."""
+    vis = ((state or {}).get("visitor") or {})
+    txt = " ".join([str(vis.get("problem") or ""),
+                     str(vis.get("company") or "")]).lower()
+    stop = {"the", "and", "our", "for", "with", "from", "into", "that", "this",
+            "have", "has", "are", "was", "we", "us", "to", "of", "in", "on",
+            "it", "is", "a", "an", "by", "at", "be", "do", "not", "but",
+            "data", "snowflake", "want", "need", "lot", "lots", "time"}
+    out = set()
+    for w in re.split(r"[^a-z0-9]+", txt):
+        if len(w) > 3 and w not in stop:
+            out.add(w)
+            if w.endswith("s"):
+                out.add(w[:-1])
+    return out
+
+
+def listings_curated(cfg, industry, state=None):
+    """Curated listings, ordered by what this visitor typed, filtered to region.
+
+    Two visitors in the same industry used to get an IDENTICAL stall: this
+    returned a fixed six in file order, and since `marketplace.agentic.enabled`
+    is false and `locations.marketplace.discovery` is "manual", this is the only
+    tier that ever runs. So the stall was a function of the industry bucket
+    alone, and the same six appeared over and over.
+
+    Two changes, neither of which invents a listing - every row here is a real,
+    checked Marketplace entry and that discipline is not worth trading for
+    variety:
+
+      1. The pool is widened by BORROWING from other buckets. A visitor whose
+         problem mentions weather, or property, or company registrations is
+         better served by the real listing that matches it than by the sixth-best
+         pick from their own sector. Their own bucket still leads, via a base
+         score.
+      2. Ties rotate on the session id, so consecutive visitors in one bucket do
+         not see the same order.
 
     The region filter is not cosmetic: handing a London visitor a us-east-1-only
     share sends them somewhere they cannot go.
     """
     market = load_marketplace()
-    rows = market.get(industry) or market.get("other") or []
+    own = market.get(industry) or market.get("other") or []
+    toks = _problem_tokens(state)
+    seen, scored = set(), []
+    for bucket, rows in [(industry, own)] + sorted(market.items()):
+        for r in rows:
+            gn = r.get("global_name") or r.get("title")
+            if gn in seen:
+                continue
+            seen.add(gn)
+            hay = (str(r.get("title") or "") + " "
+                   + str(r.get("provider") or "")).lower()
+            hits = sum(1 for t in toks if t in hay)
+            base = 2 if r in own else 0
+            scored.append((base + hits * 3, hits, r))
+    # Stable per-session shuffle for the ties, so the stall changes visitor to
+    # visitor without becoming random - the same session always sees the same
+    # stall, which matters when the panel is reopened.
+    salt = str(((state or {}).get("session_id")) or "")
+    def key(item):
+        s, hits, r = item
+        h = hashlib.md5((salt + str(r.get("global_name") or "")).encode()).hexdigest()
+        return (-s, h)
+    rows = [r for _, _, r in sorted(scored, key=key)]
     region = ((cfg.get("event") or {}).get("region") or "").strip()
     if not region:
-        return rows
+        return rows[:6]
     short = region.split(".")[-1]
     keep = []
     for r in rows:
@@ -1192,7 +1251,7 @@ def listings_curated(cfg, industry):
         # A truncated "+N" list means we cannot prove absence, so keep it.
         if short in regs or "+" in regs:
             keep.append(r)
-    return keep
+    return keep[:6]
 
 
 # --------------------------------------------------------------- the CoCo prompt
@@ -2043,7 +2102,7 @@ def run_checklist(cfg, loc_id, labels, job_id):
         # name the provider and link the listing. Anything typed into "Other"
         # stays a plain string - we will not guess a provider for it.
         ind = (state.get("visitor") or {}).get("industry") or "other"
-        by_title = {r["title"]: r for r in listings_for(cfg, ind, state.get("session_id"))}
+        by_title = {r["title"]: r for r in listings_for(cfg, ind, state.get("session_id"), state)}
         patch["joined_listings"] = [by_title[l] for l in labels if l in by_title]
     write_state(patch)
     state = read_state()

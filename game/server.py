@@ -77,7 +77,7 @@ BLANK_STATE = {
     "narrative": "",
     "turns": [],
     "visitor": {"first_name": "", "company": "", "email": "", "industry": "",
-                "problem": ""},
+                "problem": "", "company_country": "", "residency": ""},
     "held": [],
     "platforms": [],
     "joined": [],
@@ -567,6 +567,12 @@ def fill(tmpl, cfg, state, **extra):
         # which is why the later questions can be shorter than they were.
         "problem": (vis.get("problem") or "").strip() or "not stated",
         "platforms": ", ".join(state.get("platforms") or []) or "not stated",
+        # Home-stage sovereignty answers, so the reveal can reassure in-region.
+        "company_country": (vis.get("company_country") or "").strip() or "not stated",
+        "residency": {"country_only": "must stay in their country",
+                      "eu": "must stay in the EU", "us_ok": "the US is acceptable too",
+                      "unsure": "not yet decided"}.get(
+                          vis.get("residency") or "", "not stated"),
     }
     vals.update(extra)
     out = tmpl
@@ -1289,6 +1295,15 @@ def blueprint_html(cfg, state):
                 f"<a href=\"{e(purl)}\">{e(purl)}</a></li>")
         parts.append("</ul>")
 
+    sov = sovereignty_lines(load_config(), state)
+    if sov:
+        parts.append("<h3 style=\"font-size:16px;margin:22px 0 4px\">"
+                     "Sovereignty and security</h3><ul>")
+        for line in sov:
+            parts.append(f"<li><span style=\"color:#5B7382;font-size:14px\">"
+                         f"{e(line)}</span></li>")
+        parts.append("</ul>")
+
     # Marketplace: real listing, named provider, working link.
     if listings or joined:
         parts.append("<h3 style=\"font-size:15px;margin:20px 0 4px\">"
@@ -1450,6 +1465,28 @@ def normalise_platforms(cfg, plats):
     return kept[:cap]
 
 
+def sovereignty_lines(cfg, state):
+    """The four in-region pillars, personalised to the visitor's residency.
+
+    Precompute, not generation: the prose is ours (config.sovereignty.pillars),
+    so it is consistent between visitors and cannot name a control that does not
+    exist. Returns [] when we have nothing to personalise against, so a visitor
+    who skipped the question does not get a generic lecture.
+    """
+    vis = state.get("visitor") or {}
+    residency = (vis.get("residency") or "").strip().lower()
+    country = (vis.get("company_country") or "").strip()
+    if not residency and not country and not state.get("platforms"):
+        return []
+    region = {"country_only": country or "your country",
+              "eu": "the EU",
+              "us_ok": "your chosen region",
+              "unsure": "your chosen region"}.get(residency, "your chosen region")
+    pillars = (cfg.get("sovereignty") or {}).get("pillars") or {}
+    order = ["data", "models", "marketplace", "governance"]
+    return [pillars[k].replace("{region}", region) for k in order if pillars.get(k)]
+
+
 def integration_paths(state):
     """The route into Snowflake for each platform the visitor named."""
     out = []
@@ -1600,6 +1637,13 @@ def blueprint_page(cfg, state):
                                              e(url)))
         a("</ul></section>")
 
+    sov = sovereignty_lines(cfg, state)
+    if sov:
+        a("<section><h2>Sovereignty and security</h2><ul>")
+        for line in sov:
+            a("<li>%s</li>" % e(line))
+        a("</ul></section>")
+
     if listings or joined:
         a("<section><h2>Attach from the Marketplace</h2><ul>")
         named = set()
@@ -1729,6 +1773,8 @@ def blueprint_docx(cfg, state):
             p = doc.add_paragraph(style="List Bullet")
             p.add_run(plat).bold = True
             p.add_run(f"\n{how}\n{url}")
+
+    bullets("Sovereignty and security", sovereignty_lines(cfg, state))
 
     problem = ((state.get("visitor") or {}).get("problem") or "").strip()
     if problem:
@@ -1897,6 +1943,10 @@ def log_session(cfg, state):
         # wrote; these two are the visitor's own words and their real estate.
         "PROBLEM_STATEMENT": vis.get("problem", ""),
         "PLATFORMS": state.get("platforms") or [],
+        # Home-stage sovereignty answers - the visitor's own words on where they
+        # are and what their rules are, useful for follow-up grouping.
+        "COMPANY_COUNTRY": vis.get("company_country", ""),
+        "RESIDENCY": vis.get("residency", ""),
     }
     arr_cols = ["DATA_HELD", "MARKETPLACE_JOINED", "FEATURES",
                 "CONSIDERATIONS", "PLATFORMS"]
@@ -2557,6 +2607,7 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         routes = {
             "/api/intake": self._intake,
+            "/api/home": self._home,
             "/api/select": self._select,
             "/api/compose": self._compose,
             "/api/ask": self._ask,
@@ -2655,6 +2706,28 @@ class Handler(BaseHTTPRequestHandler):
                            "industry_name": industry_name(cfg, industry),
                            "state": st})
 
+    def _home(self):
+        """Home-stage answers: where the data lives, where the company is based,
+        and the residency rule. Captured before the Library now (moved off the
+        Library's second question 2026-08-25). Enriches the blueprint; never
+        gates correctness, so a failure here is not fatal to the visit.
+        """
+        b = self._body()
+        if not isinstance(b, dict):
+            return self._json({"error": "invalid json"}, 400)
+        plats = [str(x)[:60] for x in (b.get("platforms") or []) if str(x).strip()]
+        country = (b.get("company_country") or "").strip()[:60]
+        # A closed vocabulary, so the blueprint's region logic can rely on it.
+        residency = (b.get("residency") or "").strip().lower()
+        if residency not in ("country_only", "eu", "us_ok", "unsure"):
+            residency = "unsure"
+        cur = read_state()
+        vis = dict(cur.get("visitor") or {})
+        vis["company_country"] = country
+        vis["residency"] = residency
+        st = write_state({"platforms": plats[:8], "visitor": vis})
+        return self._json({"ok": True, "state": st})
+
     def _select(self):
         b = self._body()
         if not isinstance(b, dict):
@@ -2664,12 +2737,7 @@ class Handler(BaseHTTPRequestHandler):
         if loc_id not in (cfg.get("locations") or {}):
             return self._json({"error": f"unknown location {loc_id!r}"}, 400)
         labels = [str(x)[:120] for x in (b.get("labels") or []) if str(x).strip()]
-        # The library asks a second, smaller question: which platforms is this
-        # data sitting on right now. It costs one tap and it decides the whole
-        # "getting it in" section of the blueprint, so it is worth the tap.
-        plats = [str(x)[:60] for x in (b.get("platforms") or []) if str(x).strip()]
-        if plats:
-            write_state({"platforms": plats[:8]})
+        # Platforms are captured on the home stage now (see _home), not here.
         if not labels:
             return self._json({"error": "nothing selected"}, 400)
         job = uuid.uuid4().hex

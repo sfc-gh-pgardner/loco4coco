@@ -416,7 +416,7 @@
     <div class="tile"><div class="k">Player</div><div class="v" id="h-name">&mdash;</div></div>
     <div class="tile"><div class="k">Industry</div><div class="v" id="h-ind">&mdash;</div></div>
     <div class="tile"><div class="k">Progress</div><div class="v" id="h-col">0 / 4</div></div>
-    <div class="tile"><div class="k">Time</div><div class="v" id="h-time">5:00</div></div>
+    <div class="tile"><div class="k">Time</div><div class="v" id="h-time">0:00</div></div>
   </div>
   <div id="stagebar" class="rail"></div>
 
@@ -471,6 +471,23 @@
     <!-- CoCo speaking over the house scene, between the letter and the map -->
     <div id="h-say" class="hsay"></div>
 
+    <!-- Home-stage question gate. Between the letter and the map, CoCo asks
+         where the data lives, where the company is based, and the residency
+         rules. Blocking and click-only: the map stays locked until answered. -->
+    <div class="ov" id="ov-home"><div class="lwrap">
+      <div class="lbubble" id="hq-bubble"></div>
+      <div class="card" style="width:min(560px,94vw)">
+        <div id="hq-heading" style="font-size:19px;font-weight:800"></div>
+        <div id="hq-hint" class="hint" style="margin:6px 0 12px"></div>
+        <div class="chips" id="hq-chips"></div>
+        <div class="fld" id="hq-otherwrap" style="display:none;margin-top:10px">
+          <input type="text" id="hq-other" autocomplete="off" spellcheck="false"
+            placeholder="Type it if it's not here"></div>
+        <div class="go" style="margin-top:16px;justify-content:space-between;align-items:center">
+          <span id="hq-step" class="hint"></span>
+          <button class="primary" id="hq-go">CONTINUE</button></div>
+      </div></div></div>
+
     <!-- per-location panel -->
     <div class="ov" id="ov-loc"><div class="card">
       <!-- Scroll region + fixed footer. A sticky footer inside one scroll box
@@ -490,16 +507,6 @@
       <div class="q" id="c-head"></div>
       <div class="hint" id="c-hint"></div>
       <div class="opts" id="c-opts"></div>
-      <!-- The library's SECOND question, and it must read as second. It used to
-           live in the fixed dock while the options scrolled above it, which gave
-           the panel two independently scrolling regions - you could be looking
-           at "where does it live today?" with the datasets question scrolled
-           entirely out of sight. It is now part of the same single flow, and it
-           does not appear at all until the first question has been answered. -->
-      <div class="fld" id="c-platwrap" style="display:none;margin-top:14px;
-        border-top:1px solid var(--line);padding-top:12px">
-        <label id="c-platlab"></label>
-        <div class="chips" id="c-plats"></div></div>
       </div><!-- /cscroll -->
       <!-- Docked last: what you type is the action, so it sits under the
            conversation and stays reachable however long CoCo's reply is. -->
@@ -543,7 +550,7 @@
           style="display:none;margin-left:12px">Read it on screen →</a>
       </div>
     </div>
-    <div class="go"><button class="primary" id="bp-send">SEND MY POC</button>
+    <div class="go"><button class="primary" id="bp-send">POST IT TO ME</button>
       <span class="keys" id="bp-keys">Builds your document and your QR code</span></div>
   </div></div>
   <div class="ov" id="ov-done" style="display:none"><div class="card" style="max-width:420px;text-align:center;padding:28px 24px">
@@ -591,10 +598,14 @@ let CFG=null, ST={}, OPTS={}, T=16, S=3, COLS=22, ROWS=15, map=[], ctx=null, tic
 let nearId=null, panelOpen=false, panelLoc=null, visited=new Set();
 let histIdx=null;            // null = live; otherwise an index into ST.turns
 let sel=new Set();
-let plats=new Set();          // platform chips, library only
 let nudgeMsg='', nudgeUntil=0, overNudged=false;
 // A short-lived line in the bubble for things that are not a CoCo turn.
 function nudge(m,ms){ nudgeMsg=m; nudgeUntil=Date.now()+(ms||3200); }
+// A nudge can be dismissed with a tap on CoCo's bubble - used by the soft
+// five-minute notice, which should never feel like it is holding the visitor.
+addEventListener('DOMContentLoaded',()=>{
+  const b=$('bubble'); if(b) b.addEventListener('click',()=>{ nudgeUntil=0; });
+});
 
 const rng = seed => { let s=seed>>>0; return () => (s=(s*1664525+1013904223)>>>0)/4294967296; };
 const inb = (x,y) => x>=0 && y>=0 && x<COLS && y<ROWS;
@@ -632,6 +643,7 @@ let reopenLock=0;
 const blocking = () => panelOpen || $('ov-title').classList.contains('on')
   || $('ov-arctic').classList.contains('on')
   || $('ov-letter').classList.contains('on')
+  || $('ov-home').classList.contains('on')
   || $('ov-ask').classList.contains('on')
   || $('ov-bp').classList.contains('on');
 addEventListener('keydown',e=>{
@@ -1789,6 +1801,7 @@ function fillTpl(s){
     .replace(/\{industry\}/g,lv.industry_name||'what you do');
 }
 let lastLetter={};
+let homeParting='';
 function startOpening(){ openScene('house'); setPhase('arctic'); }
 function setPhase(p){
   openPhase=p; openT=Date.now();
@@ -1799,6 +1812,7 @@ function setPhase(p){
     $('a-arcticsub').textContent=L().arctic_sub||'';
   }
   if(p==='letter') paintLetter();
+  if(p==='questions') openHomeQuestions();
   if(p==='line1'||p==='line2'){
     const say=$('h-say');
     say.classList.add('on');
@@ -1807,8 +1821,10 @@ function setPhase(p){
   if(p==='map'){
     closeScene();
     // Re-assert after the post-intake state apply, which otherwise repaints the
-    // default "use WASD" line over the top of this one.
-    const line=fillTpl(L().map_line);
+    // default "use WASD" line over the top of this one. If the home gate left a
+    // parting line, lead with it so the sovereignty beat lands before the map.
+    const line=fillTpl((homeParting?homeParting+' ':'')+L().map_line);
+    homeParting='';
     nudge(line,12000);
     setTimeout(()=>nudge(line,10000),700);
   }
@@ -1817,10 +1833,11 @@ function setPhase(p){
   if(d){ clearTimeout(setPhase._t); setPhase._t=setTimeout(nextPhase,d); }
 }
 function nextPhase(){
-  const order=['arctic','house','post','walk','letter','line1','line2','leave','map'];
+  const order=['arctic','house','post','walk','letter','line1','line2','questions','leave','map'];
   const i=order.indexOf(openPhase);
   if(i<0||openPhase==='map') return;
   if(openPhase==='letter') return;            // blocked until the form is sent
+  if(openPhase==='questions') return;         // blocked until the gate is answered
   setPhase(order[i+1]);
 }
 function openingActive(){ return openPhase && openPhase!=='map'; }
@@ -1829,7 +1846,7 @@ function openingActive(){ return openPhase && openPhase!=='map'; }
 // listener meant any stray click ate a beat, so four incidental clicks skipped
 // the whole intro and visitor two onward never saw it.
 function skipBeat(){
-  if(!openingActive() || openPhase==='letter') return;
+  if(!openingActive() || openPhase==='letter' || openPhase==='questions') return;
   // A beat must be on screen for a moment before it can be skipped. Without
   // this, the click that submits the letter (and any impatient second click or
   // Enter) fell straight through and ate line1, line2 and the door exit, so
@@ -1894,6 +1911,134 @@ $('l-go').addEventListener('click',submitLetter);
 $('ov-letter').addEventListener('keydown',e=>{
   e.stopPropagation();                       // belt and braces over the global guard
   if(e.key==='Enter') submitLetter();
+});
+
+
+// ---------------- home-stage question gate ----------------
+// Between the letter and the map, blocking and click-only: where the data
+// lives, where the company is based, and the residency rules. CoCo reacts to
+// each answer in the bubble, planting the sovereignty benefits the blueprint
+// later reinforces. Nothing here is free-text-required - "Other" is optional.
+let homeStep=0;
+const homeAns={ platforms:new Set(), country:null, countryText:'', residency:null };
+function countryWord(){
+  const opts=(CFG.country||{}).options||[];
+  if(homeAns.country==null) return (CFG.residency||{}).fallback_country||'your country';
+  const label=opts[homeAns.country]||'';
+  if(label===((CFG.country||{}).other_label) && homeAns.countryText) return homeAns.countryText;
+  if(label===((CFG.country||{}).other_label)) return (CFG.residency||{}).fallback_country||'your country';
+  return label;
+}
+function sov(key){ return ((CFG.sovereignty||{}).react||{})[key]||''; }
+function openHomeQuestions(){
+  homeStep=0; homeAns.platforms=new Set(); homeAns.country=null;
+  homeAns.countryText=''; homeAns.residency=null;
+  $('ov-home').classList.add('on');
+  $('hq-bubble').textContent='Before we set off, three quick things.';
+  renderHomeStep();
+}
+function renderHomeStep(){
+  const other=$('hq-otherwrap'); other.style.display='none'; $('hq-other').value='';
+  const wrap=$('hq-chips');
+  if(homeStep===0){
+    const p=CFG.platforms||{};
+    $('hq-heading').textContent=p.heading||'Where does your data live today?';
+    $('hq-hint').textContent=p.hint||'';
+    $('hq-step').textContent='1 of 3';
+    wrap.innerHTML=(p.options||[]).map((o,i)=>
+      `<div class="chip${homeAns.platforms.has(i)?' on':''}" data-i="${i}">${esc(o)}</div>`).join('');
+    [...wrap.children].forEach(el=>el.addEventListener('click',()=>togglePlat(+el.dataset.i)));
+  } else if(homeStep===1){
+    const c=CFG.country||{};
+    $('hq-heading').textContent=c.heading||'Where is your company based?';
+    $('hq-hint').textContent=c.hint||'';
+    $('hq-step').textContent='2 of 3';
+    wrap.innerHTML=(c.options||[]).map((o,i)=>
+      `<div class="chip${homeAns.country===i?' on':''}" data-i="${i}">${esc(o)}</div>`).join('');
+    [...wrap.children].forEach(el=>el.addEventListener('click',()=>pickCountry(+el.dataset.i)));
+  } else {
+    const r=CFG.residency||{}, cw=countryWord();
+    $('hq-heading').textContent=r.heading||'Where are your data and models allowed to run?';
+    $('hq-hint').textContent=r.hint||'';
+    $('hq-step').textContent='3 of 3';
+    const opts=(r.options_template||[]).map(t=>t.replace(/\{country\}/g,cw));
+    wrap.innerHTML=opts.map((o,i)=>
+      `<div class="chip${homeAns.residency===i?' on':''}" data-i="${i}">${esc(o)}</div>`).join('');
+    [...wrap.children].forEach(el=>el.addEventListener('click',()=>pickResidency(+el.dataset.i)));
+  }
+}
+function paintHomeChips(){
+  [...$('hq-chips').children].forEach((c,j)=>{
+    const on = homeStep===0 ? homeAns.platforms.has(j)
+             : homeStep===1 ? homeAns.country===j
+             : homeAns.residency===j;
+    c.classList.toggle('on',on);
+  });
+}
+function togglePlat(i){
+  const p=CFG.platforms||{}, opt=(p.options||[])[i], excl=(p.exclusive||[]), isExcl=excl.includes(opt);
+  if(homeAns.platforms.has(i)) homeAns.platforms.delete(i);
+  else{
+    homeAns.platforms.add(i);
+    // Same guardrail as the old library question: an exclusive chip cannot sit
+    // beside a named source, or the blueprint contradicts itself.
+    (p.options||[]).forEach((o2,j)=>{
+      if(j===i) return;
+      if(isExcl ? true : excl.includes(o2)) homeAns.platforms.delete(j);
+    });
+  }
+  paintHomeChips();
+}
+function pickCountry(i){
+  homeAns.country=i;
+  const other = (CFG.country||{}).options[i]===((CFG.country||{}).other_label);
+  $('hq-otherwrap').style.display=other?'':'none';
+  paintHomeChips();
+}
+function pickResidency(i){ homeAns.residency=i; paintHomeChips(); }
+async function homeContinue(){
+  if($('hq-go').disabled) return;
+  if(homeStep===0){
+    if(!homeAns.platforms.size){ $('hq-step').textContent='Tap at least one'; return; }
+    const opts=(CFG.platforms||{}).options||[], picks=[...homeAns.platforms].map(i=>opts[i]);
+    const excl=(CFG.platforms||{}).exclusive||[];
+    const named=picks.filter(o=>!excl.includes(o));
+    let key='platform_named', plat=named[0]||picks[0];
+    if(picks.some(o=>/already in snowflake/i.test(o))) key='platform_already';
+    else if(picks.some(o=>/not sure/i.test(o))) key='platform_unsure';
+    $('hq-bubble').textContent=sov(key).replace(/\{platform\}/g,plat);
+    homeStep=1; renderHomeStep(); return;
+  }
+  if(homeStep===1){
+    if(homeAns.country==null){ $('hq-step').textContent='Pick one'; return; }
+    const other=(CFG.country||{}).options[homeAns.country]===((CFG.country||{}).other_label);
+    if(other) homeAns.countryText=$('hq-other').value.trim().slice(0,60);
+    $('hq-bubble').textContent=sov('country').replace(/\{country\}/g,countryWord());
+    homeStep=2; renderHomeStep(); return;
+  }
+  // step 2: residency
+  if(homeAns.residency==null){ $('hq-step').textContent='Pick one'; return; }
+  const rkey=['residency_country_only','residency_eu','residency_us_ok','residency_unsure'][homeAns.residency]||'residency_unsure';
+  const parting=sov(rkey).replace(/\{country\}/g,countryWord());
+  $('hq-go').disabled=true;
+  const opts=(CFG.platforms||{}).options||[];
+  try{
+    await post('/api/home',{
+      platforms:[...homeAns.platforms].map(i=>opts[i]).filter(Boolean),
+      company_country:countryWord(),
+      residency:['country_only','eu','us_ok','unsure'][homeAns.residency]||'unsure',
+    });
+  }catch(e){ /* non-fatal: home answers enrich, they do not gate correctness */ }
+  await poll();
+  $('hq-go').disabled=false;
+  $('ov-home').classList.remove('on');
+  homeParting=parting;
+  setPhase('map');
+}
+$('hq-go').addEventListener('click',homeContinue);
+$('ov-home').addEventListener('keydown',e=>{
+  e.stopPropagation();
+  if(e.key==='Enter') homeContinue();
 });
 
 
@@ -1963,7 +2108,7 @@ function openPanel(id){
   // The postbox is the send step: it opens the final summary window with the
   // SEND button rather than a separate "post it" card.
   if(id==='postbox') return showBp();
-  panelOpen=true; panelLoc=id; sel=new Set(); plats=new Set();
+  panelOpen=true; panelLoc=id; sel=new Set();
   inSceneLoc=null; inScenePhase=null; cancelAutoLeave();
   Object.keys(keys).forEach(k=>keys[k]=false);
   // POV locations get the drawn interior behind a low "desk" panel; others use
@@ -2008,46 +2153,14 @@ function openPanel(id){
         const i=+el.dataset.i;
         if(el.querySelector('input').checked) sel.add(i); else sel.delete(i);
         el.classList.toggle('sel',el.querySelector('input').checked);
-        syncGo(); revealPlats();
+        syncGo();
       });
     });
   }
   if(isCompose){ $('c-compose').placeholder=l.placeholder||''; $('c-compose').value=''; }
-  // Platform chips: library only, and SECOND. Gated on the first question
-  // having an answer - a tick or some free text - so the visitor meets one
-  // question at a time instead of two competing for the same panel.
-  const pcfg=CFG.platforms||{}, wantPlats = id==='library'
-    && Array.isArray(pcfg.options) && pcfg.options.length;
-  platsWanted=wantPlats;
-  $('c-platwrap').style.display='none';
-  if(wantPlats){
-    plats=new Set(); platsShown=false;
-    $('c-platlab').textContent=pcfg.heading||'And where does it live today?';
-    $('c-plats').innerHTML=pcfg.options.map((o,i)=>
-      `<div class="chip" data-p="${i}">${esc(o)}</div>`).join('');
-    [...$('c-plats').children].forEach(el=>{
-      el.addEventListener('click',()=>{
-        const i=+el.dataset.p, opt=pcfg.options[i],
-              excl=(pcfg.exclusive||[]), isExcl=excl.includes(opt);
-        if(plats.has(i)) plats.delete(i);
-        else{
-          plats.add(i);
-          // GUARDRAIL. "Already in Snowflake" prints "nothing to move" and
-          // "Not sure yet" prints "go and ask"; pairing either with a named
-          // source made the blueprint contradict itself (16 of the 36 possible
-          // pairs did). Tapping one group clears the other, so the visitor
-          // cannot build a contradictory answer. The server re-normalises too.
-          pcfg.options.forEach((o2,j)=>{
-            if(j===i) return;
-            const otherExcl=excl.includes(o2);
-            if(isExcl ? true : otherExcl) plats.delete(j);
-          });
-        }
-        [...$('c-plats').children].forEach((c,j)=>
-          c.classList.toggle('on',plats.has(j)));
-      });
-    });
-  }
+  // The platform question ("where does it live today?") used to live here as a
+  // second question. It moved to CoCo's home stage (2026-08-25), so the Library
+  // now asks one thing only: what data do you hold.
   $('c-coco-choose').style.display = id==='workshop' ? '' : 'none';
   $('ov-loc').classList.add('on');
   syncGo();
@@ -2101,21 +2214,21 @@ function paintSendBtn(d){
   const btn=$('bp-send'), sub=$('bp-sub'), keys=$('bp-keys'), h2=$('bp-h2');
   if(d.queued || d.draft_created){
     h2.textContent='Your blueprint is ready';
-    // Honest: the document is staged and available right now. Claiming
-    // "SENT" was never true from here, and there is no longer an address to
-    // send to - the QR is the delivery.
-    sub.textContent='Ready to take away below.';
-    // Was disabled: a dead control at the emotional high point. It now plays
-    // the posting beat and ends the visit.
+    // The QR is the delivery: the document is staged and scannable right now.
+    // No second step and no address to send to, so the button retires rather
+    // than offering a confusing "POST IT" second press.
     const ready=!!d.document_url;
-    btn.disabled=!ready;
-    btn.textContent=ready?'POST IT':'FINISHING\u2026';
-    keys.textContent=ready?'Scan the code first if you want it on your phone'
+    sub.textContent=ready?'Scan the code below to take it with you.'
+                         :'Staging your document\u2026';
+    btn.disabled=true;
+    btn.textContent=ready?'ALL YOURS \u2014 SCAN BELOW':'FINISHING\u2026';
+    keys.textContent=ready?'It is yours to keep - the link works for seven days'
                           :'Staging your document\u2026';
+    if(ready && !window.__flourished){ window.__flourished=true; postingFlourish(); }
   } else {
     h2.textContent='Ready to post';
     sub.textContent='I\u2019ll build your document and hand it straight to you.';
-    btn.disabled=false; btn.textContent='SEND MY POC';
+    btn.disabled=false; btn.textContent=(CFG.locations.postbox||{}).button||'POST IT TO ME';
     keys.textContent='Builds your document and your QR code';
   }
   paintHandover(d);
@@ -2147,9 +2260,9 @@ async function sendPoc(){
   $('bp-sub').textContent='Writing your document and staging it\u2026';
   try{
     const r=await post('/api/send',{});
-    if(!r.ok){ btn.disabled=false; btn.textContent='SEND MY POC';
+    if(!r.ok){ btn.disabled=false; btn.textContent=(CFG.locations.postbox||{}).button||'POST IT TO ME';
       $('bp-sub').textContent='That did not go through \u2014 try once more.'; return; }
-  }catch(e){ btn.disabled=false; btn.textContent='SEND MY POC';
+  }catch(e){ btn.disabled=false; btn.textContent=(CFG.locations.postbox||{}).button||'POST IT TO ME';
     $('bp-sub').textContent='Cannot reach the server.'; return; }
   // The send runs in a background thread, so a single re-read raced it and the
   // QR never appeared. Poll until the presigned URL exists (or we give up and
@@ -2163,25 +2276,23 @@ async function sendPoc(){
     if(d.document_url) return;
   }
 }
-function closeBp(){ $('ov-bp').classList.remove('on'); reopenLock=Date.now()+700; }
-$('bp-send').addEventListener('click',()=>{
+function closeBp(){
+  $('ov-bp').classList.remove('on'); reopenLock=Date.now()+700;
+  // Once the blueprint has been delivered, closing the card is the end of the
+  // visit: show the closing summary and the shareable card. This is why there
+  // is no second "post it" button - finishing is just stepping away.
   const d=window.__bp||{};
-  // Second press, once it is queued, is the "post it" beat rather than a resend.
-  if(d.queued || d.draft_created) return playPosting();
-  sendPoc();
-});
-// The letter physically going in the box. Nothing is sent here - the send already
-// happened - this is the closing beat so the visit ends on an action.
-function playPosting(){
-  if($('bp-send').disabled) return;
-  $('bp-send').disabled=true;
-  $('ov-bp').classList.remove('on');        // clear the card so the beat is seen
+  if(d.document_url){ visited.add('postbox'); showDoneSummary(); }
+}
+$('bp-send').addEventListener('click',sendPoc);
+// The letter physically going in the box - a brief flourish once the blueprint
+// is built. It does NOT clear the card: the QR must stay on screen to be
+// scanned, so the scene plays behind it and the card remains. One action, no
+// second press.
+function postingFlourish(){
   postT=Date.now(); openScene('postbox');
-  setTimeout(()=>{
-    closeScene();
-    visited.add('postbox');
-    showDoneSummary();
-  },POST_MS+220);
+  visited.add('postbox');
+  setTimeout(()=>{ closeScene(); },POST_MS+220);
 }
 
 // ---------------- new visitor ----------------
@@ -2190,7 +2301,7 @@ $('newv').addEventListener('click',async()=>{
   try{ await fetch('/api/reset',{method:'POST'}); }catch(e){}
   location.reload();
 });
-$('c-other').addEventListener('input',()=>{ syncGo(); revealPlats(); });
+$('c-other').addEventListener('input',syncGo);
 $('c-other').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter') submitPanel(); });
 $('c-compose').addEventListener('input',syncGo);
 $('c-compose').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter') submitPanel(); });
@@ -2207,9 +2318,7 @@ async function submitPanel(){
       const labels=[...sel].map(i=>items[i]&&items[i].label).filter(Boolean);
       const other=$('c-other').value.trim(); if(other) labels.push(other);
       if(!labels.length) return;
-      const popts=(CFG.platforms||{}).options||[];
-      const platforms=[...plats].map(i=>popts[i]).filter(Boolean);
-      await post('/api/select',{location:id,labels,platforms});
+      await post('/api/select',{location:id,labels});
     } else if(l.mode==='compose'){
       const text=$('c-compose').value.trim(); if(!text) return;
       await post('/api/compose',{text});
@@ -2222,7 +2331,6 @@ async function submitPanel(){
       const say=$('c-say'); say.classList.add('on');
       say.innerHTML='<b>CoCo</b>Let me look that up for you\u2026';
       $('c-opts').style.display='none'; $('c-otherwrap').style.display='none';
-      $('c-platwrap').style.display='none';
       $('c-go').disabled=true; $('c-go').textContent='THINKING\u2026';
     } else {
       visited.add(id); closePanel();
@@ -2624,20 +2732,6 @@ $('done-reset').addEventListener('click',async ()=>{
 
 // Reveal the second library question once the first has an answer. Called from
 // the option toggles and from the free-text box, so either route unlocks it.
-let platsWanted=false, platsShown=false;
-function revealPlats(){
-  if(!platsWanted || platsShown) return;
-  const anyTick=!!document.querySelector('#c-opts .opt.sel'),
-        anyText=($('c-other').value||'').trim().length>1;
-  if(!anyTick && !anyText) return;
-  platsShown=true;
-  const wrap=$('c-platwrap');
-  wrap.style.display='block';
-  // Bring it into view, but gently: jumping the scroll to the bottom is what
-  // hid the options the last time this panel was "helpfully" scrolled.
-  try{ wrap.scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(e){}
-}
-
 async function post(url,body){
   const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify(body)});
@@ -2753,20 +2847,16 @@ function onState(s){
   $('h-ind').textContent=(CFG.industries[v.industry]||{}).name||'\u2014';
   $('h-col').textContent=`${visited.size} / ${Object.keys(CFG.locations).length}`;
   if(s.started_at && haveVisitor()){
-    // A soft guide, not a cliff: at zero it says so and play continues, rather
-    // than promising a limit it never enforces.
-    const left=CFG.event.time_limit_seconds-(Date.now()/1000-s.started_at);
-    if(left>0){
-      $('h-time').textContent=`${Math.floor(left/60)}:${String(Math.floor(left%60)).padStart(2,'0')}`;
-      $('h-time').style.color=left<60?'#E8863C':'';
-    } else {
-      $('h-time').textContent='OVER'; $('h-time').style.color='#E8863C';
-      // The countdown now has a consequence: CoCo says so once, then play
-      // continues. A limit that expires in silence is worse than no limit.
-      if(!overNudged && s.stage!=='done'){ overNudged=true;
-        nudge('We are past five minutes - let us get your present in the post.',6000); }
-    }
-  } else { $('h-time').textContent=`${Math.floor(CFG.event.time_limit_seconds/60)}:00`; }
+    // Counts UP, not down: the clock is there to create a little urgency, not
+    // to threaten a cliff. It keeps counting past the limit, and the one-time
+    // notice at the limit is a soft nudge the visitor can dismiss.
+    const elapsed=Date.now()/1000-s.started_at;
+    const limit=CFG.event.time_limit_seconds||300;
+    $('h-time').textContent=`${Math.floor(elapsed/60)}:${String(Math.floor(elapsed%60)).padStart(2,'0')}`;
+    $('h-time').style.color=elapsed>=limit?'#E8863C':'';
+    if(elapsed>=limit && !overNudged && s.stage!=='done'){ overNudged=true;
+      nudge('That is five minutes - no rush, but let us get your present in the post when you are ready. (tap to dismiss)',6000); }
+  } else { $('h-time').textContent='0:00'; }
   const ids=Object.keys(CFG.locations), bar=$('stagebar');
   if(bar.children.length!==ids.length) bar.innerHTML=ids.map(()=>'<div></div>').join('');
   [...bar.children].forEach((d,i)=>{
@@ -2774,6 +2864,7 @@ function onState(s){
 
   const opening = $('ov-title').classList.contains('on')
     || $('ov-arctic').classList.contains('on') || $('ov-letter').classList.contains('on')
+    || $('ov-home').classList.contains('on')
     || openingActive();
   $('banner').classList.toggle('on', !haveVisitor() && !opening);
   if(!haveVisitor() && !opening && firstLoad) openTitle();

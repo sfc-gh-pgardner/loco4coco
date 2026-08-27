@@ -589,7 +589,8 @@
     "body": [
       "This is a fun way to experience the power of Cortex Code (CoCo) through the medium of an arcade game.",
       "You have 5 minutes to explore the key aspects of building out a Proof of Concept on Snowflake with CoCo as your tour guide on our features, marketplace datasets and how enterprise-grade AI can bring your ideas to life.",
-      "After 5 minutes you will have a personalised action plan (scan it and keep it) to building out a project on Snowflake - be daring! This is a fun, flexible process with a very real and useful outcome!"
+      "After 5 minutes you will have a personalised action plan (scan it and keep it) to building out a project on Snowflake - be daring! This is a fun, flexible process with a very real and useful outcome!",
+      "Anything you type stays private - it is shared only with you and Snowflake, and never sold on or shared with anyone else."
     ]
   },
   "ask": {
@@ -862,9 +863,9 @@
     ]
   },
   "platforms": {
-    "_comment": "Where the data lives today. Asked in the library as a second, one-tap question; decides the integration-path section of the blueprint. Order is roughly booth-audience frequency.",
-    "heading": "And where does it live today?",
-    "hint": "Tap every platform it sits on. This is what decides how we get it into Snowflake, and the blueprint will spell out the route.",
+    "_comment": "Where the data lives today. Asked on CoCo's home stage (moved out of the library 2026-08-25), one tap; decides the integration-path section of the blueprint.",
+    "heading": "Where does your data live today?",
+    "hint": "Tap every platform it sits on. This is what decides how we get it into Snowflake.",
     "options": [
       "Microsoft / Azure",
       "AWS",
@@ -882,5 +883,52 @@
     ],
     "max_routes": 4,
     "_guardrail": "`exclusive` chips cannot be combined with a named source: \"Already in Snowflake\" prints \"nothing to move\" and \"Not sure yet\" prints \"go and ask\", so pairing either with Oracle or AWS made the blueprint contradict itself. The UI clears the other group on tap and the server re-normalises, so a bypassed UI cannot produce a contradictory document. `max_routes` caps the ingestion section: 8 chips printed 8 route paragraphs and 5 Openflow mentions, which read as a template rather than a plan."
+  },
+  "country": {
+    "_comment": "Home-stage question 2. Europe-weighted for London/Paris. Frames the residency follow-up.",
+    "heading": "And where is your company based?",
+    "hint": "One tap. It helps me keep your data where your rules need it.",
+    "options": [
+      "United Kingdom",
+      "Ireland",
+      "France",
+      "Germany",
+      "Netherlands",
+      "Nordics",
+      "Rest of EU",
+      "Somewhere else"
+    ],
+    "other_label": "Somewhere else"
+  },
+  "residency": {
+    "_comment": "Home-stage question 3. Sovereignty-framed. {country} is interpolated from the country answer; falls back to 'your country'.",
+    "heading": "Where are your data and AI models allowed to run?",
+    "hint": "This shapes the region we build in. One tap.",
+    "options_template": [
+      "{country} only",
+      "Anywhere in the EU is fine",
+      "The US is fine too",
+      "Not sure yet"
+    ],
+    "fallback_country": "your country"
+  },
+  "sovereignty": {
+    "_comment": "Visitor-facing sovereignty copy. react.* are CoCo's one-liners on the home stage, keyed by the answer. pillars.* are reused verbatim in the blueprint's Sovereignty & security section. Kept here so Paris is a copy swap.",
+    "react": {
+      "platform_already": "Perfect - it's already in Snowflake, so we skip the plumbing and go straight to building.",
+      "platform_unsure": "No problem - we'll work the plumbing out together, it's usually the easy part.",
+      "platform_named": "Good - I know exactly how to get data out of {platform} and into Snowflake, in region and without copying it around.",
+      "country": "{country}, lovely. I'll keep everything where {country}'s rules need it.",
+      "residency_country_only": "Understood - everything stays in {country}. Your data, the AI models, all of it.",
+      "residency_eu": "Great - we'll keep it inside the EU. Data and models both, no border crossings.",
+      "residency_us_ok": "Plenty of room to work with, then - and it still stays wherever you choose.",
+      "residency_unsure": "We'll keep it close to home by default - you can always widen it later."
+    },
+    "pillars": {
+      "data": "Your data never leaves {region}: it stays in your own Snowflake account, in region, not copied out to be processed.",
+      "models": "Cortex runs the AI models where your data already lives, so nothing crosses a border to be understood.",
+      "marketplace": "Marketplace data is shared live rather than copied, and you are only ever offered listings available in {region}.",
+      "governance": "One set of controls - role-based access, masking, row-level policies - governs all of it, in one place."
+    }
   }
 }

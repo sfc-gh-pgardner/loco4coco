@@ -24,3 +24,7 @@ node_modules/
 test-results/
 playwright-report/
 .playwright/
+
+# Persona-audit screenshots are run output, not source.
+audit/audit/shots/
+audit/shots/

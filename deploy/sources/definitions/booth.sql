@@ -99,7 +99,10 @@ DEFINE TABLE {{db}}.{{schema}}.SESSIONS (
   -- Appended, because DCM's CREATE OR ALTER cannot add a column before the end
   -- of the list. INDUSTRY holds the human label; this holds the config key,
   -- which is what groups reliably when a label is reworded.
-  INDUSTRY_KEY        TEXT          COMMENT 'config.industries key, e.g. public | healthcare | other'
+  INDUSTRY_KEY        TEXT          COMMENT 'config.industries key, e.g. public | healthcare | other',
+  -- Home-stage sovereignty answers, appended for the same CREATE OR ALTER reason.
+  COMPANY_COUNTRY     TEXT          COMMENT 'Where the visitor says their company is based',
+  RESIDENCY           TEXT          COMMENT 'Data/model residency rule: country_only | eu | us_ok | unsure'
 )
   COMMENT = 'One row per booth visitor.';
 

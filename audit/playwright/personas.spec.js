@@ -112,18 +112,60 @@ async function submitLetter(page, t, industry) {
   await page.click('#l-go');
 }
 
-async function reachMap(page) {
-  const letter = page.locator('#ov-letter');
+// Skip intro beats until the home-stage gate is showing, without answering it -
+// used by the X5/X6 guardrail test which inspects the gate itself.
+async function reachHomeGate(page) {
+  const home = page.locator('#ov-home');
   for (let i = 0; i < 50; i++) {
-    const lo = await letter.evaluate(el => el.classList.contains('on')).catch(() => false);
+    if (await home.evaluate(el => el.classList.contains('on')).catch(() => false)) return;
+    await page.locator('#stagewrap').click({ position: { x: 40, y: 40 } }).catch(() => {});
+    await page.waitForTimeout(220);
+  }
+  throw new Error('home-stage gate never appeared');
+}
+
+async function answerHomeGate(page, platform = 'AWS') {
+  const home = page.locator('#ov-home');
+  if (!(await home.evaluate(el => el.classList.contains('on')).catch(() => false))) return;
+  // Q1 platforms
+  await page.locator('#hq-chips .chip', { hasText: platform }).first().click();
+  await page.click('#hq-go');
+  await page.waitForTimeout(150);
+  // Q2 country
+  await page.locator('#hq-chips .chip').first().click();
+  await page.click('#hq-go');
+  await page.waitForTimeout(150);
+  // Q3 residency
+  await page.locator('#hq-chips .chip').first().click();
+  await page.click('#hq-go');
+  await page.waitForTimeout(200);
+}
+
+async function reachMap(page) {
+  // The intro plays line1/line2 as bubble text (no overlay), then the BLOCKING
+  // home gate. An earlier version returned as soon as no overlay was on, which
+  // fell through during line1 - before the gate appeared - so the gate was
+  // never answered and residency/country were never captured. So: wait for the
+  // gate, answer it, then confirm no opening overlay remains.
+  const home = page.locator('#ov-home');
+  let answered = false;
+  for (let i = 0; i < 70; i++) {
+    if (await home.evaluate(el => el.classList.contains('on')).catch(() => false)) {
+      await answerHomeGate(page); answered = true; break;
+    }
+    // Skipping a timed beat (line1/line2) is safe; skipBeat refuses to skip the
+    // gate itself, so this only fast-forwards the narration.
+    await page.locator('#stagewrap').click({ position: { x: 40, y: 40 } }).catch(() => {});
+    await page.waitForTimeout(220);
+  }
+  for (let i = 0; i < 30 && answered; i++) {
     const anyOv = await page.evaluate(() =>
-      ['ov-title', 'ov-arctic', 'ov-letter'].some(id => {
+      ['ov-title', 'ov-arctic', 'ov-letter', 'ov-home'].some(id => {
         const e = document.getElementById(id);
         return e && e.classList.contains('on');
       }));
-    if (!lo && !anyOv) return;
-    await page.locator('#stagewrap').click({ position: { x: 40, y: 40 } }).catch(() => {});
-    await page.waitForTimeout(220);
+    if (!anyOv) return;
+    await page.waitForTimeout(200);
   }
 }
 
@@ -218,13 +260,10 @@ for (const [industry, t] of Object.entries(TRACKS)) {
     test('X5/X6 platform guardrail and reachability', async ({ page }) => {
       await reachLetter(page);
       await submitLetter(page, t, industry);
-      await reachMap(page);
-      await openLocation(page, 'library');
-      await page.locator('#c-opts .opt').first().click();
-      await page.waitForTimeout(400);
+      await reachHomeGate(page);   // the gate now lives on the home stage
 
-      const sel = () => page.$$eval('#c-plats .chip.on', e => e.map(x => x.textContent.trim()));
-      const chip = name => page.locator('#c-plats .chip', { hasText: name }).first();
+      const sel = () => page.$$eval('#hq-chips .chip.on', e => e.map(x => x.textContent.trim()));
+      const chip = name => page.locator('#hq-chips .chip', { hasText: name }).first();
 
       // two named sources coexist
       await chip('AWS').click();
@@ -244,11 +283,11 @@ for (const [industry, t] of Object.entries(TRACKS)) {
       await chip('Already in Snowflake').click();
       expect(await sel()).toEqual(['Already in Snowflake']);
 
-      // X6: chips and CONFIRM reachable without the visitor scrolling
+      // X6: chips and CONTINUE reachable without the visitor scrolling
       const reach = await page.evaluate(() => {
-        const w = document.getElementById('c-platwrap');
+        const w = document.getElementById('hq-chips');
         const r = w.getBoundingClientRect();
-        const go = document.querySelector('#ov-loc button.primary');
+        const go = document.getElementById('hq-go');
         const g = go.getBoundingClientRect();
         return {
           chipsIn: r.top >= 0 && r.bottom <= innerHeight,
@@ -256,7 +295,7 @@ for (const [industry, t] of Object.entries(TRACKS)) {
         };
       });
       expect(reach.chipsIn, 'platform chips not in viewport').toBe(true);
-      expect(reach.confirmIn, 'CONFIRM not reachable').toBe(true);
+      expect(reach.confirmIn, 'CONTINUE not reachable').toBe(true);
     });
 
     test('X3/X4 stall is attachable and on-geography', async ({ page }, ti) => {
@@ -311,11 +350,11 @@ for (const [industry, t] of Object.entries(TRACKS)) {
         await submitLetter(page, t, industry);
         await reachMap(page);
 
-        // Library, with a named platform so an ingestion route must be printed.
+        // The platform (Oracle etc.) is answered on the home-stage gate now,
+        // so reachMap already captured it. The Library asks only for data held.
         await openLocation(page, 'library');
         await page.locator('#c-opts .opt').first().click();
         await page.waitForTimeout(400);
-        await page.locator('#c-plats .chip', { hasText: 'Oracle' }).first().click();
         await page.locator('#ov-loc button.primary').click();
         await page.waitForFunction(() => !document.getElementById('ov-loc')
           .classList.contains('on'), null, { timeout: 180000 });
@@ -363,7 +402,8 @@ for (const [industry, t] of Object.entries(TRACKS)) {
           .toBeGreaterThan(0);
         expect(poc.guide_title, 'no guide to fork').toBeTruthy();
 
-        // X8: Oracle was picked, so the route must be printed.
+        // X8: a named platform (AWS) was picked on the home gate, so a route
+        // must be printed.
         const body = JSON.stringify(st);
         // X9: never both at once.
         const nomove = /nothing to move/i.test(body);

@@ -504,6 +504,10 @@ CoCo speaks one of these when the visitor presses send (`{first_name}` is filled
 - **On success:** Wrapped and labelled, {first_name}. Scan the code on screen and it is yours - the link works for seven days.
 - **If staging fails:** I could not wrap it up this time - grab a Snowflake person and we will sort it.
 
+### The model prompts
+
+The one-line replies above are generated, not scripted - so for full transparency, every prompt the booth actually sends to Cortex (the shared preamble, the Library, Marketplace and Workshop turns, the background fill and the QA relevance check) is rendered verbatim against an example visitor in `skills/loco4coco/references/model-prompts.md`. Regenerate it with `python3 scripts/build_model_prompts.py`. The rule that governs all of them: the model only ever PICKS from our closed lists and REFLECTS them back - it is never asked to invent a feature, a listing or a fact, and the same visitor input yields the same document.
+
 ## Flagged for review
 
 Decisions for a human, not code changes. None of these stop the booth running.

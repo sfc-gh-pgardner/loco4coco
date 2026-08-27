@@ -491,6 +491,19 @@ w('- **If staging fails:** I could not wrap it up this time - grab a Snowflake '
   'person and we will sort it.')
 w('')
 
+w('### The model prompts')
+w('')
+w('The one-line replies above are generated, not scripted - so for full '
+  'transparency, every prompt the booth actually sends to Cortex (the shared '
+  'preamble, the Library, Marketplace and Workshop turns, the background fill and '
+  'the QA relevance check) is rendered verbatim against an example visitor in '
+  '`skills/loco4coco/references/model-prompts.md`. Regenerate it with '
+  '`python3 scripts/build_model_prompts.py`. The rule that governs all of them: '
+  'the model only ever PICKS from our closed lists and REFLECTS them back - it is '
+  'never asked to invent a feature, a listing or a fact, and the same visitor '
+  'input yields the same document.')
+w('')
+
 # ---- flagged for review -----------------------------------------------------
 # Kept in the generator, not typed into the published copy, so it survives the
 # next regeneration. Anything hand-added to the Google Doc is lost on the next run.

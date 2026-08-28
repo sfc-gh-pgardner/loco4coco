@@ -200,14 +200,14 @@ for key in ('platforms', 'country', 'residency'):
     b = cfg.get(key) or {}
     w('**%s**' % q(b.get('heading')))
     w('')
-    w('- *Hint:* %s' % q(b.get('hint')))
+    w('- **Hint:** %s' % q(b.get('hint')))
     opts = b.get('options') or b.get('options_template') or []
     for o in opts:
         w('- %s' % q(o))
     if b.get('other_label'):
-        w('- *Free text option:* %s' % q(b.get('other_label')))
+        w('- **Free text option:** %s' % q(b.get('other_label')))
     if b.get('exclusive'):
-        w('- *Cannot be combined with a named source:* %s'
+        w('- **Cannot be combined with a named source:** %s'
           % ', '.join(q(x) for x in b['exclusive']))
     w('')
 
@@ -498,4 +498,51 @@ w('- The industry does not weight which archetype a visitor is routed to, and '
   'the data they hold does not narrow which datasets are suggested.')
 w('')
 
-print('\n'.join(O))
+def _to_docs(md):
+    """Flatten Markdown tables for Google Docs, which does not render them.
+
+    A table becomes one bullet per row, with each cell labelled by its column
+    heading, so nothing is lost and nothing needs a monospace font. Everything
+    else passes through untouched.
+    """
+    out, i = [], 0
+    lines = md.splitlines()
+    while i < len(lines):
+        ln = lines[i]
+        nxt = lines[i + 1] if i + 1 < len(lines) else ''
+        is_head = ln.startswith('|') and set(nxt.replace('|', '').strip()) <= {
+            '-', ' '} and nxt.startswith('|')
+        if not is_head:
+            plain = ln.replace('`', '')
+            # Google Docs shows Markdown markers literally, so strip them. The
+            # numbered section headings carry the hierarchy on their own.
+            plain = re.sub(r'^#{1,6}\s*', '', plain)
+            plain = re.sub(r'\*\*(.+?)\*\*', r'\1', plain)
+            out.append(plain)
+            i += 1
+            continue
+        cols = [c.strip() for c in ln.strip().strip('|').split('|')]
+        i += 2
+        while i < len(lines) and lines[i].startswith('|'):
+            cells = [c.strip().replace(r'\|', '|').replace('`', '')
+                     for c in lines[i].strip().strip('|').split('|')]
+            parts = []
+            for h, c in zip(cols, cells):
+                if not c or c == '-':
+                    continue
+                parts.append(c if h in ('#', 'Listing', 'Stop', 'Setting',
+                                        'Archetype', 'Option', 'Platform',
+                                        'Selection')
+                             else '%s: %s' % (h, c))
+            if parts:
+                out.append('- ' + ' \u00b7 '.join(parts))
+            i += 1
+        out.append('')
+    return '\n'.join(out)
+
+
+body = '\n'.join(O)
+if '--docs' in os.sys.argv:
+    body = _to_docs(body)
+print(body)
+

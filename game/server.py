@@ -2559,6 +2559,7 @@ class Handler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path
         routes = {
             "/api/intake": self._intake,
+            "/api/suggest": self._suggest,
             "/api/home": self._home,
             "/api/select": self._select,
             "/api/compose": self._compose,
@@ -2636,6 +2637,77 @@ class Handler(BaseHTTPRequestHandler):
         if not isinstance(patch, dict):
             return self._json({"error": "expected an object"}, 400)
         return self._json(write_state(patch))
+
+    def _suggest(self):
+        """Write a starting problem statement FOR the visitor, on request.
+
+        The problem field is the highest-value thing on the letter and the
+        hardest to fill in cold at a noisy stand. This is the "CoCo choose"
+        path: one fast completion, grounded in material that already exists and
+        is closed - the industry's own data_sources labels, and the nine
+        VISITOR_PAIN lines, which are already written in a visitor's voice.
+
+        So the model is rephrasing our own catalogue into one sentence, not
+        inventing a use case. It lands in an editable field: the visitor is
+        expected to correct it, and everything downstream keys off what they
+        finally submit rather than off this.
+        """
+        b = self._body()
+        if not isinstance(b, dict):
+            return self._json({"error": "invalid json"}, 400)
+        cfg = load_config()
+        industry = b.get("industry") or ""
+        inds = cfg.get("industries") or {}
+        if industry not in inds:
+            industry = "other"
+        ind = inds.get(industry) or {}
+        ind_name = ind.get("name") or "their sector"
+        company = (b.get("company") or "").strip()[:120]
+
+        held = []
+        for d in (ind.get("data_sources") or []):
+            lab = d.get("label") if isinstance(d, dict) else d
+            if lab:
+                held.append(str(lab))
+
+        pains = []
+        try:
+            import context
+            bundle = context.load(prefer_snowflake=False)
+            for a in (bundle.get("archetypes") or []):
+                p = str(a.get("pain") or "").strip()
+                if p:
+                    pains.append(f"- {a.get('friendly')}: {p}")
+        except Exception:                                        # noqa: BLE001
+            pains = []
+
+        who = f" at {company}" if company else ""
+        prompt = (
+            f"A visitor{who} works in {ind_name}. Write ONE problem statement in "
+            f"their voice, as they would type it into a form, describing "
+            f"something worth building with data and AI.\n\n"
+            f"Data an organisation like theirs typically holds:\n"
+            + "\n".join(f"- {h}" for h in held) + "\n\n"
+            f"The kinds of problem this booth can actually build for, with the "
+            f"complaint people usually make:\n" + "\n".join(pains) + "\n\n"
+            "Rules. Two sentences, maximum 32 words total. First sentence is the "
+            "problem as it is felt day to day; second is what good would look "
+            "like. Plain first-person plural, no jargon, no product names, no "
+            "buzzwords, no em dashes, and never mention Snowflake or AI by name. "
+            "Be specific to their sector rather than generic. Return ONLY the "
+            "two sentences, with no quotes, no preamble and no explanation."
+        )
+        loc = {"transport": "complete"}
+        ok, raw, _meta = run_turn(cfg, prompt, "letter_suggest", loc=loc)
+        text = re.sub(r"\s+", " ", str(raw or "")).strip().strip('"').strip()
+        # A refusal, an empty answer or an essay are all failures. Falling back
+        # to the industry's own placeholder means the button always does
+        # something useful, and never leaves a wall of prose in the field.
+        if not ok or not text or len(text) > 320:
+            text = str(ind.get("problem_placeholder") or "").strip()
+            text = re.sub(r"^e\.g\.\s*", "", text)
+            return self._json({"ok": True, "problem": text, "source": "fallback"})
+        return self._json({"ok": True, "problem": text, "source": "model"})
 
     def _intake(self):
         b = self._body()

@@ -368,6 +368,16 @@
   .card.letter .lask .chip.on { background:#1E6F94; border-color:#1E6F94;
     color:#F2FAFF; }
   .card.letter .lask .fld { margin-top:8px; }
+  /* "CoCo, you choose" - for the visitor who knows they want something but
+     cannot phrase it at a noisy stand. Understated, because typing their own
+     problem is still the better outcome. */
+  .card.letter .lsug { display:flex; align-items:center; gap:9px; margin-top:6px; }
+  .card.letter .sugbtn { background:rgba(30,111,148,.10); color:#1E6F94;
+    border:1px dashed rgba(30,111,148,.55); border-radius:12px;
+    font:600 12px/1 var(--ff); padding:6px 11px; cursor:pointer; }
+  .card.letter .sugbtn:hover { background:rgba(30,111,148,.18); }
+  .card.letter .sugbtn:disabled { opacity:.55; cursor:default; }
+  .card.letter .sughint { font-size:11.5px; color:#5E8399; }
   .card.letter .lp { font-size:15px; line-height:1.9; margin:0 0 7px; }
   .card.letter .lin {
     background:transparent; border:0; border-bottom:2px solid #9C8C6E;
@@ -2095,7 +2105,10 @@ function buildLetterBody(){
   // because its label is a separate config string.
   const plabel=esc(ik.problem_label||'The problem you want to solve');
   const problem=`<p class="lp">${plabel}<br>`
-    +`<textarea id="l-problem" class="lin lta" rows="2" spellcheck="false"></textarea></p>`;
+    +`<textarea id="l-problem" class="lin lta" rows="2" spellcheck="false"></textarea>`
+    +`<span class="lsug"><button type="button" id="l-suggest" class="sugbtn">`
+    +`CoCo, you choose</button>`
+    +`<span class="sughint" id="l-sughint"></span></span></p>`;
   // Sits before the closing line, so the letter still ends on its sign-off.
   html.splice(Math.max(0,html.length-1),0,problem);
   // The sign-off was also dead config: never rendered, yet a letter needs one.
@@ -2112,6 +2125,37 @@ function buildLetterBody(){
     fn.addEventListener('input',sync); sync();
   }
   lBuilt=true;
+  wireSuggest();
+}
+// One completion, grounded in our own archetype pain lines, dropped into an
+// editable field. The visitor is expected to correct it: everything downstream
+// keys off what they finally submit, not off this.
+function wireSuggest(){
+  const btn=$('l-suggest'); if(!btn || btn.dataset.wired) return;
+  btn.dataset.wired='1';
+  btn.addEventListener('click',async()=>{
+    const ta=$('l-problem'), hint=$('l-sughint');
+    const before=btn.textContent;
+    btn.disabled=true; btn.textContent='THINKING\u2026';
+    hint.textContent='';
+    try{
+      const r=await fetch('/api/suggest',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({industry:($('l-industry')||{}).value||'',
+                             company:($('l-company')||{}).value||''})});
+      const d=await r.json();
+      if(d && d.problem){
+        ta.value=d.problem;
+        ta.focus();
+        hint.textContent='Change anything that is not quite right.';
+      } else {
+        hint.textContent='Could not think of one. Type it and CoCo will run with it.';
+      }
+    }catch(e){
+      hint.textContent='Could not reach CoCo. Type it and we will carry on.';
+    }
+    btn.disabled=false; btn.textContent=before;
+  });
 }
 function paintLetter(){
   const l=L();

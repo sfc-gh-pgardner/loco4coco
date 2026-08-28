@@ -344,6 +344,8 @@
     100% { background:rgba(28,78,122,0);   border-bottom-color:#9C8C6E; }
   }
   .card.letter .lgreet { font-size:19px; margin-bottom:12px; }
+  /* Red asterisk marks the one essential field (name). Everything else is optional. */
+  .card.letter .req { color:#B4442E; font-weight:700; margin-left:1px; }
   .card.letter .lsign { margin-top:14px; font-style:italic; opacity:.85; }
   /* The stack and location questions inside the letter. Set apart from the
      handwriting so they read as CoCo asking, not as more of the letter. */
@@ -356,16 +358,6 @@
   .card.letter .lask .chip.on { background:#1E6F94; border-color:#1E6F94;
     color:#F2FAFF; }
   .card.letter .lask .fld { margin-top:8px; }
-  /* "CoCo, you choose" - for the visitor who knows they want something but
-     cannot phrase it at a noisy stand. Understated, because typing their own
-     problem is still the better outcome. */
-  .card.letter .lsug { display:flex; align-items:center; gap:9px; margin-top:6px; }
-  .card.letter .sugbtn { background:rgba(30,111,148,.10); color:#1E6F94;
-    border:1px dashed rgba(30,111,148,.55); border-radius:12px;
-    font:600 12px/1 var(--ff); padding:6px 11px; cursor:pointer; }
-  .card.letter .sugbtn:hover { background:rgba(30,111,148,.18); }
-  .card.letter .sugbtn:disabled { opacity:.55; cursor:default; }
-  .card.letter .sughint { font-size:11.5px; color:#5E8399; }
   .card.letter .lp { font-size:15px; line-height:1.9; margin:0 0 7px; }
   .card.letter .lin {
     background:transparent; border:0; border-bottom:2px solid #9C8C6E;
@@ -504,6 +496,11 @@
             spellcheck="false" placeholder="Type it if it's not here"></div>
       </div>
 
+      <!-- The letter's closing line and sign-off, rendered AFTER the data and
+           location questions so the reading order is: problem -> where the data
+           is -> where they are based -> "Could you help us out?" -> signed. -->
+      <div id="l-close"></div>
+
       <div class="go" style="margin-top:14px;justify-content:space-between;align-items:center">
         <span id="l-hint" class="lhint"></span>
         <button class="primary" id="l-go">THAT'S BETTER</button></div>
@@ -639,7 +636,17 @@ const esc = s => String(s==null?'':s);
 
 let CFG=null, ST={}, OPTS={}, T=16, S=3, COLS=22, ROWS=15, map=[], ctx=null, tick=0;
 let nearId=null, panelOpen=false, panelLoc=null, visited=new Set();
-let histIdx=null;            // null = live; otherwise an index into ST.turns
+let histIdx=null;            // null = live; otherwise an index into the history
+// CoCo's opening monologue over the house scene (line1, line2 and the summary
+// "your data stays yours" beats) is not a server turn, so it is kept here and
+// prepended to the turn history - letting the visitor scroll back to it from
+// the map. Resets naturally on NEW VISITOR, which reloads the page.
+let openingLog=[];
+function logOpening(line){
+  const s=String(line||'').trim(); if(!s) return;
+  if(openingLog.length && openingLog[openingLog.length-1].reply===s) return;
+  openingLog.push({reply:s, text:''});
+}
 let sel=new Set();
 let nudgeMsg='', nudgeUntil=0, overNudged=false;
 // A short-lived line in the bubble for things that are not a CoCo turn.
@@ -1951,7 +1958,8 @@ function setPhase(p){
   if(p==='line1'||p==='line2'){
     const say=$('h-say');
     say.classList.add('on');
-    say.textContent=fillTpl(p==='line1'?L().line1:L().line2);
+    const txt=fillTpl(p==='line1'?L().line1:L().line2);
+    say.textContent=txt; logOpening(txt);
   } else if(p==='summary'){
     trustIdx=0; buildSummary(); paintTrustLine();
   } else { $('h-say').classList.remove('on'); }
@@ -2000,6 +2008,7 @@ function paintTrustLine(){
   const say=$('h-say');
   say.classList.add('on');
   say.textContent=trustSeq[trustIdx]||'';
+  logOpening(trustSeq[trustIdx]||'');
   clearTimeout(setPhase._t);
   setPhase._t=setTimeout(nextPhase,trustDur(trustSeq[trustIdx]));
 }
@@ -2086,7 +2095,7 @@ document.addEventListener('keydown',e=>{
 // intake controls, so config.intake.letter.body is the single source of the copy
 // and the decision-tree document describes what the visitor actually reads.
 const L_CTRL={
-  '{first_name}':'<input type="text" id="l-first" class="lin" placeholder="your name" autocomplete="off" spellcheck="false">',
+  '{first_name}':'<input type="text" id="l-first" class="lin" placeholder="your name" autocomplete="off" spellcheck="false"><span class="req" title="Required">*</span>',
   '{company}':'<input type="text" id="l-company" class="lin" placeholder="company name" autocomplete="off" spellcheck="false">',
   '{industry}':'<select id="l-industry" class="lin lsel"></select>'
 };
@@ -2095,6 +2104,10 @@ function buildLetterBody(){
   if(lBuilt) return;
   const l=L(), ik=CFG.intake||{};
   const lines=(l.body||[]).slice();
+  // The last body line ("Could you help us out?") is the closing beat. It moves
+  // out of the body into #l-close, which renders AFTER the data/location
+  // questions, so the letter reads problem -> data -> location -> closing.
+  const closing = lines.length ? lines.pop() : '';
   const html=lines.map(raw=>{
     let s=esc(String(raw||''));
     // esc() leaves braces alone, so the placeholders survive escaping and the
@@ -2103,60 +2116,27 @@ function buildLetterBody(){
     return `<p class="lp">${s}</p>`;
   });
   // The problem field is the one input with no placeholder in the body copy,
-  // because its label is a separate config string.
+  // because its label is a separate config string. It ends the handwriting.
   const plabel=esc(ik.problem_label||'The problem you want to solve');
-  const problem=`<p class="lp">${plabel}<br>`
-    +`<textarea id="l-problem" class="lin lta" rows="2" spellcheck="false"></textarea>`
-    +`<span class="lsug"><button type="button" id="l-suggest" class="sugbtn">`
-    +`CoCo, you choose</button>`
-    +`<span class="sughint" id="l-sughint"></span></span></p>`;
-  // Sits before the closing line, so the letter still ends on its sign-off.
-  html.splice(Math.max(0,html.length-1),0,problem);
-  // The sign-off was also dead config: never rendered, yet a letter needs one.
-  // {first_name} here mirrors what they type rather than being a second input.
-  if(l.signoff){
-    html.push('<p class="lp lsign">'
-      +esc(String(l.signoff)).split('{first_name}')
-        .join('<span id="l-sign">\u2026</span>')+'</p>');
-  }
+  html.push(`<p class="lp">${plabel}<br>`
+    +`<textarea id="l-problem" class="lin lta" rows="2" spellcheck="false"></textarea></p>`);
   $('l-body').innerHTML=html.join('');
+  // Closing line + sign-off, after the questions. {first_name} mirrors the name
+  // input rather than being a second field.
+  let closeHtml='';
+  if(closing) closeHtml += `<p class="lp">${esc(String(closing))}</p>`;
+  if(l.signoff){
+    closeHtml += '<p class="lp lsign">'
+      +esc(String(l.signoff)).split('{first_name}')
+        .join('<span id="l-sign">\u2026</span>')+'</p>';
+  }
+  $('l-close').innerHTML=closeHtml;
   const fn=$('l-first'), sg=$('l-sign');
   if(fn && sg){
     const sync=()=>{ sg.textContent=fn.value.trim()||'\u2026'; };
     fn.addEventListener('input',sync); sync();
   }
   lBuilt=true;
-  wireSuggest();
-}
-// One completion, grounded in our own archetype pain lines, dropped into an
-// editable field. The visitor is expected to correct it: everything downstream
-// keys off what they finally submit, not off this.
-function wireSuggest(){
-  const btn=$('l-suggest'); if(!btn || btn.dataset.wired) return;
-  btn.dataset.wired='1';
-  btn.addEventListener('click',async()=>{
-    const ta=$('l-problem'), hint=$('l-sughint');
-    const before=btn.textContent;
-    btn.disabled=true; btn.textContent='THINKING\u2026';
-    hint.textContent='';
-    try{
-      const r=await fetch('/api/suggest',{method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({industry:($('l-industry')||{}).value||'',
-                             company:($('l-company')||{}).value||''})});
-      const d=await r.json();
-      if(d && d.problem){
-        ta.value=d.problem;
-        ta.focus();
-        hint.textContent='Change anything that is not quite right.';
-      } else {
-        hint.textContent='Could not think of one. Type it and CoCo will run with it.';
-      }
-    }catch(e){
-      hint.textContent='Could not reach CoCo. Type it and we will carry on.';
-    }
-    btn.disabled=false; btn.textContent=before;
-  });
 }
 function paintLetter(){
   const l=L();
@@ -3222,8 +3202,14 @@ function paintTray(s){
 }
 
 // ---------------- history ----------------
+// The scroll-back history is the opening monologue (oldest) followed by each
+// recorded stop. Opening beats have no "You said" - they are CoCo talking.
+function histList(){
+  const turns=(ST.turns||[]).map(t=>({reply:t.reply, text:t.text}));
+  return openingLog.concat(turns);
+}
 function stepHist(d){
-  const n=(ST.turns||[]).length; if(!n) return;
+  const n=histList().length; if(!n) return;
   if(histIdx===null) histIdx = d<0 ? n-1 : null;
   else { histIdx+=d; if(histIdx>=n||histIdx<0) histIdx=null; }
   paintBubble(ST);
@@ -3232,7 +3218,8 @@ $('h-prev').addEventListener('click',()=>stepHist(-1));
 $('h-next').addEventListener('click',()=>stepHist(1));
 
 function paintBubble(s){
-  const turns=s.turns||[], n=turns.length;
+  const H=histList(), n=H.length;
+  const turns=s.turns||[];
   $('h-prev').disabled = n===0 || histIdx===0;
   $('h-next').disabled = histIdx===null;
   $('h-at').textContent = n? (histIdx===null?`now \u00b7 ${n}`:`${histIdx+1} / ${n}`) : '';
@@ -3251,12 +3238,12 @@ function paintBubble(s){
   }
 
   let msg, said='';
-  if(histIdx!==null && turns[histIdx]){
-    msg=turns[histIdx].reply; said=turns[histIdx].text;
+  if(histIdx!==null && H[histIdx]){
+    msg=H[histIdx].reply; said=H[histIdx].text;
   } else if(s.thinking){
     msg=typeTarget || 'Let me think about that...';
   } else if(s.reply){
-    msg=s.reply; const t=turns[n-1]; said=t?t.text:'';
+    msg=s.reply; const t=turns[turns.length-1]; said=t?t.text:'';
   } else {
     // Only an UNLOCKED location may narrate. The penguin starts on the postbox
     // tile, so without this a fresh 0/4 session opened with the closing line.

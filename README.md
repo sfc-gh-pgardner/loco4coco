@@ -1,5 +1,7 @@
 # Loco for CoCo
 
+https://github.com/sfc-gh-pgardner/loco4coco/raw/main/assets/Loco4Coco.mp4
+
 A five-minute Cortex Code activation for **Snowflake World Tour**. A visitor drives a penguin
 round an arctic map, answers a few light questions, and leaves with the scaffolding for a POC:
 their idea in their own words, the Snowflake developer guide to fork, the

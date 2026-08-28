@@ -1123,15 +1123,7 @@
     "other_label": "Somewhere else"
   },
   "residency": {
-    "_comment": "Home-stage question 3. Sovereignty-framed. {country} is interpolated from the country answer; falls back to 'your country'.",
-    "heading": "Where are {company}'s data and AI models allowed to run?",
-    "hint": "Tap every one that applies. This shapes the region we build in, and it goes in your blueprint.",
-    "options_template": [
-      "{country} only",
-      "Anywhere in the EU is fine",
-      "The US is fine too",
-      "Not sure yet"
-    ],
+    "_comment": "The residency question is no longer asked. It is inferred from the location given on the letter: one country means that country, several mean the EU, anywhere outside means no assumption. These values still reach the blueprint and the SESSIONS row; only the question is gone. fallback_country names a country when none was given.",
     "fallback_country": "your country"
   },
   "sovereignty": {
@@ -1140,11 +1132,7 @@
       "platform_already": "Perfect - it's already in Snowflake, so we skip the plumbing and go straight to building.",
       "platform_unsure": "No problem - we'll work the plumbing out together, it's usually the easy part.",
       "platform_named": "Good - I know exactly how to get data out of {platform} and into Snowflake, in region and without copying it around.",
-      "country": "{country}, lovely. I'll keep everything where {country}'s rules need it.",
-      "residency_country_only": "Understood - everything stays in {country}. Your data, the AI models, all of it.",
-      "residency_eu": "Great - we'll keep it inside the EU. Data and models both, no border crossings.",
-      "residency_us_ok": "Plenty of room to work with, then - and it still stays wherever you choose.",
-      "residency_unsure": "We'll keep it close to home by default - you can always widen it later."
+      "country": "{country}, lovely. I'll keep everything where {country}'s rules need it."
     },
     "pillars": {
       "data": "Your data never leaves {region}: it stays in your own Snowflake account, in region, not copied out to be processed.",

@@ -116,12 +116,12 @@ w('Six stops. The home stage and the letter are one screen each; the four '
 w('')
 w('| # | Stop | What the visitor gives us | Options come from | Select |')
 w('| --- | --- | --- | --- | --- |')
-w('| 0 | The house | Where their data lives, which countries they operate in, '
-  'where data and models may run | `platforms`, `country`, `residency` | '
-  'Multi-select, all three |')
-w('| 1 | The letter | First name, employer, industry, and the problem in two '
-  'sentences | `industries` for the list; the problem is free text | Single '
-  'industry, free text |')
+w('| 0 | The letter | First name, employer, industry, the problem in two '
+  'sentences, where the data lives and which countries they operate in | '
+  '`industries` for the list, `platforms` and `country` for the chips; the '
+  'problem is free text | Single industry, multi-select chips, free text |')
+w('| 1 | The house | Nothing. CoCo reads back what the letter said and makes '
+  'the security and AI point | - | - |')
 w('| 2 | The Data Library | The data they already hold | '
   '`industries.<key>.data_sources` | Multi-select plus free text |')
 w('| 3 | The Marketplace | Datasets to join to it | `marketplace-index.md` | '
@@ -194,9 +194,14 @@ for k in ('industry_question', 'confirm_industry', 'problem_label',
 w('')
 
 # --- the three home questions
-w('### 2.4 The house: the three questions')
+w('### 2.4 The letter: the stack and the location')
 w('')
-for key in ('platforms', 'country', 'residency'):
+w('Asked on the letter itself, both multi-select. Where data and models may run '
+  'is NOT asked: it is inferred from the location, because it only names the '
+  'region in the sovereignty pillars and a visitor\'s own location answers it '
+  'more honestly than a question about their compliance position.')
+w('')
+for key in ('platforms', 'country'):
     b = cfg.get(key) or {}
     w('**%s**' % q(b.get('heading')))
     w('')
@@ -213,21 +218,26 @@ for key in ('platforms', 'country', 'residency'):
 
 # --- sovereignty reactions and pillars
 _sov = cfg.get('sovereignty') or {}
-w('### 2.5 The house: CoCo\'s reply to each answer')
+w('### 2.5 The letter: CoCo\'s reply to each answer')
 w('')
 for k, v in (_sov.get('react') or {}).items():
-    w('- **%s:** %s' % (k, q(v)))
+    # Only the replies CoCo can still speak. The residency reactions belong to
+    # the question that no longer exists.
+    if not k.startswith('residency_'):
+        w('- **%s:** %s' % (k, q(v)))
 w('')
-w('When more than one residency rule is picked, CoCo answers with the '
-  'strictest of them.')
+w('Several countries may be picked, and CoCo answers on the strictest reading '
+  'the location supports.')
 w('')
 
-w('### 2.6 The house: the closing lines before the visitor leaves')
+w('### 2.6 The house: CoCo reads it back')
 w('')
-w('Spoken in the same chat bubble as CoCo\'s other replies, led by the '
-  'residency answer above. Each advances on its own timer.')
+w('Spoken over the house scene once the letter is submitted. CoCo names what '
+  'was given, then makes the security and AI point inside that summary. The '
+  'region comes from the visitor\'s own location. Each line advances on a timer '
+  'scaled to its length.')
 w('')
-for t in (_sov.get('trust') or []):
+for t in (_sov.get('summary') or []):
     w('- %s' % q(t))
 w('')
 

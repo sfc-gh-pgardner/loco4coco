@@ -96,6 +96,18 @@ for _k, _v in (cfg.get('screens') or {}).items():
     if not _k.startswith('_'):
         check(norm(_v) in nd, f'MISSING screens.{_k}: {norm(_v)[:50]!r}')
 
+# The document must not describe anything the app no longer does. Residency is
+# inferred from the location now, so its question and its replies are not asked
+# and must not appear as though they were.
+_res = cfg.get('residency') or {}
+if _res.get('heading'):
+    check(norm(_res['heading']) not in nd,
+          'the residency question is documented but no longer asked')
+for _k in (cfg.get('sovereignty') or {}).get('react') or {}:
+    if _k.startswith('residency_'):
+        check(f'**{_k}:**' not in doc and f'{_k}:' not in doc,
+              f'{_k} is documented but CoCo can no longer speak it')
+
 # ---------------------------------------------------------------- 2. hygiene
 BANNED = [
     (r'\b20\d\d-\d\d-\d\d\b', 'an ISO date'),

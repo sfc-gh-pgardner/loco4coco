@@ -165,6 +165,11 @@
   .dock { flex:0 0 auto; background:var(--panel);
     padding-top:8px; margin-top:6px; border-top:1px solid var(--line); }
   .ov.pov .dock { background:transparent; }
+  #c-more { display:none; flex:0 0 auto; align-self:center; margin:2px 0 0;
+    font:700 11.5px/1 var(--ff); letter-spacing:.04em; color:#08131B;
+    background:var(--warm); border-radius:10px; padding:5px 11px;
+    cursor:pointer; }
+  #c-more.on { display:block; }
   /* sparkly / shimmer text for the phrases CoCo is proudest of */
   .spark { background:linear-gradient(90deg,#29B5E8 0%,#EAF6FD 25%,#E8863C 50%,#EAF6FD 75%,#29B5E8 100%);
     background-size:200% auto; -webkit-background-clip:text; background-clip:text;
@@ -564,6 +569,11 @@
       <div class="hint" id="c-hint"></div>
       <div class="opts" id="c-opts"></div>
       </div><!-- /cscroll -->
+      <!-- Overflow cue. The 18px fade at the bottom of .cscroll is too subtle at
+           booth distance: with six listings and room for four, visitors were
+           never finding the last two. This says so in words, and only when the
+           list actually overflows. -->
+      <div id="c-more">▼ <span id="c-morecount"></span> more below</div>
       <!-- Docked last: what you type is the action, so it sits under the
            conversation and stays reachable however long CoCo's reply is. -->
       <div class="dock" id="c-dock">
@@ -2602,7 +2612,20 @@ function openPanel(id){
     const sc=$('c-scroll');
     if(sc) sc.scrollTop=0;           // start at the top: the options matter most
     if(isCompose) $('c-compose').focus({preventScroll:true});
+    syncMore();
   },40);
+}
+// How many options are below the fold. Counted from the options themselves, not
+// from pixels, so the cue names a number the visitor can look for.
+function syncMore(){
+  const sc=$('c-scroll'), pill=$('c-more'), cnt=$('c-morecount');
+  if(!sc||!pill) return;
+  const hidden=[...sc.querySelectorAll('#c-opts > *')].filter(el=>{
+    const r=el.getBoundingClientRect(), s=sc.getBoundingClientRect();
+    return r.top >= s.bottom - 4;
+  }).length;
+  if(hidden>0){ cnt.textContent=String(hidden); pill.classList.add('on'); }
+  else pill.classList.remove('on');
 }
 function syncGo(){
   const l=CFG.locations[panelLoc]||{};
@@ -2794,6 +2817,13 @@ $('c-coco-choose').addEventListener('click',()=>{
   submitPanel();
 });
 $('c-go').addEventListener('click',submitPanel);
+// The cue updates as they scroll and disappears once nothing is left below.
+// Tapping it scrolls, so it works as a control and not only as a label.
+$('c-scroll').addEventListener('scroll',syncMore);
+$('c-more').addEventListener('click',()=>{
+  const sc=$('c-scroll');
+  sc.scrollBy({top:Math.round(sc.clientHeight*0.8),behavior:'smooth'});
+});
 
 // While a POV desk is open and awaiting CoCo, surface the reply in-scene.
 function paintScenePanel(s){

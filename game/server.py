@@ -1191,10 +1191,21 @@ def _problem_tokens(state):
     stop = {"the", "and", "our", "for", "with", "from", "into", "that", "this",
             "have", "has", "are", "was", "we", "us", "to", "of", "in", "on",
             "it", "is", "a", "an", "by", "at", "be", "do", "not", "but",
-            "data", "snowflake", "want", "need", "lot", "lots", "time"}
+            "data", "snowflake", "want", "need", "lot", "lots", "time",
+            # Words that appear in LISTING TITLES as generic furniture rather
+            # than as subject matter. Without these, a problem mentioning "a
+            # system that flags urgent emails" scored a hit on "Industry
+            # Classification Systems" and outranked the weather listings an
+            # energy visitor was actually there for.
+            "system", "systems", "sample", "feature", "features", "service",
+            "services", "analytics", "insight", "insights", "bundle", "global",
+            "dataset", "datasets", "information", "level", "would", "like",
+            "hours", "spend", "identify", "immediate", "attention", "automatic",
+            "automatically", "manually", "review", "reviewing", "critical"}
     out = set()
     for w in re.split(r"[^a-z0-9]+", txt):
-        if len(w) > 3 and w not in stop:
+        # Four characters or more: three-letter fragments match too much.
+        if len(w) > 4 and w not in stop:
             out.add(w)
             if w.endswith("s"):
                 out.add(w[:-1])

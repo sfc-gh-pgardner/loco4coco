@@ -434,7 +434,7 @@
       </span></div>
     <div class="msg" id="d-msg"></div>
     <div id="yousaid"></div>
-    <div id="histback">Looking back &mdash; press &#9654; to return to now</div>
+    <div id="histback"></div>
   </div>
 
   <!-- what CoCo is actually doing, expandable. Sits under the bubble so it never
@@ -598,9 +598,8 @@
     <div id="bp-hand">
       <img id="bp-qr" alt="Scan to download your blueprint" width="150" height="150">
       <div class="handtxt">
-        <div class="handh">Take it with you now</div>
-        <div class="handp" id="bp-handp">Scan this with your phone camera to
-          download your Word blueprint. The link works for seven days.</div>
+        <div class="handh" id="bp-handh"></div>
+        <div class="handp" id="bp-handp"></div>
         <a id="bp-link" class="handlink" target="_blank" rel="noopener"></a>
       </div>
     </div>
@@ -625,9 +624,8 @@
       <img id="done-qr" alt="" width="96" height="96"
         style="background:#FFF;border-radius:4px;flex:0 0 auto;display:block">
       <div style="font-size:12px;line-height:1.5;color:#9FC2D6">
-        <b style="color:var(--edge)">Scan to keep your card.</b><br>
-        It saves straight to your phone. Yours to post - tag us and we
-        will see it. Works for seven days.
+        <b style="color:var(--edge)" id="done-cardh"></b><br>
+        <span id="done-cardp"></span>
       </div>
     </div>
     <div class="hint" id="done-cardhint" style="margin:8px 0 0">Getting your card
@@ -1886,6 +1884,18 @@ function syncSceneBuffer(){
 // Convert *phrases* wrapped in asterisks into shimmering spans. Content is our
 // own config copy, so escaping first keeps it safe.
 function sparkle(s){ return esc(s).replace(/\*([^*]+)\*/g,'<span class="spark">$1</span>'); }
+// Prose that belongs to a screen rather than a stop. It used to live in the
+// markup, which kept it out of the decision tree's "every scripted line"
+// section and out of reach of review.
+function paintScreenCopy(){
+  const s=CFG.screens||{};
+  const put=(id,val)=>{ const el=$(id); if(el && val) el.textContent=val; };
+  put('histback',s.history_banner);
+  put('bp-handh',s.handover_heading);
+  put('bp-handp',s.handover_body);
+  put('done-cardh',s.card_heading);
+  put('done-cardp',s.card_body);
+}
 
 function openTitle(){
   const t=(CFG.intro)||{};
@@ -3400,6 +3410,10 @@ function fitCanvas(){
   document.documentElement.style.setProperty('--edge',CFG.theme.panel_edge);
   $('b-title').textContent=CFG.event.title;
   $('b-sub').textContent=CFG.event.subtitle.toUpperCase();
+  // Unconditionally, not inside openTitle(): a visitor resuming mid-session
+  // never sees the title card, and the handover and card panels would render
+  // empty for them.
+  paintScreenCopy();
   // Attribution, from config so a different operator can put their own name on
   // their own stand without touching the markup.
   const by=(CFG.event.byline||'').trim();

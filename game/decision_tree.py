@@ -269,6 +269,17 @@ w('- **If staging fails:** I could not wrap it up this time - grab a Snowflake '
   'person and we will sort it.')
 w('')
 
+_scr = cfg.get('screens') or {}
+if _scr:
+    w('### 2.11 Screen furniture')
+    w('')
+    w('Prose that belongs to a screen rather than to a stop.')
+    w('')
+    for k, v in _scr.items():
+        if not k.startswith('_'):
+            w('- **%s:** %s' % (k, q(v)))
+    w('')
+
 # ==================================================== 3. the marketplace, shown
 w('## 3. The datasets the booth recommends')
 w('')

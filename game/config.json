@@ -1159,5 +1159,13 @@
       "And the question I get asked most, so I will answer it now. What you send the AI stays yours. Your prompts, your data and the answers are never used to train external models, and they never leave your account. One set of controls governs all of it, the same ones you already use.",
       "You will not have to move house for any of it either. Snowflake talks to what you already run, and with Iceberg your tables stay in open formats other engines can read, so there is no one way door."
     ]
+  },
+  "screens": {
+    "_comment": "Visitor-facing prose that belongs to a screen rather than to a stop. It lived in index.html, which meant it never appeared in the \"every scripted line\" section of the decision tree, so the document claimed a completeness it did not have. Anything a visitor reads belongs here.",
+    "history_banner": "Looking back — press ▶ to return to now",
+    "handover_heading": "Take it with you now",
+    "handover_body": "Scan this with your phone camera to download your Word blueprint. The link works for seven days.",
+    "card_heading": "Scan to keep your card.",
+    "card_body": "It saves straight to your phone. Yours to post - tag us and we will see it. Works for seven days."
   }
 }

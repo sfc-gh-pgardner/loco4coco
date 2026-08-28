@@ -111,7 +111,7 @@ w('')
 # ================================================================== 1. the tree
 w('## 1. What the visitor does')
 w('')
-w('Six stops. The home stage and the letter are one screen each; the four '
+w('Six stops. The letter is the whole intake on one screen; the four '
   'locations are walked to on a map in the order below.')
 w('')
 w('| # | Stop | What the visitor gives us | Options come from | Select |')
@@ -191,6 +191,15 @@ for k in ('industry_question', 'confirm_industry', 'problem_label',
           'problem_placeholder'):
     if _intake.get(k):
         w('- **%s:** %s' % (k, q(_intake.get(k))))
+w('')
+w('The problem example above is the fallback. Once an industry is chosen it is '
+  'replaced by that industry\'s own, and a "CoCo, you choose" button will draft '
+  'a starting problem statement from the archetype pain lines, into an editable '
+  'field.')
+w('')
+for _ik, _ib in inds.items():
+    if _ib.get('problem_placeholder'):
+        w('- **%s:** %s' % (ind_label(_ik), q(_ib['problem_placeholder'])))
 w('')
 
 # --- the three home questions
@@ -374,7 +383,7 @@ w('')
 
 w('## 6. How the data gets into Snowflake')
 w('')
-w('Each platform tapped in the house prints a concrete route into the '
+w('Each platform tapped on the letter prints a concrete route into the '
   'blueprint.')
 w('')
 w('| Platform | Route printed |')
@@ -395,6 +404,17 @@ for _x in ((cfg.get('platforms') or {}).get('exclusive') or []):
     w('| %s, with a named platform | The named platform only |' % q(_x))
 w('| More than four platforms | The first four in the order listed above |')
 w('')
+# Platforms with a second phrasing for when they are not the only answer.
+if 'PLATFORM_COMBINED' in srv:
+    for _pm in re.finditer(r'"([^"]+)": \(\s*\n?\s*"(.*?)",\s*\n?\s*"https',
+                           srv.split('PLATFORM_COMBINED = {')[-1], re.S):
+        _blurb = re.sub(r'"\s*\n\s*"', '', _pm.group(2))
+        w('%s is not an exclusive answer: an estate can be part in Snowflake '
+          'and part elsewhere. When it is picked alongside a named platform the '
+          'blueprint prints this instead of "nothing to move": **%s**'
+          % (q(_pm.group(1)), q(_blurb)))
+        w('')
+        break
 w('These rules are applied in the browser as the visitor taps, and again on the '
   'server when the blueprint is built.')
 w('')
@@ -515,8 +535,12 @@ _noind = [ind_label(k) for k in order()
 if _noind:
     w('- No pinned fallback for: %s. These industries rely entirely on the '
       'curated list in section 3.' % ', '.join(_noind))
-w('- The industry does not weight which archetype a visitor is routed to, and '
-  'the data they hold does not narrow which datasets are suggested.')
+w('- The industry does not weight which archetype a visitor is routed to.')
+w('- The data a visitor holds DOES narrow which datasets are suggested: each '
+  'listing is tagged with what it is for and each library shelf with what it '
+  'is, and selection intersects the two. There is no tag for unstructured '
+  'text, because no curated listing serves it - a visitor whose problem is '
+  'documents is ranked on their own words and their sector alone.')
 w('')
 
 def _to_docs(md):

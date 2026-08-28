@@ -94,7 +94,8 @@
       "bubble": "Wow, a letter from my friend! Shame I can't make out some of these words...\n(Please fill this in with your details)"
     },
     "problem_label": "The problem you want to solve (two sentences)",
-    "problem_placeholder": "e.g. our engineers waste hours hunting through old inspection reports. We want answers in seconds, with the source."
+    "problem_placeholder": "e.g. our engineers waste hours hunting through old inspection reports. We want answers in seconds, with the source.",
+    "_problem_placeholder_comment": "intake.problem_placeholder is the fallback shown before an industry is chosen. Once one is picked, industries.<key>.problem_placeholder replaces it so the example belongs to the visitor's world."
   },
   "unlock_order": [
     "library",
@@ -136,7 +137,8 @@
           "label": "Estates & operations",
           "note": "Beds, theatres, staffing rotas, supplies"
         }
-      ]
+      ],
+      "problem_placeholder": "e.g. our clinicians re-read discharge summaries to find one detail. We want the answer in seconds, with the source."
     },
     "financial": {
       "name": "Financial Services",
@@ -171,7 +173,8 @@
           "label": "Regulatory reporting",
           "note": "Submissions and the reconciliations behind them"
         }
-      ]
+      ],
+      "problem_placeholder": "e.g. every complaint is read by hand to spot the urgent ones. We want them sorted and routed the moment they land."
     },
     "retail": {
       "name": "Retail & Consumer Goods",
@@ -206,7 +209,8 @@
           "label": "Reviews & customer service",
           "note": "Free text feedback, returns reasons, contact logs"
         }
-      ]
+      ],
+      "problem_placeholder": "e.g. nobody can say why a line sold out in one region and sat still in another. We want that answered without a data team."
     },
     "public": {
       "name": "Public Sector & Government",
@@ -241,7 +245,8 @@
           "label": "Performance & statutory returns",
           "note": "KPIs and central government reporting"
         }
-      ]
+      ],
+      "problem_placeholder": "e.g. our guidance sits in years of PDFs nobody can search. We want caseworkers to ask a question and get a cited answer."
     },
     "manufacturing": {
       "name": "Manufacturing & Industrial",
@@ -276,7 +281,8 @@
           "label": "Energy consumption",
           "note": "Meter data by line and site"
         }
-      ]
+      ],
+      "problem_placeholder": "e.g. we find out a machine was failing after it stopped. We want the warning while there is still time to act."
     },
     "energy": {
       "name": "Energy & Utilities",
@@ -311,7 +317,8 @@
           "label": "Field engineer reports",
           "note": "Free text inspection and repair notes"
         }
-      ]
+      ],
+      "problem_placeholder": "e.g. engineer notes and meter data live apart, so we cannot connect a fault to what led to it. We want them joined up."
     },
     "media": {
       "name": "Media, Telco & Entertainment",
@@ -346,7 +353,8 @@
           "label": "Customer support interactions",
           "note": "Call transcripts and chat logs"
         }
-      ]
+      ],
+      "problem_placeholder": "e.g. we know what was watched but not why anyone churned. We want the two joined so we can see it coming."
     },
     "other": {
       "name": "Something else",
@@ -381,7 +389,8 @@
           "label": "Device or sensor data",
           "note": "Anything machine-generated and high volume"
         }
-      ]
+      ],
+      "problem_placeholder": "e.g. the answer exists somewhere in our systems and it takes days to get it out. We want it in seconds, with the source."
     }
   },
   "render": {
@@ -882,11 +891,11 @@
       "Not sure yet"
     ],
     "exclusive": [
-      "Already in Snowflake",
       "Not sure yet"
     ],
     "max_routes": 4,
-    "_guardrail": "`exclusive` chips cannot be combined with a named source: \"Already in Snowflake\" prints \"nothing to move\" and \"Not sure yet\" prints \"go and ask\", so pairing either with Oracle or AWS made the blueprint contradict itself. The UI clears the other group on tap and the server re-normalises, so a bypassed UI cannot produce a contradictory document. `max_routes` caps the ingestion section: 8 chips printed 8 route paragraphs and 5 Openflow mentions, which read as a template rather than a plan."
+    "_guardrail": "`exclusive` chips cannot be combined with a named source: \"Already in Snowflake\" prints \"nothing to move\" and \"Not sure yet\" prints \"go and ask\", so pairing either with Oracle or AWS made the blueprint contradict itself. The UI clears the other group on tap and the server re-normalises, so a bypassed UI cannot produce a contradictory document. `max_routes` caps the ingestion section: 8 chips printed 8 route paragraphs and 5 Openflow mentions, which read as a template rather than a plan.",
+    "_exclusive_comment": "Only \"Not sure yet\" is exclusive, because it is the absence of an answer rather than an answer. \"Already in Snowflake\" is deliberately NOT exclusive: an organisation can have data in Snowflake AND in Oracle, and forcing a choice made the visitor misrepresent their estate. When it is combined with a named source the blueprint prints a combined route (see PLATFORM_COMBINED in server.py) rather than \"nothing to move\"."
   },
   "country": {
     "_comment": "Home-stage question 2. Europe-weighted for London/Paris. Frames the residency follow-up.",

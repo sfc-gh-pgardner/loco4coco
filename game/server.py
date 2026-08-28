@@ -1399,24 +1399,39 @@ INTEGRATION_PATHS = {
         "https://docs.snowflake.com/en/guides-overview-loading-data"),
 }
 
+# "Already in Snowflake" is no longer an exclusive answer: an estate can be part
+# in Snowflake and part in Oracle, and forcing one or the other made visitors
+# misrepresent it. But the standalone route says "nothing to move", which
+# contradicts the named-source routes printed beside it. So when it is combined,
+# it prints THIS instead - the same fact, phrased as a starting point rather
+# than a conclusion.
+PLATFORM_COMBINED = {
+    "Already in Snowflake": (
+        "Some of it is already here, so the proof of concept starts on those "
+        "tables today while the rest lands alongside them.",
+        "https://docs.snowflake.com/en/guides-overview-queries"),
+}
+
 
 def normalise_platforms(cfg, plats):
     """Resolve a raw platform selection into a predictable, non-contradictory set.
 
-    MEASURED before this existed: of the 36 possible pairs, 16 were logically
-    contradictory and 10 printed "Openflow" twice. Selecting "Already in
-    Snowflake" alongside Oracle produced a blueprint that said "Nothing to move"
-    AND gave move instructions; "Not sure yet" plus AWS said "go and ask whoever
-    owns the source" next to a concrete S3 route. At a Snowflake-branded event
-    the document has to be defensible, so the contradiction is resolved here
-    rather than left to chance.
+    Of the possible pairs, some are logically contradictory and some print
+    "Openflow" twice. "Not sure yet" plus AWS would say "go and ask whoever owns
+    the source" next to a concrete S3 route. At a Snowflake-branded event the
+    document has to be defensible, so the contradiction is resolved here rather
+    than left to chance.
+
+    "Already in Snowflake" is NOT exclusive. A real estate is often part in
+    Snowflake and part elsewhere, so it survives alongside a named source and
+    integration_paths() prints its combined phrasing instead.
 
     Rules, in order:
       1. Keep only chips the config actually offers, de-duplicated.
       2. Restore config order, so the same taps always produce the same document
          regardless of the order they were tapped in.
-      3. An `exclusive` chip ("nothing to move" / "go and ask") survives only if
-         NOTHING else was picked. A named source is actionable and wins.
+      3. An `exclusive` chip ("go and ask") survives only if NOTHING else was
+         picked. A named source is actionable and wins.
       4. Cap at `max_routes` so the ingestion section stays a plan, not a list.
 
     The UI enforces 3 on tap as well; this is the backstop, because the document
@@ -1465,10 +1480,17 @@ def sovereignty_lines(cfg, state):
 
 
 def integration_paths(state):
-    """The route into Snowflake for each platform the visitor named."""
+    """The route into Snowflake for each platform the visitor named.
+
+    A platform with a combined phrasing uses it whenever it is not the only
+    answer, so "already here" reads as a starting point beside the other routes
+    rather than contradicting them.
+    """
     out = []
-    for p in normalise_platforms(load_config(), state.get("platforms")):
-        hit = INTEGRATION_PATHS.get(p)
+    picked = normalise_platforms(load_config(), state.get("platforms"))
+    for p in picked:
+        hit = PLATFORM_COMBINED.get(p) if len(picked) > 1 else None
+        hit = hit or INTEGRATION_PATHS.get(p)
         if hit:
             out.append((p, hit[0], hit[1]))
         else:

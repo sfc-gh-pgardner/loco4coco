@@ -356,6 +356,7 @@
     100% { background:rgba(28,78,122,0);   border-bottom-color:#9C8C6E; }
   }
   .card.letter .lgreet { font-size:19px; margin-bottom:12px; }
+  .card.letter .lsign { margin-top:14px; font-style:italic; opacity:.85; }
   .card.letter .lp { font-size:15px; line-height:1.9; margin:0 0 7px; }
   .card.letter .lin {
     background:transparent; border:0; border-bottom:2px solid #9C8C6E;
@@ -465,14 +466,12 @@
       <div class="lbubble" id="l-bubble"></div>
       <div class="card letter">
       <div id="l-greet" class="lgreet"></div>
-      <p class="lp">It's your friend <input type="text" id="l-first" class="lin" placeholder="your name" autocomplete="off" spellcheck="false">!</p>
-      <p class="lp">I've heard you and the Cortex Crew have been cooking up some amazing products recently.</p>
-      <p class="lp">Me and my team at <input type="text" id="l-company" class="lin" placeholder="company name" autocomplete="off" spellcheck="false"> wanted to learn more.</p>
-      <p class="lp">We're particularly interested in <select id="l-industry" class="lin lsel"></select> and wanted to understand what an MVP/POC would look like for this on Snowflake.</p>
-      <p class="lp">The problem we're trying to solve is<br>
-        <textarea id="l-problem" class="lin lta" rows="2" spellcheck="false"
-          placeholder="in two sentences..."></textarea></p>
-      <p class="lp">Could you help us out?</p>
+      <!-- The letter's sentences are built from config.intake.letter.body, not
+           written here. They used to be hardcoded, which meant the copy in
+           config was dead data: editing it changed the decision-tree document
+           and never changed the screen. The inputs are substituted into the
+           {first_name}, {company} and {industry} placeholders. -->
+      <div id="l-body"></div>
 
       <div class="go" style="margin-top:14px;justify-content:space-between;align-items:center">
         <span id="l-hint" class="lhint"></span>
@@ -1986,8 +1985,51 @@ document.addEventListener('keydown',e=>{
   }
 });
 
+// The letter is rendered FROM CONFIG. Placeholders in the body lines become the
+// intake controls, so config.intake.letter.body is the single source of the copy
+// and the decision-tree document describes what the visitor actually reads.
+const L_CTRL={
+  '{first_name}':'<input type="text" id="l-first" class="lin" placeholder="your name" autocomplete="off" spellcheck="false">',
+  '{company}':'<input type="text" id="l-company" class="lin" placeholder="company name" autocomplete="off" spellcheck="false">',
+  '{industry}':'<select id="l-industry" class="lin lsel"></select>'
+};
+let lBuilt=false;
+function buildLetterBody(){
+  if(lBuilt) return;
+  const l=L(), ik=CFG.intake||{};
+  const lines=(l.body||[]).slice();
+  const html=lines.map(raw=>{
+    let s=esc(String(raw||''));
+    // esc() leaves braces alone, so the placeholders survive escaping and the
+    // config copy around them can never inject markup.
+    for(const [tok,ctrl] of Object.entries(L_CTRL)) s=s.split(tok).join(ctrl);
+    return `<p class="lp">${s}</p>`;
+  });
+  // The problem field is the one input with no placeholder in the body copy,
+  // because its label is a separate config string.
+  const plabel=esc(ik.problem_label||'The problem you want to solve');
+  const problem=`<p class="lp">${plabel}<br>`
+    +`<textarea id="l-problem" class="lin lta" rows="2" spellcheck="false"></textarea></p>`;
+  // Sits before the closing line, so the letter still ends on its sign-off.
+  html.splice(Math.max(0,html.length-1),0,problem);
+  // The sign-off was also dead config: never rendered, yet a letter needs one.
+  // {first_name} here mirrors what they type rather than being a second input.
+  if(l.signoff){
+    html.push('<p class="lp lsign">'
+      +esc(String(l.signoff)).split('{first_name}')
+        .join('<span id="l-sign">\u2026</span>')+'</p>');
+  }
+  $('l-body').innerHTML=html.join('');
+  const fn=$('l-first'), sg=$('l-sign');
+  if(fn && sg){
+    const sync=()=>{ sg.textContent=fn.value.trim()||'\u2026'; };
+    fn.addEventListener('input',sync); sync();
+  }
+  lBuilt=true;
+}
 function paintLetter(){
   const l=L();
+  buildLetterBody();
   $('l-bubble').textContent=l.bubble||"Wow, a letter from my friend!";
   $('l-greet').textContent=l.greeting||'Hey CoCo,';
 
@@ -2000,8 +2042,23 @@ function paintLetter(){
       Object.entries(CFG.industries).map(([k,v])=>`<option value="${k}">${esc(v.name)}</option>`).join('');
   }
   const ik=CFG.intake||{};
-  if(ik.problem_placeholder) $('l-problem').placeholder=ik.problem_placeholder;
+  // The example problem belongs to the visitor's world, not to engineering. It
+  // swaps as soon as an industry is chosen, and falls back to the generic one
+  // while the dropdown still reads "(or let CoCo guess)".
+  syncProblemPlaceholder();
+  const sel=$('l-industry');
+  if(sel && !sel.dataset.phwired){
+    sel.dataset.phwired='1';
+    sel.addEventListener('change',syncProblemPlaceholder);
+  }
   setTimeout(()=>$('l-first').focus(),260);
+}
+function syncProblemPlaceholder(){
+  const ta=$('l-problem'); if(!ta) return;
+  const ik=CFG.intake||{};
+  const key=($('l-industry')||{}).value||'';
+  const own=((CFG.industries||{})[key]||{}).problem_placeholder;
+  ta.placeholder=own||ik.problem_placeholder||'in two sentences...';
 }
 
 async function submitLetter(){
@@ -2129,8 +2186,10 @@ function togglePlat(i){
   if(homeAns.platforms.has(i)) homeAns.platforms.delete(i);
   else{
     homeAns.platforms.add(i);
-    // Same guardrail as the old library question: an exclusive chip cannot sit
-    // beside a named source, or the blueprint contradicts itself.
+    // Only a genuinely exclusive chip clears the rest. "Not sure yet" is the
+    // absence of an answer, so it cannot sit beside one. "Already in Snowflake"
+    // is a real answer that combines freely - an estate is often part here and
+    // part elsewhere - and the blueprint prints a combined route for it.
     (p.options||[]).forEach((o2,j)=>{
       if(j===i) return;
       if(isExcl ? true : excl.includes(o2)) homeAns.platforms.delete(j);

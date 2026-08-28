@@ -5,7 +5,7 @@
 -- a separate templated script run after the deploy:
 --
 --   snow sql -f deploy/hooks/post_hook.sql --enable-templating JINJA \
---     -D monitor=LOCO4COCO_RM -D monitor_quota=20 \
+--     -D monitor=LOCO4COCO_RM -D monitor_quota=100 \
 --     -D wh=LOCO4COCO_WH -D monitor_notify_user=PGARDNER -c <connection>
 --
 -- bootstrap.py runs this for you with the values from manifest.yml.
@@ -23,13 +23,19 @@ CREATE RESOURCE MONITOR IF NOT EXISTS {{ monitor }}
     TRIGGERS
       ON 75 PERCENT DO NOTIFY
       ON 90 PERCENT DO NOTIFY
-      ON 100 PERCENT DO SUSPEND
-      ON 110 PERCENT DO SUSPEND_IMMEDIATE;
+      ON 100 PERCENT DO NOTIFY;
 
 -- Re-assert the settings in case the monitor already existed with other values.
+-- Notify-only by design: the booth warns but never suspends the warehouse, so a
+-- busy stand is never cut off mid-visit. The triggers are re-set here too, so a
+-- monitor created earlier with SUSPEND triggers is brought back to notify-only.
 ALTER RESOURCE MONITOR {{ monitor }} SET
   CREDIT_QUOTA = {{ monitor_quota }}
-  NOTIFY_USERS = ({{ monitor_notify_user }});
+  NOTIFY_USERS = ({{ monitor_notify_user }})
+  TRIGGERS
+    ON 75 PERCENT DO NOTIFY
+    ON 90 PERCENT DO NOTIFY
+    ON 100 PERCENT DO NOTIFY;
 
 -- Bind it to the booth warehouse. Without this the quota monitors nothing.
 ALTER WAREHOUSE {{ wh }} SET RESOURCE_MONITOR = {{ monitor }};

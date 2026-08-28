@@ -52,7 +52,7 @@ templating:
     # Monitor values are consumed by hooks/post_hook.sql, not by DCM - resource
     # monitors are not a supported DEFINE entity.
     monitor: LOCO4COCO_RM
-    monitor_quota: 20
+    monitor_quota: 100
     # Deliberately NOT defaulted. The username differs per account, and a
     # monitor pointed at a non-existent user fails outright - which is better
     # than one that silently warns nobody. Every target must state its own.
@@ -62,7 +62,7 @@ templating:
     LONDON:
       city: London
       language: en
-      monitor_quota: 20
+      monitor_quota: 100
       monitor_notify_user: <PLACEHOLDER-NOTIFY-USER>
 
     US_WEST_DEMO:

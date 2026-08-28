@@ -152,6 +152,6 @@ elsewhere, and `REGIONS` in the table records what we knew in London.
 | A visitor's document mentions someone else's company | **Stop the booth.** | This should be impossible: the pool serialises calls precisely to prevent it. Capture `game/cost.jsonl` and the console before restarting |
 | Warehouse credits climbing while idle | Not the agent | An idle warm process holds a session, not a warehouse. Look at `LOCO4COCO_RM` and `TURNS` |
 
-Costs are capped by `LOCO4COCO_RM` (20 credits, notify at 75/90, suspend at 100),
+Costs are watched by `LOCO4COCO_RM` (100 credits, notify at 75/90/100, no suspend),
 defined in `deploy/hooks/post_hook.sql` because resource monitors are not a
 supported DCM `DEFINE` entity.

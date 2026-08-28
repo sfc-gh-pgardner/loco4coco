@@ -192,7 +192,9 @@ setup); after that it settles to 2 to 3.5s.
 
 ## Cost guardrails
 
-- The resource monitor from Step 5 has a credit quota, notifies at 75% and 90%, suspends at 100%.
+- The resource monitor from Step 5 has a 100-credit quota and notifies at 75%, 90% and
+  100%. It does **not** suspend the warehouse - it only warns, so a busy booth is never cut
+  off mid-visit. Watch the notifications and `game/cost.jsonl`.
 - `game/cost.jsonl` records every model call locally: turn, transport, model, duration and
   token counts. This is how you see spend per visitor.
 - The warehouse is X-Small with 60s auto-suspend. It only does logging, so it is near free.

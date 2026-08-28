@@ -847,7 +847,209 @@
         "weather",
         "forecast"
       ]
-    }
+    },
+    "_themes_comment": "What a listing is FOR, and what a shelf in the library IS. Selection intersects the two, so a visitor who ticked \"clinical notes\" is offered document-shaped joins and one who ticked \"estates and operations\" is offered geography and telemetry. Tagging 30 listings does the work that industry x archetype curation would need 72 hand-written lists to do, and it keeps every offered row a real, importability-checked listing.",
+    "themes": [
+      "geography",
+      "population",
+      "weather",
+      "companies",
+      "economy"
+    ],
+    "source_themes": {
+      "geography": [
+        "estate",
+        "asset",
+        "network",
+        "logistics",
+        "inbound",
+        "property",
+        "highway",
+        "fleet",
+        "site",
+        "store",
+        "premise",
+        "coverage",
+        "imaging"
+      ],
+      "population": [
+        "customer",
+        "citizen",
+        "patient",
+        "member",
+        "loyalty",
+        "subscriber",
+        "audience",
+        "clickstream",
+        "referral",
+        "waiting",
+        "viewing",
+        "listening"
+      ],
+      "weather": [
+        "energy consumption",
+        "outage",
+        "fault",
+        "generation",
+        "dispatch",
+        "meter",
+        "telemetry",
+        "sensor"
+      ],
+      "companies": [
+        "supplier",
+        "procurement",
+        "contract",
+        "purchase",
+        "regulatory",
+        "account master",
+        "kyc",
+        "trade"
+      ],
+      "economy": [
+        "finance",
+        "billing",
+        "transaction",
+        "sales",
+        "till",
+        "position",
+        "risk",
+        "capital",
+        "revenue",
+        "advertising",
+        "campaign",
+        "inventory",
+        "stock",
+        "erp",
+        "production",
+        "defect",
+        "scrap",
+        "rework",
+        "viewing",
+        "listening",
+        "operational record"
+      ]
+    },
+    "listing_themes": {
+      "GZSVZAJO3": [
+        "population",
+        "geography"
+      ],
+      "GZSVZ1K7VF": [
+        "population",
+        "geography"
+      ],
+      "GZSVZ1K7UU": [
+        "population",
+        "geography"
+      ],
+      "GZSVZ1K7UA": [
+        "population",
+        "economy"
+      ],
+      "GZSVZ1K7UQ": [
+        "geography"
+      ],
+      "GZTDZJKVCY": [
+        "weather",
+        "geography"
+      ],
+      "GZTDZJKVCU": [
+        "weather",
+        "geography"
+      ],
+      "GZSTZ67BY9OQW": [
+        "population"
+      ],
+      "GZ2FRZQNY1": [
+        "population",
+        "economy"
+      ],
+      "GZTSZ290BVCAO": [
+        "economy"
+      ],
+      "GZTDZ7DJU9": [
+        "economy"
+      ],
+      "GZ2FSZH8URW": [
+        "companies",
+        "economy"
+      ],
+      "GZSTZLT2II6": [
+        "companies"
+      ],
+      "GZT0ZI0XJ6Q": [
+        "companies"
+      ],
+      "GZTYZAPS3FP": [
+        "economy",
+        "population"
+      ],
+      "GZT0ZKUCHKL": [
+        "geography"
+      ],
+      "GZT0Z4CM1E9L4": [
+        "geography"
+      ],
+      "GZT0Z4CM1E9NA": [
+        "geography"
+      ],
+      "GZ1MOZBWYYT": [
+        "geography"
+      ],
+      "GZTSZRC7HQ3": [
+        "economy"
+      ],
+      "GZT0Z4CM1E9KJ": [
+        "geography"
+      ],
+      "GZT0ZGCQ51RQ": [
+        "companies"
+      ],
+      "GZT0ZPWB4J7": [
+        "companies",
+        "geography"
+      ],
+      "GZU6Z630VEJ0W": [
+        "geography",
+        "companies"
+      ],
+      "GZSOZ71OJH": [
+        "economy",
+        "weather"
+      ],
+      "GZSVZ8MX1I": [
+        "economy"
+      ],
+      "GZSYZSRWU5": [
+        "weather"
+      ],
+      "GZTDZ1PNFO": [
+        "economy"
+      ],
+      "GZT1ZFQ0JE5": [
+        "population"
+      ],
+      "GZSNZ4PHA6": [
+        "population"
+      ]
+    },
+    "_documents_gap_comment": "There is deliberately no \"documents\" theme. The curated set contains no listing that helps a visitor whose problem is unstructured text: PubMed and the social-conversations sample are reference corpora, not document-processing enablers, and tagging them that way surfaced biomedical papers to a council holding policy PDFs. This is a real gap in the curated set, recorded rather than papered over with a mis-tag.",
+    "_bucket_only_comment": "Listings that must never be borrowed into another industry. Cross-bucket borrowing is right for data that travels - weather, boundaries, company registrations - and wrong for sector-specific reference corpora: scoring alone offered PubMed biomedical papers to a council holding policy PDFs, because both matched on \"population\". These are offered in their own bucket only.",
+    "bucket_only": [
+      "GZSTZ67BY9OQW",
+      "GZ2FRZQNY1",
+      "GZT1ZFQ0JE5",
+      "GZSOZ71OJH",
+      "GZSVZ8MX1I",
+      "GZSYZSRWU5",
+      "GZTDZ1PNFO",
+      "GZTYZAPS3FP",
+      "GZT0ZI0XJ6Q",
+      "GZTDZ7DJU9",
+      "GZT0ZGCQ51RQ",
+      "GZT0ZPWB4J7"
+    ]
   },
   "sourcing": {
     "_comment": "Where data can come from when the visitor is NOT yet a Snowflake customer. Ordnance Survey lives here rather than in the Marketplace because it is not listed there in any region (checked 2026-08-17); Open UPRN exists but is not available in AWS_EU_WEST_2.",

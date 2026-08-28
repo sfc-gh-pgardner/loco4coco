@@ -1201,6 +1201,30 @@ def _problem_tokens(state):
     return out
 
 
+def _held_themes(cfg, state):
+    """What the visitor's own shelves imply about the joins that would help.
+
+    The industry bucket says what sector they are in; this says what SHAPE their
+    data is. Someone holding clinical notes wants document-shaped joins; someone
+    holding estates and rotas wants geography. Without this, both were offered
+    the same six, which is the single biggest reason the stall felt repetitive.
+    """
+    mk = cfg.get("marketplace") or {}
+    rules = mk.get("source_themes") or {}
+    if not rules:
+        return set()
+    held = " ".join(str(x) for x in ((state or {}).get("held") or [])).lower()
+    if not held.strip():
+        return set()
+    out = set()
+    for theme, words in rules.items():
+        for w in (words or []):
+            if str(w).lower() in held:
+                out.add(theme)
+                break
+    return out
+
+
 def listings_curated(cfg, industry, state=None):
     """Curated listings, ordered by what this visitor typed, filtered to region.
 
@@ -1228,18 +1252,30 @@ def listings_curated(cfg, industry, state=None):
     market = load_marketplace()
     own = market.get(industry) or market.get("other") or []
     toks = _problem_tokens(state)
+    themes = _held_themes(cfg, state)
+    tagmap = (cfg.get("marketplace") or {}).get("listing_themes") or {}
+    # Sector-specific reference data does not travel. Borrowing is for listings
+    # that help anyone; a biomedical corpus is not one of them.
+    own_gns = {r.get("global_name") for r in own}
+    bucket_only = set((cfg.get("marketplace") or {}).get("bucket_only") or [])
     seen, scored = set(), []
     for bucket, rows in [(industry, own)] + sorted(market.items()):
         for r in rows:
             gn = r.get("global_name") or r.get("title")
             if gn in seen:
                 continue
+            if gn in bucket_only and gn not in own_gns:
+                continue
             seen.add(gn)
             hay = (str(r.get("title") or "") + " "
                    + str(r.get("provider") or "")).lower()
             hits = sum(1 for t in toks if t in hay)
             base = 2 if r in own else 0
-            scored.append((base + hits * 3, hits, r))
+            # Theme overlap is weighted below a problem-word hit but above the
+            # home-bucket bonus, so what they HOLD outranks what sector they are
+            # in without ever outranking what they actually said.
+            overlap = len(themes & set(tagmap.get(gn) or []))
+            scored.append((base + hits * 3 + overlap * 2, hits, r))
     # Stable per-session shuffle for the ties, so the stall changes visitor to
     # visitor without becoming random - the same session always sees the same
     # stall, which matters when the panel is reopened.

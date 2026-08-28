@@ -943,11 +943,12 @@
       "marketplace": "Marketplace data is shared live rather than copied, and you are only ever offered listings available in {region}.",
       "governance": "One set of controls - role-based access, masking, row-level policies - governs all of it, in one place."
     },
-    "_trust_comment": "Spoken in the house after the residency answer, in the same chat bubble as CoCo's other replies. Each line auto-advances on a timer scaled to its own length. These are fixed lines, so they belong here rather than in the client, where marketing cannot review them.",
-    "trust": [
-      "While we are here, one thing worth saying: you will not have to move house to do any of this. Snowflake talks to the systems you already run, and with Iceberg your tables stay in open formats other engines can read.",
-      "That is on purpose, not a happy accident. Open standards mean there is no one way door, so if you ever want to take your data somewhere else, you can.",
-      "And the question I get asked most, so I will answer it before you ask. What you send the AI stays yours. Your prompts, your data and the answers are never used to train external models, and they never leave your account."
+    "_summary_comment": "Spoken over the house scene after the letter is submitted. CoCo reads back what was given, then makes the security and AI point inside that summary rather than as a separate beat. Placeholders: {first_name}, {company_bit}, {industry_bit}, {platform_bit}, {region}. The _bit placeholders are assembled by the client from what the visitor actually supplied, so a missing answer leaves no dangling sentence. Each line auto-advances on a timer scaled to its length.",
+    "summary": [
+      "So, {first_name}, let me make sure I have this. {company_bit}{industry_bit}{platform_bit}I have the problem you want to solve, and that is the bit everything else hangs off.",
+      "Here is the part that matters before we start building. All of this happens inside your own Snowflake account in {region}. Your data does not get copied out to be processed, and the AI models run where the data already lives, so nothing crosses a border to be understood.",
+      "And the question I get asked most, so I will answer it now. What you send the AI stays yours. Your prompts, your data and the answers are never used to train external models, and they never leave your account. One set of controls governs all of it, the same ones you already use.",
+      "You will not have to move house for any of it either. Snowflake talks to what you already run, and with Iceberg your tables stay in open formats other engines can read, so there is no one way door."
     ]
   }
 }

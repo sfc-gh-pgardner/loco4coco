@@ -357,6 +357,17 @@
   }
   .card.letter .lgreet { font-size:19px; margin-bottom:12px; }
   .card.letter .lsign { margin-top:14px; font-style:italic; opacity:.85; }
+  /* The stack and location questions inside the letter. Set apart from the
+     handwriting so they read as CoCo asking, not as more of the letter. */
+  .card.letter .lask { margin-top:14px; padding-top:12px;
+    border-top:1px dashed rgba(41,181,232,.30); }
+  .card.letter .laskq { font-size:15px; font-weight:700; margin-bottom:7px;
+    color:#0E2436; }
+  .card.letter .lask .chip { background:rgba(14,36,54,.06); color:#274A5F;
+    border-color:rgba(14,36,54,.22); }
+  .card.letter .lask .chip.on { background:#1E6F94; border-color:#1E6F94;
+    color:#F2FAFF; }
+  .card.letter .lask .fld { margin-top:8px; }
   .card.letter .lp { font-size:15px; line-height:1.9; margin:0 0 7px; }
   .card.letter .lin {
     background:transparent; border:0; border-bottom:2px solid #9C8C6E;
@@ -472,6 +483,23 @@
            and never changed the screen. The inputs are substituted into the
            {first_name}, {company} and {industry} placeholders. -->
       <div id="l-body"></div>
+      <!-- The stack and the location are part of the letter, not a separate
+           screen afterwards. They are things the visitor's colleague would
+           mention in a letter, and asking them here saves a blocking gate in a
+           five-minute visit. Residency is INFERRED from the location rather
+           than asked: nothing branches on it, it only names the region in the
+           blueprint's sovereignty pillars. -->
+      <div class="lask" id="l-stack">
+        <div class="laskq" id="l-stackq"></div>
+        <div class="opts chips" id="l-stackchips"></div>
+      </div>
+      <div class="lask" id="l-loc">
+        <div class="laskq" id="l-locq"></div>
+        <div class="opts chips" id="l-locchips"></div>
+        <div class="fld" id="l-locotherwrap" style="display:none">
+          <input type="text" id="l-locother" class="lin" autocomplete="off"
+            spellcheck="false" placeholder="Type it if it's not here"></div>
+      </div>
 
       <div class="go" style="margin-top:14px;justify-content:space-between;align-items:center">
         <span id="l-hint" class="lhint"></span>
@@ -1150,7 +1178,7 @@ function drawScene(kind){
     // ---- CoCo crosses to the letter, then steps INTO the doorway and out
     let cxF=0.62, scale=1, fade=1;
     if(openPhase==='walk') cxF=0.62-(0.62-0.34)*p;
-    else if(openPhase==='letter'||openPhase==='line1'||openPhase==='line2'||openPhase==='trust') cxF=0.34;
+    else if(openPhase==='letter'||openPhase==='line1'||openPhase==='line2'||openPhase==='summary') cxF=0.34;
     else if(openPhase==='leave'){
       const doorF=(dx+dw/2)/w;
       cxF=0.34+(doorF-0.34)*Math.min(1,p*1.35);
@@ -1159,7 +1187,7 @@ function drawScene(kind){
     }
     const cx=w*cxF, cy=FL-h*0.08;
     const holding = openPhase==='letter'||openPhase==='line1'
-                 || openPhase==='line2'||openPhase==='trust'
+                 || openPhase==='line2'||openPhase==='summary'
                  || openPhase==='leave';
     g.save(); g.globalAlpha=Math.max(0,Math.min(1,fade));
     const bw2=52*scale, bh2=76*scale;
@@ -1868,7 +1896,7 @@ $('t-go').addEventListener('click',()=>{
 // click-skippable so a booth operator is never trapped behind an animation.
 let openPhase='', openT=0;
 const OPEN_DUR={arctic:2800,house:1000,post:1200,walk:1400,letter:0,
-                line1:3000,line2:2600,trust:0,leave:1600};
+                line1:3000,line2:2600,summary:0,leave:1600};
 // Three things worth saying before the visitor leaves the house. They are
 // delivered in the house panel's own chat bubble, exactly like every other
 // thing CoCo says indoors, rather than as a separate captioned beat with a
@@ -1877,7 +1905,8 @@ const OPEN_DUR={arctic:2800,house:1000,post:1200,walk:1400,letter:0,
 // so a long claim gets long enough to actually read, and a click still skips.
 // The copy lives in config (sovereignty.trust) so it is reviewable alongside
 // every other scripted line rather than buried in the client.
-function TRUST_LINES(){ return ((CFG.sovereignty||{}).trust)||[]; }
+// The stack and location are asked on the letter now, so sovereignty.trust is
+// gone and its copy lives in sovereignty.summary (see buildSummary).
 // The residency reply leads the sequence, so the whole beat reads as one
 // continuous exchange instead of a reply followed by an advert.
 let trustSeq=[], trustIdx=0;
@@ -1908,13 +1937,12 @@ function setPhase(p){
     $('a-arcticsub').textContent=L().arctic_sub||'';
   }
   if(p==='letter') paintLetter();
-  if(p==='questions') openHomeQuestions();
   if(p==='line1'||p==='line2'){
     const say=$('h-say');
     say.classList.add('on');
     say.textContent=fillTpl(p==='line1'?L().line1:L().line2);
-  } else if(p==='trust'){
-    trustIdx=0; homeReplyMode(true); paintTrustLine();
+  } else if(p==='summary'){
+    trustIdx=0; buildSummary(); paintTrustLine();
   } else { $('h-say').classList.remove('on'); }
   if(p==='map'){
     closeScene();
@@ -1931,17 +1959,20 @@ function setPhase(p){
   if(d){ clearTimeout(setPhase._t); setPhase._t=setTimeout(nextPhase,d); }
 }
 function nextPhase(){
-  const order=['arctic','house','post','walk','letter','line1','line2','questions','trust','leave','map'];
+  // The three-question gate is gone: the stack and location are answered on the
+  // letter itself. 'summary' is CoCo reading back what was submitted, and it is
+  // where the security and AI points land.
+  const order=['arctic','house','post','walk','letter','line1','line2','summary','leave','map'];
   const i=order.indexOf(openPhase);
   if(i<0||openPhase==='map') return;
   if(openPhase==='letter') return;            // blocked until the form is sent
-  if(openPhase==='questions') return;         // blocked until the gate is answered
+  if(openPhase==='questions') return;         // no longer reachable; kept harmless
   // The trust beat walks through its own lines first, then closes the house
   // panel and hands on to the door.
-  if(openPhase==='trust' && trustIdx < trustSeq.length-1){
+  if(openPhase==='summary' && trustIdx < trustSeq.length-1){
     trustIdx++; openT=Date.now(); paintTrustLine(); return;
   }
-  if(openPhase==='trust'){ homeReplyMode(false); $('ov-home').classList.remove('on'); }
+  if(openPhase==='summary'){ $('h-say').classList.remove('on'); }
   setPhase(order[i+1]);
 }
 // Reply mode: the house panel keeps its chat bubble and drops the question
@@ -1955,11 +1986,66 @@ function homeReplyMode(on){
   if(dock) dock.style.display=on?'none':'';
 }
 function paintTrustLine(){
-  $('h-say').classList.remove('on');
-  const b=$('hq-bubble');
-  if(b) b.textContent=trustSeq[trustIdx]||'';
+  const say=$('h-say');
+  say.classList.add('on');
+  say.textContent=trustSeq[trustIdx]||'';
   clearTimeout(setPhase._t);
   setPhase._t=setTimeout(nextPhase,trustDur(trustSeq[trustIdx]));
+}
+// CoCo reads back what the letter said, then makes the security and AI point
+// inside that summary rather than as a separate lecture. The copy lives in
+// config (sovereignty.summary) so it is reviewable with every other scripted
+// line; only the assembly of what the visitor supplied happens here.
+function buildSummary(){
+  const v=ST.visitor||{}, lv=lastLetter||{};
+  const co=(v.company||lv.company||'').trim();
+  const ind=(lv.industry_name||'').trim();
+  const popts=(CFG.platforms||{}).options||[];
+  const plats=[...homeAns.platforms].map(i=>popts[i]).filter(Boolean);
+  // Assembled fragments, so an answer they did not give leaves no dangling
+  // clause behind it.
+  const bits={
+    '{first_name}': v.first_name||lv.first_name||'right',
+    '{company_bit}': co?('You are at '+co+(ind?'':'. ')):'',
+    '{industry_bit}': ind?((co?', in ':'You work in ')+ind+'. '):'',
+    '{platform_bit}': platformBit(plats),
+    '{region}': summaryRegion()
+  };
+  const tpl=((CFG.sovereignty||{}).summary)||[];
+  trustSeq=tpl.map(t=>{
+    let s=String(t||'');
+    for(const [k,val] of Object.entries(bits)) s=s.split(k).join(val);
+    return s.replace(/\s{2,}/g,' ').trim();
+  }).filter(Boolean);
+}
+function joinList(a){
+  if(a.length===1) return a[0];
+  return a.slice(0,-1).join(', ')+' and '+a[a.length-1];
+}
+// The chips are labels on buttons, not nouns in a sentence: read back literally
+// they produced "your data sits on Oracle and Already in Snowflake". The two
+// non-platform answers get their own clause instead of being listed.
+function platformBit(plats){
+  const already=plats.some(o=>/already in snowflake/i.test(o));
+  const unsure=plats.some(o=>/not sure/i.test(o));
+  const named=plats.filter(o=>!/already in snowflake|not sure/i.test(o));
+  if(named.length && already)
+    return 'Your data sits on '+joinList(named)+', and some of it is already in Snowflake. ';
+  if(named.length && unsure)
+    return 'Your data sits on '+joinList(named)+', and we will pin down the rest together. ';
+  if(named.length) return 'Your data sits on '+joinList(named)+'. ';
+  if(already) return 'Your data is already in Snowflake, so we can start on it straight away. ';
+  if(unsure) return 'We will work out where your data lives together. ';
+  return '';
+}
+// The region named in the summary, from the visitor's own location.
+function summaryRegion(){
+  const C=CFG.country||{}, opts=C.options||[], olab=C.other_label;
+  const picked=[...homeAns.country].map(i=>opts[i]).filter(Boolean);
+  const real=picked.filter(x=>x!==olab);
+  if(!real.length) return 'the region you choose';
+  if(real.length===1) return real[0]==='United Kingdom'?'the UK':real[0];
+  return 'the EU';
 }
 function openingActive(){ return openPhase && openPhase!=='map'; }
 // Click or any key skips the current beat, except while filling the letter in.
@@ -2046,6 +2132,7 @@ function paintLetter(){
   // swaps as soon as an industry is chosen, and falls back to the generic one
   // while the dropdown still reads "(or let CoCo guess)".
   syncProblemPlaceholder();
+  paintLetterAsk();
   const sel=$('l-industry');
   if(sel && !sel.dataset.phwired){
     sel.dataset.phwired='1';
@@ -2060,6 +2147,49 @@ function syncProblemPlaceholder(){
   const own=((CFG.industries||{})[key]||{}).problem_placeholder;
   ta.placeholder=own||ik.problem_placeholder||'in two sentences...';
 }
+// ---------------- the stack and location, asked inside the letter ----------
+// The residency question is gone. It only ever named the region in the
+// blueprint's sovereignty pillars, and a visitor's own location answers that
+// more honestly than a fourth question they have to interpret.
+function paintLetterAsk(){
+  const P=CFG.platforms||{}, C=CFG.country||{};
+  $('l-stackq').textContent=hqFill(P.heading||'Where does your data live today?');
+  $('l-locq').textContent=hqFill(C.heading||'And where are you based?');
+  const chip=(label,on,fn)=>{
+    const b=document.createElement('div');
+    b.className='chip'+(on?' on':''); b.textContent=label;
+    b.addEventListener('click',fn); return b;
+  };
+  const sc=$('l-stackchips'); sc.innerHTML='';
+  (P.options||[]).forEach((o,i)=>
+    sc.appendChild(chip(o,homeAns.platforms.has(i),()=>{ togglePlat(i); paintLetterAsk(); })));
+  const lc=$('l-locchips'); lc.innerHTML='';
+  (C.options||[]).forEach((o,i)=>
+    lc.appendChild(chip(o,homeAns.country.has(i),()=>{ pickCountry(i); paintLetterAsk(); })));
+  const olab=C.other_label;
+  const other=[...homeAns.country].some(j=>(C.options||[])[j]===olab);
+  $('l-locotherwrap').style.display=other?'':'none';
+}
+// CoCo's reaction to the stack, from the same closed set the gate used.
+function platReply(picks){
+  const excl=(CFG.platforms||{}).exclusive||[];
+  const named=picks.filter(o=>!excl.includes(o));
+  let key='platform_named', plat=named[0]||picks[0];
+  if(picks.some(o=>/already in snowflake/i.test(o)) && !named.length) key='platform_already';
+  else if(picks.some(o=>/not sure/i.test(o)) && !named.length) key='platform_unsure';
+  return sov(key).replace(/\{platform\}/g,plat||'your platform');
+}
+// Residency, derived from where they said they are. The strictest reading that
+// their own answer supports: a single country means that country, several EU
+// countries mean the EU, anything outside means we do not assume.
+function inferResidency(){
+  const C=CFG.country||{}, opts=C.options||[], olab=C.other_label;
+  const picked=[...homeAns.country].map(i=>opts[i]).filter(Boolean);
+  if(!picked.length) return 'unsure';
+  const offshore=picked.some(x=>x===olab);
+  if(offshore) return 'unsure';
+  return picked.length===1 ? 'country_only' : 'eu';
+}
 
 async function submitLetter(){
   const first=$('l-first').value.trim(), company=$('l-company').value.trim(),
@@ -2073,6 +2203,24 @@ async function submitLetter(){
   $('l-go').disabled=true;
   try{
     await post('/api/intake',{first_name:first,company:company,industry:industry,problem:problem});
+    // The stack and location came in on the letter, so they are recorded here
+    // rather than behind a separate gate. Residency is inferred from the
+    // location: it only names the region in the sovereignty pillars.
+    const olab=(CFG.country||{}).other_label;
+    if([...homeAns.country].some(j=>((CFG.country||{}).options||[])[j]===olab)){
+      homeAns.countryText=($('l-locother')||{}).value?$('l-locother').value.trim().slice(0,60):'';
+    }
+    const popts=(CFG.platforms||{}).options||[];
+    if(homeAns.platforms.size || homeAns.country.size){
+      const plats=[...homeAns.platforms].map(i=>popts[i]).filter(Boolean);
+      homeLog.length=0;
+      if(plats.length) homeLog.push({text:plats.join(', '), reply:platReply(plats)});
+      if(homeAns.country.size) homeLog.push({text:countryWord(), reply:sov('country').replace(/\{country\}/g,countryWord())});
+      try{
+        await post('/api/home',{platforms:plats, company_country:countryWord(),
+          residency:inferResidency(), exchanges:homeLog});
+      }catch(e){ /* enrichment, not correctness */ }
+    }
     // Re-fetch the checklists: /api/options is keyed on the visitor's INDUSTRY,
     // and until the letter is submitted the server does not know it, so the
     // boot-time fetch returns the generic "Something else" set. Without this a
@@ -2263,12 +2411,8 @@ async function homeContinue(){
   }catch(e){ /* non-fatal: home answers enrich, they do not gate correctness */ }
   await poll();
   $('hq-go').disabled=false;
-  // The panel STAYS open. The interoperability, open-standards and AI-privacy
-  // beat is part of this conversation, so it happens in the same chat bubble,
-  // led by the residency reply. Clearing homeParting stops the map repeating it.
-  trustSeq=[parting].concat(TRUST_LINES());
   homeParting='';
-  setPhase('trust');
+  setPhase('summary');
 }
 $('hq-go').addEventListener('click',homeContinue);
 $('ov-home').addEventListener('keydown',e=>{

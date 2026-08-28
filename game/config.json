@@ -1032,6 +1032,13 @@
       ],
       "GZSNZ4PHA6": [
         "population"
+      ],
+      "GZTDZJKVH3": [
+        "weather",
+        "geography"
+      ],
+      "GZTDZJKVCM": [
+        "weather"
       ]
     },
     "_documents_gap_comment": "There is deliberately no \"documents\" theme. The curated set contains no listing that helps a visitor whose problem is unstructured text: PubMed and the social-conversations sample are reference corpora, not document-processing enablers, and tagging them that way surfaced biomedical papers to a council holding policy PDFs. This is a real gap in the curated set, recorded rather than papered over with a mis-tag.",

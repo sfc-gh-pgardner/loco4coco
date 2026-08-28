@@ -1,6 +1,6 @@
 {
  "_generated": {
-  "at": "2026-08-24T21:10:17",
+  "at": "2026-08-28T08:31:13",
   "counts": {
    "archetypes": 9,
    "features": 53,
@@ -657,7 +657,7 @@
    "ordinal": 6,
    "provider": "CACI Ltd",
    "regions": "AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +39",
-   "title": "Household Acorn - geodemographic segmentation at household level SAMPLE DATA",
+   "title": "Household Acorn – geodemographic segmentation at household level SAMPLE DATA",
    "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7UU"
   },
   {
@@ -747,7 +747,7 @@
    "ordinal": 3,
    "provider": "CACI Ltd",
    "regions": "AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +39",
-   "title": "PayCheck - UK household income estimates at postcode level - SAMPLE data",
+   "title": "PayCheck – UK household income estimates at postcode level - SAMPLE data",
    "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7UA/caci-ltd-paycheck-%E2%80%93-uk-household-income-estimates-at-postcode-level-sample-data"
   },
   {
@@ -797,7 +797,7 @@
    "ordinal": 2,
    "provider": "CACI Ltd",
    "regions": "AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +39",
-   "title": "Address Spine - UK address level property information - Sample Data",
+   "title": "Address Spine – UK address level property information - Sample Data",
    "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7UQ/caci-ltd-address-spine-%E2%80%93-uk-address-level-property-information-sample-data"
   },
   {
@@ -811,14 +811,14 @@
    "url": "https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4/carto-carto-boundaries"
   },
   {
-   "access": "Free",
-   "global_name": "GZSVZ1K7VF",
+   "access": "Free 14-day trial",
+   "global_name": "GZTDZJKVH3",
    "industry": "public",
    "ordinal": 4,
-   "provider": "CACI Ltd",
-   "regions": "AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +28",
-   "title": "Acorn - Geodemographic Segmentation in the UK",
-   "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF/caci-ltd-acorn-geodemographic-segmentation-in-the-uk"
+   "provider": "Met Office",
+   "regions": "AWS_EU_WEST_1, AWS_EU_WEST_2, AZURE_UKSOUTH, GCP_EUROPE_WEST2",
+   "title": "UK Land Surface Observations",
+   "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVH3/met-office-uk-land-surface-observations"
   },
   {
    "access": "Free",
@@ -891,34 +891,34 @@
    "url": "https://app.snowflake.com/marketplace/listing/GZT0ZPWB4J7"
   },
   {
-   "access": "Free 30-day trial",
-   "global_name": "GZU6Z630VEJ0W",
+   "access": "Free 14-day trial",
+   "global_name": "GZTDZJKVCM",
    "industry": "manufacturing",
    "ordinal": 6,
-   "provider": "Solid Data LLC",
-   "regions": "AWS_AF_SOUTH_1, AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3 +52",
-   "title": "Solid United Nations Codes for Trade and Transport Locations",
-   "url": "https://app.snowflake.com/marketplace/listing/GZU6Z630VEJ0W"
-  },
-  {
-   "access": "Free 14-day trial",
-   "global_name": "GZTDZJKVCY",
-   "industry": "energy",
-   "ordinal": 1,
    "provider": "Met Office",
-   "regions": "AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +29",
-   "title": "Postcode Sector Weather Forecasts",
-   "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCY/met-office-postcode-sector-weather-forecasts"
+   "regions": "AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3, AWS_AP_SOUTHEAST_1 +34",
+   "title": "Global Spot Weather Forecasts",
+   "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCM/met-office-global-spot-weather-forecasts"
   },
   {
    "access": "Free",
    "global_name": "GZTDZJKVCU",
    "industry": "energy",
-   "ordinal": 2,
+   "ordinal": 1,
    "provider": "Met Office",
    "regions": "AWS_AF_SOUTH_1, AWS_AP_NORTHEAST_1, AWS_AP_NORTHEAST_2, AWS_AP_NORTHEAST_3 +50",
    "title": "National Severe Weather Warning Service",
    "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCU/met-office-national-severe-weather-warning-service"
+  },
+  {
+   "access": "Free 14-day trial",
+   "global_name": "GZTDZJKVH3",
+   "industry": "energy",
+   "ordinal": 2,
+   "provider": "Met Office",
+   "regions": "AWS_EU_WEST_1, AWS_EU_WEST_2, AZURE_UKSOUTH, GCP_EUROPE_WEST2",
+   "title": "UK Land Surface Observations",
+   "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVH3/met-office-uk-land-surface-observations"
   },
   {
    "access": "Free",

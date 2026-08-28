@@ -68,7 +68,8 @@ or feature lists. Setup only.
 
 - **It will not sign off the privacy notice.** The letter captures a first name,
   an employer and free text, and there is no notice, consent record or retention
-  policy. See `PRIVACY-REVIEW.md`. That is a human decision.
+  policy. See the "Privacy notice" section of the Setup Guide (Google Doc). That is a
+  human decision.
 - It will not re-curate the marketplace for a non-UK region. The current picks
   and the geo weighting are UK-weighted.
 - It will not translate anything.

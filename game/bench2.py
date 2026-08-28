@@ -50,7 +50,7 @@ JSON_PROMPT = (
     "Return ONLY minified JSON, no prose, with keys: archetype (one of "
     "talk-to-my-data, ask-my-documents, predict-what-happens-next, join-the-silos), "
     "poc_name (max 8 words), summary (2 sentences), first_step (one action), "
-    "readiness (integer 1-5), reply (max 40 words, warm, no em dashes)."
+    "reply (max 40 words, warm, no em dashes)."
 )
 
 

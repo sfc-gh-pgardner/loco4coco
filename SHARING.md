@@ -14,12 +14,12 @@ There are two separate questions here, and conflating them is the usual mistake:
 
 ## 1. Sharing the activation
 
-The repo is public: `github.com/snow-paddy/loco4coco`, Apache 2.0. It is a Python
+The repo is public: `github.com/sfc-gh-pgardner/loco4coco`, Apache 2.0. It is a Python
 standard-library server plus a browser canvas — no npm, no build step, nothing
 hosted.
 
 ```bash
-git clone https://github.com/snow-paddy/loco4coco.git
+git clone https://github.com/sfc-gh-pgardner/loco4coco.git
 cd loco4coco
 python3 deploy/bootstrap.py --target LONDON --connection <their-connection>
 cd game && python3 server.py
@@ -120,8 +120,9 @@ start and it is worth not spending it.
 **What changes:**
 
 - `game/config.json` → `event.city`, `event.language`.
-- The copy deck: `skills/loco4coco/references/copy-en.md` → a `copy-fr.md`. All
-  visitor-facing strings live there so translation never touches logic.
+- The visitor-facing copy: everything the visitor reads lives in `game/config.json`
+  (intro, the letter, the locations, the sovereignty lines), so a French booth is a
+  translation of that one file and never touches logic.
 - `deploy/manifest.yml` → a new target with that account, `city`, `language` and
   its own `monitor_notify_user`. That last one is deliberately not defaulted: a
   resource monitor pointed at a non-existent user fails outright, which beats one

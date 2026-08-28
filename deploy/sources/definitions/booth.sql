@@ -72,7 +72,6 @@ DEFINE TABLE {{db}}.{{schema}}.SESSIONS (
   GUIDE_FORKED        TEXT,
   GUIDE_URL           TEXT,
   FEATURES            ARRAY,
-  READINESS_SCORE     NUMBER(2,0)   COMMENT 'Strict 1-5, INTERNAL ONLY - never shown to the visitor; used to rank leads warmest-first',
   FIRST_STEP          TEXT,
 
   DOCUMENT_URL        TEXT          COMMENT 'Presigned .docx link, expires after 7 days',

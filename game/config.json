@@ -41,7 +41,7 @@
     "turn_timeout_comment": "Wall-clock ceiling per turn. The Library has been measured at a 127.3s outlier against a 2.2s median; past the ceiling the visitor is better served by the precomputed answer than a better sentence."
   },
   "qa": {
-    "_comment": "The QA bot reviews the finished blueprint before it is staged. Deterministic checks always run and silently repair what is fixable from the closed lists (off-list features dropped, guide fallback, readiness clamped, platforms re-normalised); each change is recorded to LOCO4COCO.BOOTH.QA_FINDINGS with before/after, and a summary lands on the SESSIONS row. model_review adds one fast COMPLETE call judging whether the POC addresses the visitor's stated problem - it fails open, never blocking the handover.",
+    "_comment": "The QA bot reviews the finished blueprint before it is staged. Deterministic checks always run and silently repair what is fixable from the closed lists (off-list features dropped, guide fallback, platforms re-normalised); each change is recorded to LOCO4COCO.BOOTH.QA_FINDINGS with before/after, and a summary lands on the SESSIONS row. model_review adds one fast COMPLETE call judging whether the POC addresses the visitor's stated problem - it fails open, never blocking the handover.",
     "enabled": true,
     "model_review": true,
     "model": "mistral-large2",
@@ -627,7 +627,7 @@
     "min_live_results": 3,
     "cache_minutes": 120,
     "agentic": {
-      "_comment": "Tier 0, ahead of live. Built and end-to-end tested on PG_LONDON 2026-08-23, then DISABLED the same day: measured latency 70-110s+ (2 of 3 runs timed out) is too high and too variable to trust against an unmeasured Library dwell time (see BOOTH-RUNBOOK.md). Replaced for now by a precompute pass instead - the same PrPr agentic search run offline, once, to add a verified 6th free-weighted pick per industry to marketplace-index.md (Tier 2). Code left in place and dormant; re-enable once real Library timing data exists or latency improves. No cap by design if re-enabled: an SE watches spend in cost.jsonl (kind=marketplace_agentic) and flips enabled back off by hand if needed.",
+      "_comment": "Tier 0, ahead of live. Built and end-to-end tested on PG_LONDON 2026-08-23, then DISABLED the same day: measured latency 70-110s+ (2 of 3 runs timed out) is too high and too variable to trust against an unmeasured Library dwell time. Replaced for now by a precompute pass instead - the same PrPr agentic search run offline, once, to add a verified 6th free-weighted pick per industry to marketplace-index.md (Tier 2). Code left in place and dormant; re-enable once real Library timing data exists or latency improves. No cap by design if re-enabled: an SE watches spend in cost.jsonl (kind=marketplace_agentic) and flips enabled back off by hand if needed.",
       "enabled": false,
       "timeout_seconds": 120,
       "connection": null

@@ -142,7 +142,7 @@ block(base() + "\n\n" + wk)
 w("## 5. The Workshop background fill (COMPLETE)")
 w("")
 w("Runs silently after CoCo has spoken, while the visitor walks to the postbox. "
-  "Fills the summary, first step, considerations and honest readiness score. "
+  "Fills the summary, first step and considerations. "
   "Considerations are chosen by INDEX from a precomputed pool, so the prose is "
   "ours. Mirrors `refine_poc()` in `server.py`. `{candidates}` is the archetype's "
   "own pool from `archetypes.md`.")
@@ -162,11 +162,7 @@ refine = (
     "Return ONLY minified JSON, no prose, no code fence, with exactly these keys: "
     "{\"summary\": 2 sentences on what it does and why it matters to THEM, "
     "\"first_step\": one concrete first action, \"considerations\": array of "
-    "exactly 3 integers, the numbers of the most relevant candidates above, "
-    "\"readiness\": integer 1-5}\n"
-    "Score readiness strictly: only award 4 or 5 if they named specific data, a "
-    "specific question and a specific user. Nobody sees the number, so be honest "
-    "rather than kind."
+    "exactly 3 integers, the numbers of the most relevant candidates above}"
     % (_vis["first_name"], _vis["company"],
        server.industry_name(cfg, _vis["industry"]),
        ", ".join(STATE["held"]), ", ".join(STATE["joined"]),

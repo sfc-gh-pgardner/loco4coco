@@ -456,8 +456,8 @@ w('')
 _qa = cfg.get('qa') or {}
 w('Before the document is written, it is reviewed. Deterministic checks always '
   'run and repair what is fixable from the closed lists: features that do not '
-  'resolve to a documentation link are dropped, the readiness score is clamped '
-  'into range, platforms are re-normalised, the sovereignty section is required '
+  'resolve to a documentation link are dropped, '
+  'platforms are re-normalised, the sovereignty section is required '
   'when a residency rule was given, and a list of banned words is removed. '
   'Every change is recorded with its before and after.')
 w('')

@@ -3,7 +3,7 @@
 A five-minute Cortex Code activation for **Snowflake World Tour**. A visitor drives a penguin
 round an arctic map, answers a few light questions, and leaves with the scaffolding for a POC:
 their idea in their own words, the Snowflake developer guide to fork, the
-features with doc links, a readiness score, and a kick-off prompt to paste into Cortex Code
+features with doc links, and a kick-off prompt to paste into Cortex Code
 on a free trial. They take it away by **scanning a QR code** with their own phone.
 
 > **Read [CONSTRAINTS.md](CONSTRAINTS.md) before designing or changing any feature.**
@@ -27,8 +27,8 @@ python3 server.py          # then open http://127.0.0.1:4747/
 
 ## Running an event
 
-`BOOTH-RUNBOOK.md` is the operator runbook: what is verified, what is not, and the
-pre-flight before doors open.
+`SETUP.md` also covers the operational side: the pre-flight before doors open,
+the cost guardrails, and resetting between visitors.
 
 ## How it is put together
 
@@ -46,7 +46,7 @@ pre-flight before doors open.
 | `audit/` | Chromium persona suite (`npx playwright test`), 35 stories over 8 industries. |
 | `game/state_cli.py` | Reset between visitors, purge rows. |
 | `deploy/` | DCM project that builds the Snowflake objects on any account. |
-| `skills/` | The `loco4coco` visitor flow and `loco4coco-ops` operator skills. |
+| `skills/loco4coco/references/` | The closed lists the game may name - listings, guides, features, archetypes - plus their committed offline bundle. |
 
 ## Two speeds, on purpose
 
@@ -67,7 +67,7 @@ Total CoCo wait is about 58s of the 300s budget, down from 144.5s before tuning.
   `config.json`. HTML and CSS are served from disk.
 - **Claude is not available via `CORTEX.COMPLETE` in every region.** The fast path uses
   `mistral-large2`; it falls back to the agentic path automatically if inference fails.
-- **Delivery is an outbox, not a send.** Gmail MCP tools do not load under `cortex exec`,
-  so the game composes the email and an operator drains it interactively. Nothing here ever
-  claims an email was sent when it was not.
+- **Delivery is a QR to a presigned stage document, not an email.** The booth keeps
+  nothing on the laptop and sends no email; the visitor scans the QR on screen and the
+  document lands on their own phone.
 - **The server stops itself after 45 minutes idle**, so a forgotten laptop cannot run all night.

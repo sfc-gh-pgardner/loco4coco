@@ -13,7 +13,7 @@ Every change should be checked against all seven.
 A visitor walks up to the stand, gives us **five minutes**, and in that time
 experiences the power of **Cortex Code** and leaves with the **scaffolding for a
 POC** - their idea in their own words, a Snowflake developer guide to fork, named
-features with doc links, an honest readiness score, and a kick-off prompt to paste
+features with doc links, and a kick-off prompt to paste
 into CoCo on a free trial.
 
 - **One visitor at a time**, on one laptop, with a queue behind them.

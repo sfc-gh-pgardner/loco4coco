@@ -76,6 +76,16 @@
   #stagebar div { flex:1; height:5px; background:var(--line); border-radius:3px; }
   #stagebar div.on { background:var(--edge); }
   #stagebar div.cur { background:var(--warm); }
+  /* Journey-tile states in the HUD: current stop warm, finished stops edge. */
+  .tile.done { border-color:var(--edge); }
+  .tile.done .v { color:var(--edge); }
+  .tile.cur { border-color:var(--warm); }
+  .tile.cur .k, .tile.cur .v { color:var(--warm); }
+  .tile .v.tocome { color:#5E8399; }
+  #hud-meta { display:flex; align-items:baseline; gap:6px; margin-top:5px;
+    justify-content:flex-end; font-size:11px; color:var(--dim); }
+  #hud-meta .mk { text-transform:uppercase; letter-spacing:.12em; }
+  #hud-meta .mv { color:var(--edge); font-weight:700; margin-right:12px; }
 
   #stagewrap { position:relative; }
   canvas#cv { image-rendering:pixelated; display:block; border:3px solid var(--line);
@@ -124,33 +134,7 @@
   .say b { color:var(--warm); font-size:10px; letter-spacing:.16em;
     text-transform:uppercase; display:block; margin-bottom:3px; }
 
-  /* ---------- the journey, as tiles ---------- */
-  /* Four stops is enough to lose the thread. Rather than repeat CoCo in the
-     bubble AND the panel, each finished stop is a tile you can tap open. */
-  #c-prev { display:none; margin:2px 0 10px; }
-  #c-prev.on { display:block; }
-  .ptiles { display:flex; gap:4px; }
-  .ptile { flex:1; background:var(--panel); border:2px solid var(--line);
-    border-radius:6px; padding:3px 7px; min-width:0; }
-  .ptile .k { font-size:9px; letter-spacing:.13em; color:var(--dim);
-    text-transform:uppercase; white-space:nowrap; overflow:hidden;
-    text-overflow:ellipsis; }
-  .ptile .v { font-size:11px; font-weight:700; color:#5E8399; margin-top:1px;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .ptile.done { cursor:pointer; border-color:var(--edge); }
-  .ptile.done .v { color:var(--edge); }
-  .ptile.done:hover { background:#12283A; }
-  .ptile.done.open { border-color:var(--warm); background:#12283A; }
-  .ptile.done.open .v { color:var(--warm); }
-  .ptile.cur { border-color:var(--warm); }
-  .ptile.cur .k, .ptile.cur .v { color:var(--warm); }
-  .prevbody { display:none; margin-top:5px; padding:7px 10px 8px;
-    font-size:13px; line-height:1.45; max-height:11vh; overflow-y:auto;
-    background:#0A141C; border:1px solid var(--edge); border-radius:5px; }
-  .prevbody.on { display:block; }
-  .prevbody .lab { color:var(--warm); font-size:10px; letter-spacing:.12em;
-    text-transform:uppercase; display:block; margin:7px 0 2px; }
-  .prevbody .txt { color:#8FB4CB; white-space:pre-wrap; word-break:break-word; }
+
 
   /* The action block docks at the foot of the scrolling card. */
   #ov-loc .card { display:flex; flex-direction:column; overflow:hidden; }
@@ -310,7 +294,6 @@
   #bp pre { background:#0A141C; border:2px solid #24425A; border-radius:6px;
     padding:10px; font-size:11px; line-height:1.45; max-height:190px; overflow:auto;
     white-space:pre-wrap; word-break:break-word; color:#CFE6F5; }
-  #bp .score { font-size:15px; color:var(--edge); }
   #bp a { color:var(--edge); }
   /* ---------- the letter: beige paper, dark ink, pulls up from the envelope ---------- */
   /* Centred, not bottom-anchored: flush to the floor the letter looked like
@@ -419,7 +402,7 @@
   .card.letter .primary { font-family:ui-monospace,monospace; }
   /* CoCo's spoken beats over the house scene */
   .hsay { display:none; position:absolute; left:50%; transform:translateX(-50%);
-    bottom:16vh; z-index:40; max-width:min(600px,90vw);
+    top:24px; z-index:40; max-width:min(600px,90vw);
     background:rgba(10,22,34,.92); border:2px solid var(--edge); border-radius:6px;
     padding:10px 14px; color:#EAF6FD; font-size:15px; line-height:1.5; text-align:center; }
   .hsay.on { display:block; }
@@ -450,13 +433,18 @@
     <div id="traybody"></div>
   </div>
 
-  <div id="hud" class="rail">
-    <div class="tile"><div class="k">Player</div><div class="v" id="h-name">&mdash;</div></div>
-    <div class="tile"><div class="k">Industry</div><div class="v" id="h-ind">&mdash;</div></div>
-    <div class="tile"><div class="k">Progress</div><div class="v" id="h-col">0 / 4</div></div>
-    <div class="tile"><div class="k">Time</div><div class="v" id="h-time">0:00</div></div>
-  </div>
+  <!-- The journey as four tiles, one per stop in flow order. Replaces the old
+       Player/Industry/Progress/Time bars: the name is on the letter and the
+       blueprint, and where the visitor is in the walk is the thing worth a
+       permanent readout. Filled by paintHudJourney(). -->
+  <div id="hud" class="rail"></div>
   <div id="stagebar" class="rail"></div>
+  <!-- Progress and elapsed time kept, but demoted to a slim line under the tiles
+       so they inform without competing with the journey. -->
+  <div id="hud-meta" class="rail">
+    <span class="mk">Progress</span><span class="mv" id="h-col">0 / 4</span>
+    <span class="mk">Time</span><span class="mv" id="h-time">0:00</span>
+  </div>
 
   <div id="stagewrap">
     <canvas id="cv"></canvas>
@@ -557,13 +545,6 @@
       <div class="cscroll" id="c-scroll">
       <h2 id="c-loc"></h2>
       <div class="sub" id="c-rep"></div>
-      <!-- The journey as four tiles, matching the HUD at the top of the page.
-           A full-width "EARLIER - THE DATA LIBRARY" bar read as a stray toolbar;
-           this reads as progress you can tap. -->
-      <div id="c-prev">
-        <div class="ptiles" id="c-ptiles"></div>
-        <div class="prevbody" id="c-prevbody"></div>
-      </div>
       <div class="say" id="c-say"></div>
       <div class="q" id="c-head"></div>
       <div class="hint" id="c-hint"></div>
@@ -751,7 +732,7 @@ function stepMovement(){
   for(const [id,l] of Object.entries(CFG.locations)){
     if(Math.abs(l.tile[0]-P.x)<=1 && Math.abs(l.tile[1]-P.y)<=1) found=id;
   }
-  nearId=found;
+  if(found!==nearId){ nearId=found; paintHudJourney(); }
 }
 
 function drawPenguin(g,sx,sy){
@@ -2494,43 +2475,25 @@ async function loadOptions(){
   catch(e){ OPTS={}; }
 }
 
-// The journey as four tiles: one per location, in flow order, styled like the
-// HUD. A finished stop is tappable and reveals what was said there.
-function paintPrev(id){
-  const wrap=$('c-prev'), tiles=$('c-ptiles'), body=$('c-prevbody');
-  body.classList.remove('on'); body.innerHTML='';
+// The journey as four tiles in the HUD: one per stop, in flow order. Shows
+// where the visitor is ("here now"), where they have been (what they picked),
+// and what is still to come. Persistent at the top of the page; replaces the
+// old Player/Industry readout and the in-panel copy of the same tiles.
+function paintHudJourney(){
+  const hud=$('hud'); if(!hud || !CFG.locations) return;
   const ids=Object.keys(CFG.locations);
+  const cur = panelOpen ? panelLoc : nearId;
   const turnFor=lid=>(ST.turns||[]).filter(t=>t.location===lid).slice(-1)[0];
-  // Nothing to review yet: the tiles would be four dead boxes.
-  if(!ids.some(l=>l!==id && turnFor(l))){ wrap.classList.remove('on'); return; }
-  tiles.innerHTML=ids.map(lid=>{
-    const l=CFG.locations[lid]||{}, t=turnFor(lid);
-    const cls = lid===id ? 'cur' : (t ? 'done' : '');
-    const val = lid===id ? 'here now'
-              : t ? (summarise(t.text)||'done')
-              : 'to come';
+  hud.innerHTML=ids.map(lid=>{
+    const l=CFG.locations[lid]||{}, t=turnFor(lid), here=lid===cur, done=visited.has(lid);
+    const cls = here ? 'cur' : (done ? 'done' : '');
+    const val = here ? 'here now' : done ? (summarise(t&&t.text)||'done') : 'to come';
+    const vcls = (!here && !done) ? ' tocome' : '';
     // Short label: "THE DATA LIBRARY" will not fit four across.
     const key=String(l.name||lid).replace(/^The\s+/i,'');
-    return `<div class="ptile ${cls}" data-loc="${lid}">`
-      +`<div class="k">${esc(key)}</div><div class="v">${esc(val)}</div></div>`;
+    return `<div class="tile ${cls}"><div class="k">${esc(key)}</div>`
+      +`<div class="v${vcls}">${esc(val)}</div></div>`;
   }).join('');
-  [...tiles.children].forEach(el=>{
-    if(!el.classList.contains('done')) return;
-    el.addEventListener('click',()=>{
-      const was=el.classList.contains('open');
-      [...tiles.children].forEach(o=>o.classList.remove('open'));
-      if(was){ body.classList.remove('on'); body.innerHTML=''; return; }
-      el.classList.add('open');
-      cancelAutoLeave();            // they are reading; stop the auto-exit
-      const t=turnFor(el.dataset.loc)||{};
-      body.innerHTML=`<span class="lab">You said</span>`
-        +`<div class="txt">${esc(t.text||'-')}</div>`
-        +`<span class="lab">CoCo replied</span>`
-        +`<div class="txt">${esc(t.reply||'-')}</div>`;
-      body.classList.add('on');
-    });
-  });
-  wrap.classList.add('on');
 }
 // Tiles are narrow, so show a count rather than truncating a list mid-word.
 function summarise(text){
@@ -2568,7 +2531,7 @@ function openPanel(id){
     if(card){ card.style.width=''; card.style.maxHeight='';
               card.style.marginTop=''; } }
   const say=$('c-say'); say.classList.remove('on'); say.innerHTML='';
-  paintPrev(id);
+  paintHudJourney();
   $('c-loc').textContent=l.name.toUpperCase();
   $('c-rep').textContent=l.represents||'';
   $('c-head').textContent=l.heading||'';
@@ -3323,9 +3286,6 @@ function onState(s){
   const firstLoad = !ST.updated_at;
   ST=s;
   (s.turns||[]).forEach(t=>visited.add(t.location));
-  const v=s.visitor||{};
-  $('h-name').textContent=v.first_name||'\u2014';
-  $('h-ind').textContent=(CFG.industries[v.industry]||{}).name||'\u2014';
   $('h-col').textContent=`${visited.size} / ${Object.keys(CFG.locations).length}`;
   if(s.started_at && haveVisitor()){
     // Counts UP, not down: the clock is there to create a little urgency, not
@@ -3342,6 +3302,7 @@ function onState(s){
   if(bar.children.length!==ids.length) bar.innerHTML=ids.map(()=>'<div></div>').join('');
   [...bar.children].forEach((d,i)=>{
     d.className = visited.has(ids[i])?'on':(nearId===ids[i]?'cur':''); });
+  paintHudJourney();
 
   const opening = $('ov-title').classList.contains('on')
     || $('ov-arctic').classList.contains('on') || $('ov-letter').classList.contains('on')

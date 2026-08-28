@@ -13,13 +13,13 @@ Last updated 2026-08-10.
 ## What you end up with
 
 A local booth game. A visitor drives a penguin round an arctic map, answers a few light
-questions in under five minutes, and leaves with an emailed POC blueprint: their idea in
-their own words, the Snowflake developer guide to fork, the features with doc links, a
-readiness score, and a kick-off prompt to paste into Cortex Code on a free trial.
+questions in under five minutes, and leaves with a POC blueprint: their idea in
+their own words, the Snowflake developer guide to fork, the features with doc links, and
+a kick-off prompt to paste into Cortex Code on a free trial.
 
 It runs entirely on the laptop (a small Python server plus a browser canvas). Nothing is
-hosted. The only things it reaches out to are your Snowflake account (Cortex inference and
-session logging) and, at the end, your own Gmail to post the blueprint.
+hosted. The only thing it reaches out to is your Snowflake account: Cortex inference,
+session logging, and the presigned stage document the visitor scans at the end.
 
 **Budget:** about 58s of the five minutes is CoCo thinking, leaving roughly four minutes
 for the human. The optional "Ask CoCo one thing" stop adds about 35s.
@@ -30,8 +30,7 @@ for the human. The optional "Ask CoCo one thing" stop adds about 35s.
 2. A Snowflake account where you can create a database, warehouse and resource monitor.
    ACCOUNTADMIN is simplest. **Cortex must be enabled.**
 3. Your **account region**, e.g. `AWS_EU_WEST_2`. Write it down.
-4. A Google account for sending blueprints (your own Gmail).
-5. *(Optional, recommended)* `cortex` CLI on the booth laptop and reachable - this is what powers Tier 0 (agentic marketplace search, see Step 6). Not
+4. *(Optional, recommended)* `cortex` CLI on the booth laptop and reachable - this is what powers Tier 0 (agentic marketplace search, see Step 6). Not
    required for the booth app to run: Tier 0 degrades silently to Tier 1/2 if
    `cortex` is missing, times out, or `marketplace.agentic.enabled` is false.
    "Agentic search on the Snowflake Marketplace" (PrPr) in Snowsight's
@@ -84,7 +83,7 @@ this connection. Fix it now; the whole game depends on it.
 It is a Cortex Code plugin, so it lives in the plugins directory:
 
 ```bash
-git clone https://github.com/snow-paddy/loco4coco.git ~/.snowflake/cortex/plugins/loco4coco
+git clone https://github.com/sfc-gh-pgardner/loco4coco.git ~/.snowflake/cortex/plugins/loco4coco
 cd ~/.snowflake/cortex/plugins/loco4coco
 ```
 
@@ -95,7 +94,7 @@ instead. Cortex Code follows the symlink, so the plugin still loads and you
 only have one copy of the code:
 
 ```bash
-git clone https://github.com/snow-paddy/loco4coco.git ~/Desktop/Loco4CoCo
+git clone https://github.com/sfc-gh-pgardner/loco4coco.git ~/Desktop/Loco4CoCo
 ln -s ~/Desktop/Loco4CoCo ~/.snowflake/cortex/plugins/loco4coco
 ```
 
@@ -202,32 +201,22 @@ setup); after that it settles to 2 to 3.5s.
 
 ## Delivery: how the visitor actually gets their blueprint
 
-There are three independent tiers. Each one is sufficient on its own, so a failure in
-one does not send a visitor away empty-handed.
+There are two independent routes, so a failure in one does not send a visitor away
+empty-handed. **Email was removed: nothing is sent, and no visitor content is kept on
+the laptop.**
 
-**Tier 1 - the QR code on screen. This is the primary handover at an event.**
+**The QR code on screen - the primary handover.**
 When the visitor presses SEND, the game builds a real Word document, uploads it to
 `@LOCO4COCO.BOOTH.BLUEPRINTS` and presigns it for seven days. The confirmation card
 shows that link as a QR code plus a tappable link. They scan it and leave with the
 document. This path needs no email, no MCP, and no operator - only the Snowflake
 connection the game already has.
 
-**Tier 2 - the queued email, drained by an operator.**
-The game writes a fully composed email to `game/outbox/` as a durable record, and an
-operator drains it from an **interactive** Cortex Code session using the Gmail tools.
-This is deliberate, not a shortcut: Gmail MCP tools do not load under `cortex exec`,
-only in an interactive session; the MCP exposes `create_draft` only, with no send tool
-and no attachment parameter; and `snowflake.com` publishes DMARC `p=reject`, so a
-third-party sender is rejected outright. See the `loco4coco-ops` skill for the drain.
-
-**Tier 3 - the durable record, for after the event.**
+**The durable record, for after the event.**
 The document sits in the Snowflake stage and the row in `BOOTH.SESSIONS` carries
-`DOCUMENT_URL` and `DELIVERY_STATUS`, so leads can be reconciled and re-sent in bulk
-later even if the laptop is wiped. Note the presigned URL expires after seven days;
+`DOCUMENT_URL` and `DELIVERY_STATUS`, so leads can be reconciled and re-presented in
+bulk later even if the laptop is wiped. Note the presigned URL expires after seven days;
 re-presign from the stage if you need it after that.
-
-Nothing in the game ever claims an email was sent when it was not. The card says
-"queued", and points at the QR.
 
 ### Preflight: run this at every stand before doors open
 
@@ -236,9 +225,9 @@ curl -s http://127.0.0.1:4747/api/delivery/check | python3 -m json.tool
 ```
 
 It checks, in order: `python-docx` importable, the stage configured, the stage
-reachable, `outbox/` writable, and - the one that matters - a real file staged and
-presigned end to end. `"ok": true` means Tier 1 works, which means no visitor can
-leave with nothing. If `presign_works` fails, the stand is not ready: check the
+reachable, and - the one that matters - a real file staged and
+presigned end to end. `"ok": true` means the QR handover works, which means no visitor
+can leave with nothing. If `presign_works` fails, the stand is not ready: check the
 connection name in `game/config.json` and that the deploy created the stage.
 
 If `segno` is not installed the QR degrades to a plain link rather than breaking, but

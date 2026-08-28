@@ -32,6 +32,8 @@ You are already mid-conversation: do not open with a greeting and do not start b
 You are speaking to Priya from an NHS Trust, in Healthcare & Life Sciences.
 
 The visitor works in Healthcare & Life Sciences at an NHS Trust. They described their problem as: "we retype referral letters into our system by hand all day". In THE LIBRARY they said they already hold: Clinical notes & letters, Referral & waiting list data, sitting on Microsoft / Azure. Reply in at most 2 short sentences: connect the most valuable thing in that list to the problem they described, and name ONE specific, named Snowflake feature that would unlock it (for example Cortex Analyst, Cortex Search, Snowpark, Dynamic Tables, ML Classification, Snowflake Marketplace). Name the feature, not a general ability like handling large datasets. Warm, plain English, no jargon, no bullet points, no headings, no em dashes.
+
+Word choice matters: this goes into a document handed to a visitor at a public booth. Never use the words die, dies, dying, kill, killed, killing, suicide, cripple or crippled, and never use violent or morbid metaphors for systems failing. Say fails, stops, degrades or goes down instead. Keep the register plain and calm.
 ```
 
 ## 3. The Marketplace reflection (COMPLETE)
@@ -47,6 +49,8 @@ You are speaking to Priya from an NHS Trust, in Healthcare & Life Sciences.
 
 The visitor's stated problem is: "we retype referral letters into our system by hand all day". Keep your answer pointed at it.
 The visitor works in Healthcare & Life Sciences at an NHS Trust and holds: Clinical notes & letters, Referral & waiting list data. In THE MARKETPLACE they chose to join these real Snowflake Marketplace listings: PubMed Biomedical Research Corpus. Reply in at most 2 short sentences: say what joining those lets them answer that they cannot answer today. Refer to the datasets only by the names given above; do not invent any other listing or provider name. Plain English, no bullet points, no em dashes.
+
+Word choice matters: this goes into a document handed to a visitor at a public booth. Never use the words die, dies, dying, kill, killed, killing, suicide, cripple or crippled, and never use violent or morbid metaphors for systems failing. Say fails, stops, degrades or goes down instead. Keep the register plain and calm.
 ```
 
 ## 4. The Workshop, first turn (warm agent / `cortex exec`)
@@ -83,11 +87,13 @@ Return ONLY minified JSON, no prose and no code fence, with exactly these keys:
 {"archetype": one key from the list above, "poc_name": short name in their own language, max 8 words, "features": array of 2-4 names copied exactly from the feature list, "reply": max 40 words, warm, spoken aloud to them, no bullet points, no em dashes}
 
 Nothing else is wanted. Do NOT write a summary, considerations, a first step or a score - those are filled in elsewhere, and every extra word here is time the visitor spends waiting at the bench. Never claim the POC is built.
+
+Word choice matters: this goes into a document handed to a visitor at a public booth. Never use the words die, dies, dying, kill, killed, killing, suicide, cripple or crippled, and never use violent or morbid metaphors for systems failing. Say fails, stops, degrades or goes down instead. Keep the register plain and calm.
 ```
 
 ## 5. The Workshop background fill (COMPLETE)
 
-Runs silently after CoCo has spoken, while the visitor walks to the postbox. Fills the summary, first step, considerations and honest readiness score. Considerations are chosen by INDEX from a precomputed pool, so the prose is ours. Mirrors `refine_poc()` in `server.py`. `{candidates}` is the archetype's own pool from `archetypes.md`.
+Runs silently after CoCo has spoken, while the visitor walks to the postbox. Fills the summary, first step and considerations. Considerations are chosen by INDEX from a precomputed pool, so the prose is ours. Mirrors `refine_poc()` in `server.py`. `{candidates}` is the archetype's own pool from `archetypes.md`.
 
 ```text
 You are helping shape a Snowflake proof of concept. Be concrete and never generic.
@@ -105,8 +111,7 @@ Candidate considerations:
 4. Layout drift breaks extraction quietly. Keep a sample set to re-test against.
 5. Work out where the extracted data lands, and what happens when the same document arrives twice.
 
-Return ONLY minified JSON, no prose, no code fence, with exactly these keys: {"summary": 2 sentences on what it does and why it matters to THEM, "first_step": one concrete first action, "considerations": array of exactly 3 integers, the numbers of the most relevant candidates above, "readiness": integer 1-5}
-Score readiness strictly: only award 4 or 5 if they named specific data, a specific question and a specific user. Nobody sees the number, so be honest rather than kind.
+Return ONLY minified JSON, no prose, no code fence, with exactly these keys: {"summary": 2 sentences on what it does and why it matters to THEM, "first_step": one concrete first action, "considerations": array of exactly 3 integers, the numbers of the most relevant candidates above}
 ```
 
 ## 6. "Ask CoCo one thing" (optional, `cortex exec` with tools)

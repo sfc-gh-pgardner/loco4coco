@@ -114,7 +114,7 @@ def do_show(_a):
     print(f"visitor    : {vis.get('first_name') or '-'} / {vis.get('company') or '-'}"
           f" / {vis.get('industry') or '-'}")
     print(f"held       : {len(st.get('held') or [])} | joined: {len(st.get('joined') or [])}")
-    print(f"poc        : {poc.get('poc_name') or '-'} (readiness {poc.get('readiness') or '-'})")
+    print(f"poc        : {poc.get('poc_name') or '-'}")
     print(f"delivered  : {bool(st.get('blueprint_url'))}")
     print(f"logged     : {st.get('logged')}"
           + (f"  ERROR: {st.get('log_error')}" if st.get("log_error") else ""))

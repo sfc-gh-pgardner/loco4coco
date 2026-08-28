@@ -11,6 +11,14 @@
 # accounts. For a shared or production account, Snowflake's guidance is a
 # dedicated deploy role granted only to a service user - see
 # https://docs.snowflake.com/en/user-guide/dcm-projects/dcm-projects-use
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# PLACEHOLDERS: the account_identifier and monitor_notify_user values below are
+# PLACEHOLDERS. The real Snowflake World Tour event accounts are not provisioned
+# yet. Before you deploy, replace each <PLACEHOLDER-...> with your own account
+# identifier (e.g. MYORG-MYACCOUNT) and a real username in that account. A
+# resource monitor pointed at a non-existent user fails outright.
+# ─────────────────────────────────────────────────────────────────────────────
 
 manifest_version: 2
 type: DCM_PROJECT
@@ -19,7 +27,7 @@ default_target: LONDON
 
 targets:
   LONDON:
-    account_identifier: SFSEEUROPE-PG_LONDON
+    account_identifier: <PLACEHOLDER-LONDON-ACCOUNT>   # e.g. MYORG-MYACCOUNT
     project_name: LOCO4COCO_DEPLOY.PROJECTS.LOCO4COCO_BOOTH
     project_owner: ACCOUNTADMIN
     templating_config: LONDON
@@ -27,7 +35,7 @@ targets:
   # A genuinely different account AND region, so portability is proven rather
   # than assumed.
   US_WEST_DEMO:
-    account_identifier: SFSEEUROPE-US_WEST_DEMO_PG
+    account_identifier: <PLACEHOLDER-USWEST-ACCOUNT>   # e.g. MYORG-MYACCOUNT
     project_name: LOCO4COCO_DEPLOY.PROJECTS.LOCO4COCO_BOOTH
     project_owner: ACCOUNTADMIN
     templating_config: US_WEST_DEMO
@@ -45,10 +53,9 @@ templating:
     # monitors are not a supported DEFINE entity.
     monitor: LOCO4COCO_RM
     monitor_quota: 20
-    # Deliberately NOT defaulted. The username differs per account (PGARDNER on
-    # London, PADDY on the US demo account), and a monitor pointed at a
-    # non-existent user fails outright - which is better than one that silently
-    # warns nobody. Every target must state its own.
+    # Deliberately NOT defaulted. The username differs per account, and a
+    # monitor pointed at a non-existent user fails outright - which is better
+    # than one that silently warns nobody. Every target must state its own.
     monitor_notify_user: ""
 
   configurations:
@@ -56,11 +63,11 @@ templating:
       city: London
       language: en
       monitor_quota: 20
-      monitor_notify_user: PGARDNER
+      monitor_notify_user: <PLACEHOLDER-NOTIFY-USER>
 
     US_WEST_DEMO:
       city: Test Bench
       language: en
       # Smaller quota: this target exists to prove deployment, not to run an event.
       monitor_quota: 5
-      monitor_notify_user: PADDY
+      monitor_notify_user: <PLACEHOLDER-NOTIFY-USER>

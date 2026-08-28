@@ -1322,7 +1322,7 @@ def listings_curated(cfg, industry, state=None):
 def build_coco_prompt(cfg, state):
     """The thing they paste into CoCo on their own free trial.
 
-    Six parts, per prompt-builder.md. Built deterministically from what they
+    Six parts, built deterministically from what they
     actually told us: it must never invent table or column names, so it tells
     CoCo to inspect and ask instead.
     """
@@ -1841,7 +1841,6 @@ def log_session(cfg, state):
         "GUIDE_FORKED": poc.get("guide_title", ""),
         "GUIDE_URL": poc.get("guide_url", ""),
         "FEATURES": poc.get("features") or [],
-        "READINESS_SCORE": int(poc.get("readiness") or 0),
         "CONSIDERATIONS": poc.get("considerations") or [],
         "FIRST_STEP": poc.get("first_step", ""),
         "DOCUMENT_URL": state.get("blueprint_url", ""),
@@ -1873,7 +1872,7 @@ def log_session(cfg, state):
     arr_cols = ["DATA_HELD", "MARKETPLACE_JOINED", "FEATURES",
                 "CONSIDERATIONS", "PLATFORMS"]
     cols = [k for k in payload if k not in arr_cols and k not in bool_cols]
-    num = {"READINESS_SCORE", "DURATION_SECONDS", "COCO_SECONDS",
+    num = {"DURATION_SECONDS", "COCO_SECONDS",
            "INPUT_TOKENS", "OUTPUT_TOKENS", "QA_REPAIRS"}
     sel = [f"p:{c}::{'NUMBER' if c in num else 'TEXT'}" for c in cols]
     sel += [f"p:{c}::ARRAY" for c in arr_cols]
@@ -2132,10 +2131,6 @@ def run_workshop(cfg, text, job_id):
             cons = [cons]
         poc["considerations"] = [str(c).strip() for c in (cons or [])
                                 if str(c).strip()][:4]
-        try:
-            poc["readiness"] = max(1, min(5, int(poc.get("readiness") or 3)))
-        except (TypeError, ValueError):
-            poc["readiness"] = 3
         # Stage 1 is deliberately thin - archetype, name, features, reply - which
         # is what took 84s and 1051 output tokens when it also had to write the
         # summary and four considerations. Fill the rest from the catalogue now
@@ -2152,7 +2147,6 @@ def run_workshop(cfg, text, job_id):
             poc["considerations"] = d["pool"][:3]
     else:
         poc = {"poc_name": text[:60], "summary": raw[:300], "features": [],
-               "readiness": 3,
                "considerations": ["We ran out of time to work through the "
                                   "detail. Start by confirming what data you "
                                   "can actually get hold of."]}
@@ -2168,9 +2162,9 @@ def run_workshop(cfg, text, job_id):
 
 def refine_poc(cfg, text):
     """Stage 2. Runs AFTER CoCo has spoken, on the fast transport, while the
-    visitor reads the reply and walks to the postbox. Fills the summary and the
-    honest readiness score, and picks considerations from the precomputed pool by
-    INDEX rather than writing them.
+    visitor reads the reply and walks to the postbox. Fills the summary and
+    picks considerations from the precomputed pool by INDEX rather than writing
+    them.
 
     Never blocks and never fails loudly: the blueprint is already complete from
     catalogue defaults, so a failure here costs tailoring, not the visit.
@@ -2201,10 +2195,7 @@ def refine_poc(cfg, text):
             "these keys: {\"summary\": 2 sentences on what it does and why it "
             "matters to THEM, \"first_step\": one concrete first action, "
             "\"considerations\": array of exactly 3 integers, the numbers of the "
-            "most relevant candidates above, \"readiness\": integer 1-5}\n"
-            "Score readiness strictly: only award 4 or 5 if they named specific "
-            "data, a specific question and a specific user. Nobody sees the "
-            "number, so be honest rather than kind.\n\n"
+            "most relevant candidates above}\n\n"
             # Prevention, not just detection. This text is printed and handed to
             # a stranger at a public booth, and a real blueprint came back with
             # the word "die" in it. The QA bot repairs that as a backstop; this
@@ -2245,11 +2236,6 @@ def refine_poc(cfg, text):
                     picked.append(pool[n - 1])
             if picked:
                 poc["considerations"] = picked[:4]
-        try:
-            poc["readiness"] = max(1, min(5, int(extra.get("readiness")
-                                                or poc.get("readiness") or 3)))
-        except (TypeError, ValueError):
-            pass
         write_state({"poc": poc, "poc_pending": False})
     except Exception:                                             # noqa: BLE001
         # A background refinement must never take the booth down.
@@ -2346,29 +2332,19 @@ def qa_review(cfg, state, poc):
              "platform set re-normalised for the blueprint",
              before=plats, after=norm)
 
-    # 5. Readiness in range.
-    try:
-        r = int(poc.get("readiness") or 3)
-    except (TypeError, ValueError):
-        r = 3
-    if r != poc.get("readiness"):
-        note("readiness_in_range", "repair", "readiness coerced to 1-5",
-             repaired=True, before=poc.get("readiness"), after=max(1, min(5, r)))
-    poc["readiness"] = max(1, min(5, r))
-
-    # 6. The visitor must leave with a name and a summary.
+    # 5. The visitor must leave with a name and a summary.
     if not str(poc.get("poc_name") or "").strip():
         note("poc_name_present", "flag", "no POC name produced")
     if not str(poc.get("summary") or "").strip():
         note("summary_present", "flag", "no summary produced")
 
-    # 7. If they stated a residency rule, the sovereignty section must be there.
+    # 6. If they stated a residency rule, the sovereignty section must be there.
     residency = _residency_key(vis)
     if residency in ("country_only", "eu") and not sovereignty_lines(cfg, state):
         note("sovereignty_consistent", "flag",
              "residency is %r but no sovereignty lines were produced" % residency)
 
-    # 8. Model relevance turn - fail open.
+    # 7. Model relevance turn - fail open.
     qacfg = cfg.get("qa") or {}
     relevant = None
     if qacfg.get("model_review") and problem:
@@ -2380,7 +2356,7 @@ def qa_review(cfg, state, poc):
             note("relevance_skipped", "info",
                  "relevance check did not complete; delivery proceeded")
 
-    # 9. Banned words. A booth document goes home with a stranger, so a few
+    # 8. Banned words. A booth document goes home with a stranger, so a few
     # words are simply not acceptable in it however apt the model thought they
     # were - "die" turned up in a real blueprint. Prevention lives in the exec
     # prompts (see locations.workshop.prompt); this is the backstop that catches
@@ -2551,10 +2527,10 @@ class Handler(BaseHTTPRequestHandler):
             # arrives, so the finished blueprint is readable on screen.
             cfg, st = load_config(), read_state()
             poc = st.get("poc") or {}
-            # readiness is internal lead-ranking data. This payload is rendered
-            # straight to the visitor, so the score never leaves the server.
+            # weakest_point and reply are internal; strip before rendering to
+            # the visitor.
             safe_poc = {k: v for k, v in poc.items()
-                        if k not in ("readiness", "weakest_point", "reply")}
+                        if k not in ("weakest_point", "reply")}
             return self._json({
                 "poc": safe_poc,
                 "held": st.get("held") or [],

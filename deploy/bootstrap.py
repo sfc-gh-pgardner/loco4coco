@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """One-command deployment of the Loco4CoCo booth to any Snowflake account.
 
-    python3 deploy/bootstrap.py --target LONDON --connection PG_LONDON
-    python3 deploy/bootstrap.py --target US_WEST_DEMO -c PG-SNOWFLAKE --plan-only
+    python3 deploy/bootstrap.py --target LONDON --connection <your-connection>
+    python3 deploy/bootstrap.py --target <your-target> -c <your-connection> --plan-only
 
 Steps, in order:
 

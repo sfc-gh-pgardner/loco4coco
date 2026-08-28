@@ -66,7 +66,7 @@ DEFINE TABLE {{db}}.{{schema}}.SESSIONS (
   DATA_HELD           ARRAY         COMMENT 'Library picks - data they already hold',
   MARKETPLACE_JOINED  ARRAY         COMMENT 'Marketplace picks - data to enhance it',
 
-  POC_ARCHETYPE       TEXT          COMMENT 'One of the ten archetypes; drives the guide',
+  POC_ARCHETYPE       TEXT          COMMENT 'One of the nine archetypes; drives the guide',
   POC_NAME            TEXT,
   POC_SUMMARY         TEXT,
   GUIDE_FORKED        TEXT,
@@ -75,7 +75,7 @@ DEFINE TABLE {{db}}.{{schema}}.SESSIONS (
   FIRST_STEP          TEXT,
 
   DOCUMENT_URL        TEXT          COMMENT 'Presigned .docx link, expires after 7 days',
-  DELIVERY_STATUS     TEXT          COMMENT 'QUEUED | DRAFTED | SENT | FAILED - updated by the ops drain',
+  DELIVERY_STATUS     TEXT          COMMENT 'QUEUED | DRAFTED | SENT | FAILED - set when the QR document is staged',
 
   DURATION_SECONDS    NUMBER(6,0)   COMMENT 'Wall clock from intake to postbox',
   COCO_SECONDS        NUMBER(6,0)   COMMENT 'Of which spent waiting on Cortex Code',

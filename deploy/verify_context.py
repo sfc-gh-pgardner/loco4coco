@@ -281,7 +281,7 @@ def check_listings_live(data, conn):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--connection", default="PG_LONDON")
+    ap.add_argument("--connection", default=os.environ.get("LOCO_CONNECTION"))
     ap.add_argument("--links", action="store_true")
     ap.add_argument("--listings", action="store_true")
     ap.add_argument("--all", action="store_true")

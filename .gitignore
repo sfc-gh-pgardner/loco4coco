@@ -28,3 +28,6 @@ playwright-report/
 # Persona-audit screenshots are run output, not source.
 audit/audit/shots/
 audit/shots/
+
+# Playwright run output (absolute paths, not source)
+audit/results.json

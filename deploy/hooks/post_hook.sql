@@ -6,7 +6,7 @@
 --
 --   snow sql -f deploy/hooks/post_hook.sql --enable-templating JINJA \
 --     -D monitor=LOCO4COCO_RM -D monitor_quota=100 \
---     -D wh=LOCO4COCO_WH -D monitor_notify_user=PGARDNER -c <connection>
+--     -D wh=LOCO4COCO_WH -D monitor_notify_user=<a-real-user-in-your-account> -c <connection>
 --
 -- bootstrap.py runs this for you with the values from manifest.yml.
 --

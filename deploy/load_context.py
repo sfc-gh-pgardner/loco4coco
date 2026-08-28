@@ -15,7 +15,7 @@ The server reads these at boot and falls back to the markdown on any failure,
 so a stale or empty table degrades the booth, it never breaks it.
 
 Usage:
-    python3 deploy/load_context.py                 # load, using PG_LONDON
+    python3 deploy/load_context.py --connection <your-connection>
     python3 deploy/load_context.py --check         # parse and report, no writes
     python3 deploy/load_context.py --connection X  # a different account
 
@@ -286,7 +286,7 @@ def sha_of(rel):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--connection", default="PG_LONDON")
+    ap.add_argument("--connection", default=os.environ.get("LOCO_CONNECTION"))
     ap.add_argument("--check", action="store_true",
                     help="Parse and report counts without writing")
     ap.add_argument("--print-sql", action="store_true",

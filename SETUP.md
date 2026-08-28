@@ -148,9 +148,10 @@ region-filtered, cached) then Tier 2 (curated `marketplace-index.md`, six
 verified listings per industry, all currently Free) as the offline-safe net.
 That chain runs exactly as it always has and needs nothing from Tier 0. If
 Tier 0 is ever re-enabled there is deliberately no call cap: watch spend in
-`game/cost.jsonl` (`kind: marketplace_agentic`) and flip it off by hand - a
-cross-event spend rollup across booth laptops/accounts is a known future
-work item, not yet built.
+`game/cost.jsonl` (`kind: marketplace_agentic`) and flip it off by hand. Spend
+is watched **per account** - its own resource monitor plus the `cost.jsonl` on
+that laptop - and there is deliberately no cross-booth rollup in the app:
+combine the per-account figures by hand if you want an event-wide total.
 
 Known and unfixed: the Tier 1 query filters `regions LIKE '%<region>%'`,
 which never matches the literal `ALL` Snowflake returns for

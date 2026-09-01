@@ -284,9 +284,24 @@ def sha_of(rel):
         return ""
 
 
+def _configured_connection():
+    """Default to the connection the game is configured with (bootstrap sets it),
+    so a fresh setup loads context into the right account. Falls back to
+    $LOCO_CONNECTION, then None (snow's own default)."""
+    try:
+        cfg_path = os.path.join(os.path.dirname(__file__), "..", "game", "config.json")
+        with open(cfg_path) as f:
+            c = (json.load(f).get("snowflake") or {}).get("connection_name")
+        if c:
+            return c
+    except Exception:                                            # noqa: BLE001
+        pass
+    return os.environ.get("LOCO_CONNECTION")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--connection", default=os.environ.get("LOCO_CONNECTION"))
+    ap.add_argument("--connection", default=_configured_connection())
     ap.add_argument("--check", action="store_true",
                     help="Parse and report counts without writing")
     ap.add_argument("--print-sql", action="store_true",

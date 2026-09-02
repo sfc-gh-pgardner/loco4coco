@@ -460,7 +460,7 @@
       "mode": "checklist",
       "source": "marketplace_index",
       "heading": "What shall we join to your data?",
-      "hint": "Live listings, filtered to what you can attach in this region. No ETL, no storage cost, always current. The same door works outwards: this is how you share your own data without handing over a copy.",
+      "hint": "Live listings, filtered to what you can attach in this region. No ETL, no storage cost, refreshed by the provider. The same door works outwards: this is how you share your own data without handing over a copy.",
       "other_label": "Something else you'd join",
       "other_placeholder": "e.g. UK postcode boundaries, company registry data",
       "discovery": "manual",
@@ -1135,16 +1135,16 @@
       "country": "{country}, lovely. I'll keep everything where {country}'s rules need it."
     },
     "pillars": {
-      "data": "Your data never leaves {region}: it stays in your own Snowflake account, in region, not copied out to be processed.",
-      "models": "Cortex runs the AI models where your data already lives, so nothing crosses a border to be understood.",
+      "data": "By default your data does not leave {region}: it stays in your own Snowflake account, in region, not copied out to be processed.",
+      "models": "By default, Cortex runs the AI models in your own region, so nothing has to cross a border to be understood.",
       "marketplace": "Marketplace data is shared live rather than copied, and you are only ever offered listings available in {region}.",
       "governance": "One set of controls - role-based access, masking, row-level policies - governs all of it, in one place."
     },
     "_summary_comment": "Spoken over the house scene after the letter is submitted. CoCo reads back what was given, then makes the security and AI point inside that summary rather than as a separate beat. Placeholders: {first_name}, {company_bit}, {industry_bit}, {platform_bit}, {region}. The _bit placeholders are assembled by the client from what the visitor actually supplied, so a missing answer leaves no dangling sentence. Each line auto-advances on a timer scaled to its length.",
     "summary": [
       "So, {first_name}, let me make sure I have this. {company_bit}{industry_bit}{platform_bit}I have the problem you want to solve, and that is the bit everything else hangs off.",
-      "Here is the part that matters before we start building. All of this happens inside your own Snowflake account in {region}. Your data does not get copied out to be processed, and the AI models run where the data already lives, so nothing crosses a border to be understood.",
-      "And the question I get asked most, so I will answer it now. What you send the AI stays yours. Your prompts, your data and the answers are never used to train external models, and they never leave your account. One set of controls governs all of it, the same ones you already use.",
+      "Here is the part that matters before we start building. By default, all of this happens inside your own Snowflake account in {region}. Your data does not get copied out to be processed, and the AI models run in your own region, so nothing has to cross a border to be understood.",
+      "And the question I get asked most, so I will answer it now. Snowflake never uses your Customer Data to train models made available to our customer base. Your data is not available to other customers or model developers. And you have control over your team's use of Snowflake AI Features through familiar role-based access control.",
       "You will not have to move house for any of it either. Snowflake talks to what you already run, and with Iceberg your tables stay in open formats other engines can read, so there is no one way door."
     ]
   },

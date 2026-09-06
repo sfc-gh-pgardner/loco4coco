@@ -1553,48 +1553,52 @@ def integration_paths(state):
 # So the same state renders twice - a page for reading now, a document for
 # keeping. Mobile-first is not a nicety here, it is the primary case.
 BLUEPRINT_CSS = """
+/* The blueprint is the one light surface in the game, and deliberately so:
+   it is a printable handout, and #2C3444 across A4 is a ruined cartridge. The
+   paper field (#F4F8FB) and the card white are therefore the only two tones
+   here that are not palette values - every ink, rule, and accent below is. */
 :root { color-scheme:light; }
 * { box-sizing:border-box; }
 body { margin:0; padding:0 18px 64px;
   font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,
        Arial,sans-serif;
-  color:#1A242E; background:#F4F8FB;
+  color:#191D27; background:#F4F8FB;
   -webkit-text-size-adjust:100%; }
 .wrap { max-width:34rem; margin:0 auto; }
 header { padding:26px 0 18px; }
 .mark { display:block; margin-bottom:14px; }
-h1 { font-size:1.55rem; line-height:1.25; margin:0 0 6px; color:#11567F;
+h1 { font-size:1.55rem; line-height:1.25; margin:0 0 6px; color:#166184;
   letter-spacing:-.01em; }
-.for { color:#55707F; font-size:.95rem; margin:0; }
-.lede { font-size:1.06rem; color:#243642; margin:16px 0 0; }
-section { background:#fff; border:1px solid #DCE7EF; border-radius:12px;
+.for { color:#465C6D; font-size:.95rem; margin:0; }
+.lede { font-size:1.06rem; color:#2C3444; margin:16px 0 0; }
+section { background:#fff; border:1px solid #DEE5EB; border-radius:12px;
   padding:16px 16px 18px; margin:14px 0; }
 h2 { font-size:.78rem; letter-spacing:.10em; text-transform:uppercase;
   color:#29B5E8; margin:0 0 10px; }
 ul { margin:0; padding-left:1.15rem; }
 li { margin:0 0 9px; }
-li b { color:#11567F; }
-.note { display:block; color:#5B7382; font-size:.88rem; margin-top:2px; }
-a { color:#0B7FB3; overflow-wrap:anywhere; }
+li b { color:#166184; }
+.note { display:block; color:#465C6D; font-size:.88rem; margin-top:2px; }
+a { color:#166184; overflow-wrap:anywhere; }
 /* Tap targets, not links: a 14px underline on a phone is a coin toss. */
 .btn { display:block; text-align:center; text-decoration:none;
   padding:15px 18px; border-radius:10px; font-weight:700; font-size:1rem;
-  background:#29B5E8; color:#08222E; border:none; width:100%;
+  background:#29B5E8; color:#191D27; border:none; width:100%;
   cursor:pointer; font-family:inherit; }
-.btn.alt { background:#fff; color:#11567F; border:2px solid #29B5E8;
+.btn.alt { background:#fff; color:#166184; border:2px solid #29B5E8;
   margin-top:10px; }
-pre { margin:0; padding:14px; background:#0E1F2B; color:#DDEBF4;
+pre { margin:0; padding:14px; background:#191D27; color:#DEE5EB;
   border-radius:10px; font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
   white-space:pre-wrap; overflow-wrap:anywhere; max-height:15rem;
   overflow-y:auto; }
 ol { margin:0; padding-left:1.3rem; }
-footer { text-align:center; color:#7B909D; font-size:.82rem; padding:22px 0 0; }
+footer { text-align:center; color:#465C6D; font-size:.82rem; padding:22px 0 0; }
 @media (prefers-color-scheme:dark) {
-  body { background:#0B1620; color:#DCE8F0; }
-  section { background:#12222E; border-color:#20384A; }
-  h1,li b { color:#7FD3F2; } .for,.note { color:#8FA8B8; }
-  .lede { color:#C9DCE8; } a { color:#7FD3F2; }
-  .btn.alt { background:transparent; color:#7FD3F2; }
+  body { background:#2C3444; color:#DEE5EB; }
+  section { background:#35424C; border-color:#465C6D; }
+  h1,li b { color:#29B5E8; } .for,.note { color:#8FA6B8; }
+  .lede { color:#DEE5EB; } a { color:#67B5ED; }
+  .btn.alt { background:transparent; color:#67B5ED; }
 }
 """
 

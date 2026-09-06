@@ -7,10 +7,10 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" href="/favicon.svg">
 <style>
-  :root { --panel:#101C27; --edge:#29B5E8; --text:#EAF6FD; --warm:#E8863C;
-          --dim:#7FA8C2; --line:#1E3446; }
+  :root { --panel:#2C3444; --edge:#29B5E8; --text:#E5EFF5; --warm:#ED8D30;
+          --dim:#8FA6B8; --line:#465C6D; }
   * { box-sizing:border-box; }
-  html,body { margin:0; height:100%; background:#0A121A; color:var(--text);
+  html,body { margin:0; height:100%; background:#2C3444; color:var(--text);
     font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; overflow:hidden; }
   #wrap { height:100%; display:flex; flex-direction:column; align-items:center;
     gap:7px; padding:8px 10px; }
@@ -33,7 +33,7 @@
   .rail { width:100%; max-width:1056px; }
 
   /* ---------- CoCo's thought bubble: the ONLY place narrative appears ------- */
-  #bubble { position:relative; background:#16283A; border:3px solid var(--edge);
+  #bubble { position:relative; background:#35424C; border:3px solid var(--edge);
     border-radius:14px; padding:11px 15px 12px; min-height:62px;
     box-shadow:0 0 26px rgba(41,181,232,.16); }
   #bubble:after, #bubble:before { content:''; position:absolute; left:56px;
@@ -41,7 +41,7 @@
   #bubble:before { bottom:-15px; border-width:15px 13px 0 0;
     border-color:var(--edge) transparent transparent transparent; }
   #bubble:after { bottom:-10px; border-width:11px 9px 0 0;
-    border-color:#16283A transparent transparent transparent; }
+    border-color:#35424C transparent transparent transparent; }
   #bubble .who { color:var(--warm); font-size:10px; letter-spacing:.18em;
     text-transform:uppercase; display:flex; justify-content:space-between; }
   /* Long CoCo replies were clipped by a rigid box. The message now wraps and,
@@ -53,7 +53,7 @@
     white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
     min-height:68px; max-height:18vh; overflow-y:auto; }
   #hist { display:flex; gap:5px; align-items:center; }
-  #hist button { background:#0E1F2E; color:var(--dim); border:1px solid var(--line);
+  #hist button { background:#35424C; color:var(--dim); border:1px solid var(--line);
     border-radius:4px; font:inherit; font-size:11px; padding:1px 7px; cursor:pointer; }
   #hist button:hover:not(:disabled) { color:var(--edge); border-color:var(--edge); }
   #hist button:disabled { opacity:.3; cursor:default; }
@@ -62,7 +62,7 @@
     letter-spacing:.1em; text-transform:uppercase; }
   #histback.on { display:block; }
   #yousaid { display:none; margin-top:6px; padding-top:6px;
-    border-top:1px dashed #2B4A61; font-size:12px; color:var(--dim); }
+    border-top:1px dashed #465C6D; font-size:12px; color:var(--dim); }
   #yousaid.on { display:block; }
 
   /* ---------- HUD ---------- */
@@ -81,7 +81,7 @@
   .tile.done .v { color:var(--edge); }
   .tile.cur { border-color:var(--warm); }
   .tile.cur .k, .tile.cur .v { color:var(--warm); }
-  .tile .v.tocome { color:#5E8399; }
+  .tile .v.tocome { color:#8FA6B8; }
   #hud-meta { display:flex; align-items:baseline; gap:6px; margin-top:5px;
     justify-content:flex-end; font-size:11px; color:var(--dim); }
   #hud-meta .mk { text-transform:uppercase; letter-spacing:.12em; }
@@ -93,7 +93,7 @@
   /* The POV interior scene. Drawn procedurally in the same pixel style as the
      map, it sits over the board while you are "inside" a location or waking. */
   canvas#scene { image-rendering:pixelated; position:absolute; inset:0;
-    width:100%; height:100%; display:none; border:3px solid var(--warm);
+    width:100%; height:100%; display:none; border:3px solid var(--edge);
     border-radius:8px; z-index:30; }
   canvas#scene.on { display:block; }
 
@@ -101,7 +101,7 @@
   /* Fixed to the viewport, not the canvas: tying the card to the board once
      hid 40% of the panel (and the CONFIRM button) on a small window. */
   .ov { position:fixed; inset:0; z-index:40; display:none; align-items:center;
-    justify-content:center; background:rgba(6,12,18,.9); }
+    justify-content:center; background:rgba(44,52,68,.9); }
   .ov.on { display:flex; }
   /* POV variant: the interior scene shows behind, so the backdrop is only a
      soft vignette and the card sits low, like a surface on the desk. */
@@ -114,7 +114,7 @@
      leftover height in between. sizePovCard() now places this card itself. */
   .ov.pov { background:transparent; align-items:flex-start; justify-content:center; }
   .ov.pov .card { margin:0; width:auto; max-height:52vh;
-    background:rgba(12,22,31,.97);
+    background:rgba(44,52,68,.97);
     border-color:var(--edge); box-shadow:0 -8px 40px rgba(0,0,0,.75); }
   /* The home stage borrows the interior card but not sizePovCard(), which is
      driven by panelLoc and belongs to the locations. It only needs to sit under
@@ -141,28 +141,28 @@
   .cscroll { flex:1 1 auto; overflow-y:auto; min-height:180px;
     /* A fade at the bottom edge, so a clipped list reads as scrollable rather
        than as a panel that is simply missing its options. */
-    background:linear-gradient(var(--panel) 30%,rgba(11,22,31,0)) bottom/100% 18px
+    background:linear-gradient(var(--panel) 30%,rgba(44,52,68,0)) bottom/100% 18px
       no-repeat local; }
   .ov.pov .cscroll { min-height:0;
-    background:linear-gradient(rgba(8,16,23,.92) 30%,
-    rgba(8,16,23,0)) bottom/100% 18px no-repeat local; }
+    background:linear-gradient(rgba(44,52,68,.92) 30%,
+    rgba(44,52,68,0)) bottom/100% 18px no-repeat local; }
   .dock { flex:0 0 auto; background:var(--panel);
     padding-top:8px; margin-top:6px; border-top:1px solid var(--line); }
   .ov.pov .dock { background:transparent; }
   #c-more { display:none; flex:0 0 auto; align-self:center; margin:2px 0 0;
-    font:700 11.5px/1 var(--ff); letter-spacing:.04em; color:#08131B;
+    font:700 11.5px/1 var(--ff); letter-spacing:.04em; color:#191D27;
     background:var(--warm); border-radius:10px; padding:5px 11px;
     cursor:pointer; }
   #c-more.on { display:block; }
   /* sparkly / shimmer text for the phrases CoCo is proudest of */
-  .spark { background:linear-gradient(90deg,#29B5E8 0%,#EAF6FD 25%,#E8863C 50%,#EAF6FD 75%,#29B5E8 100%);
+  .spark { background:linear-gradient(90deg,#29B5E8 0%,#E5EFF5 25%,#ED8D30 50%,#E5EFF5 75%,#29B5E8 100%);
     background-size:200% auto; -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color:transparent; color:transparent; font-weight:700;
     animation:shimmer 3.2s linear infinite; }
   @keyframes shimmer { to { background-position:200% center; } }
   /* A flat highlight colour, not the shimmer: used for the privacy promise in
      the intro, which needs to stand out without looking like marketing. */
-  .ihl { color:#6FD3F2; font-weight:700; }
+  .ihl { color:#67B5ED; font-weight:700; }
   /* roomier spacing on the combined wake + details card */
   .card { width:min(700px,94vw); max-height:88vh; overflow:auto; background:var(--panel);
     border:3px solid var(--warm); border-radius:10px; padding:14px 18px 16px; }
@@ -177,16 +177,16 @@
   /* checklist: the panel carries STRUCTURE, never the narrative */
   .opts { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
   @media (max-width:700px){ .opts { grid-template-columns:1fr; } }
-  .opt { display:flex; gap:8px; align-items:flex-start; background:#0A141C;
-    border:2px solid #24425A; border-radius:6px; padding:7px 9px; cursor:pointer; }
+  .opt { display:flex; gap:8px; align-items:flex-start; background:#191D27;
+    border:2px solid #465C6D; border-radius:6px; padding:7px 9px; cursor:pointer; }
   .opt:hover { border-color:var(--edge); }
-  .opt.sel { border-color:var(--warm); background:#17222B; }
+  .opt.sel { border-color:var(--warm); background:#35424C; }
   .opt input { margin:2px 0 0; accent-color:var(--warm); flex:none; }
   .opt .lb { font-size:13px; line-height:1.3; }
   .opt .nt { font-size:11px; color:var(--dim); margin-top:2px; line-height:1.3; }
 
-  input[type=text], input[type=email], select { width:100%; background:#0A141C;
-    color:var(--text); font:inherit; font-size:14px; border:2px solid #2B4A61;
+  input[type=text], input[type=email], select { width:100%; background:#191D27;
+    color:var(--text); font:inherit; font-size:14px; border:2px solid #465C6D;
     border-radius:6px; padding:8px 10px; }
   input:focus, select:focus { outline:none; border-color:var(--edge); }
   .fld { margin-bottom:8px; }
@@ -197,19 +197,25 @@
     color:var(--edge); font:700 12px/1 var(--ff); letter-spacing:.08em;
     cursor:pointer; text-transform:uppercase; }
   .cchoose:hover { background:var(--edge); color:var(--panel); }
+  /* Once CoCo has chosen, the button has nothing left to do: it stays visible so
+     the visitor can see what they pressed, but it stops looking or behaving like
+     a control. Without this it still highlighted on hover and re-submitted. */
+  .cchoose:disabled { border-color:var(--dim); color:var(--dim);
+    cursor:default; opacity:.55; }
+  .cchoose:disabled:hover { background:transparent; color:var(--dim); }
   .go { margin-top:11px; display:flex; gap:9px; align-items:center; }
-  button.primary { background:var(--warm); color:#101C27; border:none; font:inherit;
+  button.primary { background:var(--warm); color:#191D27; border:none; font:inherit;
     font-weight:700; font-size:14px; letter-spacing:.06em; border-radius:6px;
     padding:9px 18px; cursor:pointer; }
   button.primary:hover { filter:brightness(1.12); }
   button.primary:disabled { opacity:.45; cursor:default; filter:none; }
-  .go .keys { font-size:11px; color:#5E8399; }
+  .go .keys { font-size:11px; color:#8FA6B8; }
   .chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:4px; }
   .chip { padding:6px 11px; border:1px solid var(--line); border-radius:12px;
-    background:#0A141C; color:#8FB4CB; font:600 13px/1 var(--ff);
+    background:#191D27; color:#DEE5EB; font:600 13px/1 var(--ff);
     cursor:pointer; user-select:none; }
   .chip:hover { border-color:var(--edge); }
-  .chip.on { background:var(--edge); border-color:var(--edge); color:#08131B; }
+  .chip.on { background:var(--edge); border-color:var(--edge); color:#191D27; }
   /* The submit button is the only thing in the panel that DOES anything, so it
      stops being a small pill sitting next to grey hint text and becomes the
      width of the panel with a lit edge. In testing CONFIRM was being read as a
@@ -218,9 +224,9 @@
     letter-spacing:.10em; }
   .go .primary:not(:disabled) { animation:goPulse 2.6s ease-in-out infinite; }
   @keyframes goPulse {
-    0%,100% { box-shadow:0 0 0 2px rgba(232,134,60,.30),
+    0%,100% { box-shadow:0 0 0 2px rgba(237,141,48,.30),
                          0 6px 18px rgba(0,0,0,.45); }
-    50%     { box-shadow:0 0 0 6px rgba(232,134,60,.10),
+    50%     { box-shadow:0 0 0 6px rgba(237,141,48,.10),
                          0 8px 22px rgba(0,0,0,.52); }
   }
   /* "ESC to step away" was sharing the row and eating a quarter of the
@@ -231,30 +237,30 @@
   /* Disabled keeps a dim ring: with no shadow at all the control vanished into
      the panel at exactly the moment the visitor had not yet acted. */
   .go .primary:disabled { animation:none;
-    box-shadow:0 0 0 1px rgba(232,134,60,.20); }
-  input.invalid { border-color:#FF7A7A !important; }
+    box-shadow:0 0 0 1px rgba(237,141,48,.20); }
+  input.invalid { border-color:#DF6C5A !important; }
 
   /* ---------- the take-it-with-you handover ---------- */
   #bp-hand { display:none; gap:14px; margin-top:14px; padding:12px;
-    align-items:center; background:#0A141C; border:2px solid var(--edge);
+    align-items:center; background:#191D27; border:2px solid var(--edge);
     border-radius:8px; }
   #bp-hand.on { display:flex; }
   #bp-qr { background:#FFF; border-radius:4px; flex:0 0 auto; display:block; }
   #bp-hand .handh { color:var(--warm); font-size:11px; letter-spacing:.14em;
     text-transform:uppercase; margin-bottom:4px; }
-  #bp-hand .handp { font-size:13px; line-height:1.5; color:#9FC2D6; }
+  #bp-hand .handp { font-size:13px; line-height:1.5; color:#8FA6B8; }
   #bp-hand .handlink { display:inline-block; margin-top:7px; font-size:11px;
     color:var(--edge); word-break:break-all; text-decoration:none;
     border-bottom:1px dotted var(--edge); }
   #bp-hand .handlink:hover { color:var(--text); }
 
   /* ---------- reasoning tray: replaces "CoCo is thinking" ---------- */
-  #tray { background:#0C1720; border:2px solid var(--line); border-radius:6px;
+  #tray { background:#35424C; border:2px solid var(--line); border-radius:6px;
     font-size:11px; overflow:hidden; }
   #trayhead { display:flex; gap:8px; align-items:center; padding:5px 10px;
     cursor:pointer; color:var(--dim); }
   #trayhead:hover { color:var(--text); }
-  #trayhead .dot { width:7px; height:7px; border-radius:50%; background:#2B4A61; flex:none; }
+  #trayhead .dot { width:7px; height:7px; border-radius:50%; background:#465C6D; flex:none; }
   #trayhead.live .dot { background:var(--edge); animation:pulse 1.1s ease-in-out infinite; }
   @keyframes pulse { 0%,100%{opacity:.25;transform:scale(.8)} 50%{opacity:1;transform:scale(1.25)} }
   #traynow { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
@@ -264,11 +270,11 @@
   #traybody { display:none; max-height:132px; overflow:auto; padding:0 10px 8px;
     border-top:1px solid var(--line); }
   #traybody.on { display:block; }
-  #traybody div { color:#8FB4CB; line-height:1.45; padding:1px 0;
+  #traybody div { color:#DEE5EB; line-height:1.45; padding:1px 0;
     white-space:pre-wrap; word-break:break-word; }
 
   #banner { position:absolute; inset:0; display:none; align-items:center;
-    justify-content:center; flex-direction:column; background:rgba(10,18,26,.92);
+    justify-content:center; flex-direction:column; background:rgba(44,52,68,.92);
     border-radius:8px; }
   #banner.on { display:flex; }
   #banner h1 { font-size:52px; margin:0; color:var(--edge); letter-spacing:.06em;
@@ -278,8 +284,8 @@
      as attribution rather than as an instruction. */
   #b-by { margin:6px 0 18px; color:var(--warm); font-size:13px;
     letter-spacing:.16em; text-transform:none; opacity:.9; }
-  #err { position:fixed; left:8px; bottom:5px; color:#FF7A7A; font-size:11px; }
-  #newv { position:fixed; right:9px; top:7px; z-index:60; background:#16283A;
+  #err { position:fixed; left:8px; bottom:5px; color:#DF6C5A; font-size:11px; }
+  #newv { position:fixed; right:9px; top:7px; z-index:60; background:#35424C;
     color:var(--dim); border:1px solid var(--line); border-radius:5px; font:inherit;
     font-size:10px; letter-spacing:.12em; padding:4px 9px; cursor:pointer; }
   #newv:hover { color:var(--warm); border-color:var(--warm); }
@@ -291,9 +297,9 @@
   #bp h3 { font-size:12px; letter-spacing:.14em; text-transform:uppercase;
     color:var(--warm); margin:14px 0 4px; }
   #bp ul { margin:4px 0; padding-left:18px; font-size:13px; line-height:1.5; }
-  #bp pre { background:#0A141C; border:2px solid #24425A; border-radius:6px;
+  #bp pre { background:#191D27; border:2px solid #465C6D; border-radius:6px;
     padding:10px; font-size:11px; line-height:1.45; max-height:190px; overflow:auto;
-    white-space:pre-wrap; word-break:break-word; color:#CFE6F5; }
+    white-space:pre-wrap; word-break:break-word; color:#DEE5EB; }
   #bp a { color:var(--edge); }
   /* ---------- the letter: beige paper, dark ink, pulls up from the envelope ---------- */
   /* Centred, not bottom-anchored: flush to the floor the letter looked like
@@ -302,11 +308,11 @@
   /* CoCo reacts to the letter he has just been handed, above the paper itself. */
   .lwrap { display:flex; flex-direction:column; align-items:center;
     width:min(600px,94vw); margin:2vh 0 6vh; perspective:900px; }
-  .lbubble { position:relative; background:#16283A; border:3px solid var(--edge);
+  .lbubble { position:relative; background:#35424C; border:3px solid var(--edge);
     opacity:0; transform:translateY(8px); transition:opacity .5s ease .95s,
     transform .5s ease .95s;
     border-radius:14px; padding:10px 14px; margin-bottom:16px;
-    color:#EAF6FD; font-size:14px; line-height:1.5; text-align:center;
+    color:#E5EFF5; font-size:14px; line-height:1.5; text-align:center;
     font-family:ui-monospace,monospace; box-shadow:0 0 26px rgba(41,181,232,.16); }
   .lbubble:after { content:''; position:absolute; bottom:-10px; left:50%;
     margin-left:-9px; width:0; height:0; border-style:solid;
@@ -340,7 +346,7 @@
   #ov-letter.on .card.letter #l-problem  { animation-delay:1.90s; }
   @keyframes lglow {
     0%   { background:rgba(28,78,122,0);   border-bottom-color:#9C8C6E; }
-    35%  { background:rgba(232,134,60,.22); border-bottom-color:#B4442E; }
+    35%  { background:rgba(237,141,48,.22); border-bottom-color:#B4442E; }
     100% { background:rgba(28,78,122,0);   border-bottom-color:#9C8C6E; }
   }
   .card.letter .lgreet { font-size:19px; margin-bottom:12px; }
@@ -395,8 +401,8 @@
   /* CoCo's spoken beats over the house scene */
   .hsay { display:none; position:absolute; left:50%; transform:translateX(-50%);
     top:24px; z-index:40; max-width:min(600px,90vw);
-    background:rgba(10,22,34,.92); border:2px solid var(--edge); border-radius:6px;
-    padding:10px 14px; color:#EAF6FD; font-size:15px; line-height:1.5; text-align:center; }
+    background:rgba(44,52,68,.94); border:2px solid var(--edge); border-radius:6px;
+    padding:10px 14px; color:#E5EFF5; font-size:15px; line-height:1.5; text-align:center; }
   .hsay.on { display:block; }
 </style>
 </head>
@@ -445,7 +451,7 @@
     <!-- opening title: a plain statement of what this is, no narrative -->
     <div class="ov" id="ov-title"><div class="card" style="text-align:center;border-color:var(--edge);width:min(640px,94vw)">
       <div id="t-title" class="spark" style="font-size:34px;font-weight:800;letter-spacing:.03em;margin:2px 0 12px"></div>
-      <div id="t-body" style="font-size:15px;line-height:1.6;color:#CFE6F5;text-align:left"></div>
+      <div id="t-body" style="font-size:15px;line-height:1.6;color:#DEE5EB;text-align:left"></div>
       <div class="go" style="justify-content:center;margin-top:16px">
         <button class="primary" id="t-go">START</button></div>
     </div></div>
@@ -462,7 +468,7 @@
     </div></div>
 
     <!-- Opening beat 1: the arctic title card -->
-    <div class="ov" id="ov-arctic"><div class="card" style="text-align:center;border-color:var(--edge);width:min(620px,94vw);background:rgba(10,22,34,.92)">
+    <div class="ov" id="ov-arctic"><div class="card" style="text-align:center;border-color:var(--edge);width:min(620px,94vw);background:rgba(44,52,68,.92)">
       <div id="a-arctic" style="font-size:28px;font-weight:800;letter-spacing:.03em"></div>
       <div id="a-arcticsub" class="hint" style="margin-top:8px;font-size:13px"></div>
     </div></div>
@@ -611,7 +617,7 @@
       text-align:left">
       <img id="done-qr" alt="" width="96" height="96"
         style="background:#FFF;border-radius:4px;flex:0 0 auto;display:block">
-      <div style="font-size:12px;line-height:1.5;color:#9FC2D6">
+      <div style="font-size:12px;line-height:1.5;color:#8FA6B8">
         <b style="color:var(--edge)" id="done-cardh"></b><br>
         <span id="done-cardp"></span>
       </div>
@@ -747,16 +753,36 @@ function drawPenguin(g,sx,sy){
   const px=(x,y,w,h,col)=>{ g.fillStyle=col; g.fillRect(sx+x*u,sy+y*u,w*u,h*u); };
   const o=(P.moving>0&&P.frame%2)?1:0;
   const fs=P.moving>0?(P.frame%2?1:-1):0;
-  px(3+fs,14,3,2,c.foot); px(10-fs,14,3,2,c.foot);
-  px(3,2+o,10,12,c.body); px(2,4+o,12,9,c.body); px(4,1+o,8,1,c.body);
-  px(1,6+o,2,5,c.body_dark); px(13,6+o,2,5,c.body_dark);
-  if(P.dir==='up'){ px(4,3+o,8,10,c.body_dark); return; }
-  px(5,7+o,6,7,c.belly);
+  // Transcribed cell-for-cell from the Cortex Code CLI, which stores CoCo as a
+  // character grid - P body, B belly, O orange, E eye - only nine cells wide and
+  // four rows tall:
+  //     ..PEPEP..     eyes are the lower half of their cell
+  //     .PPPOPPP.     the beak is ONE centred orange cell
+  //     PPPBBBPPP     widest row; the belly is only three cells
+  //     .PPOPPPOP     feet sit INSIDE the body - the sitting pose
+  // A terminal cell is twice as tall as it is wide, so one cell is 2u x 4u here
+  // and the silhouette keeps the CLI's 9:8 proportion. It steps 5 -> 7 -> 9 -> 7
+  // cells wide, which is what makes it read as CoCo: earlier versions had a
+  // square head on a 12-wide body and lost the taper entirely. The body is FLAT
+  // #29B5E8 - the CLI has no darker flipper shading, so neither do we.
+  // The one licensed change: the feet come out of row D and go BELOW the torso,
+  // because feet set inside the body cannot read as walking - nothing moves
+  // against the ground. Row D is therefore plain body, and the two orange cells
+  // swing under it on alternate frames while the body bobs by `o` above them.
+  px(4+fs,16,2,2,c.foot); px(12-fs,16,2,2,c.foot);
+  px(4,0+o,10,4,c.body);                       // row A - head, 5 cells
+  px(2,4+o,14,4,c.body);                       // row B - 7 cells
+  px(0,8+o,18,4,c.body);                       // row C - 9 cells, the shoulders
+  px(2,12+o,14,4,c.body);                      // row D - 7 cells
+  if(P.dir==='up') return;                     // seen from behind: no face, no belly
+  px(6,8+o,6,4,c.belly);                       // belly - three cells, row C only
   if(P.dir==='down'){
-    px(5,4+o,2,2,c.eye); px(9,4+o,2,2,c.eye); px(7,6+o,2,2,c.beak);
+    px(6,2+o,2,2,c.eye); px(10,2+o,2,2,c.eye); // E = lower half of row A
+    px(8,4+o,2,4,c.beak);                      // O = one centred cell, row B
   } else {
-    const f=P.dir==='left'?-1:1, cx=8+f*2;
-    px(cx-1,4+o,2,2,c.eye); px(cx+f,6+o,3,2,c.beak);
+    const f=P.dir==='left'?-1:1;
+    px(8+f*2,2+o,2,2,c.eye);                   // one eye in profile
+    px(8+f*3,4+o,2,4,c.beak);                  // beak swung to the leading side
   }
 }
 
@@ -764,48 +790,48 @@ function drawStructure(g,kind,tx,ty,done){
   const th=CFG.theme,u=S,X=tx*T*S,Y=ty*T*S,w=T*S;
   const r=(x,y,ww,hh,col)=>{ g.fillStyle=col; g.fillRect(X+x*u,Y+y*u,ww*u,hh*u); };
   if(kind==='library'){
-    // warm yellow body, dark grey peaked roof, two cyan windows, open book
-    r(1,5,14,11,'#F2CC5C');               // body
-    r(2,7,12,1,'#D4A830');                // horizontal band
-    g.fillStyle='#3A3A42'; g.beginPath();  // peaked roof
+    // Clear Dark yellow body, black peaked roof, two brand-blue windows, open book
+    r(1,5,14,11,th.ansi_yellow_bright);   // body
+    r(2,7,12,1,th.ansi_yellow);           // horizontal band
+    g.fillStyle=th.ansi_black; g.beginPath();  // peaked roof
     g.moveTo(X-1*u,Y+6*u); g.lineTo(X+w/2,Y+0*u); g.lineTo(X+w+1*u,Y+6*u);
     g.closePath(); g.fill();
     r(3,8,4,4,th.accent); r(9,8,4,4,th.accent); // windows
-    r(6,10,4,6,'#3A3A42');                // door
+    r(6,10,4,6,th.ansi_black);            // door
     // open book above the door
-    g.fillStyle='#F2F7FA';
+    g.fillStyle=th.ansi_white;
     g.beginPath(); g.moveTo(X+w/2,Y+3*u); g.lineTo(X+w/2-3*u,Y+5*u);
     g.lineTo(X+w/2,Y+4.5*u); g.closePath(); g.fill();
     g.beginPath(); g.moveTo(X+w/2,Y+3*u); g.lineTo(X+w/2+3*u,Y+5*u);
     g.lineTo(X+w/2,Y+4.5*u); g.closePath(); g.fill();
-    g.fillStyle='#C4553E'; g.fillRect(X+w/2-0.5*u,Y+3*u,1*u,2*u); // spine
+    g.fillStyle=th.ansi_red; g.fillRect(X+w/2-0.5*u,Y+3*u,1*u,2*u); // spine
   } else if(kind==='marketplace'){
-    r(1,7,14,2,'#8A5A2B');
-    r(2,9,2,7,'#6B4A2B'); r(12,9,2,7,'#6B4A2B');
+    r(1,7,14,2,th.warm_deep);
+    r(2,9,2,7,th.ansi_black); r(12,9,2,7,th.ansi_black);
     for(let i=0;i<5;i++){
-      g.fillStyle = i%2 ? '#D0392B' : th.snow_bright;
+      g.fillStyle = i%2 ? th.ansi_red_bright : th.snow_bright;
       g.fillRect(X+(1+i*2.8)*u, Y+3*u, 2.8*u, 4*u);
     }
-    r(1,2,14,1,'#6B4A2B');
+    r(1,2,14,1,th.warm_deep);
     r(4,5,2,2,th.accent_warm); r(8,5,2,2,th.accent);
-    r(11,5,2,2,'#5ED6A0');
+    r(11,5,2,2,th.ansi_green_bright);
   } else if(kind==='workshop'){
-    // modern tech lab: flat metal body, cyan LED strip, antenna/dish
-    r(1,5,14,11,'#1B2C3A');               // dark metallic body
-    r(1,9,14,1,'#29B5E8');                // cyan LED strip
-    r(2,6,12,3,'#24384A');                // upper panel
-    r(2,11,12,4,'#162430');               // lower panel
-    r(6,11,4,5,'#0B1219');                // door
+    // modern tech lab: flat metal body, brand-blue LED strip, antenna/dish
+    r(1,5,14,11,th.ansi_black);           // dark metallic body
+    r(1,9,14,1,th.accent);                // LED strip
+    r(2,6,12,3,th.ansi_black_bright);     // upper panel
+    r(2,11,12,4,th.sea);                  // lower panel
+    r(6,11,4,5,th.sea_deep);              // door
     // antenna + dish on top
-    r(7,1,2,5,'#39525F');                 // mast
-    g.fillStyle='#4AA8DC'; g.beginPath();
+    r(7,1,2,5,th.ansi_black_bright);      // mast
+    g.fillStyle=th.ansi_blue_bright; g.beginPath();
     g.moveTo(X+6*u,Y+1*u); g.lineTo(X+10*u,Y+1*u);
     g.lineTo(X+8*u,Y-1*u); g.closePath(); g.fill(); // dish
-    if(done){ r(5,10,6,1,'#29B5E8'); r(7,12,2,2,'#29B5E8'); }
+    if(done){ r(5,10,6,1,th.accent); r(7,12,2,2,th.accent); }
   } else if(kind==='postbox'){
-    r(6,6,4,10,'#5A5A62');
-    r(3,1,10,7,'#D0392B');
-    r(4,2,8,2,'#F2F7FA'); r(5,5,6,1,'#7A1E15');
+    r(6,6,4,10,th.ansi_black);
+    r(3,1,10,7,th.ansi_red);
+    r(4,2,8,2,th.ansi_white); r(5,5,6,1,th.sea_deep);
     if(!done) r(13,2,2,2,th.accent);
   }
 }
@@ -819,7 +845,7 @@ function drawGround(g){
     if(t===4){ g.fillStyle=th.sea_deep;
       if((x+y+Math.floor(tick/18))%3===0) g.fillRect(x*T*S,y*T*S+6*S,T*S,2*S); }
     if(t===5){ const X=x*T*S,Y=y*T*S;
-      g.fillStyle='#6B4A2B'; g.fillRect(X+7*S,Y+11*S,2*S,5*S);
+      g.fillStyle=th.rock; g.fillRect(X+7*S,Y+11*S,2*S,5*S);
       for(let i=0;i<3;i++){ g.fillStyle=i%2?th.pine_dark:th.pine; g.beginPath();
         g.moveTo(X+T*S/2,Y+(1+i*3.5)*S); g.lineTo(X+(14-i)*S,Y+(7+i*3.5)*S);
         g.lineTo(X+(2+i)*S,Y+(7+i*3.5)*S); g.closePath(); g.fill(); }
@@ -838,20 +864,20 @@ function drawLabels(g){
     const done=visited.has(id), open=unlocked(id), active=nearId===id;
     const txt=(done?'\u2713 ':(open?'':'\u2715 '))+l.name.toUpperCase();
     const wpx=g.measureText(txt).width+10;
-    g.fillStyle='rgba(10,18,26,.88)'; g.fillRect(X-wpx/2,Y-13,wpx,15);
-    g.fillStyle=active?'#E8863C':done?'#29B5E8':open?'#9FC2D6':'#5A7183';
+    g.fillStyle='rgba(44,52,68,.88)'; g.fillRect(X-wpx/2,Y-13,wpx,15);
+    g.fillStyle=active?'#ED8D30':done?'#29B5E8':open?'#DEE5EB':'#8FA6B8';
     g.fillText(txt,X,Y-2);
     if(active){
       const b=Math.sin(tick/8)*3;
-      g.fillStyle=open?'#E8863C':'#5A7183'; g.beginPath();
+      g.fillStyle=open?'#ED8D30':'#8FA6B8'; g.beginPath();
       g.moveTo(X,Y-18+b); g.lineTo(X-5,Y-26+b); g.lineTo(X+5,Y-26+b); g.closePath(); g.fill();
       const hint=open?'PRESS E':'NOT YET';
       g.font=`bold ${8*S/2}px ui-monospace, monospace`;
       const hw=g.measureText(hint).width+12;
       const HY=(y+1)*T*S+10;
-      g.fillStyle=open?'rgba(232,134,60,.92)':'rgba(90,113,131,.92)';
+      g.fillStyle=open?'rgba(237,141,48,.92)':'rgba(70,92,109,.92)';
       g.fillRect(X-hw/2,HY,hw,15);
-      g.fillStyle='#101C27'; g.fillText(hint,X,HY+11);
+      g.fillStyle='#191D27'; g.fillText(hint,X,HY+11);
       g.font=`bold ${9*S/2}px ui-monospace, monospace`;
     }
   });
@@ -906,7 +932,7 @@ function drawRoute(g){
     const cx=px+ux*d, cy=py+uy*d;
     const a=breath-i*0.14;
     g.save(); g.translate(cx,cy); g.rotate(ang);
-    g.strokeStyle=`rgba(232,134,60,${a})`; g.lineWidth=3*S/2;
+    g.strokeStyle=`rgba(237,141,48,${a})`; g.lineWidth=3*S/2;
     g.lineCap='round'; g.lineJoin='round';
     g.beginPath();
     g.moveTo(-4*S/2,-5*S/2); g.lineTo(4*S/2,0); g.lineTo(-4*S/2,5*S/2);
@@ -994,14 +1020,43 @@ function measureSafe(){
   SAFE=Math.max(0.18,Math.min(0.80,1-ch/cssH));
 }
 
-function drawCoCoFront(g,cx,cy,u){
-  const c=CFG.penguin;
-  const r=(x,y,w,h,col)=>{ g.fillStyle=col; g.fillRect(cx+x*u,cy+y*u,w*u,h*u); };
-  r(-5,7,3,2,c.foot); r(2,7,3,2,c.foot);
-  r(-5,-6,10,13,c.body); r(-6,-4,12,10,c.body); r(-4,-7,8,1,c.body);
-  r(-6,-2,2,6,c.body_dark); r(4,-2,2,6,c.body_dark);
-  r(-3,-1,6,7,c.belly);
-  r(-3,-4,2,2,c.eye); r(1,-4,2,2,c.eye); r(-1,-2,2,2,c.beak);
+function drawCoCoFront(g,cx,cy,u,opt){
+  const c=CFG.penguin, o=opt||{};
+  // Same CLI grid as drawPenguin (see there for the transcription): nine cells
+  // wide, four rows tall, one cell 2 x 4.
+  //
+  // Two poses. `sitting` is the CLI EXACTLY - row D is `.PPOPPPOP`, with the two
+  // orange cells set inside the body. That is the pose for the postcards and the
+  // gallery, where CoCo is a portrait and nothing needs to move. The default
+  // pose lifts those cells out of row D to below the torso, which is the one
+  // licensed deviation, because feet inside the body cannot read as walking.
+  //
+  // Either pose puts the soles on cy+9u, so the ground plane that MOTIF_LIFT is
+  // measured against does not shift when a card switches to sitting. Sitting is
+  // 16 cells tall against walking's 18, so it is the crown that gives, not the
+  // feet: walking keeps the crown at -7u, where drawThinkBubble anchors.
+  const k=u*8/9, sit=!!o.sitting;
+  const top = sit ? 9*u-16*k : -7*u;
+  // bob and swing are in the MAP sprite's units, where one grid unit is half a
+  // cell, so one unit is exactly k here - the animation values carry across from
+  // drawPenguin unchanged. The body bobs; the feet stay planted, which is what
+  // makes it read as a stride rather than a hop.
+  const bob=(o.bob||0)*k, sw=(o.swing||0)*k;
+  const r=(col,y,wc,hh,col2,dx)=>{ g.fillStyle=col2;
+    g.fillRect(cx+(col*2-9)*k+(dx||0), cy+y, wc*2*k, hh); };
+  if(!sit){                                                 // feet below, planted
+    r(2,top+16*k,1,2*k,c.foot,sw); r(6,top+16*k,1,2*k,c.foot,-sw);
+  }
+  r(2,top+bob,       5,4*k,c.body);                         // row A - head
+  r(1,top+4*k+bob,   7,4*k,c.body);                         // row B
+  r(0,top+8*k+bob,   9,4*k,c.body);                         // row C - shoulders
+  r(1,top+12*k+bob,  7,4*k,c.body);                         // row D
+  if(sit){                                                  // row D as the CLI has it
+    r(2,top+12*k+bob,1,4*k,c.foot); r(6,top+12*k+bob,1,4*k,c.foot);
+  }
+  r(3,top+8*k+bob,   3,4*k,c.belly);                        // belly, row C only
+  r(3,top+2*k+bob,   1,2*k,c.eye); r(5,top+2*k+bob,1,2*k,c.eye);
+  r(4,top+4*k+bob,   1,4*k,c.beak);                         // one centred cell
 }
 // A loading animation that belongs to the character rather than the chrome:
 // "Processing your request..." was only ever text in the panel, so the scene sat
@@ -1015,12 +1070,12 @@ function drawThinkBubble(g,cx,cy,u){
   const bw=13*u, bh=7*u;
   const ax=cx+3*u, ay=cy-7*u;                            // anchor: crown, off-centre
   const bx=ax+2.5*u, by=cy-20*u;                         // cloud, up and right
-  g.fillStyle='rgba(10,20,28,.55)';                      // soft drop
+  g.fillStyle='rgba(25,29,39,.55)';                      // soft drop
   g.fillRect(bx-u,by+u,bw,bh);
-  g.fillStyle='#EAF6FD'; g.fillRect(bx,by,bw,bh);        // cloud body
+  g.fillStyle='#E5EFF5'; g.fillRect(bx,by,bw,bh);        // cloud body
   g.fillRect(bx+2*u,by-u,bw-4*u,bh+2*u);
   // three puffs shrinking along the diagonal from the crown up to the cloud
-  g.fillStyle='#9FC2D6';
+  g.fillStyle='#DEE5EB';
   // Smallest puff at the crown, growing toward the cloud: the trail should
   // read as a thought expanding outward, not shrinking into his head.
   const puffs=[[0.30,1.1],[0.62,1.6],[0.86,2.2]];
@@ -1031,14 +1086,14 @@ function drawThinkBubble(g,cx,cy,u){
   // three dots, one lit at a time, so it reads as working not stuck
   const lit=Math.floor(tick/9)%3;
   for(let i=0;i<3;i++){
-    g.fillStyle = i===lit ? '#E8863C' : '#B9CBD8';
+    g.fillStyle = i===lit ? '#ED8D30' : '#8FA6B8';
     const d = i===lit ? 0.5*u : 0;
     g.fillRect(bx+2.5*u+i*3.2*u-d/2, by+2.5*u-d/2, 2*u+d, 2*u+d);
   }
 }
 function shelfBooks(g,x,y,w,u,seed){
   const r=rng(seed); let cx=x;
-  const cols=['#C4553E','#3E7DA8','#C9A13B','#4F9E6A','#8A5FA8','#B5482F','#3C6E8F'];
+  const cols=['#B45648','#6D96B4','#C4AC62','#6CAA71','#BD7BCD','#DF6C5A','#67B5ED'];
   while(cx<x+w-u){ const bw=(1+Math.floor(r()*2))*u, bh=(6+Math.floor(r()*4))*u;
     g.fillStyle=cols[Math.floor(r()*cols.length)];
     g.fillRect(cx,y-bh,bw-1,bh); cx+=bw; }
@@ -1051,55 +1106,55 @@ function drawScene(kind){
     const F=Math.sin(tick/7)*0.5+0.5;                 // fire flicker 0..1
     const FL=h*0.66;                                  // floor line
     // ---- walls: ice blocks with a lit top edge
-    g.fillStyle='#0A1622'; g.fillRect(0,0,w,h);
+    g.fillStyle='#2C3444'; g.fillRect(0,0,w,h);
     for(let by=0; by<FL; by+=h*0.105){
       for(let bx=0; bx<w; bx+=w*0.13){
         const alt=((bx/(w*0.13)|0)+(by/(h*0.105)|0))%2;
-        g.fillStyle=alt?'#20364A':'#26415A';
+        g.fillStyle=alt?'#2C3444':'#35424C';
         g.fillRect(bx+2,by+2,w*0.13-4,h*0.105-4);
         g.fillStyle='rgba(255,255,255,.04)';
         g.fillRect(bx+2,by+2,w*0.13-4,3);
       }
     }
     // ---- floor, boards fanning toward the viewer
-    g.fillStyle='#152A3C'; g.fillRect(0,FL,w,h-FL);
+    g.fillStyle='#273D4C'; g.fillRect(0,FL,w,h-FL);
     for(let i=0;i<9;i++){
       g.fillStyle=i%2?'rgba(255,255,255,.03)':'rgba(0,0,0,.10)';
       const x0=w*(i/9), x1=w*0.5+(x0-w*0.5)*1.9;
       g.beginPath(); g.moveTo(x0,FL); g.lineTo(x1,h); g.lineTo(x1+w*0.06,h);
       g.lineTo(x0+w*0.055,FL); g.closePath(); g.fill();
     }
-    g.fillStyle='#0E1E2C'; g.fillRect(0,FL,w,4);
+    g.fillStyle='#191D27'; g.fillRect(0,FL,w,4);
     // ---- window: night sky, moon, snow drifting past
     const wx=w*0.60, wy=h*0.09, ww=w*0.24, wh=h*0.26;
-    g.fillStyle='#08121C'; g.fillRect(wx-5,wy-5,ww+10,wh+10);
-    g.fillStyle='#0D2438'; g.fillRect(wx,wy,ww,wh);
-    g.fillStyle='#EAF6FD'; g.fillRect(wx+ww*0.66,wy+wh*0.18,13,13);
+    g.fillStyle='#191D27'; g.fillRect(wx-5,wy-5,ww+10,wh+10);
+    g.fillStyle='#273D4C'; g.fillRect(wx,wy,ww,wh);
+    g.fillStyle='#E5EFF5'; g.fillRect(wx+ww*0.66,wy+wh*0.18,13,13);
     for(let i=0;i<16;i++){
-      g.fillStyle='rgba(234,246,253,.55)';
+      g.fillStyle='rgba(229,239,245,.55)';
       g.fillRect(wx+((i*37+tick*0.6)%ww),wy+((i*53+tick*1.4)%wh),S,S);
     }
-    g.fillStyle='#2B4A61';
+    g.fillStyle='#465C6D';
     g.fillRect(wx+ww/2-2,wy,4,wh); g.fillRect(wx,wy+wh/2-2,ww,4);
-    g.strokeStyle='#3A5F7A'; g.lineWidth=4; g.strokeRect(wx,wy,ww,wh);
+    g.strokeStyle='#6D96B4'; g.lineWidth=4; g.strokeRect(wx,wy,ww,wh);
     // ---- fireplace: the room's light source
     const fx=w*0.80, fy=h*0.34, fw=w*0.15, fh=FL-fy;
-    g.fillStyle='#243747'; g.fillRect(fx-8,fy-10,fw+16,fh+10);
-    g.fillStyle='#08111A'; g.fillRect(fx,fy,fw,fh);
-    g.fillStyle='#3A2A1C'; g.fillRect(fx+6,fy+fh-16,fw-12,10);
-    g.fillStyle='#5A3D22'; g.fillRect(fx+10,fy+fh-22,fw-20,8);
+    g.fillStyle='#35424C'; g.fillRect(fx-8,fy-10,fw+16,fh+10);
+    g.fillStyle='#191D27'; g.fillRect(fx,fy,fw,fh);
+    g.fillStyle='#35424C'; g.fillRect(fx+6,fy+fh-16,fw-12,10);
+    g.fillStyle='#C4682A'; g.fillRect(fx+10,fy+fh-22,fw-20,8);
     for(let i=0;i<5;i++){
       const bh=(14+i*4)*(0.7+F*0.5), bx=fx+fw*0.18+i*(fw*0.16);
-      g.fillStyle=i%2?'#E8863C':'#F2C14E';
+      g.fillStyle=i%2?'#ED8D30':'#E5C872';
       g.fillRect(bx,fy+fh-22-bh,fw*0.13,bh);
     }
     const fg=g.createRadialGradient(fx+fw/2,fy+fh*0.7,10,fx+fw/2,fy+fh*0.7,w*0.52);
-    fg.addColorStop(0,'rgba(232,134,60,'+(0.30+F*0.12)+')');
-    fg.addColorStop(1,'rgba(232,134,60,0)');
+    fg.addColorStop(0,'rgba(237,141,48,'+(0.30+F*0.12)+')');
+    fg.addColorStop(1,'rgba(237,141,48,0)');
     g.fillStyle=fg; g.fillRect(0,0,w,h);
     // ---- shelf of jars above the hearth
-    g.fillStyle='#5A3D22'; g.fillRect(w*0.58,h*0.42,w*0.16,6);
-    ['#4F9E6A','#3E7DA8','#C9A13B'].forEach((c,i)=>{ g.fillStyle=c;
+    g.fillStyle='#C4682A'; g.fillRect(w*0.58,h*0.42,w*0.16,6);
+    ['#6CAA71','#6D96B4','#C4AC62'].forEach((c,i)=>{ g.fillStyle=c;
       g.fillRect(w*0.59+i*(w*0.05),h*0.42-15,w*0.035,15); });
     // ---- Snowflake logo on the wall. The real mark, drawn from file.
     const sfx=w*0.375, sfy=h*0.155, sfr=h*0.075;
@@ -1112,17 +1167,17 @@ function drawScene(kind){
     // It used to sit at w*0.625/h*0.275, which put it on top of the jars AND
     // over the bottom of the window - the frame was covering two things at once.
     const pfx=w*0.47, pfy=h*0.255, pfw=w*0.105, pfh=h*0.125;
-    g.fillStyle='#4A3118'; g.fillRect(pfx-6,pfy-6,pfw+12,pfh+12);   // frame
-    g.fillStyle='#7C5730'; g.fillRect(pfx-3,pfy-3,pfw+6,pfh+6);     // bevel
+    g.fillStyle='#C4682A'; g.fillRect(pfx-6,pfy-6,pfw+12,pfh+12);   // frame
+    g.fillStyle='#C4682A'; g.fillRect(pfx-3,pfy-3,pfw+6,pfh+6);     // bevel
     const sky=g.createLinearGradient(0,pfy,0,pfy+pfh);
-    sky.addColorStop(0,'#2C5570'); sky.addColorStop(1,'#6FA0B4');
+    sky.addColorStop(0,'#2C3444'); sky.addColorStop(1,'#6D96B4');
     g.fillStyle=sky; g.fillRect(pfx,pfy,pfw,pfh);
     g.save(); g.beginPath(); g.rect(pfx,pfy,pfw,pfh); g.clip();
     // snow bank he is sitting on
-    g.fillStyle='#DDEBF3'; g.beginPath();
+    g.fillStyle='#DEE5EB'; g.beginPath();
     g.ellipse(pfx+pfw*0.5,pfy+pfh*1.05,pfw*0.80,pfh*0.32,0,0,7); g.fill();
     const bcx=pfx+pfw*0.44, bby=pfy+pfh*0.82, bs=pfw*0.29;
-    g.fillStyle='#F5FAFD';
+    g.fillStyle='#E5EFF5';
     g.beginPath(); g.ellipse(bcx,bby-bs*0.60,bs*1.10,bs*0.82,0,0,7); g.fill();
     g.beginPath(); g.ellipse(bcx-bs*0.80,bby-bs*0.34,bs*0.46,bs*0.56,0,0,7);
     g.fill();                                                       // haunch
@@ -1130,10 +1185,10 @@ function drawScene(kind){
     g.fill();                                                       // head
     g.beginPath(); g.arc(bcx+bs*0.30,bby-bs*1.76,bs*0.17,0,7); g.fill();
     g.beginPath(); g.arc(bcx+bs*0.94,bby-bs*1.74,bs*0.17,0,7); g.fill();
-    g.fillStyle='#E6F0F7';                                          // muzzle
+    g.fillStyle='#E5EFF5';                                          // muzzle
     g.beginPath(); g.ellipse(bcx+bs*1.02,bby-bs*1.26,bs*0.26,bs*0.19,0,0,7);
     g.fill();
-    g.fillStyle='#1B2733';                                          // nose, eye
+    g.fillStyle='#1E1E2E';                                          // nose, eye
     g.beginPath(); g.ellipse(bcx+bs*1.20,bby-bs*1.28,bs*0.12,bs*0.09,0,0,7);
     g.fill();
     g.beginPath(); g.arc(bcx+bs*0.64,bby-bs*1.50,bs*0.075,0,7); g.fill();
@@ -1146,20 +1201,20 @@ function drawScene(kind){
     g.fill();                                                       // hanging end
     g.restore();
     // ---- rug
-    g.fillStyle='#7A3B32'; g.beginPath();
+    g.fillStyle='#B45648'; g.beginPath();
     g.ellipse(w*0.62,h*0.80,w*0.20,h*0.070,0,0,7); g.fill();
-    g.fillStyle='#9C4C40'; g.beginPath();
+    g.fillStyle='#B45648'; g.beginPath();
     g.ellipse(w*0.62,h*0.80,w*0.13,h*0.044,0,0,7); g.fill();
     // ---- the door: it swings open on 'leave' and CoCo walks out through it
     const dx=w*0.08, dw=w*0.17, dy=h*0.22, dh=FL-dy;
-    g.fillStyle='#0A1826'; g.fillRect(dx-7,dy-7,dw+14,dh+7);
-    g.fillStyle='#2B4A61'; g.fillRect(dx-7,dy-7,dw+14,7);
+    g.fillStyle='#191D27'; g.fillRect(dx-7,dy-7,dw+14,dh+7);
+    g.fillStyle='#465C6D'; g.fillRect(dx-7,dy-7,dw+14,7);
     const swing = openPhase==='leave' ? Math.min(1,p*1.6) : 0;
     if(swing>0){
-      g.fillStyle='#0A1622'; g.fillRect(dx,dy,dw,dh);
+      g.fillStyle='#2C3444'; g.fillRect(dx,dy,dw,dh);
       const sg=g.createLinearGradient(dx,dy,dx+dw,dy+dh);
-      sg.addColorStop(0,'rgba(159,194,214,'+(0.30*swing)+')');
-      sg.addColorStop(1,'rgba(159,194,214,0)');
+      sg.addColorStop(0,'rgba(143,166,184,'+(0.30*swing)+')');
+      sg.addColorStop(1,'rgba(143,166,184,0)');
       g.fillStyle=sg; g.fillRect(dx,dy,dw*1.5,dh);
       for(let i=0;i<10;i++){
         g.fillStyle='rgba(255,255,255,'+(0.5*swing)+')';
@@ -1167,13 +1222,13 @@ function drawScene(kind){
       }
     }
     const pw=dw*(1-swing*0.82);
-    g.fillStyle='#123049'; g.fillRect(dx,dy,pw,dh);
-    g.fillStyle='#1B4260';
+    g.fillStyle='#273D4C'; g.fillRect(dx,dy,pw,dh);
+    g.fillStyle='#465C6D';
     g.fillRect(dx+3,dy+6,Math.max(0,pw-6),dh*0.42);
     g.fillRect(dx+3,dy+dh*0.52,Math.max(0,pw-6),dh*0.42);
     if(swing<0.5){
       g.fillStyle=th.accent_warm; g.fillRect(dx+pw*0.18,dy+dh*0.42,pw*0.64,7);
-      g.fillStyle='#9FC2D6'; g.fillRect(dx+pw-14,dy+dh*0.55,7,7);
+      g.fillStyle='#8FA6B8'; g.fillRect(dx+pw-14,dy+dh*0.55,7,7);
     }
     // ---- the letter: through the slot, to the floor, then in his flipper
     const lw=w*0.11, lh=h*0.075;
@@ -1197,25 +1252,29 @@ function drawScene(kind){
                  || openPhase==='leave';
     g.save(); g.globalAlpha=Math.max(0,Math.min(1,fade));
     const bw2=52*scale, bh2=76*scale;
+    // He was floating: cy is FL-h*0.08, so the soles landed roughly 15px above
+    // the floorboards with the shadow hanging in the air under them. The sprite
+    // is 16u from crown to sole, so standing him ON the floor is just a matter
+    // of putting the soles at FL and deriving the rest from that.
+    const u2=bh2/16, feetY=FL, midY=feetY-9*u2;
+    // The map sprite's walk, reused rather than reinvented: the body bobs one
+    // unit on alternate frames while the planted feet swing. Same two-frame
+    // cadence, driven off this beat's own progress.
+    const walking=(openPhase==='walk'||openPhase==='leave');
+    const fr=walking?(Math.floor(p*9)%2):0;
+    const bob=walking&&fr?1:0, fswing=walking?(fr?1:-1):0;
     g.fillStyle='rgba(0,0,0,.28)';
-    g.beginPath(); g.ellipse(cx,cy+26*scale,bw2*0.52,7*scale,0,0,7); g.fill();
-    g.fillStyle=CFG.penguin.body; g.fillRect(cx-bw2/2,cy-bh2*0.68,bw2,bh2);
-    g.fillStyle=CFG.penguin.belly;
-    g.fillRect(cx-bw2*0.31,cy-bh2*0.45,bw2*0.62,bh2*0.68);
-    g.fillStyle=CFG.penguin.eye;
-    g.fillRect(cx-bw2*0.23,cy-bh2*0.55,6*scale,6*scale);
-    g.fillRect(cx+bw2*0.11,cy-bh2*0.55,6*scale,6*scale);
-    g.fillStyle=CFG.penguin.beak;
-    g.fillRect(cx-5*scale,cy-bh2*0.42,10*scale,7*scale);
-    g.fillStyle=CFG.penguin.foot||'#E8863C';
-    const step=(openPhase==='walk'||openPhase==='leave')&&(Math.floor(p*9)%2===0);
-    g.fillRect(cx-bw2*0.38,cy+22*scale,14*scale,7*scale);
-    g.fillRect(cx+bw2*0.11,cy+22*scale-(step?3:0),14*scale,7*scale);
-    const ex = holding ? cx+bw2*0.42 : lx, ey = holding ? cy-bh2*0.28 : ly;
+    g.beginPath(); g.ellipse(cx,feetY+2*scale,bw2*0.52,6*scale,0,0,7); g.fill();
+    // This was a hand-rolled sprite: a plain 52x76 blue rectangle with a belly
+    // filling two thirds of it, a square stub beak and two feet - a completely
+    // different character from the CLI CoCo on the map and the cards. It is now
+    // the same drawCoCoFront grid, so there is exactly one CoCo in the game.
+    drawCoCoFront(g,cx,midY,u2,{bob,swing:fswing});
+    const ex = holding ? cx+bw2*0.42 : lx, ey = holding ? midY-bh2*0.28 : ly;
     if(openPhase!=='house'){
       const ew=holding?lw*scale:lw, eh=holding?lh*scale:lh;
       g.fillStyle='#EADFC6'; g.fillRect(ex,ey,ew,eh);
-      g.strokeStyle='#B9A98A'; g.lineWidth=2; g.strokeRect(ex,ey,ew,eh);
+      g.strokeStyle='#C4AC62'; g.lineWidth=2; g.strokeRect(ex,ey,ew,eh);
       g.beginPath(); g.moveTo(ex,ey); g.lineTo(ex+ew/2,ey+eh*0.6);
       g.lineTo(ex+ew,ey); g.stroke();
     }
@@ -1227,21 +1286,25 @@ function drawScene(kind){
     return;
   }
   if(kind==='wake'){
-    g.fillStyle='#0A1622'; g.fillRect(0,0,w,h);
+    g.fillStyle='#2C3444'; g.fillRect(0,0,w,h);
     // igloo dome: concentric arcs of pale blocks
-    g.fillStyle='#152A3C'; g.fillRect(0,h*0.62,w,h*0.38);
+    g.fillStyle='#273D4C'; g.fillRect(0,h*0.62,w,h*0.38);
     for(let ring=0;ring<5;ring++){
       const ry=h*0.62-ring*h*0.11, rw=w*(0.9-ring*0.13);
-      g.fillStyle=ring%2?'#20364A':'#26415A';
+      g.fillStyle=ring%2?'#2C3444':'#35424C';
       for(let bx=w/2-rw/2; bx<w/2+rw/2; bx+=rw/6){
         g.fillRect(bx+2,ry-h*0.10,rw/6-3,h*0.10-2);
       }
     }
-    // sleeping mat + CoCo lying down
-    g.fillStyle='#7A1E15'; g.fillRect(w*0.28,h*0.74,w*0.44,h*0.10);
+    // sleeping mat + CoCo lying down. This is the one pose the CLI has no cell
+    // for, so it stays hand-drawn - but on the CLI's terms: flat body, the belly
+    // a contained patch rather than a slab, and the beak one cell at the muzzle.
+    // The belly previously ran from cx-30 to cx+90 while the body ended at cx+70,
+    // so twenty pixels of it hung off his back in mid-air.
+    g.fillStyle='#B45648'; g.fillRect(w*0.28,h*0.74,w*0.44,h*0.10);
     const cx=w*0.5, cy=h*0.73;
     g.fillStyle=CFG.penguin.body; g.fillRect(cx-70,cy-8,140,34);
-    g.fillStyle=CFG.penguin.belly; g.fillRect(cx-30,cy+2,120,20);
+    g.fillStyle=CFG.penguin.belly; g.fillRect(cx-46,cy+4,92,16);
     g.fillStyle=CFG.penguin.eye; g.fillRect(cx-58,cy-2,6,6);
     g.fillStyle=CFG.penguin.beak; g.fillRect(cx-70,cy+2,10,6);
     // wrapped present
@@ -1249,21 +1312,21 @@ function drawScene(kind){
     g.fillStyle=th.accent_warm; g.fillRect(w*0.66,h*0.70+18,54,7);
     g.fillRect(w*0.66+22,h*0.70,7,44);
     // Zzz -> thought of a friend
-    g.fillStyle='#EAF6FD'; g.font=`bold ${18}px ui-monospace,monospace`;
+    g.fillStyle='#E5EFF5'; g.font=`bold ${18}px ui-monospace,monospace`;
     g.fillText('z',cx-90,cy-30); g.fillText('Z',cx-104,cy-52);
     g.fillStyle='rgba(255,255,255,.10)';
     g.beginPath(); g.arc(w*0.30,h*0.28,58,0,7); g.fill();
     g.fillStyle=th.accent; g.fillRect(w*0.30-14,h*0.28-18,28,30);      // friend torso
     g.fillStyle='#EADFcf'; g.fillRect(w*0.30-9,h*0.28-34,18,16);       // friend head
-    g.fillStyle='#7FA8C2'; g.font=`italic ${13}px ui-monospace,monospace`;
+    g.fillStyle='#8FA6B8'; g.font=`italic ${13}px ui-monospace,monospace`;
     g.fillText('...my friend',w*0.30-40,h*0.28+42);
     return;
   }
   if(kind==='library'){
-    g.fillStyle='#1C2B3A'; g.fillRect(0,0,w,h);                        // teal-grey wall
+    g.fillStyle='#2C3444'; g.fillRect(0,0,w,h);                        // teal-grey wall
     const DK=h*SAFE;                                                    // desk line = band
     // ---- floorboards in perspective below the shelves
-    g.fillStyle='#1A2A36'; g.fillRect(0,DK-h*0.08,w,h*0.08);
+    g.fillStyle='#222834'; g.fillRect(0,DK-h*0.08,w,h*0.08);
     for(let i=0;i<10;i++){
       g.fillStyle=i%2?'rgba(255,255,255,.028)':'rgba(0,0,0,.12)';
       const x0=w*(i/10), x1=w*0.5+(x0-w*0.5)*1.7;
@@ -1276,55 +1339,59 @@ function drawScene(kind){
     const TIERS=3;
     for(let row=0;row<TIERS;row++){
       const y=h*0.02+row*(h*SAFE-h*0.10)/TIERS;
-      g.fillStyle='#2A3F4C'; g.fillRect(w*0.03,y,w*0.94,h*0.084);      // recess
-      g.fillStyle='#3A4F5C'; g.fillRect(w*0.03,y,w*0.94,4);
+      g.fillStyle='#35424C'; g.fillRect(w*0.03,y,w*0.94,h*0.084);      // recess
+      g.fillStyle='#465C6D'; g.fillRect(w*0.03,y,w*0.94,4);
       shelfBooks(g,w*0.04,y+h*0.084,w*0.92,u,700+row);
       const r2=rng(31+row);                                            // leaners
       for(let k=0;k<2;k++){
         const lx=w*(0.10+r2()*0.78), bh=h*0.055;
         g.save(); g.translate(lx,y+h*0.084); g.rotate(-0.22-r2()*0.16);
-        g.fillStyle=['#C9A13B','#4F9E6A','#C4553E'][k%3];
+        g.fillStyle=['#C4AC62','#6CAA71','#B45648'][k%3];
         g.fillRect(0,-bh,u*3,bh); g.restore();
       }
-      g.fillStyle='#1A2A36'; g.fillRect(w*0.03,y+h*0.084,w*0.94,3);    // lip
+      g.fillStyle='#222834'; g.fillRect(w*0.03,y+h*0.084,w*0.94,3);    // lip
       g.fillStyle='rgba(0,0,0,.22)'; g.fillRect(w*0.03,y+h*0.084+3,w*0.94,5);
     }
     // ---- rolling ladder against the stacks
     const ldx=w*0.16;
-    g.fillStyle='#6E4B2A'; g.fillRect(ldx,h*0.03,6,DK-h*0.06);
+    g.fillStyle='#C4682A'; g.fillRect(ldx,h*0.03,6,DK-h*0.06);
     g.fillRect(ldx+w*0.085,h*0.03,6,DK-h*0.06);
     for(let ry=h*0.07; ry<DK-h*0.05; ry+=h*0.055){
-      g.fillStyle='#5A3D22'; g.fillRect(ldx,ry,w*0.085+6,5);
+      g.fillStyle='#C4682A'; g.fillRect(ldx,ry,w*0.085+6,5);
     }
     // ---- lantern, its beam, and dust motes drifting in it
     const lgx=w*0.85, lgy=h*0.13;
     const lg=g.createRadialGradient(lgx,lgy,8,lgx,lgy,h*0.62);
-    lg.addColorStop(0,'rgba(232,134,60,.55)');
-    lg.addColorStop(1,'rgba(232,134,60,0)');
+    lg.addColorStop(0,'rgba(237,141,48,.55)');
+    lg.addColorStop(1,'rgba(237,141,48,0)');
     g.fillStyle=lg; g.fillRect(0,0,w,h);
     g.fillStyle=th.accent_warm; g.fillRect(lgx-6,lgy-9,12,18);
-    g.fillStyle='#FFE7B0'; g.fillRect(lgx-4,lgy-6,7,11);
-    g.fillStyle='#4A3520'; g.fillRect(lgx-2,lgy-20,4,11);              // hook
+    g.fillStyle='#E5C872'; g.fillRect(lgx-4,lgy-6,7,11);
+    g.fillStyle='#C4682A'; g.fillRect(lgx-2,lgy-20,4,11);              // hook
     for(let i=0;i<22;i++){
       const mx=lgx-w*0.30+((i*53+tick*0.35)%(w*0.34));
       const my=lgy+((i*37+tick*0.22)%(h*0.34));
-      g.fillStyle='rgba(255,231,176,'+(0.10+0.22*((i%3)/2))+')';
+      g.fillStyle='rgba(229,200,114,'+(0.10+0.22*((i%3)/2))+')';
       g.fillRect(mx,my,S,S);
     }
     // ---- CoCo behind the reading desk
     drawCoCoFront(g,w*0.5,DK-h*0.055,S*2.0);
     if(sceneThinking) drawThinkBubble(g,w*0.5,DK-h*0.055,S*2.0);
     // ---- desk: top edge catches the lantern, front face falls away
-    g.fillStyle='#5A3D22'; g.fillRect(0,DK,w,h-DK);
+    // A full-width surface like this is background, not a prop, so it takes the
+    // dark grey rather than the warm timber - drawn in #C4682A it was a slab of
+    // orange across the bottom third of the frame. The warm grain overlays below
+    // keep it reading as wood.
+    g.fillStyle='#35424C'; g.fillRect(0,DK,w,h-DK);
     for(let i=0;i<7;i++){                                              // grain
-      g.fillStyle=i%2?'rgba(0,0,0,.10)':'rgba(255,231,176,.035)';
+      g.fillStyle=i%2?'rgba(0,0,0,.10)':'rgba(229,200,114,.035)';
       g.fillRect(0,DK+10+i*Math.max(6,(h-DK)/8),w,3);
     }
-    g.fillStyle='#6E4B2A'; g.fillRect(0,DK,w,5);
-    g.fillStyle='rgba(255,231,176,.12)'; g.fillRect(w*0.55,DK,w*0.45,5);
-    g.fillStyle='#C9A13B'; g.fillRect(w*0.14,DK-13,38,9);             // open book
+    g.fillStyle='#465C6D'; g.fillRect(0,DK,w,5);
+    g.fillStyle='rgba(229,200,114,.12)'; g.fillRect(w*0.55,DK,w*0.45,5);
+    g.fillStyle='#C4AC62'; g.fillRect(w*0.14,DK-13,38,9);             // open book
     g.fillStyle='#EFE6D2'; g.fillRect(w*0.14+3,DK-19,32,7);
-    g.fillStyle='#3A2A1C'; g.fillRect(w*0.72,DK-14,10,7);              // inkwell
+    g.fillStyle='#35424C'; g.fillRect(w*0.72,DK-14,10,7);              // inkwell
     // ---- vignette
     const vg=g.createRadialGradient(w/2,h*0.42,h*0.28,w/2,h*0.42,h*0.95);
     vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.58)');
@@ -1337,40 +1404,47 @@ function drawScene(kind){
     // ---- other stalls receding behind, in silhouette
     for(let i=0;i<5;i++){
       const sx=w*(0.02+i*0.21), sw=w*0.15, sh=h*0.13;
-      g.fillStyle='#16303F'; g.fillRect(sx,h*0.20,sw,sh);
-      g.fillStyle='#1D3D50'; g.fillRect(sx,h*0.20,sw,6);
-      g.fillStyle='rgba(232,134,60,.16)';                              // lit inside
+      g.fillStyle='#273D4C'; g.fillRect(sx,h*0.20,sw,sh);
+      g.fillStyle='#465C6D'; g.fillRect(sx,h*0.20,sw,6);
+      g.fillStyle='rgba(237,141,48,.16)';                              // lit inside
       g.fillRect(sx+sw*0.3,h*0.20+8,sw*0.4,sh-12);
     }
     g.fillStyle=th.snow; g.fillRect(0,h*0.30,w,CT-h*0.30);            // snow floor
     g.fillStyle='rgba(41,181,232,.10)'; g.fillRect(0,h*0.30,w,4);
     // ---- striped awning with a scalloped edge
+    // Large-fill rule: this spans the full width across the top third, so it
+    // is background, not a prop. In #DF6C5A/#DEE5EB it was a candy slab that
+    // fought every other colour in the room and pulled the eye off CoCo. Same
+    // eleven-bay rhythm, stepped between the two dark greys, with the warm red
+    // moved into the scalloped hem - the market identity survives in the hem
+    // and the bunting, which is where the eye lands anyway.
     for(let i=0;i<11;i++){
-      g.fillStyle=i%2?'#D0392B':'#F2F7FA';
+      g.fillStyle=i%2?'#35424C':'#465C6D';
       g.fillRect(i*(w/11),0,w/11,h*0.15);
+      g.fillStyle=i%2?'#B45648':'#DF6C5A';
       g.beginPath(); g.arc(i*(w/11)+w/22,h*0.15,w/22,0,Math.PI); g.fill();
     }
-    g.fillStyle='#8A5A2B'; g.fillRect(0,h*0.17,w,7);
+    g.fillStyle='#C4682A'; g.fillRect(0,h*0.17,w,7);
     // ---- bunting slung under the awning, hung with a deeper swag so it comes
     // down close to CoCo - feedback: the empty gap between him and the bunting
     // read as dead space in the shorter room.
     for(let i=0;i<14;i++){
       const bx=w*0.03+i*(w*0.069);
       const sag=Math.sin(i/2.1)*5;
-      g.fillStyle=['#E8863C','#29B5E8','#F2C14E','#4F9E6A'][i%4];
+      g.fillStyle=['#ED8D30','#29B5E8','#E5C872','#6CAA71'][i%4];
       g.beginPath(); g.moveTo(bx,h*0.19+sag);
       g.lineTo(bx+w*0.03,h*0.19+sag); g.lineTo(bx+w*0.015,h*0.34+sag);
       g.closePath(); g.fill();
     }
-    g.fillStyle='#6B4A2B'; g.fillRect(w*0.04,h*0.15,9,CT-h*0.15);     // posts
+    g.fillStyle='#C4682A'; g.fillRect(w*0.04,h*0.15,9,CT-h*0.15);     // posts
     g.fillRect(w*0.92,h*0.15,9,CT-h*0.15);
     // ---- hanging lamp over the counter, warm pool of light
     const px=w*0.22, py=h*0.20;
-    g.fillStyle='#3A2A1C'; g.fillRect(px-2,h*0.145,4,py-h*0.145);
-    g.fillStyle='#C9A13B'; g.fillRect(px-11,py,22,8);
+    g.fillStyle='#35424C'; g.fillRect(px-2,h*0.145,4,py-h*0.145);
+    g.fillStyle='#C4AC62'; g.fillRect(px-11,py,22,8);
     const pg=g.createRadialGradient(px,py+8,6,px,py+8,h*0.40);
-    pg.addColorStop(0,'rgba(255,231,176,.40)');
-    pg.addColorStop(1,'rgba(255,231,176,0)');
+    pg.addColorStop(0,'rgba(229,200,114,.40)');
+    pg.addColorStop(1,'rgba(229,200,114,0)');
     g.fillStyle=pg; g.fillRect(0,0,w,h);
     // ---- CoCo tending the stall, with breath in the cold. Raised toward the
     // bunting so the stall reads as one compact unit rather than a figure with
@@ -1379,34 +1453,34 @@ function drawScene(kind){
     if(sceneThinking) drawThinkBubble(g,w*0.5,CT-h*0.28,S*1.9);
     for(let i=0;i<5;i++){
       const t=(tick*0.9+i*22)%110;
-      g.fillStyle='rgba(234,246,253,'+(0.30*(1-t/110))+')';
+      g.fillStyle='rgba(229,239,245,'+(0.30*(1-t/110))+')';
       g.fillRect(w*0.5+16+t*0.5,CT-h*0.28-4-t*0.28,S*(1+t/60),S*(1+t/60));
     }
     // ---- crates of goods with price tags
-    const goods=['#4F9E6A','#3E7DA8','#C9A13B','#8A5FA8','#C4553E'];
+    const goods=['#6CAA71','#6D96B4','#C4AC62','#BD7BCD','#B45648'];
     const cy0=CT-h*0.075;                                  // crates ON the counter
     for(let i=0;i<5;i++){ const x=w*0.09+i*w*0.17;
-      g.fillStyle='#7A5433'; g.fillRect(x,cy0,w*0.12,h*0.075);
+      g.fillStyle='#C4682A'; g.fillRect(x,cy0,w*0.12,h*0.075);
       g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(x,cy0,w*0.12,4);
       g.fillStyle=goods[i]; g.fillRect(x+6,cy0-h*0.035,w*0.12-12,h*0.035);
-      g.fillStyle='#F2F7FA'; g.fillRect(x+w*0.12-15,cy0+6,13,9);
-      g.fillStyle='#7A5433'; g.fillRect(x+w*0.12-15,cy0+6,13,2);
+      g.fillStyle='#DEE5EB'; g.fillRect(x+w*0.12-15,cy0+6,13,9);
+      g.fillStyle='#C4682A'; g.fillRect(x+w*0.12-15,cy0+6,13,2);
     }
     // (The chalkboard price sign was removed - it rendered as a stray box of
     // text lines and added nothing at booth scale.)
     // ---- counter: a slim wooden lip, not a slab. The bulk of the wood is gone
     // so the goods and CoCo carry the scene.
-    g.fillStyle='#5A3D22'; g.fillRect(0,CT,w,h-CT);
+    g.fillStyle='#35424C'; g.fillRect(0,CT,w,h-CT);
     for(let i=0;i<9;i++){                                              // planks
       g.fillStyle='rgba(0,0,0,.12)';
       g.fillRect(i*(w/9),CT,3,h-CT);
     }
-    g.fillStyle='#6E4B2A'; g.fillRect(0,CT,w,5);
-    g.fillStyle='rgba(255,231,176,.10)'; g.fillRect(0,CT,w*0.42,5);
+    g.fillStyle='#465C6D'; g.fillRect(0,CT,w,5);
+    g.fillStyle='rgba(229,200,114,.10)'; g.fillRect(0,CT,w*0.42,5);
     // a second lamp low over the counter, so this scene is lit like the library
     const l2=g.createRadialGradient(w*0.72,CT-6,6,w*0.72,CT-6,h*0.26);
-    l2.addColorStop(0,'rgba(255,231,176,.26)');
-    l2.addColorStop(1,'rgba(255,231,176,0)');
+    l2.addColorStop(0,'rgba(229,200,114,.26)');
+    l2.addColorStop(1,'rgba(229,200,114,0)');
     g.fillStyle=l2; g.fillRect(w*0.42,CT-h*0.26,w*0.58,h*0.30);
     // ---- snow falling through the scene
     for(let i=0;i<34;i++){
@@ -1419,10 +1493,10 @@ function drawScene(kind){
   if(kind==='workshop'){
     const BN=h*SAFE;                                                    // bench = band
     // ---- steel back wall with panel seams
-    g.fillStyle='#0B1219'; g.fillRect(0,0,w,h);
+    g.fillStyle='#2C3444'; g.fillRect(0,0,w,h);
     for(let x=0;x<w;x+=w*0.11){
-      g.fillStyle='#121C26'; g.fillRect(x+2,0,w*0.11-4,BN);
-      g.fillStyle='#1A2833'; g.fillRect(x+2,0,w*0.11-4,3);
+      g.fillStyle='#222834'; g.fillRect(x+2,0,w*0.11-4,BN);
+      g.fillStyle='#222834'; g.fillRect(x+2,0,w*0.11-4,3);
     }
     // ---- cyan floor/wall grid glow
     g.strokeStyle='rgba(41,181,232,.16)'; g.lineWidth=2;
@@ -1434,17 +1508,17 @@ function drawScene(kind){
     }
     // ---- server racks either side, LEDs scanning down each column
     [w*0.03,w*0.83].forEach((rx,side)=>{
-      g.fillStyle='#0E1A24'; g.fillRect(rx,h*0.05,w*0.14,BN-h*0.06);
-      g.fillStyle='#1B2C3A'; g.fillRect(rx,h*0.05,w*0.14,4);
+      g.fillStyle='#222834'; g.fillRect(rx,h*0.05,w*0.14,BN-h*0.06);
+      g.fillStyle='#35424C'; g.fillRect(rx,h*0.05,w*0.14,4);
       for(let r=0;r<9;r++){
         const ry=h*0.075+r*((BN-h*0.11)/9);
-        g.fillStyle='#16242F'; g.fillRect(rx+5,ry,w*0.14-10,(BN-h*0.11)/9-4);
+        g.fillStyle='#222834'; g.fillRect(rx+5,ry,w*0.14-10,(BN-h*0.11)/9-4);
         const lit=((Math.floor(tick/5)+r+side*4)%9)<3;
-        g.fillStyle=lit?'#29B5E8':'#1E3A4C';
+        g.fillStyle=lit?'#29B5E8':'#35424C';
         g.fillRect(rx+9,ry+4,6,6);
         g.fillStyle=lit?'rgba(41,181,232,.30)':'transparent';
         g.fillRect(rx+5,ry,w*0.14-10,(BN-h*0.11)/9-4);
-        g.fillStyle='#24455C';                                         // drive slots
+        g.fillStyle='#465C6D';                                         // drive slots
         for(let d=0;d<3;d++) g.fillRect(rx+22+d*10,ry+5,6,(BN-h*0.11)/9-14);
       }
     });
@@ -1461,11 +1535,11 @@ function drawScene(kind){
       // ambiguous grey shapes is worse than a clean wall. The gear stays: it is
       // one large circle with teeth and it reads at any size.
       const gx=w*0.235, gy=BN*0.095, rad=w*0.036;
-      g.save(); g.translate(gx,gy); g.rotate(tick/60); g.fillStyle='#425C6A';
+      g.save(); g.translate(gx,gy); g.rotate(tick/60); g.fillStyle='#465C6D';
       for(let t=0;t<10;t++){ g.save(); g.rotate(t/10*Math.PI*2);
         g.fillRect(-rad*0.18,-rad-5,rad*0.36,9); g.restore(); }
       g.beginPath(); g.arc(0,0,rad,0,7); g.fill();
-      g.fillStyle='#0E1A24'; g.beginPath(); g.arc(0,0,rad*0.32,0,7); g.fill();
+      g.fillStyle='#222834'; g.beginPath(); g.arc(0,0,rad*0.32,0,7); g.fill();
       g.restore();
     })();
     // ---- glowing conduits running along the floor into the bench
@@ -1482,7 +1556,7 @@ function drawScene(kind){
     eg.addColorStop(0,'rgba(41,181,232,.34)');
     eg.addColorStop(1,'rgba(41,181,232,0)');
     g.fillStyle=eg; g.fillRect(w*0.24,0,w*0.52,BN);
-    g.fillStyle='#1B4260'; g.fillRect(ox-22,BN-9,44,9);                // emitter
+    g.fillStyle='#465C6D'; g.fillRect(ox-22,BN-9,44,9);                // emitter
     g.fillStyle='#29B5E8'; g.fillRect(ox-14,BN-12,28,4);
     const pt=(sx,sy,sz)=>{                                             // cheap 3D
       const c=Math.cos(a), si=Math.sin(a);
@@ -1497,8 +1571,8 @@ function drawScene(kind){
     g.strokeStyle='rgba(41,181,232,.85)'; g.lineWidth=2;
     E.forEach(e=>{ g.beginPath(); g.moveTo(V[e[0]][0],V[e[0]][1]);
       g.lineTo(V[e[1]][0],V[e[1]][1]); g.stroke(); });
-    g.fillStyle='#9FE8FF'; V.forEach(v=>g.fillRect(v[0]-2,v[1]-2,5,5));
-    g.strokeStyle='rgba(159,232,255,.30)'; g.lineWidth=1;              // scan line
+    g.fillStyle='#84DDE0'; V.forEach(v=>g.fillRect(v[0]-2,v[1]-2,5,5));
+    g.strokeStyle='rgba(132,221,224,.30)'; g.lineWidth=1;              // scan line
     const sl=oy-rh+((tick*1.6)%(rh*2));
     g.beginPath(); g.moveTo(ox-rw,sl); g.lineTo(ox+rw,sl); g.stroke();
     // ---- articulated arms dipping to the bench, throwing sparks
@@ -1506,22 +1580,22 @@ function drawScene(kind){
       const ax=arm[0], dip=Math.sin(tick/17+i*2.1);
       const j1x=ax, j1y=BN*0.14, j2x=ax+arm[1]*w*0.055, j2y=BN*0.48+dip*h*0.03;
       const tipx=ax+arm[1]*w*0.015, tipy=BN-h*0.045+dip*h*0.018;
-      g.strokeStyle='#39525F'; g.lineWidth=9;
+      g.strokeStyle='#465C6D'; g.lineWidth=9;
       g.beginPath(); g.moveTo(j1x,j1y); g.lineTo(j2x,j2y);
       g.lineTo(tipx,tipy); g.stroke();
-      g.strokeStyle='#5A7A8C'; g.lineWidth=3;
+      g.strokeStyle='#8FA6B8'; g.lineWidth=3;
       g.beginPath(); g.moveTo(j1x,j1y); g.lineTo(j2x,j2y);
       g.lineTo(tipx,tipy); g.stroke();
-      g.fillStyle='#1B4260'; g.fillRect(j1x-8,j1y-8,16,16);
+      g.fillStyle='#465C6D'; g.fillRect(j1x-8,j1y-8,16,16);
       g.fillRect(j2x-6,j2y-6,12,12);
-      g.fillStyle='#E8863C'; g.fillRect(tipx-4,tipy-4,8,8);
+      g.fillStyle='#ED8D30'; g.fillRect(tipx-4,tipy-4,8,8);
       if(dip>0.55){                                                    // sparks
         for(let k2=0;k2<7;k2++){
           const t2=(tick*2+k2*9)%18;
-          g.fillStyle='rgba(255,231,176,'+(1-t2/18)+')';
+          g.fillStyle='rgba(229,200,114,'+(1-t2/18)+')';
           g.fillRect(tipx+(k2-3)*3.5, tipy+t2*1.5, S, S);
         }
-        g.fillStyle='rgba(255,231,176,.18)';
+        g.fillStyle='rgba(229,200,114,.18)';
         g.beginPath(); g.arc(tipx,tipy,20,0,7); g.fill();
       }
     });
@@ -1559,13 +1633,13 @@ function drawScene(kind){
       const flip=(gx,gy)=>{                      // one flipper, shoulder to grip
         // In CoCo's own blue, brightened. Drawn in #1F4258 it was the same value
         // as the wall shading and read as a shadow, not a limb.
-        g.strokeStyle='#2E6E96'; g.lineWidth=cu*1.8; g.lineCap='round';
+        g.strokeStyle='#6D96B4'; g.lineWidth=cu*1.8; g.lineCap='round';
         g.beginPath(); g.moveTo(shx,shy); g.lineTo(gx,gy); g.stroke();
-        g.strokeStyle='#4A9BC4'; g.lineWidth=cu*0.7;
+        g.strokeStyle='#67B5ED'; g.lineWidth=cu*0.7;
         g.beginPath(); g.moveTo(shx,shy-cu*0.45); g.lineTo(gx,gy-cu*0.45); g.stroke();
         // A visible grip at the end, so the arm plainly CLASPS the tool rather
         // than stopping near it.
-        g.fillStyle='#173447';
+        g.fillStyle='#35424C';
         g.fillRect(gx-cu*1.0,gy-cu*0.9,cu*2.0,cu*1.8);
       };
       const WELD = Math.floor(tick/200)%2===0;
@@ -1576,14 +1650,14 @@ function drawScene(kind){
       drawThinkBubble(g,w*0.5,BN-h*0.055,S*1.9);
 
       // ---- the anvil is furniture: it stays for both jobs.
-      g.fillStyle='#3A3A42'; g.fillRect(ax2-18,ay2-8,36,8);   // face
-      g.fillStyle='#33333B'; g.fillRect(ax2-14,ay2-10,28,2);  // lit top edge
-      g.fillStyle='#2A2A32'; g.fillRect(ax2-10,ay2,20,14);    // waist
-      g.fillStyle='#22222A'; g.fillRect(ax2-16,ay2+14,32,4);  // base
+      g.fillStyle='#465C6D'; g.fillRect(ax2-18,ay2-8,36,8);   // face
+      g.fillStyle='#465C6D'; g.fillRect(ax2-14,ay2-10,28,2);  // lit top edge
+      g.fillStyle='#35424C'; g.fillRect(ax2-10,ay2,20,14);    // waist
+      g.fillStyle='#222834'; g.fillRect(ax2-16,ay2+14,32,4);  // base
       // the workpiece, glowing on the face
-      g.fillStyle='rgba(232,134,60,.35)'; g.fillRect(ax2-13,ay2-15,26,10);
-      g.fillStyle='#E8863C'; g.fillRect(ax2-8,ay2-12,16,4);
-      g.fillStyle='#FFD79A'; g.fillRect(ax2-6,ay2-12,12,2);
+      g.fillStyle='rgba(237,141,48,.35)'; g.fillRect(ax2-13,ay2-15,26,10);
+      g.fillStyle='#ED8D30'; g.fillRect(ax2-8,ay2-12,16,4);
+      g.fillStyle='#E5C872'; g.fillRect(ax2-6,ay2-12,12,2);
 
       if(WELD){
         // ---- the mask. A proper helmet: a rounded grey shell over the whole
@@ -1592,17 +1666,17 @@ function drawScene(kind){
         // and pushed a grey tab out past the right - a mask worn crooked. The
         // shell now sits inside CoCo's silhouette.
         const mw=cu*7.6, mh=cu*7.2, mx0=ccx-mw/2, my0=ccy-cu*9.7;
-        g.fillStyle='#5C6268';                       // shell, shadowed side
+        g.fillStyle='#465C6D';                       // shell, shadowed side
         rrect(g,mx0,my0,mw,mh,cu*2.2); g.fill();
-        g.fillStyle='#8B9298';                       // shell, lit
+        g.fillStyle='#8FA6B8';                       // shell, lit
         rrect(g,mx0+cu*0.5,my0+cu*0.4,mw-cu*1.6,mh-cu*1.6,cu*1.9); g.fill();
-        g.fillStyle='#A7AEB4';                       // top highlight
+        g.fillStyle='#DEE5EB';                       // top highlight
         rrect(g,mx0+cu*1.6,my0+cu*0.6,mw-cu*3.4,cu*1.0,cu*0.5); g.fill();
         // the window: dark bezel, cyan glass, two diagonal light streaks
         const ww=mw-cu*2.2, wh=cu*2.6, wx=ccx-ww/2, wy=my0+cu*2.4;
-        g.fillStyle='#2C3238'; rrect(g,wx-cu*0.4,wy-cu*0.4,ww+cu*0.8,wh+cu*0.8,cu*0.5); g.fill();
+        g.fillStyle='#35424C'; rrect(g,wx-cu*0.4,wy-cu*0.4,ww+cu*0.8,wh+cu*0.8,cu*0.5); g.fill();
         g.fillStyle='#29B5E8'; g.fillRect(wx,wy,ww,wh);
-        g.fillStyle='#7FD6F2'; g.fillRect(wx,wy,ww,cu*0.5);
+        g.fillStyle='#84DDE0'; g.fillRect(wx,wy,ww,cu*0.5);
         g.save(); g.beginPath(); g.rect(wx,wy,ww,wh); g.clip();
         g.fillStyle='rgba(255,255,255,.30)';
         g.translate(wx,wy); g.rotate(-0.5);
@@ -1614,11 +1688,11 @@ function drawScene(kind){
         // spray of sparks falling AWAY from the work - the giveaway that it is
         // welding and not just a glow.
         const fl=0.55+0.45*Math.abs(Math.sin(tick*0.9))*(tick%7<5?1:0.35);
-        g.fillStyle='rgba(140,210,255,'+(0.16*fl).toFixed(3)+')';
+        g.fillStyle='rgba(103,181,237,'+(0.16*fl).toFixed(3)+')';
         g.beginPath(); g.arc(ax2,ay2-12,cu*7*fl,0,7); g.fill();
-        g.fillStyle='rgba(150,220,255,'+(0.60*fl).toFixed(3)+')';
+        g.fillStyle='rgba(103,181,237,'+(0.60*fl).toFixed(3)+')';
         g.beginPath(); g.arc(ax2,ay2-12,cu*2.6*fl,0,7); g.fill();
-        g.fillStyle='#FFFFFF';
+        g.fillStyle='#E5EFF5';
         g.fillRect(ax2-cu*0.8,ay2-13-cu*0.5,cu*1.6,cu*1.4);
         // The torch, HELD - angled from CoCo's flipper down onto the work.
         // The first version was a horizontal dark bar on a dark wall: all that
@@ -1628,16 +1702,16 @@ function drawScene(kind){
         g.save(); g.translate(gx,gy);
         g.rotate(Math.atan2((ay2-15)-gy,ax2-gx));
         const tl=Math.hypot(ax2-gx,(ay2-15)-gy);
-        g.fillStyle='#8A9299'; g.fillRect(0,-cu*0.6,tl*0.72,cu*1.2);  // body
-        g.fillStyle='#B0B8BE'; g.fillRect(0,-cu*0.6,tl*0.72,cu*0.4);  // lit edge
-        g.fillStyle='#3A4249'; g.fillRect(tl*0.72,-cu*0.4,tl*0.20,cu*0.8);
-        g.fillStyle='#B8452E'; g.fillRect(tl*0.92,-cu*0.5,tl*0.08,cu*1.0);
+        g.fillStyle='#8FA6B8'; g.fillRect(0,-cu*0.6,tl*0.72,cu*1.2);  // body
+        g.fillStyle='#DEE5EB'; g.fillRect(0,-cu*0.6,tl*0.72,cu*0.4);  // lit edge
+        g.fillStyle='#465C6D'; g.fillRect(tl*0.72,-cu*0.4,tl*0.20,cu*0.8);
+        g.fillStyle='#B45648'; g.fillRect(tl*0.92,-cu*0.5,tl*0.08,cu*1.0);
         g.restore();
         for(let sp=0;sp<10;sp++){
           const t2=(tick*2.2+sp*13)%26;
           const spx=ax2+Math.cos(sp*1.9)*t2*0.8, spy=ay2-12+t2*0.75;
           if(spy>ay2+16) continue;
-          g.fillStyle=sp%3?'#FFE7B0':'#8CD2FF';
+          g.fillStyle=sp%3?'#E5C872':'#67B5ED';
           g.fillRect(spx,spy,S*1.3,S*1.3);
         }
       } else {
@@ -1663,11 +1737,11 @@ function drawScene(kind){
         g.save();
         g.translate(gx2,gy2); g.rotate(ang);
         // shaft runs along +x from the grip, head sits at the far end
-        g.fillStyle='#5A3D22'; g.fillRect(0,-cu*0.45,SHAFT,cu*0.9);
-        g.fillStyle='#77522F'; g.fillRect(0,-cu*0.45,SHAFT,cu*0.3);
-        g.fillStyle='#6A6A72'; g.fillRect(SHAFT-cu*0.6,-cu*1.7,cu*2.4,cu*3.4);
-        g.fillStyle='#8A8A94'; g.fillRect(SHAFT-cu*0.6,-cu*1.7,cu*2.4,cu*0.6);
-        g.fillStyle='#4C4C56'; g.fillRect(SHAFT+cu*1.8,-cu*1.1,cu*0.7,cu*2.2);
+        g.fillStyle='#C4682A'; g.fillRect(0,-cu*0.45,SHAFT,cu*0.9);
+        g.fillStyle='#C4682A'; g.fillRect(0,-cu*0.45,SHAFT,cu*0.3);
+        g.fillStyle='#8FA6B8'; g.fillRect(SHAFT-cu*0.6,-cu*1.7,cu*2.4,cu*3.4);
+        g.fillStyle='#8FA6B8'; g.fillRect(SHAFT-cu*0.6,-cu*1.7,cu*2.4,cu*0.6);
+        g.fillStyle='#465C6D'; g.fillRect(SHAFT+cu*1.8,-cu*1.1,cu*0.7,cu*2.2);
         g.restore();
         // The arm last, so the grip reads as closing over the shaft.
         flip(gx2,gy2);
@@ -1683,10 +1757,10 @@ function drawScene(kind){
             // muddy: hot pixels and grey block occupying the same rows.
             const spx=ax2+Math.cos(ang2)*spd*1.6,
                   spy=strikeY+cu*0.8+Math.abs(Math.sin(ang2))*spd*0.5;
-            g.fillStyle=sp%2?'#FFE7B0':'#E8863C';
+            g.fillStyle=sp%2?'#E5C872':'#ED8D30';
             g.fillRect(spx,spy,S*1.2,S*1.2);
           }
-          g.fillStyle='rgba(255,231,176,.22)';
+          g.fillStyle='rgba(229,200,114,.22)';
           g.beginPath(); g.arc(ax2,strikeY+cu*0.6,cu*1.5,0,7); g.fill();
         }
       }
@@ -1694,11 +1768,11 @@ function drawScene(kind){
     g.fillStyle='rgba(41,181,232,.16)';
     g.fillRect(w*0.5-38,BN-h*0.16,76,h*0.16);
     // ---- steel bench: the panel docks against this edge
-    g.fillStyle='#243747'; g.fillRect(0,BN,w,h-BN);
-    g.fillStyle='#31485B'; g.fillRect(0,BN,w,5);
+    g.fillStyle='#35424C'; g.fillRect(0,BN,w,h-BN);
+    g.fillStyle='#465C6D'; g.fillRect(0,BN,w,5);
     g.fillStyle='rgba(41,181,232,.35)'; g.fillRect(0,BN+5,w,2);
     for(let x=w*0.05;x<w*0.95;x+=w*0.09){                              // bolts
-      g.fillStyle='#1A2833'; g.fillRect(x,BN+12,7,7);
+      g.fillStyle='#222834'; g.fillRect(x,BN+12,7,7);
     }
     for(let i=0;i<5;i++){                                              // seams
       g.fillStyle='rgba(0,0,0,.16)';
@@ -1718,11 +1792,11 @@ function drawScene(kind){
     g.fillStyle=th.sky; g.fillRect(0,0,w,h);
     // arctic dusk behind: a soft horizon and a few pines
     const sg=g.createLinearGradient(0,0,0,GR);
-    sg.addColorStop(0,'#0E2436'); sg.addColorStop(1,'#1D3D50');
+    sg.addColorStop(0,'#273D4C'); sg.addColorStop(1,'#465C6D');
     g.fillStyle=sg; g.fillRect(0,0,w,GR);
     for(let i=0;i<7;i++){
       const tx=w*(0.05+i*0.15), th2=h*0.10;
-      g.fillStyle='#123049';
+      g.fillStyle='#273D4C';
       g.beginPath(); g.moveTo(tx,GR-th2*1.6); g.lineTo(tx-w*0.030,GR);
       g.lineTo(tx+w*0.030,GR); g.closePath(); g.fill();
     }
@@ -1730,9 +1804,9 @@ function drawScene(kind){
     g.fillStyle='rgba(41,181,232,.10)'; g.fillRect(0,GR,w,4);
     // the postbox
     const bx=w*0.62, by=GR-h*0.26, bw=w*0.11, bh=h*0.26;
-    g.fillStyle='#3A2A1C'; g.fillRect(bx+bw*0.36,by+bh*0.55,bw*0.28,bh*0.45);
-    g.fillStyle='#C4553E'; g.fillRect(bx,by,bw,bh*0.60);
-    g.fillStyle='#A6412F'; g.fillRect(bx,by,bw,6);
+    g.fillStyle='#35424C'; g.fillRect(bx+bw*0.36,by+bh*0.55,bw*0.28,bh*0.45);
+    g.fillStyle='#B45648'; g.fillRect(bx,by,bw,bh*0.60);
+    g.fillStyle='#B45648'; g.fillRect(bx,by,bw,6);
     // The envelope, the hole and the red lip all have to agree. Previously the
     // hole was a fixed fraction of the box and the letter was a fraction of the
     // stage, so the letter came out WIDER than the lip; and the lip was painted
@@ -1743,9 +1817,9 @@ function drawScene(kind){
     const holeW=Math.max(bw*0.64, ew+w*0.014);       // never narrower than the letter
     const holeH=Math.max(9,eh*0.30);
     const holeX=slotX-holeW/2;
-    g.fillStyle='#16222E'; g.fillRect(holeX,slotY,holeW,holeH);          // the hole
+    g.fillStyle='#191D27'; g.fillRect(holeX,slotY,holeW,holeH);          // the hole
     if(p>0.60){                                                          // the lip
-      g.fillStyle='#A6412F';
+      g.fillStyle='#B45648';
       g.fillRect(holeX,slotY-(p<0.72?4:0),holeW,7);
     }
     if(p<0.62){
@@ -1756,7 +1830,7 @@ function drawScene(kind){
       const ey=ey_start+(ey_end-ey_start)*t - Math.sin(t*Math.PI)*h*0.13;
       g.save(); g.translate(ex+ew/2,ey+eh/2); g.rotate(-0.5+t*0.5);
       g.fillStyle='#EADFC6'; g.fillRect(-ew/2,-eh/2,ew,eh);
-      g.strokeStyle='#B9A98A'; g.lineWidth=2; g.strokeRect(-ew/2,-eh/2,ew,eh);
+      g.strokeStyle='#C4AC62'; g.lineWidth=2; g.strokeRect(-ew/2,-eh/2,ew,eh);
       g.beginPath(); g.moveTo(-ew/2,-eh/2); g.lineTo(0,eh*0.1);
       g.lineTo(ew/2,-eh/2); g.stroke(); g.restore();
     } else if(p<0.78){
@@ -1768,7 +1842,7 @@ function drawScene(kind){
       for(let i=0;i<9;i++){
         const t=(p-0.74)/0.26, a=1-t;
         const ang=i*0.7, r=t*h*0.12;
-        g.fillStyle=`rgba(255,231,176,${Math.max(0,a)})`;
+        g.fillStyle=`rgba(229,200,114,${Math.max(0,a)})`;
         g.fillRect(slotX+Math.cos(ang)*r,slotY+Math.sin(ang)*r-h*0.02,S,S);
       }
     }
@@ -1776,7 +1850,9 @@ function drawScene(kind){
     const cx=w*0.44, cy=GR-h*0.045;
     drawCoCoFront(g,cx,cy,S*1.9);
     if(p>0.62){
-      g.fillStyle=CFG.penguin.body_dark;
+      // Flat body, as in the CLI - so the raised flipper reads by silhouette,
+      // sticking out past the shoulder line, not by being a darker blue.
+      g.fillStyle=CFG.penguin.body;
       g.fillRect(cx+S*1.9*4,cy-S*1.9*6,S*1.9*2,S*1.9*4);
     }
     for(let i=0;i<26;i++){                            // snow
@@ -2005,12 +2081,18 @@ function homeReplyMode(on){
   if(dock) dock.style.display=on?'none':'';
 }
 function paintTrustLine(){
-  const say=$('h-say');
-  say.classList.add('on');
-  say.textContent=trustSeq[trustIdx]||'';
-  logOpening(trustSeq[trustIdx]||'');
+  // The read-back belongs in CoCo's bubble, which the stylesheet above calls
+  // "the ONLY place narrative appears". This beat was the one exception: it
+  // spoke through a second bubble floating in the middle of the house. The
+  // nudge is given a little more time than the beat itself so the line cannot
+  // blank out in the gap before it advances.
+  const txt=trustSeq[trustIdx]||'';
+  $('h-say').classList.remove('on');
+  const dur=trustDur(txt);
+  nudge(txt,dur+1200);
+  logOpening(txt);
   clearTimeout(setPhase._t);
-  setPhase._t=setTimeout(nextPhase,trustDur(trustSeq[trustIdx]));
+  setPhase._t=setTimeout(nextPhase,dur);
 }
 // CoCo reads back what the letter said, then makes the security and AI point
 // inside that summary rather than as a separate lecture. The copy lives in
@@ -2548,6 +2630,8 @@ function openPanel(id){
   // second question. It moved to CoCo's home stage (2026-08-25), so the Library
   // now asks one thing only: what data do you hold.
   $('c-coco-choose').style.display = id==='workshop' ? '' : 'none';
+  // Fresh visit to the bench, fresh choice - but within one visit it is one shot.
+  $('c-coco-choose').disabled = false;
   $('ov-loc').classList.add('on');
   syncGo();
   // Land the caret in the docked action block, not at the top of the card.
@@ -2601,10 +2685,10 @@ function renderBpBody(d,featNames,joinNames,li){
   const p=d.poc||{};
   $('bp').innerHTML = `
     <h3>What you are building</h3><div style="font-size:15px">${esc(p.poc_name)}</div>
-    <div style="font-size:13px;color:#7FA8C2;margin-top:3px">${esc(p.summary||'')}</div>
+    <div style="font-size:13px;color:#8FA6B8;margin-top:3px">${esc(p.summary||'')}</div>
     ${joinNames.length?`<h3>Data you are attaching</h3><ul>${li(joinNames)}</ul>`:''}
     ${featNames.length?`<h3>Snowflake features in play</h3><ul>${li(featNames.slice(0,4))}</ul>`:''}
-    <div style="margin-top:12px;font-size:13px;color:#9FC2D6;line-height:1.5">
+    <div style="margin-top:12px;font-size:13px;color:#8FA6B8;line-height:1.5">
       The full brief, the Cortex Code prompt${p.guide_title?', the guide to fork':''}
       and your Word document all travel with the blueprint. Scan the code
       below to take it with you.</div>`;
@@ -2751,6 +2835,10 @@ async function submitPanel(){
   }catch(e){ showErr('cannot reach server'); }
 }
 $('c-coco-choose').addEventListener('click',()=>{
+  // One shot. It stayed live after being pressed, so it invited a second click
+  // that would overwrite the answer CoCo was already composing.
+  if($('c-coco-choose').disabled) return;
+  $('c-coco-choose').disabled=true;
   const v=ST.visitor||{}, ind=(CFG.industries[v.industry]||{}).name||'your sector';
   const held=(ST.held||[]).slice(0,2).join(' and ')||'your data';
   const joined=(ST.joined||[]).slice(0,1)[0]||'';
@@ -2811,16 +2899,23 @@ function cancelAutoLeave(){ clearTimeout(autoLeaveT); autoLeaveT=0; }
 // trick - the decision tree already tells us the finite set of things a visitor
 // can end up with, so the art can be built in advance and pieced together.
 const CARD_W=1200, CARD_H=630;
+// Every card now sits on the same dark grey, #2C3444, lifting one step to
+// Clear Dark's #35424C so a 1200x630 slab is not a flat field. The nine
+// identities survive in the accent alone, and every accent is drawn from the
+// Clear Dark palette rather than invented, so a wall of nine postcards reads as
+// one family. They were nine bespoke gradients - purple, pink, teal - none of
+// which were brand colours.
+const CARD_SKY=['#2C3444','#35424C'];
 const CARD_THEMES={
-  'talk-to-my-data':        {sky:['#0B2A3F','#1E5A7A'], accent:'#29B5E8', motif:'chart',    tag:'Talk to my data'},
-  'ask-my-documents':       {sky:['#122036','#2F4F7A'], accent:'#7DD3F0', motif:'docs',    tag:'Ask my documents'},
-  'extract-from-paperwork': {sky:['#1B1B33','#40407A'], accent:'#B39DFF', motif:'form',    tag:'Extract from paperwork'},
-  'triage-and-classify':    {sky:['#0E2B2B','#1F6060'], accent:'#4FD1B0', motif:'bins',    tag:'Triage and classify'},
-  'an-agent-that-acts':     {sky:['#2A1633','#5C2A6B'], accent:'#E88BD8', motif:'agent',   tag:'An agent that acts'},
-  'predict-what-happens-next':{sky:['#1A1030','#3D2070'], accent:'#FF7FAF', motif:'trend', tag:'Predict what happens next'},
-  'join-the-silos':         {sky:['#101F2E','#2B4A66'], accent:'#8FD4F5', motif:'silos',   tag:'Join the silos'},
-  'share-without-copying':  {sky:['#0E2620','#1F5A46'], accent:'#5FD9A0', motif:'share',   tag:'Share without copying'},
-  'watch-it-live':          {sky:['#2B1220','#6B2440'], accent:'#FF7FA8', motif:'stream',  tag:'Watch it live'}
+  'talk-to-my-data':        {sky:CARD_SKY, accent:'#29B5E8', motif:'chart',    tag:'Talk to my data'},
+  'ask-my-documents':       {sky:CARD_SKY, accent:'#67B5ED', motif:'docs',     tag:'Ask my documents'},
+  'extract-from-paperwork': {sky:CARD_SKY, accent:'#D389E5', motif:'form',     tag:'Extract from paperwork'},
+  'triage-and-classify':    {sky:CARD_SKY, accent:'#79BE7E', motif:'bins',     tag:'Triage and classify'},
+  'an-agent-that-acts':     {sky:CARD_SKY, accent:'#BD7BCD', motif:'agent',    tag:'An agent that acts'},
+  'predict-what-happens-next':{sky:CARD_SKY, accent:'#E5C872', motif:'trend',  tag:'Predict what happens next'},
+  'join-the-silos':         {sky:CARD_SKY, accent:'#6D96B4', motif:'silos',    tag:'Join the silos'},
+  'share-without-copying':  {sky:CARD_SKY, accent:'#6CAA71', motif:'share',    tag:'Share without copying'},
+  'watch-it-live':          {sky:CARD_SKY, accent:'#84DDE0', motif:'stream',   tag:'Watch it live'}
 };
 // Per-motif vertical nudge, so every motif's visual bottom lands on the same
 // ground plane as CoCo's feet. Measured, not guessed.
@@ -2835,7 +2930,7 @@ function cardTheme(){
 function cpx(g,x,y,w,h,c){ g.fillStyle=c; g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); }
 
 function drawCardMotif(g,kind,cx,cy,u,accent){
-  const A=accent, D='#EAF6FD', S2='rgba(255,255,255,.20)';
+  const A=accent, D='#E5EFF5', S2='rgba(255,255,255,.20)';
   if(kind==='chat'){
     // iMessage-style: user asks (accent, left), reply (white, right)
     const msgs=[
@@ -2909,8 +3004,9 @@ function drawCardMotif(g,kind,cx,cy,u,accent){
     cpx(g,cx-u*3.5,cy-u*12,u*8,u*0.8,'rgba(0,0,0,.3)');
     cpx(g,cx-u*3.5,cy-u*10.5,u*6,u*0.8,'rgba(0,0,0,.3)');
   } else if(kind==='trend'){
-    // Bars in subtle green, dot-line in PINK (not orange) to avoid cigarette look
-    const G='rgba(80,200,140,.55)', PK='#FF7FAF';
+    // Bars in subtle green, dot-line in Clear Dark magenta (not orange) to
+    // avoid a cigarette look
+    const G='rgba(108,170,113,.55)', PK='#D389E5';
     for(let i=0;i<7;i++){
       const h=(3+i*1.4)*u;
       cpx(g,cx-u*10+i*u*3,cy+u*6-h,u*2.2,h,i>4?PK:G);
@@ -2950,14 +3046,14 @@ function drawCardMotif(g,kind,cx,cy,u,accent){
     // Two people/screens with a glowing link between them - fun and playful
     // Left screen
     cpx(g,cx-u*12,cy-u*5,u*8,u*10,D);
-    cpx(g,cx-u*11,cy-u*4,u*6,u*8,'#0B1A24');
+    cpx(g,cx-u*11,cy-u*4,u*6,u*8,'#191D27');
     // data bars on left screen
     cpx(g,cx-u*10,cy-u*2,u*4,u*0.8,S2);
     cpx(g,cx-u*10,cy-u*0.2,u*3,u*0.8,S2);
     cpx(g,cx-u*10,cy+u*1.6,u*4.5,u*0.8,A);
     // Right screen (mirror)
     cpx(g,cx+u*5,cy-u*5,u*8,u*10,A);
-    cpx(g,cx+u*6,cy-u*4,u*6,u*8,'#0B1A24');
+    cpx(g,cx+u*6,cy-u*4,u*6,u*8,'#191D27');
     // same data bars on right screen (it's shared!)
     cpx(g,cx+u*7,cy-u*2,u*4,u*0.8,S2);
     cpx(g,cx+u*7,cy-u*0.2,u*3,u*0.8,S2);
@@ -2976,7 +3072,7 @@ function drawCardMotif(g,kind,cx,cy,u,accent){
     // glitch rather than as a stream. It needs an object: a monitor with a live
     // trace running across it, and a queue feeding in from the left.
     cpx(g,cx-u*11,cy-u*8,u*22,u*15,D);                  // bezel
-    cpx(g,cx-u*10,cy-u*7,u*20,u*13,'#0B1A24');          // screen
+    cpx(g,cx-u*10,cy-u*7,u*20,u*13,'#191D27');          // screen
     for(let i=0;i<19;i++){                              // the trace
       const yy=cy-u*0.5+Math.sin(i*0.8)*u*4.2;
       cpx(g,cx-u*10+i*u,yy,u*1.1,u*1.1,i>14?A:D);
@@ -3017,8 +3113,8 @@ function buildShareCard(){
   }
   // ground: two bands of snow
   const GR=Math.round(CARD_H*0.64);
-  cpx(g,0,GR,CARD_W,CARD_H-GR,'#DCEAF2');
-  cpx(g,0,GR,CARD_W,10,'#FFFFFF');
+  cpx(g,0,GR,CARD_W,CARD_H-GR,'#DEE5EB');
+  cpx(g,0,GR,CARD_W,10,'#E5EFF5');
   cpx(g,0,GR+56,CARD_W,6,'rgba(41,181,232,.20)');
 
   // the motif stands to CoCo's right, at POC scale
@@ -3027,8 +3123,10 @@ function buildShareCard(){
   // 'docs' sat on the snow. MOTIF_LIFT lands each one on the same plane.
   const lift=MOTIF_LIFT[th.motif]||0;
   drawCardMotif(g,th.motif,Math.round(CARD_W*0.775),GR-40-lift,11,th.accent);
-  // CoCo himself, reusing the in-game sprite so the card and the game agree
-  drawCoCoFront(g,Math.round(CARD_W*0.545),GR+22,9);
+  // CoCo himself, reusing the in-game sprite so the card and the game agree.
+  // The card is a portrait, so it takes the CLI pose EXACTLY - feet sitting
+  // inside the body. Only the game needs them below, to walk.
+  drawCoCoFront(g,Math.round(CARD_W*0.545),GR+22,9,{sitting:true});
 
   // text column
   const PADX=64;
@@ -3037,7 +3135,7 @@ function buildShareCard(){
   g.font='700 22px ui-monospace,SFMono-Regular,Menlo,monospace';
   g.fillText(th.tag.toUpperCase(),PADX,64);
 
-  g.fillStyle='#FFFFFF';
+  g.fillStyle='#E5EFF5';
   g.font='700 52px -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
   const lines=wrapText(g,poc.poc_name||'My Snowflake proof of concept',
                        Math.round(CARD_W*0.44));
@@ -3050,8 +3148,8 @@ function buildShareCard(){
   if(feats) g.fillText(feats,PADX,y);
 
   // footer strip: who, where, how long. The time is the boast.
-  cpx(g,0,CARD_H-92,CARD_W,92,'rgba(6,14,20,.88)');
-  g.fillStyle='#FFFFFF';
+  cpx(g,0,CARD_H-92,CARD_W,92,'rgba(25,29,39,.88)');
+  g.fillStyle='#E5EFF5';
   g.font='700 26px -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
   const el=Math.max(0,Math.round(Date.now()/1000-(ST.started_at||Date.now()/1000)));
   const mm=Math.floor(el/60), ss=el%60;
@@ -3281,7 +3379,7 @@ function onState(s){
     const elapsed=Date.now()/1000-s.started_at;
     const limit=CFG.event.time_limit_seconds||300;
     $('h-time').textContent=`${Math.floor(elapsed/60)}:${String(Math.floor(elapsed%60)).padStart(2,'0')}`;
-    $('h-time').style.color=elapsed>=limit?'#E8863C':'';
+    $('h-time').style.color=elapsed>=limit?'#ED8D30':'';
     if(elapsed>=limit && !overNudged && s.stage!=='done'){ overNudged=true;
       nudge('That is five minutes - no rush, but let us get your present in the post when you are ready. (tap to dismiss)',6000); }
   } else { $('h-time').textContent='0:00'; }

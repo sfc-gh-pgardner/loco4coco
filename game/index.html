@@ -398,12 +398,6 @@
   .card.letter .lsel option { color:#2A2418; background-color:#FFFFFF; }
   .card.letter .lhint { font-size:12px; color:#8A3524; font-family:ui-monospace,monospace; }
   .card.letter .primary { font-family:ui-monospace,monospace; }
-  /* CoCo's spoken beats over the house scene */
-  .hsay { display:none; position:absolute; left:50%; transform:translateX(-50%);
-    top:24px; z-index:40; max-width:min(600px,90vw);
-    background:rgba(44,52,68,.94); border:2px solid var(--edge); border-radius:6px;
-    padding:10px 14px; color:#E5EFF5; font-size:15px; line-height:1.5; text-align:center; }
-  .hsay.on { display:block; }
 </style>
 </head>
 <body>
@@ -511,9 +505,6 @@
         <span id="l-hint" class="lhint"></span>
         <button class="primary" id="l-go">THAT'S BETTER</button></div>
     </div></div></div>
-
-    <!-- CoCo speaking over the house scene, between the letter and the map -->
-    <div id="h-say" class="hsay"></div>
 
     <!-- Home-stage question gate. Between the letter and the map, CoCo asks
          where the data lives, where the company is based, and the residency
@@ -2032,13 +2023,16 @@ function setPhase(p){
   }
   if(p==='letter') paintLetter();
   if(p==='line1'||p==='line2'){
-    const say=$('h-say');
-    say.classList.add('on');
+    // These two used to speak through a bubble floating in the house while the
+    // read-back that follows them spoke through CoCo's box, so the voice moved
+    // mid-scene. Every house beat now lands in the one place the stylesheet
+    // designates for narrative. Held a little past the beat so the line cannot
+    // blank out in the gap before the next one arms.
     const txt=fillTpl(p==='line1'?L().line1:L().line2);
-    say.textContent=txt; logOpening(txt);
+    nudge(txt,(OPEN_DUR[p]||2600)+1200); logOpening(txt);
   } else if(p==='summary'){
     trustIdx=0; buildSummary(); paintTrustLine();
-  } else { $('h-say').classList.remove('on'); }
+  }
   if(p==='map'){
     closeScene();
     // Re-assert after the post-intake state apply, which otherwise repaints the
@@ -2067,7 +2061,6 @@ function nextPhase(){
   if(openPhase==='summary' && trustIdx < trustSeq.length-1){
     trustIdx++; openT=Date.now(); paintTrustLine(); return;
   }
-  if(openPhase==='summary'){ $('h-say').classList.remove('on'); }
   setPhase(order[i+1]);
 }
 // Reply mode: the house panel keeps its chat bubble and drops the question
@@ -2082,12 +2075,11 @@ function homeReplyMode(on){
 }
 function paintTrustLine(){
   // The read-back belongs in CoCo's bubble, which the stylesheet above calls
-  // "the ONLY place narrative appears". This beat was the one exception: it
-  // spoke through a second bubble floating in the middle of the house. The
+  // "the ONLY place narrative appears", and since the .hsay bubble that used to
+  // float over the house was retired that is now literally true. The
   // nudge is given a little more time than the beat itself so the line cannot
   // blank out in the gap before it advances.
   const txt=trustSeq[trustIdx]||'';
-  $('h-say').classList.remove('on');
   const dur=trustDur(txt);
   nudge(txt,dur+1200);
   logOpening(txt);
@@ -2754,16 +2746,32 @@ async function sendPoc(){
   }catch(e){ btn.disabled=false; btn.textContent=(CFG.locations.postbox||{}).button||'POST IT TO ME';
     $('bp-sub').textContent='Cannot reach the server.'; return; }
   // The send runs in a background thread, so a single re-read raced it and the
-  // QR never appeared. Poll until the presigned URL exists (or we give up and
-  // show the queued state without a code).
-  for(let i=0;i<30;i++){
+  // QR never appeared - hence polling. But the budget used to be 30 x 700ms,
+  // and a real visit measured ~21s: the QA COMPLETE call, the stage upload and
+  // the presign are three separate `snow` CLI invocations, each paying process
+  // start and connection setup, on top of a possible warehouse resume. Landing
+  // one second over the budget left the loop falling out silently with the
+  // button still disabled and still reading BUILDING IT, forever, while the
+  // document sat finished on the stage. That is a dead end with a visitor
+  // watching, so the budget now exceeds the server's own timeouts (8s pending
+  // wait + 120s upload + 90s presign) rather than undercutting them.
+  const t0=Date.now();
+  for(let i=0;i<260;i++){
     await new Promise(r=>setTimeout(r,700));
     let d; try{ d=await (await fetch('/api/blueprint',{cache:'no-store'})).json(); }
     catch(e){ continue; }
     window.__bp=d;
     if(d.document_url || d.queued || d.draft_created){ paintSendBtn(d); }
     if(d.document_url) return;
+    // Something has to move on screen, or a twenty-second wait reads as a hang.
+    const s=Math.round((Date.now()-t0)/1000);
+    if(s>=4) $('bp-sub').textContent =
+      'Writing your document and staging it\u2026 ('+s+'s)';
   }
+  // Genuinely gave up. Hand the press back rather than leaving a dead button.
+  btn.disabled=false;
+  btn.textContent=(CFG.locations.postbox||{}).button||'POST IT TO ME';
+  $('bp-sub').textContent='Still working on it \u2014 press again to check.';
 }
 function closeBp(){
   $('ov-bp').classList.remove('on'); reopenLock=Date.now()+700;

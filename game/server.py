@@ -2458,7 +2458,16 @@ def run_send(cfg, job_id):
             print(f"[loco4coco] QA review error (non-blocking): {e}")
 
     transport = get_transport(cfg)
-    delivered, reply = transport.deliver(cfg, state, job_id)
+    # deliver() reports failure by return value, but an unexpected raise here -
+    # a malformed POC reaching the docx builder, say - killed this daemon thread
+    # with `thinking` still set, and the postbox then span forever with no error
+    # and no way out. Whatever happens, the turn gets finished.
+    try:
+        delivered, reply = transport.deliver(cfg, state, job_id)
+    except Exception as e:                                       # noqa: BLE001
+        print(f"[loco4coco] delivery raised: {e}")
+        delivered, reply = False, ("I could not wrap it up this time - grab a "
+                                   "Snowflake person and we will sort it.")
     st = read_state()
     write_state({"queued": bool(delivered), "email_sent": False})
 
@@ -2466,7 +2475,11 @@ def run_send(cfg, job_id):
     # everything else waits on, so logging after it means the row lands after
     # the visitor has already been told the flow is finished - and a failure
     # would go unnoticed until someone counted rows.
-    ok, err = log_session(cfg, read_state())
+    ok, err = False, ""
+    try:
+        ok, err = log_session(cfg, read_state())
+    except Exception as e:                                       # noqa: BLE001
+        err = str(e)[:300]                    # never block the handover on audit
     if ok:
         write_state({"logged": True, "log_error": ""})
     else:

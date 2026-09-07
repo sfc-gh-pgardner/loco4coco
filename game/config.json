@@ -1164,7 +1164,7 @@
     "summary": [
       "So, {first_name}, let me make sure I have this. {company_bit}{industry_bit}{platform_bit}I have the problem you want to solve, and that is the bit everything else hangs off.",
       "Here is the part that matters before we start building. By default, all of this happens inside your own Snowflake account in {region}. Your data does not get copied out to be processed, and the AI models run in your own region, so nothing has to cross a border to be understood.",
-      "And the question I get asked most, so I will answer it now. Snowflake never uses your Customer Data to train models made available to our customer base. Your data is not available to other customers or model developers. And you have control over your team's use of Snowflake AI Features through familiar role-based access control.",
+      "Snowflake never uses your Customer Data to train models made available to our customer base. Your data is not available to other customers or model developers. And you have control over your team's use of Snowflake AI Features through familiar role-based access control.",
       "You will not have to move house for any of it either. Snowflake talks to what you already run, and with Iceberg your tables stay in open formats other engines can read, so there is no one way door."
     ]
   },

@@ -67,7 +67,12 @@
 
   /* ---------- HUD ---------- */
   #hud { display:flex; gap:7px; }
-  .tile { flex:1; background:var(--panel); border:2px solid var(--line);
+  /* min-width:0 is load-bearing. A flex item defaults to min-width:auto, so the
+     tile refused to shrink below its content's max-content width: the workshop
+     tile carried a ~160 character brief, grew to 1322px, and pushed the whole
+     page wider than the viewport - which is why the map appeared cut off and
+     the ellipsis below never engaged. */
+  .tile { flex:1; min-width:0; background:var(--panel); border:2px solid var(--line);
     border-radius:6px; padding:4px 9px; }
   .tile .k { font-size:9px; letter-spacing:.14em; color:var(--dim); text-transform:uppercase; }
   .tile .v { font-size:15px; font-weight:700; color:var(--edge); margin-top:1px;
@@ -701,7 +706,7 @@ addEventListener('keydown',e=>{
   if(e.key!=='Escape' && (tag==='input' || tag==='select' || tag==='textarea'
       || (t && t.isContentEditable))) return;
   if(blocking()){
-    if(e.key==='Escape'){ if(panelOpen) closePanel(); else closeBp(); }
+    if(e.key==='Escape'){ if(panelOpen) tryClosePanel(); else closeBp(); }
     return;
   }
   const k=e.key.toLowerCase();
@@ -2541,7 +2546,13 @@ function paintHudJourney(){
   hud.innerHTML=ids.map(lid=>{
     const l=CFG.locations[lid]||{}, t=turnFor(lid), here=lid===cur, done=visited.has(lid);
     const cls = here ? 'cur' : (done ? 'done' : '');
-    const val = here ? 'here now' : done ? (summarise(t&&t.text)||'done') : 'to come';
+    // The checklist stops hand back a comma-separated list, which summarise()
+    // turns into a count. The workshop hands back a free-text brief with no
+    // commas in it, so that branch never fired and the tile showed the entire
+    // sentence. What matters here is that the brief is in, not what it said.
+    const val = here ? 'here now'
+      : done ? ((l.mode==='compose' ? 'brief set' : summarise(t&&t.text)) || 'done')
+      : 'to come';
     const vcls = (!here && !done) ? ' tocome' : '';
     // Short label: "THE DATA LIBRARY" will not fit four across.
     const key=String(l.name||lid).replace(/^The\s+/i,'');
@@ -2553,7 +2564,17 @@ function paintHudJourney(){
 function summarise(text){
   const parts=String(text||'').split(',').map(x=>x.trim()).filter(Boolean);
   if(parts.length>1) return parts.length+' chosen';
-  return parts[0]||'';
+  const one=parts[0]||'';
+  // A single long value - a typed "other" entry, say - would still be handed to
+  // a ~250px box whole. Cut on a word boundary so the tile is never carrying a
+  // sentence it cannot show.
+  if(one.length<=24) return one;
+  let out='';
+  for(const w of one.split(/\s+/)){
+    if((out?out+' '+w:w).length>22) break;
+    out=out?out+' '+w:w;
+  }
+  return (out||one.slice(0,22))+'\u2026';
 }
 
 function openPanel(id){
@@ -2656,8 +2677,26 @@ function closePanel(){ cancelAutoLeave();
   panelOpen=false; panelLoc=null; reopenLock=Date.now()+700;
   $('wrap').classList.remove('povfocus');   // give the chrome back first
   fitCanvas();                              // restore natural scene size
-  inSceneLoc=null; inScenePhase=null;
+  inSceneLoc=null; inScenePhase=null; runStart=0;
   $('ov-loc').classList.remove('on','pov'); closeScene(); }
+
+// Escape is the operator's escape hatch, but it must not walk out on a run that
+// is still in flight. The workshop's answer is being written at the moment it is
+// pressed - the button beside it is already disabled and reading THINKING - so
+// leaving here abandoned the very thing the visitor had just asked CoCo to
+// build, and they returned to the map with nothing. A hung agent must not trap
+// them either, so the hatch reopens once the run has outlived the server's own
+// per-turn ceiling, past which the turn is not coming back anyway.
+let runStart=0;
+const RUN_HATCH_MS=75000;    // coco.turn_timeout is 60s; this is that plus slack
+function runInFlight(){
+  return panelOpen && isPov(panelLoc) && inScenePhase==='await'
+    && !!ST.thinking && runStart && Date.now()-runStart < RUN_HATCH_MS;
+}
+function tryClosePanel(){
+  if(runInFlight()) return;
+  closePanel();
+}
 
 // ---------------- final window: summary + send ----------------
 async function showBp(){
@@ -2832,7 +2871,7 @@ async function submitPanel(){
     }
     if(isPov(id)){
       // Stay at the desk: CoCo answers in-scene rather than in the top bubble.
-      inSceneLoc=id; inScenePhase='await';
+      inSceneLoc=id; inScenePhase='await'; runStart=Date.now();
       const say=$('c-say'); say.classList.add('on');
       say.innerHTML='<b>CoCo</b>Let me look that up for you\u2026';
       $('c-opts').style.display='none'; $('c-otherwrap').style.display='none';

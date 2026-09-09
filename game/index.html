@@ -234,6 +234,19 @@
     50%     { box-shadow:0 0 0 6px rgba(237,141,48,.10),
                          0 8px 22px rgba(0,0,0,.52); }
   }
+  /* Once CoCo's reply has landed, c-go stops being CONFIRM/FORGE IT and becomes
+     the way out. That is worth a nudge distinct from the generic goPulse above,
+     since a visitor who has just finished reading is exactly who this needs to
+     catch - so the glow switches to brand blue and gets a hair of scale rather
+     than adding a second effect on top of the first. Kept deliberately light:
+     a suggestion to click, not a flashing alarm. */
+  .go .primary.leave-cta:not(:disabled) { animation:leaveNudge 1.8s ease-in-out infinite; }
+  @keyframes leaveNudge {
+    0%,100% { transform:scale(1); box-shadow:0 0 0 2px rgba(41,181,232,.35),
+                         0 6px 18px rgba(0,0,0,.45); }
+    50%     { transform:scale(1.035); box-shadow:0 0 0 7px rgba(41,181,232,.14),
+                         0 8px 22px rgba(0,0,0,.52); }
+  }
   /* "ESC to step away" was sharing the row and eating a quarter of the
      button's width, which is exactly why it still read as a pill rather than a
      bar. In POV the hint moves under the button. */
@@ -949,7 +962,7 @@ function drawRoute(g){
 const IMG={};
 (function preload(){
   [['mark','/assets/snowflake-mark.png'],
-   ['wordmark','/assets/snowflake-wordmark.png']].forEach(([k,src])=>{
+   ['wordmark','/assets/snowflake-wordmark-white.png']].forEach(([k,src])=>{
     const im=new Image();
     im.onload=()=>{ IMG[k]=im; };
     im.onerror=()=>{ console.warn('[loco] asset missing:',src); };
@@ -2617,6 +2630,7 @@ function openPanel(id){
   $('c-otherwrap').style.display=isList?'block':'none';
   $('c-composewrap').style.display=isCompose?'block':'none';
   $('c-go').textContent=isSend?(l.button||'POST IT'):(isCompose?'FORGE IT':'CONFIRM');
+  $('c-go').classList.remove('leave-cta');
 
   if(isList){
     const items=OPTS[id]||[];
@@ -2916,6 +2930,7 @@ function paintScenePanel(s){
     const leave = {library:'LEAVE THE LIBRARY', marketplace:'LEAVE THE STALL',
                    workshop:'LEAVE THE WORKSHOP'}[panelLoc] || 'STEP AWAY';
     $('c-go').disabled=false; $('c-go').textContent=leave;
+    $('c-go').classList.add('leave-cta');
     // Walk them back out. Standing in a finished room waiting to be told to
     // leave is dead time on a five minute budget, and the reply is not lost:
     // paintBubble adopts it in the top thought bubble on the way out.
@@ -2924,7 +2939,11 @@ function paintScenePanel(s){
 }
 
 let autoLeaveT=0;
-const AUTO_LEAVE_MS=3000;          // long enough to read a 40 word reply
+// Feedback from the floor: 3s was not enough to read a real reply, only a
+// short one. 8s is long enough for the ~40 word replies this stop actually
+// produces, with the leave-cta pulse above doing the job of pulling a visitor
+// who reads faster than that back to the button rather than making them wait.
+const AUTO_LEAVE_MS=8000;
 function startAutoLeave(){
   clearTimeout(autoLeaveT);
   const at=panelLoc;
@@ -3195,7 +3214,8 @@ function buildShareCard(){
   if(feats) g.fillText(feats,PADX,y);
 
   // footer strip: who, where, how long. The time is the boast.
-  cpx(g,0,CARD_H-92,CARD_W,92,'rgba(25,29,39,.88)');
+  const FOOTER_H=92;
+  cpx(g,0,CARD_H-FOOTER_H,CARD_W,FOOTER_H,'rgba(25,29,39,.88)');
   g.fillStyle='#E5EFF5';
   g.font='700 26px -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
   const el=Math.max(0,Math.round(Date.now()/1000-(ST.started_at||Date.now()/1000)));
@@ -3210,13 +3230,20 @@ function buildShareCard(){
 
   // The mark, bottom right. The full wordmark rather than the symbol alone: this
   // image is going onto someone's LinkedIn feed, where a bare symbol at 30px is
-  // just a blue blob and the word is the whole point of them posting it.
-  // Aspect is the file's own, 3840x919.
-  const lw=286, lh=Math.round(lw*919/3840);
-  if(!drawImgSmooth(g,'wordmark',CARD_W-lw-46,CARD_H-lh-38,lw,lh)){
+  // just a blue blob and the word is the whole point of them posting it. White
+  // on the dark footer strip now, to sit on that panel rather than fight it.
+  //
+  // Sized to the STRIP, not to a fixed width: the old file's aspect (3840x919)
+  // was fatter than this one's (1585x362), so a fixed lw=286 left this logo's
+  // height too tall for the 92px strip and its top edge spilled up into the
+  // card body above. Deriving lh from the strip height with a real margin on
+  // both sides keeps it inside the strip regardless of which file is loaded.
+  const LOGO_MARGIN=20;
+  const lh=FOOTER_H-LOGO_MARGIN*2, lw=Math.round(lh*1585/362);
+  if(!drawImgSmooth(g,'wordmark',CARD_W-lw-46,CARD_H-FOOTER_H+LOGO_MARGIN,lw,lh)){
     // The card can be built the instant the page loads, before the asset has
     // arrived. A missing logo must not cost the visitor their card.
-    g.fillStyle='#29B5E8'; g.font='700 34px ui-sans-serif,system-ui,sans-serif';
+    g.fillStyle='#E5EFF5'; g.font='700 34px ui-sans-serif,system-ui,sans-serif';
     g.textAlign='right'; g.fillText('snowflake',CARD_W-46,CARD_H-44);
     g.textAlign='left';
   }

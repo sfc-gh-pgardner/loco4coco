@@ -89,8 +89,9 @@ def _from_markdown():
     return {
         "listings": [
             {"industry": i, "ordinal": o, "title": t, "provider": p,
-             "access": a, "global_name": g, "regions": r, "url": u}
-            for i, o, t, p, a, g, r, u in L.parse_listings()],
+             "access": a, "global_name": g, "regions": r, "url": u,
+             "market_profile": mp, "reserve": bool(rv)}
+            for i, o, t, p, a, g, r, u, mp, rv in L.parse_listings()],
         "guides": [
             {"archetype": a, "title": t, "slug": s, "is_primary": bool(pr)}
             for a, t, s, pr in L.parse_guides()],
@@ -147,7 +148,8 @@ def _from_snowflake(conn, timeout=25):
       'listings',  (SELECT ARRAY_AGG(OBJECT_CONSTRUCT('industry',INDUSTRY,
                       'ordinal',ORDINAL,'title',TITLE,'provider',PROVIDER,
                       'access',ACCESS,'global_name',GLOBAL_NAME,
-                      'regions',REGIONS,'url',URL))
+                      'regions',REGIONS,'url',URL,
+                      'market_profile',MARKET_PROFILE,'reserve',RESERVE))
                     FROM LOCO4COCO.BOOTH.LISTINGS),
       'guides',    (SELECT ARRAY_AGG(OBJECT_CONSTRUCT('archetype',ARCHETYPE,
                       'title',TITLE,'slug',SLUG,'is_primary',IS_PRIMARY))

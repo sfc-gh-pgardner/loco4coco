@@ -1,0 +1,551 @@
+{
+  "_generated": {
+    "note": "GENERATED source of truth for the booth marketplace. Edit via scripts/precompute_marketplace.py (agentic) or by hand, then run --mirror to refresh marketplace-index.md. uk seeded from the original curated md; fr/de/reserve filled by the precompute.",
+    "at": "2026-09-16T17:39:34",
+    "availability_measured": "2026-09-16"
+  },
+  "profiles": {
+    "uk": {
+      "healthcare": {
+        "primary": [
+          {
+            "global_name": "GZSVZAJO3",
+            "title": "UK (England and Wales only) Census 2021 - Trial",
+            "provider": "Jaywing",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZAJO3/jaywing-uk-england-and-wales-only-census-2021-trial",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZSVZ1K7VF",
+            "title": "Acorn - Geodemographic Segmentation in the UK",
+            "provider": "CACI Ltd",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF/caci-ltd-acorn-geodemographic-segmentation-in-the-uk",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZTDZJKVCY",
+            "title": "Postcode Sector Weather Forecasts",
+            "provider": "Met Office",
+            "access": "Free 14-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCY/met-office-postcode-sector-weather-forecasts",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZSTZ67BY9OQW",
+            "title": "PubMed Biomedical Research Corpus",
+            "provider": "Snowflake",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSTZ67BY9OQW/snowflake-pubmed-biomedical-research-corpus",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZ2FRZQNY1",
+            "title": "UK Health Facts and Dimensions Sample",
+            "provider": "Facts and Dimensions Ltd",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ2FRZQNY1/facts-and-dimensions-ltd-uk-health-facts-and-dimensions-sample",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZSVZ1K7UU",
+            "title": "Household Acorn – geodemographic segmentation at household level SAMPLE DATA",
+            "provider": "CACI Ltd",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7UU",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          }
+        ],
+        "reserve": []
+      },
+      "financial": {
+        "primary": [
+          {
+            "global_name": "GZTSZ290BVCAO",
+            "title": "Snowflake Public Data: Foreign Exchange Rates",
+            "provider": "Snowflake Public Data Products",
+            "access": "Free 60-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTSZ290BVCAO/snowflake-public-data-products-snowflake-public-data-foreign-exchange-rates",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZTDZ7DJU9",
+            "title": "Inflation Forecasting - Headline & Core CPI by Country",
+            "provider": "Turnleaf Analytics",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZ7DJU9/turnleaf-analytics-inflation-forecasting-headline-core-cpi-by-country",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZ2FSZH8URW",
+            "title": "Company Data UK (incl. Guernsey) - XL Dataset",
+            "provider": "North Data GmbH",
+            "access": "Free 7-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW/north-data-gmbh-company-data-uk-incl-guernsey-xl-dataset",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZSTZLT2II6",
+            "title": "Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.)",
+            "provider": "IBISWorld",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSTZLT2II6/ibisworld-industry-classification-systems-naics-anzsic-isic-uk-sic-etc",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZT0ZI0XJ6Q",
+            "title": "CSRHub ESG (Environment, Social, Governance) Fast Start",
+            "provider": "CSRHub LLC",
+            "access": "Free 30-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0ZI0XJ6Q/csrhub-llc-csrhub-esg-environment-social-governance-fast-start",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZTYZAPS3FP",
+            "title": "Banking Analytics Bundle",
+            "provider": "InSights",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTYZAPS3FP",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          }
+        ],
+        "reserve": []
+      },
+      "retail": {
+        "primary": [
+          {
+            "global_name": "GZTDZJKVCY",
+            "title": "Postcode Sector Weather Forecasts",
+            "provider": "Met Office",
+            "access": "Free 14-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCY/met-office-postcode-sector-weather-forecasts",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZSVZ1K7VF",
+            "title": "Acorn - Geodemographic Segmentation in the UK",
+            "provider": "CACI Ltd",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF/caci-ltd-acorn-geodemographic-segmentation-in-the-uk",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZSVZ1K7UA",
+            "title": "PayCheck – UK household income estimates at postcode level - SAMPLE data",
+            "provider": "CACI Ltd",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7UA/caci-ltd-paycheck-%E2%80%93-uk-household-income-estimates-at-postcode-level-sample-data",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZSVZAJO3",
+            "title": "UK (England and Wales only) Census 2021 - Trial",
+            "provider": "Jaywing",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZAJO3/jaywing-uk-england-and-wales-only-census-2021-trial",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZSTZLT2II6",
+            "title": "Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.)",
+            "provider": "IBISWorld",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSTZLT2II6/ibisworld-industry-classification-systems-naics-anzsic-isic-uk-sic-etc",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZT0ZKUCHKL",
+            "title": "Spatial Features (GBR, Quadgrid 15 and H3 Res. 8)",
+            "provider": "CARTO",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0ZKUCHKL",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          }
+        ],
+        "reserve": []
+      },
+      "public": {
+        "primary": [
+          {
+            "global_name": "GZSVZAJO3",
+            "title": "UK (England and Wales only) Census 2021 - Trial",
+            "provider": "Jaywing",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZAJO3/jaywing-uk-england-and-wales-only-census-2021-trial",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZSVZ1K7UQ",
+            "title": "Address Spine – UK address level property information - Sample Data",
+            "provider": "CACI Ltd",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7UQ/caci-ltd-address-spine-%E2%80%93-uk-address-level-property-information-sample-data",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZT0Z4CM1E9L4",
+            "title": "CARTO Boundaries",
+            "provider": "CARTO",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4/carto-carto-boundaries",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZTDZJKVH3",
+            "title": "UK Land Surface Observations",
+            "provider": "Met Office",
+            "access": "Free 14-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVH3/met-office-uk-land-surface-observations",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZTDZJKVCU",
+            "title": "National Severe Weather Warning Service",
+            "provider": "Met Office",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCU/met-office-national-severe-weather-warning-service",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZ1MOZBWYYT",
+            "title": "Administrative boundaries - Great Britain: Boundary Line - Open",
+            "provider": "Ordnance Survey",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ1MOZBWYYT",
+            "regions": "ALL",
+            "ready": true
+          }
+        ],
+        "reserve": []
+      },
+      "manufacturing": {
+        "primary": [
+          {
+            "global_name": "GZTSZRC7HQ3",
+            "title": "CEIC Commodities Data",
+            "provider": "CEIC Data",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTSZRC7HQ3/ceic-data-ceic-commodities-data",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZ2FSZH8URW",
+            "title": "Company Data UK (incl. Guernsey) - XL Dataset",
+            "provider": "North Data GmbH",
+            "access": "Free 7-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW/north-data-gmbh-company-data-uk-incl-guernsey-xl-dataset",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZT0Z4CM1E9KJ",
+            "title": "Overture Maps - Transportation",
+            "provider": "CARTO",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9KJ/carto-overture-maps-transportation",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZT0ZGCQ51RQ",
+            "title": "FactSet Supply Chain Relationships (sample)",
+            "provider": "FactSet",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0ZGCQ51RQ",
+            "regions": "ALL",
+            "ready": true
+          },
+          {
+            "global_name": "GZT0ZPWB4J7",
+            "title": "D&B Shipping Insights Sample",
+            "provider": "Dun & Bradstreet",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0ZPWB4J7",
+            "regions": "ALL",
+            "ready": true
+          },
+          {
+            "global_name": "GZTDZJKVCM",
+            "title": "Global Spot Weather Forecasts",
+            "provider": "Met Office",
+            "access": "Free 14-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCM/met-office-global-spot-weather-forecasts",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          }
+        ],
+        "reserve": []
+      },
+      "energy": {
+        "primary": [
+          {
+            "global_name": "GZTDZJKVCU",
+            "title": "National Severe Weather Warning Service",
+            "provider": "Met Office",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCU/met-office-national-severe-weather-warning-service",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZTDZJKVH3",
+            "title": "UK Land Surface Observations",
+            "provider": "Met Office",
+            "access": "Free 14-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVH3/met-office-uk-land-surface-observations",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZSOZ71OJH",
+            "title": "Yes Energy - Sample Data",
+            "provider": "Yes Energy",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSOZ71OJH/yes-energy-yes-energy-sample-data",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZSVZ8MX1I",
+            "title": "Sample of GasMarketCube - Global Gas Supply, Demand and Trade",
+            "provider": "Rystad Energy",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ8MX1I",
+            "regions": "ALL",
+            "ready": true
+          },
+          {
+            "global_name": "GZSYZSRWU5",
+            "title": "Wind Power Forecast, Day-ahead - Sample",
+            "provider": "Weather Solutions",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZSRWU5",
+            "regions": "ALL",
+            "ready": true
+          },
+          {
+            "global_name": "GZTDZ1PNFO",
+            "title": "Crude oil price data",
+            "provider": "General Index",
+            "access": "Free Trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZ1PNFO",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": false
+          }
+        ],
+        "reserve": []
+      },
+      "media": {
+        "primary": [
+          {
+            "global_name": "GZSVZ1K7VF",
+            "title": "Acorn - Geodemographic Segmentation in the UK",
+            "provider": "CACI Ltd",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF/caci-ltd-acorn-geodemographic-segmentation-in-the-uk",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZSVZAJO3",
+            "title": "UK (England and Wales only) Census 2021 - Trial",
+            "provider": "Jaywing",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZAJO3/jaywing-uk-england-and-wales-only-census-2021-trial",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZT0Z4CM1E9L4",
+            "title": "CARTO Boundaries",
+            "provider": "CARTO",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4/carto-carto-boundaries",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZT0ZKUCHKL",
+            "title": "Spatial Features (GBR, Quadgrid 15 and H3 Res. 8)",
+            "provider": "CARTO",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0ZKUCHKL",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZT1ZFQ0JE5",
+            "title": "GLP-1 Social Conversations Sample Dataset",
+            "provider": "Socialgist",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZFQ0JE5",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": false
+          },
+          {
+            "global_name": "GZSNZ4PHA6",
+            "title": "American Community Survey, 2016",
+            "provider": "data.world, Inc",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSNZ4PHA6",
+            "regions": "ALL",
+            "ready": true
+          }
+        ],
+        "reserve": []
+      },
+      "other": {
+        "primary": [
+          {
+            "global_name": "GZSVZAJO3",
+            "title": "UK (England and Wales only) Census 2021 - Trial",
+            "provider": "Jaywing",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZAJO3/jaywing-uk-england-and-wales-only-census-2021-trial",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZ2FSZH8URW",
+            "title": "Company Data UK (incl. Guernsey) - XL Dataset",
+            "provider": "North Data GmbH",
+            "access": "Free 7-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW/north-data-gmbh-company-data-uk-incl-guernsey-xl-dataset",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZT0Z4CM1E9L4",
+            "title": "CARTO Boundaries",
+            "provider": "CARTO",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4/carto-carto-boundaries",
+            "regions": "AWS_EU_WEST_2",
+            "ready": false
+          },
+          {
+            "global_name": "GZTSZ290BVCAO",
+            "title": "Snowflake Public Data: Foreign Exchange Rates",
+            "provider": "Snowflake Public Data Products",
+            "access": "Free 60-day trial",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTSZ290BVCAO/snowflake-public-data-products-snowflake-public-data-foreign-exchange-rates",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZT0Z4CM1E9NA",
+            "title": "CARTO Analytics Toolbox",
+            "provider": "CARTO",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9NA/carto-carto-analytics-toolbox",
+            "regions": "AWS_EU_WEST_2,AWS_EU_WEST_3,AWS_EU_CENTRAL_1",
+            "ready": true
+          },
+          {
+            "global_name": "GZSVZ1K7VF",
+            "title": "Acorn - Geodemographic Segmentation in the UK",
+            "provider": "CACI Ltd",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF/caci-ltd-acorn-geodemographic-segmentation-in-the-uk",
+            "regions": "AWS_EU_WEST_2,AWS_EU_CENTRAL_1",
+            "ready": true
+          }
+        ],
+        "reserve": []
+      }
+    },
+    "fr": {
+      "healthcare": {
+        "primary": [],
+        "reserve": []
+      },
+      "financial": {
+        "primary": [],
+        "reserve": []
+      },
+      "retail": {
+        "primary": [],
+        "reserve": []
+      },
+      "public": {
+        "primary": [],
+        "reserve": []
+      },
+      "manufacturing": {
+        "primary": [],
+        "reserve": []
+      },
+      "energy": {
+        "primary": [],
+        "reserve": []
+      },
+      "media": {
+        "primary": [],
+        "reserve": []
+      },
+      "other": {
+        "primary": [],
+        "reserve": []
+      }
+    },
+    "de": {
+      "healthcare": {
+        "primary": [],
+        "reserve": []
+      },
+      "financial": {
+        "primary": [],
+        "reserve": []
+      },
+      "retail": {
+        "primary": [],
+        "reserve": []
+      },
+      "public": {
+        "primary": [],
+        "reserve": []
+      },
+      "manufacturing": {
+        "primary": [],
+        "reserve": []
+      },
+      "energy": {
+        "primary": [],
+        "reserve": []
+      },
+      "media": {
+        "primary": [],
+        "reserve": []
+      },
+      "other": {
+        "primary": [],
+        "reserve": []
+      }
+    }
+  }
+}

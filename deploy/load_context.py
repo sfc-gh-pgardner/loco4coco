@@ -52,27 +52,25 @@ def _read(path):
 
 
 def parse_listings():
-    """marketplace-index.md -> [(industry, ordinal, title, provider, access,
-    global_name, regions, url)]"""
-    text = _read(os.path.join(REFS, "marketplace-index.md"))
-    row_re = re.compile(r"^\|\s*\[(?P<title>.+?)\]\((?P<url>[^)]+)\)\s*\|"
-                        r"\s*(?P<prov>[^|]+?)\s*\|\s*(?P<acc>[^|]+?)\s*\|"
-                        r"\s*`(?P<gname>[^`]+)`\s*\|\s*(?P<regs>[^|]*)\|")
-    out, current, n = [], None, 0
-    for line in text.splitlines():
-        h = re.match(r"^##\s+([a-z_]+)\s*$", line.strip())
-        if h:
-            current, n = h.group(1), 0
-            continue
-        if not current:
-            continue
-        m = row_re.match(line.strip())
-        if m:
-            n += 1
-            out.append((current, n, m.group("title").strip(),
-                        m.group("prov").strip(), m.group("acc").strip(),
-                        m.group("gname").strip(), m.group("regs").strip(),
-                        m.group("url").strip()))
+    """marketplace.json -> [(industry, ordinal, title, provider, access,
+    global_name, regions, url, market_profile, reserve)]
+
+    marketplace.json is the source of truth (per profile uk/fr/de, each with
+    primary and reserve picks). marketplace-index.md is a generated human mirror
+    and is no longer parsed. Ordinal is 1-based within (profile, industry, kind);
+    the reserve flag distinguishes the two."""
+    path = os.path.join(REFS, "marketplace.json")
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    out = []
+    for profile, inds in (data.get("profiles") or {}).items():
+        for industry, block in (inds or {}).items():
+            for kind, reserve in (("primary", False), ("reserve", True)):
+                for n, r in enumerate((block or {}).get(kind) or [], start=1):
+                    out.append((industry, n, r.get("title"), r.get("provider"),
+                                r.get("access"), r.get("global_name"),
+                                r.get("regions") or "", r.get("url"),
+                                profile, reserve))
     return out
 
 
@@ -309,9 +307,9 @@ def main():
     args = ap.parse_args()
 
     specs = [
-        ("LISTINGS", "skills/loco4coco/references/marketplace-index.md",
+        ("LISTINGS", "skills/loco4coco/references/marketplace.json",
          ["INDUSTRY", "ORDINAL", "TITLE", "PROVIDER", "ACCESS", "GLOBAL_NAME",
-          "REGIONS", "URL"], parse_listings),
+          "REGIONS", "URL", "MARKET_PROFILE", "RESERVE"], parse_listings),
         ("GUIDES", "skills/loco4coco/references/guides-index.md",
          ["ARCHETYPE", "TITLE", "SLUG", "IS_PRIMARY"], parse_guides),
         ("FEATURES", "skills/loco4coco/references/feature-docs.md",

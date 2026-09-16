@@ -54,6 +54,8 @@ FEATURES_PATH = os.path.join(PLUGIN_ROOT, "skills", "loco4coco",
                              "references", "feature-docs.md")
 MARKET_PATH = os.path.join(PLUGIN_ROOT, "skills", "loco4coco",
                            "references", "marketplace-index.md")
+MARKET_JSON_PATH = os.path.join(PLUGIN_ROOT, "skills", "loco4coco",
+                                "references", "marketplace.json")
 LISTING_URL = "https://app.snowflake.com/marketplace/listing/"
 
 _lock = threading.Lock()
@@ -855,59 +857,73 @@ def archetype_defaults(cfg, arche):
 _market_cache = None
 
 
-def load_marketplace():
-    """Parse marketplace-index.md into {industry: [listing dicts]}.
+def _row_dict(r):
+    return {
+        "title": r.get("title"), "provider": r.get("provider"),
+        "access": r.get("access"), "url": r.get("url"),
+        "global_name": r.get("global_name"),
+        "regions": r.get("regions") or "",
+        "reserve": bool(r.get("reserve")),
+    }
 
-    Only listings in this file may ever be named. SQL exposes a provider name
-    for a small minority of listings and the public page is client-rendered, so
-    provider names are recorded constants - see the file header.
-    """
+
+def _group_by_profile(rows):
+    """[listing rows] -> {profile: {industry: [dicts]}}, primary before reserve."""
+    prof = {}
+    for r in sorted(rows, key=lambda x: (x.get("market_profile") or "uk",
+                                         x.get("industry") or "",
+                                         1 if x.get("reserve") else 0,
+                                         x.get("ordinal") or 0)):
+        p = r.get("market_profile") or "uk"
+        prof.setdefault(p, {}).setdefault(r.get("industry"), []).append(_row_dict(r))
+    return prof
+
+
+def _all_marketplace():
+    """{profile: {industry: [listing dicts]}} from the table/bundle, or the
+    marketplace.json source of truth as the offline fallback."""
     global _market_cache
     if _market_cache is not None:
         return _market_cache
     try:
         rows = bctx.load(conn=coco_connection())[0].get("listings") or []
         if rows:
-            grouped = {}
-            for r in sorted(rows, key=lambda x: (x.get("industry") or "",
-                                                 x.get("ordinal") or 0)):
-                grouped.setdefault(r.get("industry"), []).append({
-                    "title": r.get("title"), "provider": r.get("provider"),
-                    "access": r.get("access"), "url": r.get("url"),
-                    "global_name": r.get("global_name"),
-                    "regions": r.get("regions") or "",
-                })
-            _market_cache = grouped
+            _market_cache = _group_by_profile(rows)
             return _market_cache
     except Exception:
         pass
-    out, current = {}, None
-    row_re = re.compile(r"^\|\s*\[(?P<title>.+?)\]\((?P<url>[^)]+)\)\s*\|"
-                        r"\s*(?P<prov>[^|]+?)\s*\|\s*(?P<acc>[^|]+?)\s*\|"
-                        r"\s*`(?P<gname>[^`]+)`\s*\|\s*(?P<regs>[^|]*)\|")
+    rows = []
     try:
-        with open(MARKET_PATH, encoding="utf-8") as f:
-            for line in f:
-                h = re.match(r"^##\s+([a-z_]+)\s*$", line.strip())
-                if h:
-                    current = h.group(1)
-                    out.setdefault(current, [])
-                    continue
-                if not current:
-                    continue
-                m = row_re.match(line.strip())
-                if m:
-                    out[current].append({
-                        "title": m.group("title").strip(),
-                        "provider": m.group("prov").strip(),
-                        "access": m.group("acc").strip(),
-                        "url": m.group("url").strip(),
-                        "global_name": m.group("gname").strip(),
-                        "regions": m.group("regs").strip(),
-                    })
+        with open(MARKET_JSON_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        for profile, inds in (data.get("profiles") or {}).items():
+            for industry, block in (inds or {}).items():
+                for kind, reserve in (("primary", False), ("reserve", True)):
+                    for n, r in enumerate((block or {}).get(kind) or [], start=1):
+                        rows.append({**r, "market_profile": profile,
+                                     "industry": industry, "ordinal": n,
+                                     "reserve": reserve})
     except OSError:
         pass
-    _market_cache = out
+    _market_cache = _group_by_profile(rows)
+    return _market_cache
+
+
+def load_marketplace(profile="uk"):
+    """{industry: [listing dicts]} for the active market profile.
+
+    Only listings in marketplace.json may ever be named. Each industry leads
+    with its primary picks and appends any reserves. When the active profile has
+    no rows for an industry (fr/de not yet curated), that industry falls back to
+    the uk profile, so Paris/Berlin serve the region-filtered uk set rather than
+    an empty stall.
+    """
+    allp = _all_marketplace()
+    active = allp.get(profile) or {}
+    uk = allp.get("uk") or {}
+    out = {}
+    for ind in set(active) | set(uk):
+        out[ind] = active.get(ind) or uk.get(ind) or []
     return out
 
 
@@ -1290,7 +1306,8 @@ def listings_curated(cfg, industry, state=None):
     The region filter is not cosmetic: handing a London visitor a us-east-1-only
     share sends them somewhere they cannot go.
     """
-    market = load_marketplace()
+    profile = ((cfg.get("event") or {}).get("market_profile")) or "uk"
+    market = load_marketplace(profile)
     own = market.get(industry) or market.get("other") or []
     toks = _problem_tokens(state)
     themes = _held_themes(cfg, state)

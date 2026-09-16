@@ -165,15 +165,18 @@ DEFINE TABLE {{db}}.{{schema}}.QA_FINDINGS (
 
 DEFINE TABLE {{db}}.{{schema}}.LISTINGS (
   INDUSTRY     TEXT    COMMENT 'Config industry key: public | healthcare | retail | ...',
-  ORDINAL      NUMBER(4,0) COMMENT 'Display order within the industry, 1-based',
+  ORDINAL      NUMBER(4,0) COMMENT 'Display order within the profile+industry+kind, 1-based',
   TITLE        TEXT,
   PROVIDER     TEXT    COMMENT 'Recorded constant - SQL exposes a provider for only a minority of listings',
   ACCESS       TEXT    COMMENT 'Every curated listing is free to acquire, but the value varies: "Free" is perpetual, "Free 14-day trial" and friends expire. Nothing Paid ships.',
   GLOBAL_NAME  TEXT    COMMENT 'Marketplace global name, e.g. GZSVZAJO3',
-  REGIONS      TEXT    COMMENT 'Region availability, or ALL',
-  URL          TEXT
+  REGIONS      TEXT    COMMENT 'Subset of the SWT venue regions the listing is in (AWS_EU_WEST_2/3, AWS_EU_CENTRAL_1), or ALL',
+  URL          TEXT,
+  -- Appended (DCM CREATE OR ALTER only adds columns at the end).
+  MARKET_PROFILE TEXT  COMMENT 'uk | fr | de - which venue profile this listing belongs to. Selected by event.market_profile, with uk fallback.',
+  RESERVE      BOOLEAN COMMENT 'FALSE = one of the primary 6; TRUE = a reserve/backup pick used to fill the stall when a primary is region-filtered out'
 )
-  COMMENT = 'Closed list of Marketplace listings the booth may name, by industry. Mirror of marketplace-index.md.';
+  COMMENT = 'Closed list of Marketplace listings the booth may name, by profile and industry. Mirror of marketplace.json.';
 
 DEFINE TABLE {{db}}.{{schema}}.GUIDES (
   ARCHETYPE    TEXT    COMMENT 'POC archetype key, e.g. talk-to-my-data',

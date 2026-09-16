@@ -11,34 +11,63 @@
 -- bootstrap.py runs this for you with the values from manifest.yml.
 --
 -- Idempotent by design: safe to re-run on every deploy.
+--
+-- NOTIFY tolerance: the booth is notify-only by design (it warns but never
+-- suspends the warehouse, so a busy stand is never cut off mid-visit). But on
+-- Snowflake World Tour / hands-on-lab event accounts the login user often has
+-- NO email address, and `NOTIFY_USERS=(that_user)` fails outright with 090269,
+-- which used to abort the whole deploy. So the monitor is created inside a
+-- scripting block that tries WITH notify first and falls back to creating it
+-- WITHOUT notify if that fails. Either way the monitor exists and is bound to
+-- the warehouse; a warning is printed below if nobody can be notified.
 
--- notify_users has been silently empty on a hand-created monitor before, which
--- makes every trigger useless. It is set explicitly here and verified below.
-CREATE RESOURCE MONITOR IF NOT EXISTS {{ monitor }}
-  WITH
-    CREDIT_QUOTA = {{ monitor_quota }}
-    FREQUENCY = MONTHLY
-    START_TIMESTAMP = IMMEDIATELY
-    NOTIFY_USERS = ({{ monitor_notify_user }})
-    TRIGGERS
-      ON 75 PERCENT DO NOTIFY
-      ON 90 PERCENT DO NOTIFY
-      ON 100 PERCENT DO NOTIFY;
+EXECUTE IMMEDIATE $$
+DECLARE
+  notified BOOLEAN DEFAULT FALSE;
+BEGIN
+{% if monitor_notify_user %}
+  BEGIN
+    CREATE RESOURCE MONITOR IF NOT EXISTS {{ monitor }}
+      WITH CREDIT_QUOTA = {{ monitor_quota }}
+        FREQUENCY = MONTHLY
+        START_TIMESTAMP = IMMEDIATELY
+        NOTIFY_USERS = ({{ monitor_notify_user }})
+        TRIGGERS ON 75 PERCENT DO NOTIFY
+                 ON 90 PERCENT DO NOTIFY
+                 ON 100 PERCENT DO NOTIFY;
+    ALTER RESOURCE MONITOR {{ monitor }} SET
+      CREDIT_QUOTA = {{ monitor_quota }}
+      NOTIFY_USERS = ({{ monitor_notify_user }})
+      TRIGGERS ON 75 PERCENT DO NOTIFY
+               ON 90 PERCENT DO NOTIFY
+               ON 100 PERCENT DO NOTIFY;
+    notified := TRUE;
+  EXCEPTION
+    WHEN OTHER THEN
+      notified := FALSE;
+  END;
+{% endif %}
+  IF (NOT notified) THEN
+    -- No usable notify user (empty, or the user has no email). Create the
+    -- monitor anyway so the quota exists; the triggers still fire, they just
+    -- warn nobody. This never suspends the warehouse.
+    CREATE RESOURCE MONITOR IF NOT EXISTS {{ monitor }}
+      WITH CREDIT_QUOTA = {{ monitor_quota }}
+        FREQUENCY = MONTHLY
+        START_TIMESTAMP = IMMEDIATELY
+        TRIGGERS ON 75 PERCENT DO NOTIFY
+                 ON 90 PERCENT DO NOTIFY
+                 ON 100 PERCENT DO NOTIFY;
+    ALTER RESOURCE MONITOR {{ monitor }} SET CREDIT_QUOTA = {{ monitor_quota }};
+  END IF;
 
--- Re-assert the settings in case the monitor already existed with other values.
--- Notify-only by design: the booth warns but never suspends the warehouse, so a
--- busy stand is never cut off mid-visit. The triggers are re-set here too, so a
--- monitor created earlier with SUSPEND triggers is brought back to notify-only.
-ALTER RESOURCE MONITOR {{ monitor }} SET
-  CREDIT_QUOTA = {{ monitor_quota }}
-  NOTIFY_USERS = ({{ monitor_notify_user }})
-  TRIGGERS
-    ON 75 PERCENT DO NOTIFY
-    ON 90 PERCENT DO NOTIFY
-    ON 100 PERCENT DO NOTIFY;
+  ALTER WAREHOUSE {{ wh }} SET RESOURCE_MONITOR = {{ monitor }};
 
--- Bind it to the booth warehouse. Without this the quota monitors nothing.
-ALTER WAREHOUSE {{ wh }} SET RESOURCE_MONITOR = {{ monitor }};
+  RETURN IFF(notified,
+             'monitor bound, notify user set',
+             'monitor bound, NO notify user (nobody will be warned - set a user with an email)');
+END;
+$$;
 
 -- Proof, not assumption: a monitor with no notify_users cannot warn anyone.
 SHOW RESOURCE MONITORS LIKE '{{ monitor }}';

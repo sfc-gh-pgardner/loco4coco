@@ -34,7 +34,7 @@
     "timeout_seconds": 180,
     "stream": true,
     "cost_log": "cost.jsonl",
-    "complete_model": "mistral-large2",
+    "complete_model": "llama3.3-70b",
     "warm_agent": true,
     "warm_agent_comment": "Hold a `cortex mcp serve` process open between visitors. Measured ~3.4s per turn against ~26s for a cold `cortex exec`, because exec has no --resume/--session and pays ~18s of process startup every call. Strictly one in-flight call: concurrent calls on one process were proven to mis-correlate and return another call's answer. Set false to fall straight through to exec.",
     "turn_timeout": 60,
@@ -44,7 +44,7 @@
     "_comment": "The QA bot reviews the finished blueprint before it is staged. Deterministic checks always run and silently repair what is fixable from the closed lists (off-list features dropped, guide fallback, platforms re-normalised); each change is recorded to LOCO4COCO.BOOTH.QA_FINDINGS with before/after, and a summary lands on the SESSIONS row. model_review adds one fast COMPLETE call judging whether the POC addresses the visitor's stated problem - it fails open, never blocking the handover.",
     "enabled": true,
     "model_review": true,
-    "model": "mistral-large2",
+    "model": "llama3.3-70b",
     "timeout_seconds": 12
   },
   "delivery": {

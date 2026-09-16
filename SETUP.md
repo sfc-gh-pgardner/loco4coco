@@ -250,22 +250,29 @@ live event, or you will delete your leads.
 1. **Edited `config.json` or `server.py` and nothing changed.** Python does not hot-reload.
    Restart the server. HTML and CSS are served fresh from disk and need no restart.
 2. **A Library or Marketplace reply fails or is slow.** Those use direct Cortex inference.
-   Claude models are **not available through `CORTEX.COMPLETE` in every region** (error
-   512513 on AWS_EU_WEST_2). Set `coco.complete_model` to `mistral-large2` or
-   `llama3.3-70b`. The game already falls back to the slower agentic path automatically.
+   **Models are region-specific.** The default is `llama3.3-70b`, verified working in both
+   `AWS_EU_WEST_2` (London) and `AWS_EU_CENTRAL_1` (Frankfurt/Berlin). `mistral-large2` is
+   **legacy in eu-central-1** (400 error) though it still works in eu-west-2, and Claude is
+   not available via `CORTEX.COMPLETE` in every region. If you move regions, confirm your
+   `coco.complete_model` and `qa.model` with a one-line `SELECT SNOWFLAKE.CORTEX.COMPLETE(...)`
+   first. The game falls back to the slower agentic path automatically.
 3. **Marketplace stall is empty.** `event.region` does not match your account region.
 4. **First visitor felt slow.** Connection setup. Pre-warm.
 5. **`No models available`.** Cortex Code is not authenticated for that connection (Step 2).
 6. **The server vanished.** It idled out after 45 minutes.
-7. **Nobody got a monitor warning.** `monitor_notify_user` was empty (Step 5).
+7. **Nobody got a monitor warning.** `monitor_notify_user` was empty, or the user has no
+   email address. On hands-on-lab / event accounts the login user often has no email, so
+   `NOTIFY_USERS` cannot be set - the deploy no longer aborts (the post-hook creates the
+   monitor without a notify list and prints a warning), but nobody is warned. For an
+   unattended event account, add a `DO SUSPEND` trigger by hand if you want a hard cap.
 
 ## If you change the fast model
 
-The two fast turns use `mistral-large2`, which needs more prompt discipline than Claude.
-When first switched on it greeted the visitor by name on *every* turn and named vague
-capabilities such as "the ability to handle large datasets". Both are fixed in the prompts.
-If you change `coco.complete_model`, read a couple of Library and Marketplace replies and
-check for exactly those two failures before trusting it at a booth.
+The two fast turns use `llama3.3-70b` by default. Open-weight models need more prompt
+discipline than Claude: `mistral-large2` (a previous default) greeted the visitor by name on
+*every* turn and named vague capabilities such as "the ability to handle large datasets".
+Both are fixed in the prompts. If you change `coco.complete_model`, read a couple of Library
+and Marketplace replies and check for exactly those two failures before trusting it at a booth.
 
 ## How the two speeds work
 

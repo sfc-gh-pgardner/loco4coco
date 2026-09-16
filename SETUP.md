@@ -127,11 +127,46 @@ the account is proven rather than assumed.
 
 Edit `game/config.json`:
 
+**The one setting to change per event: `event.venue`.** Set it to `london`,
+`paris`, `frankfurt` or `berlin` and the game resolves the rest from the
+`venues` map - city label, visitor language, cloud region, and which curated
+marketplace profile to serve. You do not hand-set the region any more.
+
+```jsonc
+"event": { "venue": "london", ... }
+```
+
+| Venue | City | Language | Cloud region | Marketplace profile |
+|---|---|---|---|---|
+| `london` | London | en | AWS_EU_WEST_2 | uk |
+| `paris` | Paris | fr | AWS_EU_WEST_3 | fr |
+| `frankfurt` | Frankfurt | en | AWS_EU_CENTRAL_1 | de |
+| `berlin` | Berlin | en | AWS_EU_CENTRAL_1 | de |
+
+Frankfurt and Berlin deliberately share a region and marketplace profile
+(`de`), because Marketplace availability is a property of the cloud region, not
+the city. **There is no UI for this yet** - it is a `config.json` edit, and the
+server does not hot-reload, so restart it after changing the venue. A small
+local `/admin` venue selector is planned.
+
+Other keys you may still set directly:
+
 | Key | What it does |
 |---|---|
-| `event.city`, `event.language` | What the visitor sees |
-| `event.region` | **Must match your account region.** Filters the Marketplace stall to listings the visitor can actually attach. Wrong value = empty stall. |
+| `event.venue` | **Primary toggle** (above). Overwrites city/language/region and sets the marketplace profile. Leave unset to hand-configure the three fields below. |
+| `event.city`, `event.language`, `event.region` | Only used directly if `event.venue` is unset or unknown. A venue overwrites them. |
 | `snowflake.connection_name` | Your connection (bootstrap normally sets this) |
+
+> **Marketplace localisation caveat (current state):** the curated marketplace
+> is UK-weighted today. `london` and `frankfurt` are proven end to end;
+> `paris` and `berlin` resolve the correct region and serve the UK-curated set
+> *filtered to their region* - functional and region-correct, but not yet
+> localised to French/German datasets. Per-region curation (the `fr`/`de`
+> profiles) is a planned follow-up requiring an SE review of each industry.
+
+**Also note the models are region-specific:** the default `coco.complete_model`
+and `qa.model` are `llama3.3-70b`, which works in both `AWS_EU_WEST_2` and
+`AWS_EU_CENTRAL_1`. `mistral-large2` is legacy in eu-central-1.
 
 **About the Marketplace preview:** the game now uses three tiers, in order.
 Tier 0 is agentic: `cortex exec` calls the `marketplace-search` skill - the same skill behind Snowsight's Discover-tab "Agentic search on the

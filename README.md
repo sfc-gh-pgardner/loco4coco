@@ -65,8 +65,14 @@ Total CoCo wait is about 58s of the 300s budget, down from 144.5s before tuning.
 
 - **Python does not hot-reload.** Restart the server after editing `server.py` or
   `config.json`. HTML and CSS are served from disk.
-- **Claude is not available via `CORTEX.COMPLETE` in every region.** The fast path uses
-  `mistral-large2`; it falls back to the agentic path automatically if inference fails.
+- **One toggle per event: `event.venue`** (`london` / `paris` / `frankfurt` / `berlin`).
+  It resolves city, language, cloud region and marketplace profile from the `venues`
+  map in `config.json`. Frankfurt and Berlin share region and profile (`de`). It is a
+  config edit today (no UI; a local `/admin` selector is planned), and the marketplace
+  is UK-weighted for now - `paris`/`berlin` are region-correct but not yet localised.
+- **Models are region-specific.** The fast/QA path defaults to `llama3.3-70b`, which works
+  in both `AWS_EU_WEST_2` and `AWS_EU_CENTRAL_1`; `mistral-large2` is legacy in eu-central-1.
+  It falls back to the agentic path automatically if inference fails.
 - **Delivery is a QR to a presigned stage document, not an email.** The booth keeps
   nothing on the laptop and sends no email; the visitor scans the QR on screen and the
   document lands on their own phone.

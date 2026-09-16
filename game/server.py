@@ -129,7 +129,34 @@ INDUSTRY_HINTS = {
 
 def load_config():
     with open(CONFIG_PATH, encoding="utf-8") as f:
-        return json.load(f)
+        return resolve_venue(json.load(f))
+
+
+def resolve_venue(cfg):
+    """Expand a single `event.venue` toggle into city, language, cloud region
+    and marketplace profile, so the operator changes ONE key to move the booth
+    from London to Paris, Frankfurt or Berlin.
+
+    The venue's values overwrite event.city/language/region in place, so every
+    existing reader (region filter, templating, the index builder) sees the
+    resolved values without knowing venues exist. `event.market_profile` is set
+    for the marketplace loader. If no venue is set, or it is unknown, the event
+    block is left exactly as written - so a hand-configured event still works.
+    """
+    ev = cfg.get("event") or {}
+    venue = (ev.get("venue") or "").strip().lower()
+    venues = cfg.get("venues") or {}
+    v = venues.get(venue)
+    if v:
+        for k in ("city", "language", "region"):
+            if v.get(k):
+                ev[k] = v[k]
+        ev["market_profile"] = v.get("market_profile") or "uk"
+    else:
+        ev.setdefault("market_profile", "uk")
+    cfg["event"] = ev
+    return cfg
+
 
 
 def read_state():
@@ -1084,7 +1111,10 @@ def listings_live(cfg, industry):
     # Postal Codes" because keyword matches were taken in raw catalogue order
     # with no notion of where the event is. Config-driven so moving the event to
     # another country is a config change, not a code change.
-    geo = (mk.get("geo") or {})
+    # Per market_profile (uk/fr/de): a Paris or Frankfurt event weights local
+    # datasets up, not UK ones. uk falls back to the base "geo" block.
+    prof = ((cfg.get("event") or {}).get("market_profile")) or "uk"
+    geo = ((mk.get("geo_by_profile") or {}).get(prof)) or (mk.get("geo") or {})
     prefer = [w.lower() for w in (geo.get("prefer") or [])]
     demote = [w.lower() for w in (geo.get("demote") or [])]
     # Per-industry veto: "postcode" is a legitimate public-sector keyword but it

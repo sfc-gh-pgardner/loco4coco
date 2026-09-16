@@ -7,6 +7,8 @@
     "idle_shutdown_minutes": 45
   },
   "event": {
+    "venue": "london",
+    "_venue_comment": "The ONE toggle a booth operator changes per event. Expands via the venues map below into city, language, cloud region and marketplace profile. One of: london, paris, frankfurt, berlin. Leave unset to hand-configure city/language/region directly.",
     "city": "London",
     "language": "en",
     "region": "AWS_EU_WEST_2",
@@ -18,6 +20,13 @@
     "operator": "",
     "_operator_comment": "Who is running THIS stand, and which stand it is. Written to SESSIONS.SE_OPERATOR on every visitor. It was read by the server but never defined here, which is why all 52 existing rows have it empty. Set it per laptop before doors open: it cannot be reconstructed afterwards, and without it 'which stand produced the best conversations' is unanswerable. Format: 'Name / Stand label', e.g. 'P Gardner / Stand 2'.",
     "_byline_comment": "Shown under the title on the start screen. Left EMPTY by default so a fresh cloner does not ship someone else's name at their own event. Set it to your own, or leave blank to show nothing."
+  },
+  "venues": {
+    "_comment": "SWT event venues. event.venue selects one; resolve_venue() in server.py overwrites event.city/language/region and sets event.market_profile from it. Frankfurt and Berlin share region AND market_profile (de) because Marketplace availability is a property of the cloud region, not the city. market_profile keys the curated marketplace listing set (uk/fr/de). NOTE: only the 'en' UI copy deck exists today; fr/de are wired for region+marketplace but the letter/narrative copy is still English until a copy-deck swap lands.",
+    "london":    { "city": "London",    "language": "en", "region": "AWS_EU_WEST_2",    "market_profile": "uk" },
+    "paris":     { "city": "Paris",     "language": "fr", "region": "AWS_EU_WEST_3",    "market_profile": "fr" },
+    "frankfurt": { "city": "Frankfurt", "language": "en", "region": "AWS_EU_CENTRAL_1", "market_profile": "de" },
+    "berlin":    { "city": "Berlin",    "language": "en", "region": "AWS_EU_CENTRAL_1", "market_profile": "de" }
   },
   "snowflake": {
     "connection_name": "PG_LONDON",
@@ -852,6 +861,17 @@
       ]
     },
     "_avoid_comment": "Per-industry veto. The public-sector keyword 'postcode' was matching 'Postcode Sector Weather Forecasts' - a weather product - so three of the six public-sector picks were Met Office. These terms drop a listing from an industry even when a keyword hit.",
+    "geo_by_profile": {
+      "_comment": "Per market_profile geo weighting for the live/agentic tiers. uk falls back to the 'geo' block above. prefer scores a listing up, demote scores it down. The manual/curated stall does not use geo - its localisation is which listings are curated per profile plus the region filter.",
+      "fr": {
+        "prefer": ["france", "french", "fran\u00e7ais", "paris", "insee", "data.gouv", "siren", "siret", "iris", "commune", "d\u00e9partement", "metropolitan france", "eurozone"],
+        "demote": ["india", "united states", " usa", "u.s.", "brazil", "canada", "australia", "japan", "china", "united kingdom", "great britain", "england", "germany", "spain", "italy", "international", "worldwide", "global", "apac"]
+      },
+      "de": {
+        "prefer": ["germany", "german", "deutschland", "berlin", "frankfurt", "munich", "destatis", "bundes", "l\u00e4nder", "dax", "eurozone"],
+        "demote": ["india", "united states", " usa", "u.s.", "brazil", "canada", "australia", "japan", "china", "united kingdom", "great britain", "england", "france", "spain", "italy", "international", "worldwide", "global", "apac"]
+      }
+    },
     "industry_avoid": {
       "public": [
         "weather",

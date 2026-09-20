@@ -1,0 +1,290 @@
+{
+  "profiles": {
+    "uk": {
+      "media": [
+        {
+          "global_name": "GZSYZIIAKU",
+          "title": "AI Signals Crypto Sentiment",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSOZ262LR",
+          "title": "Advanced TV Audience Insights",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSYZMQ0QY",
+          "title": "Adverse Media Entities Data Set",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZTWZO5G4T",
+          "title": "Alternative Data: Consumer Reviews, Support Call Transcripts & NLP Sentiment",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSTZVA0O9RA",
+          "title": "Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSVZ6EW2A",
+          "title": "European Broadband Markets 2017",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSVZ6EW2M",
+          "title": "Global Broadband Tariff Time Series 2017",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZTSZT83AIS",
+          "title": "Mastercard Audiences",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSOZ70FXV",
+          "title": "Tealium Audience Discovery",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZ1M7ZC3M49",
+          "title": "Behavioral Customer Segmentation - Sample",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        }
+      ]
+    },
+    "fr": {
+      "media": [
+        {
+          "global_name": "GZSYZIIAKU",
+          "title": "AI Signals Crypto Sentiment",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSOZ262LR",
+          "title": "Advanced TV Audience Insights",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSYZMQ0QY",
+          "title": "Adverse Media Entities Data Set",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZTWZO5G4T",
+          "title": "Alternative Data: Consumer Reviews, Support Call Transcripts & NLP Sentiment",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSTZVA0O9RA",
+          "title": "Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSVZ6EW2A",
+          "title": "European Broadband Markets 2017",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSVZ6EW2M",
+          "title": "Global Broadband Tariff Time Series 2017",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZTSZT83AIS",
+          "title": "Mastercard Audiences",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSOZ70FXV",
+          "title": "Tealium Audience Discovery",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        }
+      ]
+    },
+    "de": {
+      "media": [
+        {
+          "global_name": "GZSYZIIAKU",
+          "title": "AI Signals Crypto Sentiment",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSOZ262LR",
+          "title": "Advanced TV Audience Insights",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSYZMQ0QY",
+          "title": "Adverse Media Entities Data Set",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZTWZO5G4T",
+          "title": "Alternative Data: Consumer Reviews, Support Call Transcripts & NLP Sentiment",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSTZVA0O9RA",
+          "title": "Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSVZ6EW2A",
+          "title": "European Broadband Markets 2017",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSVZ6EW2M",
+          "title": "Global Broadband Tariff Time Series 2017",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZTSZT83AIS",
+          "title": "Mastercard Audiences",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZSOZ70FXV",
+          "title": "Tealium Audience Discovery",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukfrde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZ1M7ZC3M49",
+          "title": "Behavioral Customer Segmentation - Sample",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "ukde",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        },
+        {
+          "global_name": "GZT1ZW66H5",
+          "title": "Content Value/Engagement & Emotional Metrics for TV Programs (Sample)",
+          "provider": "(SE to confirm)",
+          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
+          "regions_swt": "de",
+          "ready": true,
+          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+        }
+      ]
+    }
+  },
+  "_generated": {
+    "at": "2026-09-16T17:57:47",
+    "note": "MEDIA candidates for SE review (deterministic; agentic cortex-exec was blocked). Confirm provider+access+fit, assign 6 primary + reserves, then promote into marketplace.json and run build_marketplace_json.py --mirror + load_context.py."
+  }
+}

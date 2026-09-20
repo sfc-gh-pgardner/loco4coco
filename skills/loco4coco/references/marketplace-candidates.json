@@ -307,6 +307,30 @@
       ],
       "retail": [
         {
+          "global_name": "GZSYZ12OIDA",
+          "title": "MBI Sociodemographic Data for France Postcode Level",
+          "provider": "Michael Bauer International GmbH",
+          "use_cases": [
+            "household income and geodemographic segmentation"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_WEST_3"
+        },
+        {
+          "global_name": "GZSYZ7UQCDLQ",
+          "title": "MBI Purchasing Power Data for France Postcode Level",
+          "provider": "Michael Bauer International GmbH",
+          "use_cases": [
+            "household income and geodemographic segmentation"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_WEST_3"
+        },
+        {
           "global_name": "GZSYZG5AD",
           "title": "NIQ-GfK Retail Purchasing Power for Product Lines in France",
           "provider": "NIQ-GFK",
@@ -316,7 +340,7 @@
           "verified_title": null,
           "ready": null,
           "in_region": null,
-          "region_checked": "AWS_EU_CENTRAL_1"
+          "region_checked": "AWS_EU_WEST_3"
         },
         {
           "global_name": "GZT1ZQXT97",
@@ -328,7 +352,7 @@
           "verified_title": null,
           "ready": null,
           "in_region": null,
-          "region_checked": "AWS_EU_CENTRAL_1"
+          "region_checked": "AWS_EU_WEST_3"
         },
         {
           "global_name": "GZT1ZQXT9J",
@@ -340,31 +364,7 @@
           "verified_title": null,
           "ready": null,
           "in_region": null,
-          "region_checked": "AWS_EU_CENTRAL_1"
-        },
-        {
-          "global_name": "GZT1ZQXT9N",
-          "title": "Population in France and overseas in 2018",
-          "provider": "Atos",
-          "use_cases": [
-            "household income and geodemographic segmentation"
-          ],
-          "verified_title": null,
-          "ready": null,
-          "in_region": null,
-          "region_checked": "AWS_EU_CENTRAL_1"
-        },
-        {
-          "global_name": "GZT1ZQXT9R",
-          "title": "Population in France and overseas in 2017",
-          "provider": "Atos",
-          "use_cases": [
-            "household income and geodemographic segmentation"
-          ],
-          "verified_title": null,
-          "ready": null,
-          "in_region": null,
-          "region_checked": "AWS_EU_CENTRAL_1"
+          "region_checked": "AWS_EU_WEST_3"
         }
       ],
       "public": [
@@ -575,7 +575,92 @@
           "region_checked": "AWS_EU_CENTRAL_1"
         }
       ],
-      "energy": [],
+      "energy": [
+        {
+          "global_name": "GZSOZ1LLD8",
+          "title": "Global Weather & Climate Data by Pelmorex Weather Source",
+          "provider": "Pelmorex Weather Source",
+          "use_cases": [
+            "weather and severe-weather warnings"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_WEST_3"
+        },
+        {
+          "global_name": "GZSOZBT22EH",
+          "title": "OnPoint Historical Global Weather Data",
+          "provider": "Pelmorex Weather Source",
+          "use_cases": [
+            "weather and severe-weather warnings"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_WEST_3"
+        },
+        {
+          "global_name": "GZSTZ1H2CVHSX",
+          "title": "AccuWeather: Forecast data",
+          "provider": "AccuWeather",
+          "use_cases": [
+            "weather and severe-weather warnings"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_WEST_3"
+        },
+        {
+          "global_name": "GZSTZ1H2CVHUF",
+          "title": "AccuWeather: Historical Weather Data",
+          "provider": "AccuWeather",
+          "use_cases": [
+            "weather and severe-weather warnings"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_WEST_3"
+        },
+        {
+          "global_name": "GZSXZ2I7689",
+          "title": "Meteomatics Weather",
+          "provider": "Meteomatics",
+          "use_cases": [
+            "weather and severe-weather warnings"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_WEST_3"
+        },
+        {
+          "global_name": "GZSYZSRWTW",
+          "title": "15-Day Weather Forecast - Sample",
+          "provider": "Weather Solutions",
+          "use_cases": [
+            "weather and severe-weather warnings"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_WEST_3"
+        },
+        {
+          "global_name": "GZTYZEQB2DU",
+          "title": "Ambee Global Weather Data - Historical, Present Conditions, and Forecast",
+          "provider": "Ambee",
+          "use_cases": [
+            "weather and severe-weather warnings"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_WEST_3"
+        }
+      ],
       "other": [
         {
           "global_name": "GZSNZ7F5UT",
@@ -1100,7 +1185,7 @@
     }
   },
   "_generated": {
-    "at": "2026-09-20T20:32:56",
+    "at": "2026-09-20T21:34:26",
     "note": "Agentic candidates for SE review. Promote good ones into marketplace.json (primary/reserve). NOT shipped as-is."
   }
 }

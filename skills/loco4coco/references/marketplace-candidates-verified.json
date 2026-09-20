@@ -1,7 +1,7 @@
 {
   "_generated": {
     "by": "scripts/verify_candidates.py",
-    "catalogue": "query_001.json"
+    "catalogue": "listings.json"
   },
   "profiles": {
     "uk": {
@@ -422,6 +422,36 @@
       ],
       "retail": [
         {
+          "claimed_title": "MBI Sociodemographic Data for France Postcode Level",
+          "claimed_global_name": "GZSYZ12OIDA",
+          "event_region": "AWS_EU_WEST_3",
+          "global_name": "GZSYZ12OIDA",
+          "title": "MBI Sociodemographic Data for France Postcode Level",
+          "provider": "GZSYZ12OI8D",
+          "access": "Limited trial",
+          "regions": "ALL",
+          "ready": true,
+          "local": false,
+          "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12OIDA",
+          "verdict": "REJECT",
+          "note": "not offered in AWS_EU_WEST_3"
+        },
+        {
+          "claimed_title": "MBI Purchasing Power Data for France Postcode Level",
+          "claimed_global_name": "GZSYZ7UQCDLQ",
+          "event_region": "AWS_EU_WEST_3",
+          "global_name": "GZSYZ7UQCDLQ",
+          "title": "MBI Purchasing Power Data for France Postcode Level",
+          "provider": "GZSYZ12OI8D",
+          "access": "Limited trial",
+          "regions": "ALL",
+          "ready": true,
+          "local": false,
+          "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDLQ",
+          "verdict": "REJECT",
+          "note": "not offered in AWS_EU_WEST_3"
+        },
+        {
           "claimed_title": "NIQ-GfK Retail Purchasing Power for Product Lines in France",
           "claimed_global_name": "GZSYZG5AD",
           "event_region": "AWS_EU_WEST_3",
@@ -463,36 +493,6 @@
           "ready": true,
           "local": false,
           "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT9J",
-          "verdict": "REJECT",
-          "note": "not offered in AWS_EU_WEST_3"
-        },
-        {
-          "claimed_title": "Population in France and overseas in 2018",
-          "claimed_global_name": "GZT1ZQXT9N",
-          "event_region": "AWS_EU_WEST_3",
-          "global_name": "GZT1ZQXT9N",
-          "title": "Population in France and overseas in 2018",
-          "provider": "GZT1ZQXT8I",
-          "access": "Free",
-          "regions": "ALL",
-          "ready": false,
-          "local": false,
-          "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT9N",
-          "verdict": "REJECT",
-          "note": "not offered in AWS_EU_WEST_3"
-        },
-        {
-          "claimed_title": "Population in France and overseas in 2017",
-          "claimed_global_name": "GZT1ZQXT9R",
-          "event_region": "AWS_EU_WEST_3",
-          "global_name": "GZT1ZQXT9R",
-          "title": "Population in France and overseas in 2017",
-          "provider": "GZT1ZQXT8I",
-          "access": "Free",
-          "regions": "ALL",
-          "ready": true,
-          "local": false,
-          "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT9R",
           "verdict": "REJECT",
           "note": "not offered in AWS_EU_WEST_3"
         }
@@ -752,6 +752,113 @@
           "ready": false,
           "local": false,
           "url": "https://app.snowflake.com/marketplace/listing/GZU6Z3U9MOEOB",
+          "verdict": "REJECT",
+          "note": "not offered in AWS_EU_WEST_3"
+        }
+      ],
+      "energy": [
+        {
+          "claimed_title": "Global Weather & Climate Data by Pelmorex Weather Source",
+          "claimed_global_name": "GZSOZ1LLD8",
+          "event_region": "AWS_EU_WEST_3",
+          "global_name": "GZSOZ1LLD8",
+          "title": "Global Weather & Climate Data by Pelmorex Weather Source",
+          "provider": "GZSOZ1LLBU",
+          "access": "Free",
+          "regions": "ALL",
+          "ready": true,
+          "local": false,
+          "url": "https://app.snowflake.com/marketplace/listing/GZSOZ1LLD8",
+          "verdict": "REJECT",
+          "note": "not offered in AWS_EU_WEST_3"
+        },
+        {
+          "claimed_title": "OnPoint Historical Global Weather Data",
+          "claimed_global_name": "GZSOZBT22EH",
+          "event_region": "AWS_EU_WEST_3",
+          "global_name": "GZSOZBT22EH",
+          "title": "OnPoint Historical Global Weather Data",
+          "provider": "GZSOZ1LLBU",
+          "access": "Limited trial",
+          "regions": "ALL",
+          "ready": true,
+          "local": false,
+          "url": "https://app.snowflake.com/marketplace/listing/GZSOZBT22EH",
+          "verdict": "REJECT",
+          "note": "not offered in AWS_EU_WEST_3"
+        },
+        {
+          "claimed_title": "AccuWeather: Forecast data",
+          "claimed_global_name": "GZSTZ1H2CVHSX",
+          "event_region": "AWS_EU_WEST_3",
+          "global_name": "GZSTZ1H2CVHSX",
+          "title": "AccuWeather: Forecast data",
+          "provider": "GZSTZ745B56",
+          "access": "Limited trial",
+          "regions": "ALL",
+          "ready": true,
+          "local": false,
+          "url": "https://app.snowflake.com/marketplace/listing/GZSTZ1H2CVHSX",
+          "verdict": "REJECT",
+          "note": "not offered in AWS_EU_WEST_3"
+        },
+        {
+          "claimed_title": "AccuWeather: Historical Weather Data",
+          "claimed_global_name": "GZSTZ1H2CVHUF",
+          "event_region": "AWS_EU_WEST_3",
+          "global_name": "GZSTZ1H2CVHUF",
+          "title": "AccuWeather: Historical Weather Data",
+          "provider": "GZSTZ745B56",
+          "access": "Limited trial",
+          "regions": "ALL",
+          "ready": true,
+          "local": false,
+          "url": "https://app.snowflake.com/marketplace/listing/GZSTZ1H2CVHUF",
+          "verdict": "REJECT",
+          "note": "not offered in AWS_EU_WEST_3"
+        },
+        {
+          "claimed_title": "Meteomatics Weather",
+          "claimed_global_name": "GZSXZ2I7689",
+          "event_region": "AWS_EU_WEST_3",
+          "global_name": "GZSXZ2I7689",
+          "title": "Meteomatics Weather",
+          "provider": "GZSXZ2I7681",
+          "access": "Free",
+          "regions": "ALL",
+          "ready": true,
+          "local": false,
+          "url": "https://app.snowflake.com/marketplace/listing/GZSXZ2I7689",
+          "verdict": "REJECT",
+          "note": "not offered in AWS_EU_WEST_3"
+        },
+        {
+          "claimed_title": "15-Day Weather Forecast - Sample",
+          "claimed_global_name": "GZSYZSRWTW",
+          "event_region": "AWS_EU_WEST_3",
+          "global_name": "GZSYZSRWTW",
+          "title": "15-Day Weather Forecast - Sample",
+          "provider": "GZSYZSRWTO",
+          "access": "Free",
+          "regions": "ALL",
+          "ready": true,
+          "local": false,
+          "url": "https://app.snowflake.com/marketplace/listing/GZSYZSRWTW",
+          "verdict": "REJECT",
+          "note": "not offered in AWS_EU_WEST_3"
+        },
+        {
+          "claimed_title": "Ambee Global Weather Data - Historical, Present Conditions, and Forecast",
+          "claimed_global_name": "GZTYZEQB2DU",
+          "event_region": "AWS_EU_WEST_3",
+          "global_name": "GZTYZEQB2DU",
+          "title": "Ambee Global Weather Data - Historical, Present Conditions, and Forecast",
+          "provider": "GZTYZEQB2DU",
+          "access": "Limited trial",
+          "regions": "ALL",
+          "ready": true,
+          "local": false,
+          "url": "https://app.snowflake.com/marketplace/listing/GZTYZEQB2DU",
           "verdict": "REJECT",
           "note": "not offered in AWS_EU_WEST_3"
         }

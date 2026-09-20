@@ -22,11 +22,10 @@
     "_byline_comment": "Shown under the title on the start screen. Left EMPTY by default so a fresh cloner does not ship someone else's name at their own event. Set it to your own, or leave blank to show nothing."
   },
   "venues": {
-    "_comment": "SWT event venues. event.venue selects one; resolve_venue() in server.py overwrites event.city/language/region and sets event.market_profile from it. Frankfurt and Berlin share region AND market_profile (de) because Marketplace availability is a property of the cloud region, not the city. market_profile keys the curated marketplace listing set (uk/fr/de). NOTE: only the 'en' UI copy deck exists today; fr/de are wired for region+marketplace but the letter/narrative copy is still English until a copy-deck swap lands.",
-    "london":    { "city": "London",    "language": "en", "region": "AWS_EU_WEST_2",    "market_profile": "uk" },
-    "paris":     { "city": "Paris",     "language": "fr", "region": "AWS_EU_WEST_3",    "market_profile": "fr" },
-    "frankfurt": { "city": "Frankfurt", "language": "en", "region": "AWS_EU_CENTRAL_1", "market_profile": "de" },
-    "berlin":    { "city": "Berlin",    "language": "en", "region": "AWS_EU_CENTRAL_1", "market_profile": "de" }
+    "_comment": "The three SWT events. event.venue selects one; resolve_venue() in server.py overwrites event.city/language and sets event.market_profile from it. EACH EVENT RUNS ON ITS OWN EPHEMERAL ACCOUNT (stood up via DataOps Live), so one account = one event and LOCO4COCO.BOOTH in that account IS the per-event isolation - there are deliberately no per-event schemas. Every one of those accounts is in AWS Frankfurt, so `region` is CONSTANT at AWS_EU_CENTRAL_1 and is NOT the thing that varies between events: it only gates which listings are importable. What varies is market_profile (uk/fr/de), which selects the LOCALLY RELEVANT curated listings for that city - attendees read the doc later and attach data from their own account, so local relevance matters more than the booth's region. NOTE: only the 'en' UI copy deck exists; fr/de language codes are wired but the letter/narrative copy is still English (translation deprioritised).",
+    "london": { "city": "London", "language": "en", "region": "AWS_EU_CENTRAL_1", "market_profile": "uk" },
+    "paris":  { "city": "Paris",  "language": "fr", "region": "AWS_EU_CENTRAL_1", "market_profile": "fr" },
+    "berlin": { "city": "Berlin", "language": "de", "region": "AWS_EU_CENTRAL_1", "market_profile": "de" }
   },
   "snowflake": {
     "connection_name": "PG_LONDON",
@@ -655,6 +654,12 @@
     "_comment": "Live discovery needs NO private preview: SHOW AVAILABLE LISTINGS piped through RESULT_SCAN gives 188 importable listings in AWS_EU_WEST_2 (of 4327 total, 799 region-available). Measured 2026-08-17. The curated index stays as the offline-safe fallback.",
     "min_live_results": 3,
     "cache_minutes": 120,
+    "_locality_comment": "market_profile -> the country the agentic search should prefer. This is what makes the 7th 'something else' option local to the EVENT rather than to the account: every event account is in AWS Frankfurt, so the region is a constraint on what can be attached, while the country below is what makes a suggestion relevant. Proven: asking for Germany returned GfK Population Germany and Acxiom EMEA Geo-Spatial DE.",
+    "locality": {
+      "uk": "the United Kingdom",
+      "fr": "France",
+      "de": "Germany"
+    },
     "agentic": {
       "_comment": "Tier 0, ahead of live. Built and end-to-end tested on PG_LONDON 2026-08-23, then DISABLED the same day: measured latency 70-110s+ (2 of 3 runs timed out) is too high and too variable to trust against an unmeasured Library dwell time. Replaced for now by a precompute pass instead - the same PrPr agentic search run offline, once, to add a verified 6th free-weighted pick per industry to marketplace-index.md (Tier 2). Code left in place and dormant; re-enable once real Library timing data exists or latency improves. No cap by design if re-enabled: an SE watches spend in cost.jsonl (kind=marketplace_agentic) and flips enabled back off by hand if needed.",
       "enabled": false,

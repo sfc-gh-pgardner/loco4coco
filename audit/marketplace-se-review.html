@@ -11,13 +11,22 @@
       width: 100%; box-sizing: border-box; margin: 0 auto; padding: clamp(16px,4vw,28px);
       color: light-dark(#1f2937,#e5e7eb); line-height: 1.5; }
     h1,h2,h3 { color: light-dark(#0f172a,#f1f5f9); }
-    h2 { margin-top: 30px; border-bottom: 2px solid #29B5E8; padding-bottom: 4px; }
+    h3 { margin-top: 22px; }
     a { color: light-dark(#166184,#67B5ED); }
     .sub { color: light-dark(#64748b,#94a3b8); }
-    .callout { background: light-dark(#f1f5f9,#1f2937); border-left: 4px solid #ED8D30;
-      border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
-    .legend { background: light-dark(#f1f5f9,#1f2937); border:1px solid light-dark(#d1d5db,#374151);
-      border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+    .legend, .callout { background: light-dark(#f1f5f9,#1f2937);
+      border: 1px solid light-dark(#d1d5db,#374151); border-radius: 8px;
+      padding: 12px 16px; margin: 14px 0; }
+    .callout { border-left: 4px solid #ED8D30; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 0; }
+    .tab { font: inherit; cursor: pointer; padding: 9px 18px;
+      background: light-dark(#e8edf3,#252b36); color: inherit;
+      border: 1px solid light-dark(#d1d5db,#374151); border-bottom: none;
+      border-radius: 8px 8px 0 0; }
+    .tab.active { background: #29B5E8; color: #0b1220; font-weight: 700; }
+    .pane { display: none; border: 1px solid light-dark(#d1d5db,#374151);
+      border-radius: 0 8px 8px 8px; padding: clamp(12px,3vw,20px); }
+    .pane.active { display: block; }
     .table-wrap { overflow-x: auto; margin: 8px 0; }
     table { border-collapse: collapse; width: 100%; font-size: 14px; }
     th,td { border: 1px solid light-dark(#d1d5db,#374151); padding: 6px 9px; text-align: left; }
@@ -31,149 +40,150 @@
 </head>
 <body>
   <h1>Marketplace — SE review</h1>
-  <p class="sub">Loco for CoCo · per industry × cloud region · generated 2026-09-20 · from marketplace.json</p>
-  <div class="legend"><strong>Regions</strong>: London → <code>AWS_EU_WEST_2</code> ·
-    Paris → <code>AWS_EU_WEST_3</code> · Frankfurt &amp; Berlin → <code>AWS_EU_CENTRAL_1</code>.<br>
-    <strong>Key</strong>: <span class="yes">✓</span> available &amp; importable ·
-    <span class="warn">⚠</span> region-available but not ready-for-import (needs request/trial) ·
-    <span class="no">✗</span> not offered in that region. Titles link to the Marketplace listing.</div>
-  <h2 id="summary">Summary — datasets surviving per industry × region</h2>
-<div class="table-wrap"><table><thead><tr><th>Industry</th><th class="c">London</th><th class="c">Paris</th><th class="c">Frankfurt / Berlin</th></tr></thead><tbody>
-<tr><td>Healthcare & Life Sciences</td><td class="c">6/6</td><td class="c">1/6</td><td class="c">5/6</td></tr>
-<tr><td>Financial Services</td><td class="c">6/6</td><td class="c">4/6</td><td class="c">6/6</td></tr>
-<tr><td>Retail & Consumer Goods</td><td class="c">6/6</td><td class="c">2/6</td><td class="c">4/6</td></tr>
-<tr><td>Public Sector & Government</td><td class="c">6/6</td><td class="c">3/6</td><td class="c">3/6</td></tr>
-<tr><td>Manufacturing & Industrial</td><td class="c">6/6</td><td class="c">3/6</td><td class="c">6/6</td></tr>
-<tr><td>Energy & Utilities</td><td class="c">6/6</td><td class="c">5/6</td><td class="c">5/6</td></tr>
-<tr><td>Media, Telco & Entertainment</td><td class="c">6/6</td><td class="c">2/6</td><td class="c">3/6</td></tr>
-<tr><td>Something else (other)</td><td class="c">6/6</td><td class="c">2/6</td><td class="c">4/6</td></tr>
-</tbody></table></div>
-<h2 id="industries">Current picks per industry (uk profile)</h2>
-<p class="sub">Titles link to the Marketplace listing. The SE verdict column is blank for you to fill.</p>
-<h3>Healthcare & Life Sciences</h3>
-<div class="table-wrap"><table>
-<thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c">Lon</th><th class="c">Par</th><th class="c">Fra/Ber</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZAJO3" target="_blank" rel="noopener">UK (England and Wales only) Census 2021 - Trial</a></td><td>Jaywing</td><td>Free</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF" target="_blank" rel="noopener">Acorn - Geodemographic Segmentation in the UK</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVCY" target="_blank" rel="noopener">Postcode Sector Weather Forecasts</a></td><td>Met Office</td><td>Free 14-day trial</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZ67BY9OQW" target="_blank" rel="noopener">PubMed Biomedical Research Corpus</a></td><td>Snowflake</td><td>Free</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ2FRZQNY1" target="_blank" rel="noopener">UK Health Facts and Dimensions Sample</a></td><td>Facts and Dimensions Ltd</td><td>Free</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7UU" target="_blank" rel="noopener">Household Acorn – geodemographic segmentation at household level SAMPLE DATA</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+  <p class="sub">Loco for CoCo · one tab per SWT event · generated 2026-09-20 · from marketplace.json</p>
+  <div class="legend">
+    Each event runs on its <strong>own ephemeral account, all in AWS Frankfurt</strong>, so the
+    cloud region is the same everywhere and is <em>not</em> what differs between events —
+    <strong>local relevance is</strong>. Attendees read the document later and attach data from
+    their own account, so a pick is judged on whether it is locally meaningful first.<br>
+    <strong>Usable</strong>: <span class="yes">✓</span> importable on eu-central-1 ·
+    <span class="warn">⚠</span> in region but needs a request/trial ·
+    <span class="no">✗</span> not offered in eu-central-1 (cannot be used at any of these events).
+    Titles link to the Marketplace listing.
+  </div>
+  <div class="tabs"><button class="tab active" data-pane="pane-uk">London</button>
+<button class="tab" data-pane="pane-fr">Paris</button>
+<button class="tab" data-pane="pane-de">Berlin</button></div>
+  <section class="pane active" id="pane-uk"><p class="sub">Suggestions chosen for local relevance to <strong>United Kingdom</strong>. The booth account for this event is in AWS Frankfurt, so every pick must also be importable on eu-central-1.</p>
+<h3>Healthcare &amp; Life Sciences</h3>
+<div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c" title="Importable on an eu-central-1 account">Usable</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZAJO3" target="_blank" rel="noopener">UK (England and Wales only) Census 2021 - Trial</a></td><td>Jaywing</td><td>Free</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF" target="_blank" rel="noopener">Acorn - Geodemographic Segmentation in the UK</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVCY" target="_blank" rel="noopener">Postcode Sector Weather Forecasts</a></td><td>Met Office</td><td>Free 14-day trial</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZ67BY9OQW" target="_blank" rel="noopener">PubMed Biomedical Research Corpus</a></td><td>Snowflake</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ2FRZQNY1" target="_blank" rel="noopener">UK Health Facts and Dimensions Sample</a></td><td>Facts and Dimensions Ltd</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7UU" target="_blank" rel="noopener">Household Acorn – geodemographic segmentation at household level SAMPLE DATA</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
 </tbody></table></div>
 <h3>Financial Services</h3>
-<div class="table-wrap"><table>
-<thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c">Lon</th><th class="c">Par</th><th class="c">Fra/Ber</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZ290BVCAO" target="_blank" rel="noopener">Snowflake Public Data: Foreign Exchange Rates</a></td><td>Snowflake Public Data Products</td><td>Free 60-day trial</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZ7DJU9" target="_blank" rel="noopener">Inflation Forecasting - Headline &amp; Core CPI by Country</a></td><td>Turnleaf Analytics</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW" target="_blank" rel="noopener">Company Data UK (incl. Guernsey) - XL Dataset</a></td><td>North Data GmbH</td><td>Free 7-day trial</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZLT2II6" target="_blank" rel="noopener">Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.)</a></td><td>IBISWorld</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0ZI0XJ6Q" target="_blank" rel="noopener">CSRHub ESG (Environment, Social, Governance) Fast Start</a></td><td>CSRHub LLC</td><td>Free 30-day trial</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTYZAPS3FP" target="_blank" rel="noopener">Banking Analytics Bundle</a></td><td>InSights</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c" title="Importable on an eu-central-1 account">Usable</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZ290BVCAO" target="_blank" rel="noopener">Snowflake Public Data: Foreign Exchange Rates</a></td><td>Snowflake Public Data Products</td><td>Free 60-day trial</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZ7DJU9" target="_blank" rel="noopener">Inflation Forecasting - Headline &amp; Core CPI by Country</a></td><td>Turnleaf Analytics</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW" target="_blank" rel="noopener">Company Data UK (incl. Guernsey) - XL Dataset</a></td><td>North Data GmbH</td><td>Free 7-day trial</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZLT2II6" target="_blank" rel="noopener">Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.)</a></td><td>IBISWorld</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0ZI0XJ6Q" target="_blank" rel="noopener">CSRHub ESG (Environment, Social, Governance) Fast Start</a></td><td>CSRHub LLC</td><td>Free 30-day trial</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTYZAPS3FP" target="_blank" rel="noopener">Banking Analytics Bundle</a></td><td>InSights</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
 </tbody></table></div>
-<h3>Retail & Consumer Goods</h3>
-<div class="table-wrap"><table>
-<thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c">Lon</th><th class="c">Par</th><th class="c">Fra/Ber</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVCY" target="_blank" rel="noopener">Postcode Sector Weather Forecasts</a></td><td>Met Office</td><td>Free 14-day trial</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF" target="_blank" rel="noopener">Acorn - Geodemographic Segmentation in the UK</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7UA" target="_blank" rel="noopener">PayCheck – UK household income estimates at postcode level - SAMPLE data</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZAJO3" target="_blank" rel="noopener">UK (England and Wales only) Census 2021 - Trial</a></td><td>Jaywing</td><td>Free</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZLT2II6" target="_blank" rel="noopener">Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.)</a></td><td>IBISWorld</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0ZKUCHKL" target="_blank" rel="noopener">Spatial Features (GBR, Quadgrid 15 and H3 Res. 8)</a></td><td>CARTO</td><td>Free</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
+<h3>Retail &amp; Consumer Goods</h3>
+<div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c" title="Importable on an eu-central-1 account">Usable</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVCY" target="_blank" rel="noopener">Postcode Sector Weather Forecasts</a></td><td>Met Office</td><td>Free 14-day trial</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF" target="_blank" rel="noopener">Acorn - Geodemographic Segmentation in the UK</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7UA" target="_blank" rel="noopener">PayCheck – UK household income estimates at postcode level - SAMPLE data</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZAJO3" target="_blank" rel="noopener">UK (England and Wales only) Census 2021 - Trial</a></td><td>Jaywing</td><td>Free</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZLT2II6" target="_blank" rel="noopener">Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.)</a></td><td>IBISWorld</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0ZKUCHKL" target="_blank" rel="noopener">Spatial Features (GBR, Quadgrid 15 and H3 Res. 8)</a></td><td>CARTO</td><td>Free</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
 </tbody></table></div>
-<h3>Public Sector & Government</h3>
-<div class="table-wrap"><table>
-<thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c">Lon</th><th class="c">Par</th><th class="c">Fra/Ber</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZAJO3" target="_blank" rel="noopener">UK (England and Wales only) Census 2021 - Trial</a></td><td>Jaywing</td><td>Free</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7UQ" target="_blank" rel="noopener">Address Spine – UK address level property information - Sample Data</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4" target="_blank" rel="noopener">CARTO Boundaries</a></td><td>CARTO</td><td>Free</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVH3" target="_blank" rel="noopener">UK Land Surface Observations</a></td><td>Met Office</td><td>Free 14-day trial</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVCU" target="_blank" rel="noopener">National Severe Weather Warning Service</a></td><td>Met Office</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ1MOZBWYYT" target="_blank" rel="noopener">Administrative boundaries - Great Britain: Boundary Line - Open</a></td><td>Ordnance Survey</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<h3>Public Sector &amp; Government</h3>
+<div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c" title="Importable on an eu-central-1 account">Usable</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZAJO3" target="_blank" rel="noopener">UK (England and Wales only) Census 2021 - Trial</a></td><td>Jaywing</td><td>Free</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7UQ" target="_blank" rel="noopener">Address Spine – UK address level property information - Sample Data</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4" target="_blank" rel="noopener">CARTO Boundaries</a></td><td>CARTO</td><td>Free</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVH3" target="_blank" rel="noopener">UK Land Surface Observations</a></td><td>Met Office</td><td>Free 14-day trial</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVCU" target="_blank" rel="noopener">National Severe Weather Warning Service</a></td><td>Met Office</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ1MOZBWYYT" target="_blank" rel="noopener">Administrative boundaries - Great Britain: Boundary Line - Open</a></td><td>Ordnance Survey</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
 </tbody></table></div>
-<h3>Manufacturing & Industrial</h3>
-<div class="table-wrap"><table>
-<thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c">Lon</th><th class="c">Par</th><th class="c">Fra/Ber</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZRC7HQ3" target="_blank" rel="noopener">CEIC Commodities Data</a></td><td>CEIC Data</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW" target="_blank" rel="noopener">Company Data UK (incl. Guernsey) - XL Dataset</a></td><td>North Data GmbH</td><td>Free 7-day trial</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9KJ" target="_blank" rel="noopener">Overture Maps - Transportation</a></td><td>CARTO</td><td>Free</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0ZGCQ51RQ" target="_blank" rel="noopener">FactSet Supply Chain Relationships (sample)</a></td><td>FactSet</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0ZPWB4J7" target="_blank" rel="noopener">D&amp;B Shipping Insights Sample</a></td><td>Dun &amp; Bradstreet</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVCM" target="_blank" rel="noopener">Global Spot Weather Forecasts</a></td><td>Met Office</td><td>Free 14-day trial</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<h3>Manufacturing &amp; Industrial</h3>
+<div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c" title="Importable on an eu-central-1 account">Usable</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZRC7HQ3" target="_blank" rel="noopener">CEIC Commodities Data</a></td><td>CEIC Data</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW" target="_blank" rel="noopener">Company Data UK (incl. Guernsey) - XL Dataset</a></td><td>North Data GmbH</td><td>Free 7-day trial</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9KJ" target="_blank" rel="noopener">Overture Maps - Transportation</a></td><td>CARTO</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0ZGCQ51RQ" target="_blank" rel="noopener">FactSet Supply Chain Relationships (sample)</a></td><td>FactSet</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0ZPWB4J7" target="_blank" rel="noopener">D&amp;B Shipping Insights Sample</a></td><td>Dun &amp; Bradstreet</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVCM" target="_blank" rel="noopener">Global Spot Weather Forecasts</a></td><td>Met Office</td><td>Free 14-day trial</td><td class="c yes">✓</td><td class="verdict"></td></tr>
 </tbody></table></div>
-<h3>Energy & Utilities</h3>
-<div class="table-wrap"><table>
-<thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c">Lon</th><th class="c">Par</th><th class="c">Fra/Ber</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVCU" target="_blank" rel="noopener">National Severe Weather Warning Service</a></td><td>Met Office</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVH3" target="_blank" rel="noopener">UK Land Surface Observations</a></td><td>Met Office</td><td>Free 14-day trial</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ71OJH" target="_blank" rel="noopener">Yes Energy - Sample Data</a></td><td>Yes Energy</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ8MX1I" target="_blank" rel="noopener">Sample of GasMarketCube - Global Gas Supply, Demand and Trade</a></td><td>Rystad Energy</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZSRWU5" target="_blank" rel="noopener">Wind Power Forecast, Day-ahead - Sample</a></td><td>Weather Solutions</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZ1PNFO" target="_blank" rel="noopener">Crude oil price data</a></td><td>General Index</td><td>Free Trial</td><td class="c warn">⚠</td><td class="c warn">⚠</td><td class="c warn">⚠</td><td class="verdict"></td></tr>
+<h3>Energy &amp; Utilities</h3>
+<div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c" title="Importable on an eu-central-1 account">Usable</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVCU" target="_blank" rel="noopener">National Severe Weather Warning Service</a></td><td>Met Office</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZJKVH3" target="_blank" rel="noopener">UK Land Surface Observations</a></td><td>Met Office</td><td>Free 14-day trial</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ71OJH" target="_blank" rel="noopener">Yes Energy - Sample Data</a></td><td>Yes Energy</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ8MX1I" target="_blank" rel="noopener">Sample of GasMarketCube - Global Gas Supply, Demand and Trade</a></td><td>Rystad Energy</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZSRWU5" target="_blank" rel="noopener">Wind Power Forecast, Day-ahead - Sample</a></td><td>Weather Solutions</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTDZ1PNFO" target="_blank" rel="noopener">Crude oil price data</a></td><td>General Index</td><td>Free Trial</td><td class="c warn" title="In region but needs a request/trial">⚠</td><td class="verdict"></td></tr>
 </tbody></table></div>
-<h3>Media, Telco & Entertainment</h3>
-<div class="table-wrap"><table>
-<thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c">Lon</th><th class="c">Par</th><th class="c">Fra/Ber</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF" target="_blank" rel="noopener">Acorn - Geodemographic Segmentation in the UK</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZAJO3" target="_blank" rel="noopener">UK (England and Wales only) Census 2021 - Trial</a></td><td>Jaywing</td><td>Free</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4" target="_blank" rel="noopener">CARTO Boundaries</a></td><td>CARTO</td><td>Free</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0ZKUCHKL" target="_blank" rel="noopener">Spatial Features (GBR, Quadgrid 15 and H3 Res. 8)</a></td><td>CARTO</td><td>Free</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT1ZFQ0JE5" target="_blank" rel="noopener">GLP-1 Social Conversations Sample Dataset</a></td><td>Socialgist</td><td>Free</td><td class="c warn">⚠</td><td class="c warn">⚠</td><td class="c warn">⚠</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSNZ4PHA6" target="_blank" rel="noopener">American Community Survey, 2016</a></td><td>data.world, Inc</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<h3>Media, Telco &amp; Entertainment</h3>
+<div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c" title="Importable on an eu-central-1 account">Usable</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF" target="_blank" rel="noopener">Acorn - Geodemographic Segmentation in the UK</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZAJO3" target="_blank" rel="noopener">UK (England and Wales only) Census 2021 - Trial</a></td><td>Jaywing</td><td>Free</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4" target="_blank" rel="noopener">CARTO Boundaries</a></td><td>CARTO</td><td>Free</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0ZKUCHKL" target="_blank" rel="noopener">Spatial Features (GBR, Quadgrid 15 and H3 Res. 8)</a></td><td>CARTO</td><td>Free</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT1ZFQ0JE5" target="_blank" rel="noopener">GLP-1 Social Conversations Sample Dataset</a></td><td>Socialgist</td><td>Free</td><td class="c warn" title="In region but needs a request/trial">⚠</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSNZ4PHA6" target="_blank" rel="noopener">American Community Survey, 2016</a></td><td>data.world, Inc</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
 </tbody></table></div>
 <h3>Something else (other)</h3>
-<div class="table-wrap"><table>
-<thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c">Lon</th><th class="c">Par</th><th class="c">Fra/Ber</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZAJO3" target="_blank" rel="noopener">UK (England and Wales only) Census 2021 - Trial</a></td><td>Jaywing</td><td>Free</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW" target="_blank" rel="noopener">Company Data UK (incl. Guernsey) - XL Dataset</a></td><td>North Data GmbH</td><td>Free 7-day trial</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4" target="_blank" rel="noopener">CARTO Boundaries</a></td><td>CARTO</td><td>Free</td><td class="c warn">⚠</td><td class="c no">✗</td><td class="c no">✗</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZ290BVCAO" target="_blank" rel="noopener">Snowflake Public Data: Foreign Exchange Rates</a></td><td>Snowflake Public Data Products</td><td>Free 60-day trial</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9NA" target="_blank" rel="noopener">CARTO Analytics Toolbox</a></td><td>CARTO</td><td>Free</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="c yes">✓</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF" target="_blank" rel="noopener">Acorn - Geodemographic Segmentation in the UK</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="c no">✗</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<div class="table-wrap"><table><thead><tr><th>Dataset</th><th>Provider</th><th>Access</th><th class="c" title="Importable on an eu-central-1 account">Usable</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZAJO3" target="_blank" rel="noopener">UK (England and Wales only) Census 2021 - Trial</a></td><td>Jaywing</td><td>Free</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ2FSZH8URW" target="_blank" rel="noopener">Company Data UK (incl. Guernsey) - XL Dataset</a></td><td>North Data GmbH</td><td>Free 7-day trial</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9L4" target="_blank" rel="noopener">CARTO Boundaries</a></td><td>CARTO</td><td>Free</td><td class="c no" title="Not offered in eu-central-1">✗</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZ290BVCAO" target="_blank" rel="noopener">Snowflake Public Data: Foreign Exchange Rates</a></td><td>Snowflake Public Data Products</td><td>Free 60-day trial</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT0Z4CM1E9NA" target="_blank" rel="noopener">CARTO Analytics Toolbox</a></td><td>CARTO</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ1K7VF" target="_blank" rel="noopener">Acorn - Geodemographic Segmentation in the UK</a></td><td>CACI Ltd</td><td>Free</td><td class="c yes">✓</td><td class="verdict"></td></tr>
 </tbody></table></div>
-<h2 id="media-candidates">Media candidates for review (deterministic)</h2>
-<div class="callout">New, region-verified, importable media listings to fill the sparse media stall. Provider/access are flagged for SE confirmation (they cannot be scraped). Assign 6 primary + reserves per profile, then promote into marketplace.json.</div>
-<h3>profile: uk</h3>
-<div class="table-wrap"><table><thead><tr><th>Candidate</th><th>Global name</th><th>SWT regions</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZIIAKU" target="_blank" rel="noopener">AI Signals Crypto Sentiment</a></td><td><code>GZSYZIIAKU</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ262LR" target="_blank" rel="noopener">Advanced TV Audience Insights</a></td><td><code>GZSOZ262LR</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZMQ0QY" target="_blank" rel="noopener">Adverse Media Entities Data Set</a></td><td><code>GZSYZMQ0QY</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTWZO5G4T" target="_blank" rel="noopener">Alternative Data: Consumer Reviews, Support Call Transcripts &amp; NLP Sentiment</a></td><td><code>GZTWZO5G4T</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZVA0O9RA" target="_blank" rel="noopener">Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)</a></td><td><code>GZSTZVA0O9RA</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2A" target="_blank" rel="noopener">European Broadband Markets 2017</a></td><td><code>GZSVZ6EW2A</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2M" target="_blank" rel="noopener">Global Broadband Tariff Time Series 2017</a></td><td><code>GZSVZ6EW2M</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZT83AIS" target="_blank" rel="noopener">Mastercard Audiences</a></td><td><code>GZTSZT83AIS</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ70FXV" target="_blank" rel="noopener">Tealium Audience Discovery</a></td><td><code>GZSOZ70FXV</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ1M7ZC3M49" target="_blank" rel="noopener">Behavioral Customer Segmentation - Sample</a></td><td><code>GZ1M7ZC3M49</code></td><td>ukde</td><td class="verdict"></td></tr>
-</tbody></table></div>
-<h3>profile: fr</h3>
-<div class="table-wrap"><table><thead><tr><th>Candidate</th><th>Global name</th><th>SWT regions</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZIIAKU" target="_blank" rel="noopener">AI Signals Crypto Sentiment</a></td><td><code>GZSYZIIAKU</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ262LR" target="_blank" rel="noopener">Advanced TV Audience Insights</a></td><td><code>GZSOZ262LR</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZMQ0QY" target="_blank" rel="noopener">Adverse Media Entities Data Set</a></td><td><code>GZSYZMQ0QY</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTWZO5G4T" target="_blank" rel="noopener">Alternative Data: Consumer Reviews, Support Call Transcripts &amp; NLP Sentiment</a></td><td><code>GZTWZO5G4T</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZVA0O9RA" target="_blank" rel="noopener">Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)</a></td><td><code>GZSTZVA0O9RA</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2A" target="_blank" rel="noopener">European Broadband Markets 2017</a></td><td><code>GZSVZ6EW2A</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2M" target="_blank" rel="noopener">Global Broadband Tariff Time Series 2017</a></td><td><code>GZSVZ6EW2M</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZT83AIS" target="_blank" rel="noopener">Mastercard Audiences</a></td><td><code>GZTSZT83AIS</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ70FXV" target="_blank" rel="noopener">Tealium Audience Discovery</a></td><td><code>GZSOZ70FXV</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-</tbody></table></div>
-<h3>profile: de</h3>
-<div class="table-wrap"><table><thead><tr><th>Candidate</th><th>Global name</th><th>SWT regions</th><th class="verdict">SE verdict</th></tr></thead><tbody>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZIIAKU" target="_blank" rel="noopener">AI Signals Crypto Sentiment</a></td><td><code>GZSYZIIAKU</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ262LR" target="_blank" rel="noopener">Advanced TV Audience Insights</a></td><td><code>GZSOZ262LR</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZMQ0QY" target="_blank" rel="noopener">Adverse Media Entities Data Set</a></td><td><code>GZSYZMQ0QY</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTWZO5G4T" target="_blank" rel="noopener">Alternative Data: Consumer Reviews, Support Call Transcripts &amp; NLP Sentiment</a></td><td><code>GZTWZO5G4T</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZVA0O9RA" target="_blank" rel="noopener">Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)</a></td><td><code>GZSTZVA0O9RA</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2A" target="_blank" rel="noopener">European Broadband Markets 2017</a></td><td><code>GZSVZ6EW2A</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2M" target="_blank" rel="noopener">Global Broadband Tariff Time Series 2017</a></td><td><code>GZSVZ6EW2M</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZT83AIS" target="_blank" rel="noopener">Mastercard Audiences</a></td><td><code>GZTSZT83AIS</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ70FXV" target="_blank" rel="noopener">Tealium Audience Discovery</a></td><td><code>GZSOZ70FXV</code></td><td>ukfrde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ1M7ZC3M49" target="_blank" rel="noopener">Behavioral Customer Segmentation - Sample</a></td><td><code>GZ1M7ZC3M49</code></td><td>ukde</td><td class="verdict"></td></tr>
-<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT1ZW66H5" target="_blank" rel="noopener">Content Value/Engagement &amp; Emotional Metrics for TV Programs (Sample)</a></td><td><code>GZT1ZW66H5</code></td><td>de</td><td class="verdict"></td></tr>
-</tbody></table></div>
-  <h2>What the review feeds</h2>
-  <p>Confirm fit, provider and access per row; for each ✗/⚠ where an industry thins out,
-  pick a region-appropriate replacement (local FR/DE datasets for Paris/Berlin). Approved
-  media candidates are promoted into <code>marketplace.json</code> then mirrored and reloaded.</p>
+<h3>Candidates awaiting review</h3>
+<p class="sub"><strong>Media, Telco &amp; Entertainment</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Candidate</th><th>Provider</th><th>Global name</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZIIAKU" target="_blank" rel="noopener">AI Signals Crypto Sentiment</a></td><td>(SE to confirm)</td><td><code>GZSYZIIAKU</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ262LR" target="_blank" rel="noopener">Advanced TV Audience Insights</a></td><td>(SE to confirm)</td><td><code>GZSOZ262LR</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZMQ0QY" target="_blank" rel="noopener">Adverse Media Entities Data Set</a></td><td>(SE to confirm)</td><td><code>GZSYZMQ0QY</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTWZO5G4T" target="_blank" rel="noopener">Alternative Data: Consumer Reviews, Support Call Transcripts &amp; NLP Sentiment</a></td><td>(SE to confirm)</td><td><code>GZTWZO5G4T</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZVA0O9RA" target="_blank" rel="noopener">Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)</a></td><td>(SE to confirm)</td><td><code>GZSTZVA0O9RA</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2A" target="_blank" rel="noopener">European Broadband Markets 2017</a></td><td>(SE to confirm)</td><td><code>GZSVZ6EW2A</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2M" target="_blank" rel="noopener">Global Broadband Tariff Time Series 2017</a></td><td>(SE to confirm)</td><td><code>GZSVZ6EW2M</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZT83AIS" target="_blank" rel="noopener">Mastercard Audiences</a></td><td>(SE to confirm)</td><td><code>GZTSZT83AIS</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ70FXV" target="_blank" rel="noopener">Tealium Audience Discovery</a></td><td>(SE to confirm)</td><td><code>GZSOZ70FXV</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ1M7ZC3M49" target="_blank" rel="noopener">Behavioral Customer Segmentation - Sample</a></td><td>(SE to confirm)</td><td><code>GZ1M7ZC3M49</code></td><td class="verdict"></td></tr>
+</tbody></table></div></section>
+<section class="pane" id="pane-fr"><p class="sub">Suggestions chosen for local relevance to <strong>France</strong>. The booth account for this event is in AWS Frankfurt, so every pick must also be importable on eu-central-1.</p>
+<div class="callout">No curated picks for this event yet. Agentic locality curation is pending; any candidates found so far are listed below for review.</div>
+<h3>Candidates awaiting review</h3>
+<p class="sub"><strong>Media, Telco &amp; Entertainment</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Candidate</th><th>Provider</th><th>Global name</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZIIAKU" target="_blank" rel="noopener">AI Signals Crypto Sentiment</a></td><td>(SE to confirm)</td><td><code>GZSYZIIAKU</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ262LR" target="_blank" rel="noopener">Advanced TV Audience Insights</a></td><td>(SE to confirm)</td><td><code>GZSOZ262LR</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZMQ0QY" target="_blank" rel="noopener">Adverse Media Entities Data Set</a></td><td>(SE to confirm)</td><td><code>GZSYZMQ0QY</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTWZO5G4T" target="_blank" rel="noopener">Alternative Data: Consumer Reviews, Support Call Transcripts &amp; NLP Sentiment</a></td><td>(SE to confirm)</td><td><code>GZTWZO5G4T</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZVA0O9RA" target="_blank" rel="noopener">Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)</a></td><td>(SE to confirm)</td><td><code>GZSTZVA0O9RA</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2A" target="_blank" rel="noopener">European Broadband Markets 2017</a></td><td>(SE to confirm)</td><td><code>GZSVZ6EW2A</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2M" target="_blank" rel="noopener">Global Broadband Tariff Time Series 2017</a></td><td>(SE to confirm)</td><td><code>GZSVZ6EW2M</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZT83AIS" target="_blank" rel="noopener">Mastercard Audiences</a></td><td>(SE to confirm)</td><td><code>GZTSZT83AIS</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ70FXV" target="_blank" rel="noopener">Tealium Audience Discovery</a></td><td>(SE to confirm)</td><td><code>GZSOZ70FXV</code></td><td class="verdict"></td></tr>
+</tbody></table></div></section>
+<section class="pane" id="pane-de"><p class="sub">Suggestions chosen for local relevance to <strong>Germany</strong>. The booth account for this event is in AWS Frankfurt, so every pick must also be importable on eu-central-1.</p>
+<div class="callout">No curated picks for this event yet. Agentic locality curation is pending; any candidates found so far are listed below for review.</div>
+<h3>Candidates awaiting review</h3>
+<p class="sub"><strong>Media, Telco &amp; Entertainment</strong></p>
+<div class="table-wrap"><table><thead><tr><th>Candidate</th><th>Provider</th><th>Global name</th><th class="verdict">SE verdict</th></tr></thead><tbody>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZIIAKU" target="_blank" rel="noopener">AI Signals Crypto Sentiment</a></td><td>(SE to confirm)</td><td><code>GZSYZIIAKU</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ262LR" target="_blank" rel="noopener">Advanced TV Audience Insights</a></td><td>(SE to confirm)</td><td><code>GZSOZ262LR</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSYZMQ0QY" target="_blank" rel="noopener">Adverse Media Entities Data Set</a></td><td>(SE to confirm)</td><td><code>GZSYZMQ0QY</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTWZO5G4T" target="_blank" rel="noopener">Alternative Data: Consumer Reviews, Support Call Transcripts &amp; NLP Sentiment</a></td><td>(SE to confirm)</td><td><code>GZTWZO5G4T</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSTZVA0O9RA" target="_blank" rel="noopener">Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)</a></td><td>(SE to confirm)</td><td><code>GZSTZVA0O9RA</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2A" target="_blank" rel="noopener">European Broadband Markets 2017</a></td><td>(SE to confirm)</td><td><code>GZSVZ6EW2A</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSVZ6EW2M" target="_blank" rel="noopener">Global Broadband Tariff Time Series 2017</a></td><td>(SE to confirm)</td><td><code>GZSVZ6EW2M</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZTSZT83AIS" target="_blank" rel="noopener">Mastercard Audiences</a></td><td>(SE to confirm)</td><td><code>GZTSZT83AIS</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZSOZ70FXV" target="_blank" rel="noopener">Tealium Audience Discovery</a></td><td>(SE to confirm)</td><td><code>GZSOZ70FXV</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZ1M7ZC3M49" target="_blank" rel="noopener">Behavioral Customer Segmentation - Sample</a></td><td>(SE to confirm)</td><td><code>GZ1M7ZC3M49</code></td><td class="verdict"></td></tr>
+<tr><td><a href="https://app.snowflake.com/marketplace/listing/GZT1ZW66H5" target="_blank" rel="noopener">Content Value/Engagement &amp; Emotional Metrics for TV Programs (Sample)</a></td><td>(SE to confirm)</td><td><code>GZT1ZW66H5</code></td><td class="verdict"></td></tr>
+</tbody></table></div></section>
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+        document.querySelectorAll('.pane').forEach(function (p) { p.classList.remove('active'); });
+        t.classList.add('active');
+        const pane = document.getElementById(t.dataset.pane);
+        if (pane) { pane.classList.add('active'); }
+      });
+    });
+  </script>
 </body>
 </html>

@@ -952,10 +952,26 @@ def run_agentic_search(cfg, industry, problem):
     ac = (cfg.get("marketplace") or {}).get("agentic") or {}
     c = cfg.get("coco") or {}
     ind_name = industry_name(cfg, industry) or industry
+    # Seed the search from the SELECTED EVENT, not from the account's geography.
+    # market_profile says which country the visitor's event is in, so a Paris
+    # visitor is offered French data and a Berlin visitor German data - proven to
+    # work: asking "for Germany" returned GfK Population Germany and Acxiom EMEA
+    # Geo-Spatial DE. The region is a separate, harder constraint: every event
+    # account is in AWS Frankfurt, so whatever it finds must be importable there
+    # or the attendee cannot attach it when they read the document later.
+    ev = cfg.get("event") or {}
+    locality = (cfg.get("marketplace") or {}).get("locality") or {}
+    country = locality.get(ev.get("market_profile") or "uk") or ""
+    region = (ev.get("region") or "").strip().split(".")[-1]
+    where = f" Prefer listings relevant to {country}." if country else ""
+    in_region = (f" The listing MUST be available in the {region} region, "
+                 f"because that is where this account lives.") if region else ""
     prompt = (
         f"Use the marketplace-search skill to find Snowflake Marketplace "
         f"listings relevant to this problem from a visitor in {ind_name}: "
-        f"\"{problem}\". Return ONLY a JSON array (no prose, no code fence) "
+        f"\"{problem}\".{where}{in_region} Only FREE listings that can be "
+        f"imported (not by-request, not discover-only). "
+        f"Return ONLY a JSON array (no prose, no code fence) "
         f"of objects with keys: title, provider, description, and "
         f"global_name if you know it.")
     cmd = [c.get("binary", "cortex"), "exec", prompt, "--format", "json",

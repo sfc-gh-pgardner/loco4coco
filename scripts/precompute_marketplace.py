@@ -32,7 +32,10 @@ ROOT = os.path.dirname(HERE)
 REFS = os.path.join(ROOT, "skills", "loco4coco", "references")
 OUT = os.path.join(REFS, "marketplace-candidates.json")
 
-PROFILE_REGION = {"uk": "AWS_EU_WEST_2", "fr": "AWS_EU_WEST_3", "de": "AWS_EU_CENTRAL_1"}
+# Every SWT event account is stood up in AWS Frankfurt, so the region a candidate
+# must be importable in is CONSTANT - it is not the thing that varies per event.
+# What varies is the COUNTRY the listing should be relevant to.
+PROFILE_REGION = {"uk": "AWS_EU_CENTRAL_1", "fr": "AWS_EU_CENTRAL_1", "de": "AWS_EU_CENTRAL_1"}
 PROFILE_COUNTRY = {"uk": "the United Kingdom", "fr": "France", "de": "Germany"}
 
 INDUSTRIES = ["healthcare", "financial", "retail", "public",
@@ -139,6 +142,10 @@ def main():
     ap.add_argument("--all", action="store_true", help="all profiles x all industries")
     ap.add_argument("--connection", "-c", default=None)
     ap.add_argument("--timeout", type=float, default=150)
+    ap.add_argument("--use-cases", type=int, default=0,
+                    help="Cap the creative use-cases per industry (0 = all). Each "
+                         "one is a separate ~75s agentic call, so 1 keeps a full "
+                         "3-event sweep inside about 20 minutes.")
     a = ap.parse_args()
 
     profiles = list(PROFILE_REGION) if a.all else a.profile
@@ -157,7 +164,10 @@ def main():
         result["profiles"].setdefault(profile, {})
         for industry in industries:
             found = {}
-            for uc in USE_CASES.get(industry, []):
+            ucs = USE_CASES.get(industry, [])
+            if a.use_cases > 0:
+                ucs = ucs[:a.use_cases]
+            for uc in ucs:
                 prompt = (
                     f"Use the marketplace-search skill to find Snowflake Marketplace "
                     f"listings for {country} about: {uc}. Only FREE listings that can be "

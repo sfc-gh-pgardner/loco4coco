@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
-"""Generate audit/marketplace-se-review.html from marketplace.json (+ the media
-candidates file), so the SE review sheet always matches the shipping data and
-every listing links to its Marketplace page.
+"""Generate audit/marketplace-se-review.html from marketplace.json (+ candidates).
+
+Three tabs, one per SWT EVENT: London, Paris, Berlin. Each tab holds that event's
+per-industry suggestions, chosen for LOCAL relevance to that city's country.
+
+Why there is no per-region matrix any more: every SWT event account is stood up in
+AWS Frankfurt, so the cloud region is CONSTANT (AWS_EU_CENTRAL_1) across all three
+events. The only region question left is a single flag - "can this be imported on
+an eu-central-1 account?" - so that is all this shows. Locality is what varies.
 
     python3 scripts/build_se_review_html.py
 """
@@ -18,25 +24,31 @@ JSON_PATH = os.path.join(REFS, "marketplace.json")
 CAND_PATH = os.path.join(REFS, "marketplace-candidates.json")
 OUT = os.path.join(ROOT, "audit", "marketplace-se-review.html")
 LISTING = "https://app.snowflake.com/marketplace/listing/"
+REGION = "AWS_EU_CENTRAL_1"
+
+# event tab -> (profile, country blurb)
+EVENTS = [("London", "uk", "United Kingdom"),
+          ("Paris", "fr", "France"),
+          ("Berlin", "de", "Germany")]
 
 INDUSTRY_LABEL = {
-    "healthcare": "Healthcare & Life Sciences", "financial": "Financial Services",
-    "retail": "Retail & Consumer Goods", "public": "Public Sector & Government",
-    "manufacturing": "Manufacturing & Industrial", "energy": "Energy & Utilities",
-    "media": "Media, Telco & Entertainment", "other": "Something else (other)",
+    "healthcare": "Healthcare &amp; Life Sciences", "financial": "Financial Services",
+    "retail": "Retail &amp; Consumer Goods", "public": "Public Sector &amp; Government",
+    "manufacturing": "Manufacturing &amp; Industrial", "energy": "Energy &amp; Utilities",
+    "media": "Media, Telco &amp; Entertainment", "other": "Something else (other)",
 }
 ORDER = ["healthcare", "financial", "retail", "public", "manufacturing",
          "energy", "media", "other"]
 
 
-def avail(regions, token):
-    return regions == "ALL" or token in (regions or "")
-
-
-def cell(regions, ready, token):
-    if not avail(regions, token):
-        return '<td class="c no">✗</td>'
-    return '<td class="c warn">⚠</td>' if not ready else '<td class="c yes">✓</td>'
+def importable(r):
+    reg = r.get("regions") or ""
+    in_region = reg == "ALL" or REGION in reg
+    if not in_region:
+        return '<td class="c no" title="Not offered in eu-central-1">✗</td>'
+    if not r.get("ready", True):
+        return '<td class="c warn" title="In region but needs a request/trial">⚠</td>'
+    return '<td class="c yes">✓</td>'
 
 
 def link(gn, title):
@@ -44,91 +56,83 @@ def link(gn, title):
         LISTING, html.escape(gn or ""), html.escape(title or ""))
 
 
-def rows_table(rows):
-    out = ['<div class="table-wrap"><table>',
-           '<thead><tr><th>Dataset</th><th>Provider</th><th>Access</th>'
-           '<th class="c">Lon</th><th class="c">Par</th><th class="c">Fra/Ber</th>'
+def table(rows):
+    out = ['<div class="table-wrap"><table><thead><tr><th>Dataset</th>'
+           '<th>Provider</th><th>Access</th>'
+           '<th class="c" title="Importable on an eu-central-1 account">Usable</th>'
            '<th class="verdict">SE verdict</th></tr></thead><tbody>']
     for r in rows:
-        reg, rd = r.get("regions") or "", bool(r.get("ready"))
-        out.append(
-            "<tr><td>%s</td><td>%s</td><td>%s</td>%s%s%s<td class=\"verdict\"></td></tr>" % (
-                link(r.get("global_name"), r.get("title")),
-                html.escape(r.get("provider") or ""),
-                html.escape(r.get("access") or ""),
-                cell(reg, rd, "AWS_EU_WEST_2"),
-                cell(reg, rd, "AWS_EU_WEST_3"),
-                cell(reg, rd, "AWS_EU_CENTRAL_1")))
+        out.append("<tr><td>%s</td><td>%s</td><td>%s</td>%s<td class=\"verdict\"></td></tr>" % (
+            link(r.get("global_name"), r.get("title")),
+            html.escape(r.get("provider") or ""),
+            html.escape(r.get("access") or ""),
+            importable(r)))
     out.append("</tbody></table></div>")
     return "\n".join(out)
 
 
-def survivor_count(rows, token):
-    return sum(1 for r in rows if avail(r.get("regions") or "", token))
+def cand_table(rows):
+    out = ['<div class="table-wrap"><table><thead><tr><th>Candidate</th>'
+           '<th>Provider</th><th>Global name</th><th class="verdict">SE verdict</th>'
+           '</tr></thead><tbody>']
+    for r in rows:
+        out.append("<tr><td>%s</td><td>%s</td><td><code>%s</code></td>"
+                   "<td class=\"verdict\"></td></tr>" % (
+                       link(r.get("global_name"), r.get("title")),
+                       html.escape(r.get("provider") or "(to confirm)"),
+                       html.escape(r.get("global_name") or "")))
+    out.append("</tbody></table></div>")
+    return "\n".join(out)
 
 
 def main():
-    data = json.load(open(JSON_PATH, encoding="utf-8"))
-    uk = data["profiles"]["uk"]
+    data = json.load(open(JSON_PATH, encoding="utf-8"))["profiles"]
     cand = {}
     if os.path.exists(CAND_PATH):
         cand = json.load(open(CAND_PATH, encoding="utf-8")).get("profiles", {})
 
-    parts = []
-    # summary
-    parts.append('<h2 id="summary">Summary — datasets surviving per industry × region</h2>')
-    parts.append('<div class="table-wrap"><table><thead><tr><th>Industry</th>'
-                 '<th class="c">London</th><th class="c">Paris</th>'
-                 '<th class="c">Frankfurt / Berlin</th></tr></thead><tbody>')
-    for ind in ORDER:
-        rows = uk[ind]["primary"]
-        n = len(rows)
-        parts.append("<tr><td>%s</td><td class=\"c\">%d/%d</td><td class=\"c\">%d/%d</td>"
-                     "<td class=\"c\">%d/%d</td></tr>" % (
-                         INDUSTRY_LABEL[ind],
-                         survivor_count(rows, "AWS_EU_WEST_2"), n,
-                         survivor_count(rows, "AWS_EU_WEST_3"), n,
-                         survivor_count(rows, "AWS_EU_CENTRAL_1"), n))
-    parts.append("</tbody></table></div>")
-
-    # per-industry current picks
-    parts.append('<h2 id="industries">Current picks per industry (uk profile)</h2>')
-    parts.append('<p class="sub">Titles link to the Marketplace listing. The SE '
-                 'verdict column is blank for you to fill.</p>')
-    for ind in ORDER:
-        parts.append("<h3>%s</h3>" % INDUSTRY_LABEL[ind])
-        parts.append(rows_table(uk[ind]["primary"]))
-        res = uk[ind].get("reserve") or []
-        if res:
-            parts.append('<p class="sub">Reserves:</p>')
-            parts.append(rows_table(res))
-
-    # media candidates
-    if cand:
-        parts.append('<h2 id="media-candidates">Media candidates for review (deterministic)</h2>')
-        parts.append('<div class="callout">New, region-verified, importable media '
-                     'listings to fill the sparse media stall. Provider/access are '
-                     'flagged for SE confirmation (they cannot be scraped). Assign '
-                     '6 primary + reserves per profile, then promote into marketplace.json.</div>')
-        for prof in ("uk", "fr", "de"):
-            rows = (cand.get(prof) or {}).get("media") or []
-            if not rows:
+    tabs, panes = [], []
+    for i, (event, profile, country) in enumerate(EVENTS):
+        active = " active" if i == 0 else ""
+        tabs.append('<button class="tab%s" data-pane="pane-%s">%s</button>'
+                    % (active, profile, event))
+        body = ['<p class="sub">Suggestions chosen for local relevance to '
+                '<strong>%s</strong>. The booth account for this event is in '
+                'AWS Frankfurt, so every pick must also be importable on '
+                'eu-central-1.</p>' % country]
+        prof = data.get(profile) or {}
+        curated_any = any((prof.get(ind) or {}).get("primary") for ind in ORDER)
+        if not curated_any:
+            body.append('<div class="callout">No curated picks for this event yet. '
+                        'Agentic locality curation is pending; any candidates found '
+                        'so far are listed below for review.</div>')
+        for ind in ORDER:
+            block = prof.get(ind) or {}
+            prim = block.get("primary") or []
+            res = block.get("reserve") or []
+            if not prim and not res:
                 continue
-            parts.append("<h3>profile: %s</h3>" % prof)
-            out = ['<div class="table-wrap"><table><thead><tr><th>Candidate</th>'
-                   '<th>Global name</th><th>SWT regions</th><th class="verdict">SE verdict</th>'
-                   '</tr></thead><tbody>']
-            for r in rows:
-                out.append("<tr><td>%s</td><td><code>%s</code></td><td>%s</td>"
-                           "<td class=\"verdict\"></td></tr>" % (
-                               link(r.get("global_name"), r.get("title")),
-                               html.escape(r.get("global_name") or ""),
-                               html.escape(r.get("regions_swt") or "")))
-            out.append("</tbody></table></div>")
-            parts.append("\n".join(out))
+            body.append("<h3>%s</h3>" % INDUSTRY_LABEL[ind])
+            if prim:
+                body.append(table(prim))
+            if res:
+                body.append('<p class="sub">Reserves:</p>')
+                body.append(table(res))
+        # candidates awaiting promotion
+        cprof = cand.get(profile) or {}
+        cany = {k: v for k, v in cprof.items() if v}
+        if cany:
+            body.append('<h3>Candidates awaiting review</h3>')
+            for ind, rows in cany.items():
+                body.append("<p class=\"sub\"><strong>%s</strong></p>"
+                            % INDUSTRY_LABEL.get(ind, ind))
+                body.append(cand_table(rows))
+        panes.append('<section class="pane%s" id="pane-%s">%s</section>'
+                     % (active, profile, "\n".join(body)))
 
-    body = "\n".join(parts)
-    doc = TEMPLATE.replace("{{GENERATED}}", time.strftime("%Y-%m-%d")).replace("{{BODY}}", body)
+    doc = TEMPLATE.replace("{{GENERATED}}", time.strftime("%Y-%m-%d")) \
+                  .replace("{{TABS}}", "\n".join(tabs)) \
+                  .replace("{{PANES}}", "\n".join(panes))
     with open(OUT, "w", encoding="utf-8") as f:
         f.write(doc)
     print("wrote", OUT)
@@ -147,13 +151,22 @@ TEMPLATE = """<!DOCTYPE html>
       width: 100%; box-sizing: border-box; margin: 0 auto; padding: clamp(16px,4vw,28px);
       color: light-dark(#1f2937,#e5e7eb); line-height: 1.5; }
     h1,h2,h3 { color: light-dark(#0f172a,#f1f5f9); }
-    h2 { margin-top: 30px; border-bottom: 2px solid #29B5E8; padding-bottom: 4px; }
+    h3 { margin-top: 22px; }
     a { color: light-dark(#166184,#67B5ED); }
     .sub { color: light-dark(#64748b,#94a3b8); }
-    .callout { background: light-dark(#f1f5f9,#1f2937); border-left: 4px solid #ED8D30;
-      border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
-    .legend { background: light-dark(#f1f5f9,#1f2937); border:1px solid light-dark(#d1d5db,#374151);
-      border-radius: 8px; padding: 12px 16px; margin: 14px 0; }
+    .legend, .callout { background: light-dark(#f1f5f9,#1f2937);
+      border: 1px solid light-dark(#d1d5db,#374151); border-radius: 8px;
+      padding: 12px 16px; margin: 14px 0; }
+    .callout { border-left: 4px solid #ED8D30; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 0; }
+    .tab { font: inherit; cursor: pointer; padding: 9px 18px;
+      background: light-dark(#e8edf3,#252b36); color: inherit;
+      border: 1px solid light-dark(#d1d5db,#374151); border-bottom: none;
+      border-radius: 8px 8px 0 0; }
+    .tab.active { background: #29B5E8; color: #0b1220; font-weight: 700; }
+    .pane { display: none; border: 1px solid light-dark(#d1d5db,#374151);
+      border-radius: 0 8px 8px 8px; padding: clamp(12px,3vw,20px); }
+    .pane.active { display: block; }
     .table-wrap { overflow-x: auto; margin: 8px 0; }
     table { border-collapse: collapse; width: 100%; font-size: 14px; }
     th,td { border: 1px solid light-dark(#d1d5db,#374151); padding: 6px 9px; text-align: left; }
@@ -167,17 +180,31 @@ TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
   <h1>Marketplace — SE review</h1>
-  <p class="sub">Loco for CoCo · per industry × cloud region · generated {{GENERATED}} · from marketplace.json</p>
-  <div class="legend"><strong>Regions</strong>: London → <code>AWS_EU_WEST_2</code> ·
-    Paris → <code>AWS_EU_WEST_3</code> · Frankfurt &amp; Berlin → <code>AWS_EU_CENTRAL_1</code>.<br>
-    <strong>Key</strong>: <span class="yes">✓</span> available &amp; importable ·
-    <span class="warn">⚠</span> region-available but not ready-for-import (needs request/trial) ·
-    <span class="no">✗</span> not offered in that region. Titles link to the Marketplace listing.</div>
-  {{BODY}}
-  <h2>What the review feeds</h2>
-  <p>Confirm fit, provider and access per row; for each ✗/⚠ where an industry thins out,
-  pick a region-appropriate replacement (local FR/DE datasets for Paris/Berlin). Approved
-  media candidates are promoted into <code>marketplace.json</code> then mirrored and reloaded.</p>
+  <p class="sub">Loco for CoCo · one tab per SWT event · generated {{GENERATED}} · from marketplace.json</p>
+  <div class="legend">
+    Each event runs on its <strong>own ephemeral account, all in AWS Frankfurt</strong>, so the
+    cloud region is the same everywhere and is <em>not</em> what differs between events —
+    <strong>local relevance is</strong>. Attendees read the document later and attach data from
+    their own account, so a pick is judged on whether it is locally meaningful first.<br>
+    <strong>Usable</strong>: <span class="yes">✓</span> importable on eu-central-1 ·
+    <span class="warn">⚠</span> in region but needs a request/trial ·
+    <span class="no">✗</span> not offered in eu-central-1 (cannot be used at any of these events).
+    Titles link to the Marketplace listing.
+  </div>
+  <div class="tabs">{{TABS}}</div>
+  {{PANES}}
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(function (t) {
+      t.addEventListener('click', function () {
+        document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+        document.querySelectorAll('.pane').forEach(function (p) { p.classList.remove('active'); });
+        t.classList.add('active');
+        const pane = document.getElementById(t.dataset.pane);
+        if (pane) { pane.classList.add('active'); }
+      });
+    });
+  </script>
 </body>
 </html>
 """

@@ -176,12 +176,37 @@ def main():
             if a.use_cases > 0:
                 ucs = ucs[:a.use_cases]
             for uc in ucs:
+                # The region MUST be in the prompt. It was not, originally - the
+                # prompt asked only "for {country}" and the region was applied
+                # afterwards as a rejection filter. MEASURED result: 71 of 91
+                # candidates failed that filter, and only 3 of them existed in any
+                # EU region at all. We were not being refused, we were not asking.
+                #
+                # This works from a Frankfurt account because SHOW AVAILABLE
+                # LISTINGS returns the GLOBAL catalogue: the "regions" column
+                # lists every region a listing is published to, so eu-west-3
+                # availability is readable from eu-central-1. The agent is told
+                # how to check rather than merely asked to prefer, because a soft
+                # "prefer" is what produced US-only results.
                 prompt = (
-                    f"Use the marketplace-search skill to find Snowflake Marketplace "
-                    f"listings for {country} about: {uc}. Only FREE listings that can be "
-                    f"imported (not by-request, not discover-only). Return ONLY a JSON array "
-                    f"(no prose, no code fence) of objects with keys title, provider, "
-                    f"global_name (the GZ... id if known).")
+                    f"Find Snowflake Marketplace listings relevant to {country} "
+                    f"about: {uc}.\n\n"
+                    f"HARD REQUIREMENT - the listing must be available in the "
+                    f"{region} region. Verify this yourself, do not assume: run "
+                    f"SHOW AVAILABLE LISTINGS and keep a row ONLY if its "
+                    f'"regions" column contains {region} (or equals ALL). '
+                    f"Discard everything else, even if it looks like a perfect "
+                    f"subject match. Most Marketplace data is US-only, so expect "
+                    f"to reject many candidates - returning three verified "
+                    f"listings is better than ten unverified ones.\n"
+                    f"Note: the account you are connected to is in "
+                    f"AWS_EU_CENTRAL_1. That is irrelevant - filter for "
+                    f"{region}, which is where this event's visitors are.\n\n"
+                    f"Also require: free to import, and is_ready_for_import = "
+                    f"true (not by-request, not discover-only).\n\n"
+                    f"Return ONLY a JSON array (no prose, no code fence) of "
+                    f"objects with keys title, provider, global_name (the GZ... "
+                    f'id), and regions (the "regions" value you verified).')
                 t0 = time.time()
                 text, ok = cortex_exec(prompt, a.connection, a.timeout)
                 cands = parse_candidates(text)

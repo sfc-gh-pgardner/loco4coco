@@ -1322,8 +1322,8 @@ def listings_curated(cfg, industry, state=None):
       2. Ties rotate on the session id, so consecutive visitors in one bucket do
          not see the same order.
 
-    The region filter is not cosmetic: handing a London visitor a us-east-1-only
-    share sends them somewhere they cannot go.
+    The region filter PREFERS in-region listings rather than deleting the rest -
+    see the bottom of this function for why deleting made the stall sparse.
     """
     profile = ((cfg.get("event") or {}).get("market_profile")) or "uk"
     market = load_marketplace(profile)
@@ -1362,25 +1362,33 @@ def listings_curated(cfg, industry, state=None):
         h = hashlib.md5((salt + str(r.get("global_name") or "")).encode()).hexdigest()
         return (-s, h)
     rows = [r for _, _, r in sorted(scored, key=key)]
+    # Region PREFERS, it does not DELETE. This used to hard-drop anything not
+    # offered in the event's region, and that is what made the stall look sparse:
+    # MEASURED against the live catalogue, only 28 of the 48 curated UK picks are
+    # importable in eu-west-2, so media arrived at the stall with ONE dataset.
+    #
+    # The visitor never imports anything at the booth. They tick datasets, those
+    # become links in a document, and they open them later from their own account
+    # - which may be in any region at all. So a listing that is relevant, real and
+    # SE-reviewed belongs on the stall even if this particular region cannot
+    # attach it; what it must never be is invented. In-region picks lead, the rest
+    # fill the six, and the document is always six real datasets rather than one.
     region = ((cfg.get("event") or {}).get("region") or "").strip()
     if not region:
         return rows[:6]
     short = region.split(".")[-1]
-    keep = []
-    for r in rows:
+
+    def local(r):
         regs = (r.get("regions") or "").strip()
         # "ALL" means every region. MEASURED: this was being substring-matched
         # like a region list, so it matched nothing and silently dropped the
         # listing - which is how public sector shipped 5 picks instead of 6 and
         # lost Ordnance Survey Boundary Line, one of the best UK public-sector
-        # datasets on the Marketplace.
-        if regs.upper() == "ALL":
-            keep.append(r)
-            continue
-        # A truncated "+N" list means we cannot prove absence, so keep it.
-        if short in regs or "+" in regs:
-            keep.append(r)
-    return keep[:6]
+        # datasets on the Marketplace. A truncated "+N" list means we cannot
+        # prove absence, so it counts as local.
+        return regs.upper() == "ALL" or short in regs or "+" in regs
+
+    return ([r for r in rows if local(r)] + [r for r in rows if not local(r)])[:6]
 
 
 # --------------------------------------------------------------- the CoCo prompt

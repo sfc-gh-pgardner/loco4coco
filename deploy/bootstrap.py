@@ -189,8 +189,9 @@ def main():
     a = ap.parse_args()
 
     target, tgt, vals = load_target(a.target)
+    pinned = (tgt.get("account_identifier") or "").strip()
     print(f"Target      : {target}")
-    print(f"Account     : {tgt.get('account_identifier')}")
+    print(f"Account     : {pinned or '(not pinned - deploying wherever this connection points)'}")
     print(f"Connection  : {a.connection}")
     print(f"Objects     : {vals['db']}.{vals['schema']}  +  {vals['wh']}")
 
@@ -204,9 +205,14 @@ def main():
         if isinstance(first, list):
             first = first[0] if first else {}
         live = first.get("ACCT") or ""
-    if live.upper() != str(tgt.get("account_identifier")).upper():
+    # Only enforced when a target names an account. The EVENT target deliberately
+    # does not: every event gets its own freshly provisioned, randomly named AWS
+    # Frankfurt account, so there is nothing stable to pin and demanding one would
+    # just be friction. The pinned targets are long-lived accounts where deploying
+    # to the wrong one is a real risk worth refusing.
+    if pinned and live.upper() != pinned.upper():
         sys.exit(f"\nRefusing to deploy: connection {a.connection!r} is on {live}, "
-                 f"but target {target!r} expects {tgt.get('account_identifier')}.\n"
+                 f"but target {target!r} expects {pinned}.\n"
                  f"Deploying booth objects to the wrong account is not something "
                  f"to discover afterwards.")
     print(f"Verified    : connection is on {live}")

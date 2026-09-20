@@ -22,6 +22,7 @@ ROOT = os.path.dirname(HERE)
 REFS = os.path.join(ROOT, "skills", "loco4coco", "references")
 JSON_PATH = os.path.join(REFS, "marketplace.json")
 CAND_PATH = os.path.join(REFS, "marketplace-candidates.json")
+VERIFIED_PATH = os.path.join(REFS, "marketplace-candidates-verified.json")
 OUT = os.path.join(ROOT, "audit", "marketplace-se-review.html")
 LISTING = "https://app.snowflake.com/marketplace/listing/"
 
@@ -74,15 +75,28 @@ def table(rows, region):
 
 
 def cand_table(rows):
+    """Candidates with the verdict from scripts/verify_candidates.py.
+
+    The agentic search proposes; the catalogue decides. Provider and access are
+    read off the live listing, not guessed, and anything the catalogue says is not
+    available in this event's region is marked so it can be discarded at a glance.
+    """
     out = ['<div class="table-wrap"><table><thead><tr><th>Candidate</th>'
-           '<th>Provider</th><th>Global name</th><th class="verdict">SE verdict</th>'
-           '</tr></thead><tbody>']
-    for r in rows:
-        out.append("<tr><td>%s</td><td>%s</td><td><code>%s</code></td>"
+           '<th>Provider</th><th>Access</th><th>Verified</th>'
+           '<th class="verdict">SE verdict</th></tr></thead><tbody>']
+    rank = {"OK": 0, "RESERVE": 1, "REJECT": 2, "NOT FOUND": 3, "": 4}
+    for r in sorted(rows, key=lambda x: rank.get(x.get("verdict") or "", 4)):
+        v = r.get("verdict") or ""
+        cls = {"OK": "yes", "RESERVE": "warn"}.get(v, "no") if v else ""
+        mark = {"OK": "\u2713 usable", "RESERVE": "\u26a0 reserve"}.get(v, v.lower())
+        out.append("<tr><td>%s</td><td>%s</td><td>%s</td>"
+                   "<td class=\"%s\" title=\"%s\">%s</td>"
                    "<td class=\"verdict\"></td></tr>" % (
-                       link(r.get("global_name"), r.get("title")),
+                       link(r.get("global_name"), r.get("title")
+                            or r.get("claimed_title")),
                        html.escape(r.get("provider") or "(to confirm)"),
-                       html.escape(r.get("global_name") or "")))
+                       html.escape(r.get("access") or ""),
+                       cls, html.escape(r.get("note") or ""), html.escape(mark)))
     out.append("</tbody></table></div>")
     return "\n".join(out)
 
@@ -90,7 +104,12 @@ def cand_table(rows):
 def main():
     data = json.load(open(JSON_PATH, encoding="utf-8"))["profiles"]
     cand = {}
-    if os.path.exists(CAND_PATH):
+    # Prefer the VERIFIED candidates: same listings, but with the provider, access
+    # route and region read off the live catalogue and a verdict attached, so the
+    # reviewer is not asked to confirm what SQL already knows.
+    if os.path.exists(VERIFIED_PATH):
+        cand = json.load(open(VERIFIED_PATH, encoding="utf-8")).get("profiles", {})
+    elif os.path.exists(CAND_PATH):
         cand = json.load(open(CAND_PATH, encoding="utf-8")).get("profiles", {})
 
     tabs, panes = [], []

@@ -952,20 +952,21 @@ def run_agentic_search(cfg, industry, problem):
     ac = (cfg.get("marketplace") or {}).get("agentic") or {}
     c = cfg.get("coco") or {}
     ind_name = industry_name(cfg, industry) or industry
-    # Seed the search from the SELECTED EVENT, not from the account's geography.
-    # market_profile says which country the visitor's event is in, so a Paris
-    # visitor is offered French data and a Berlin visitor German data - proven to
-    # work: asking "for Germany" returned GfK Population Germany and Acxiom EMEA
-    # Geo-Spatial DE. The region is a separate, harder constraint: every event
-    # account is in AWS Frankfurt, so whatever it finds must be importable there
-    # or the attendee cannot attach it when they read the document later.
+    # Seed the search from the EVENT LOCATION, not from the booth account.
+    # market_profile says which country the event is in, so a Paris visitor is
+    # offered French data and a Berlin visitor German data - proven to work:
+    # asking "for Germany" returned GfK Population Germany and Acxiom EMEA
+    # Geo-Spatial DE. event.region is the EVENT's region (London = eu-west-2),
+    # NOT the account's (always eu-central-1): the visitor never imports anything
+    # at the booth, they open the links later from their own account, so what
+    # matters is availability where THEY are.
     ev = cfg.get("event") or {}
     locality = (cfg.get("marketplace") or {}).get("locality") or {}
     country = locality.get(ev.get("market_profile") or "uk") or ""
     region = (ev.get("region") or "").strip().split(".")[-1]
     where = f" Prefer listings relevant to {country}." if country else ""
-    in_region = (f" The listing MUST be available in the {region} region, "
-                 f"because that is where this account lives.") if region else ""
+    in_region = (f" Prefer listings available in the {region} region, which is "
+                 f"where this event's visitors are based.") if region else ""
     prompt = (
         f"Use the marketplace-search skill to find Snowflake Marketplace "
         f"listings relevant to this problem from a visitor in {ind_name}: "
@@ -1230,10 +1231,12 @@ def listings_for(cfg, industry, session_id=None, state=None):
     loc = ((cfg.get("locations") or {}).get("marketplace") or {})
     mk = cfg.get("marketplace") or {}
     want = int(mk.get("min_live_results", 3))
-    agentic = listings_agentic(cfg, session_id)
-    if len(agentic) >= want:
-        _live_cache["tier"] = "agentic"
-        return agentic[:max(want, 6)]
+    # The stall is ALWAYS the deterministic curated six (optionally the live
+    # catalogue). Agentic results deliberately do NOT replace them any more:
+    # they are the 7th option, merged into the takeaway document at the postbox
+    # when the visitor typed something of their own. A stall that changed shape
+    # depending on whether a background call had landed was unpredictable in
+    # public, which is the one thing a branded stand cannot be.
     if (loc.get("discovery") or "manual") == "live":
         live, err = listings_live(cfg, industry)
         if len(live) >= want:
@@ -2123,6 +2126,16 @@ def run_checklist(cfg, loc_id, labels, job_id):
         ind = (state.get("visitor") or {}).get("industry") or "other"
         by_title = {r["title"]: r for r in listings_for(cfg, ind, state.get("session_id"), state)}
         patch["joined_listings"] = [by_title[l] for l in labels if l in by_title]
+        # THE 7th OPTION. The six curated picks stay deterministic; anything the
+        # visitor TYPES into "something else" is what agentic marketplace search
+        # is for, seeded with this event's country and region. Fired in the
+        # BACKGROUND on purpose: the call is 75-110s, and making a visitor watch
+        # that at the stall would eat the five-minute clock. It enriches the
+        # takeaway document instead (merged in run_send), and if it does not
+        # finish in time nothing is lost - they still have what they picked.
+        typed = [l for l in labels if l not in by_title and str(l).strip()]
+        if typed:
+            start_agentic_search(cfg, state.get("session_id"), ind, " ".join(typed))
     write_state(patch)
     state = read_state()
     loc = (cfg.get("locations") or {}).get(loc_id) or {}
@@ -2507,6 +2520,26 @@ def _qa_relevance(cfg, problem, poc):
 def run_send(cfg, job_id):
     state = read_state()
 
+    # Merge anything the 7th option found. The agentic search was fired in the
+    # background when the visitor typed into "something else" at the stall; by the
+    # time they reach the postbox it has usually finished. Real listings only, and
+    # never a duplicate of something they already picked. If it did not finish,
+    # this is a no-op and the document is exactly what they chose.
+    try:
+        extra = listings_agentic(cfg, state.get("session_id"))
+        if extra:
+            have = {(r.get("global_name") or r.get("title")) for r
+                    in (state.get("joined_listings") or [])}
+            add = [r for r in extra
+                   if (r.get("global_name") or r.get("title")) not in have]
+            if add:
+                write_state({"joined_listings":
+                             (state.get("joined_listings") or []) + add})
+                state = read_state()
+                print(f"[loco4coco] 7th option added {len(add)} agentic listing(s)")
+    except Exception as e:                                           # noqa: BLE001
+        print(f"[loco4coco] agentic merge skipped (non-blocking): {e}")
+
     # QA bot runs BEFORE delivery so its repairs land in the document the visitor
     # actually scans. It reviews the finished POC against their stated problem,
     # fixes what is safely fixable from the closed lists, and records every change.
@@ -2840,10 +2873,10 @@ class Handler(BaseHTTPRequestHandler):
             "stage": "library", "unlocked": ["library"], "reasoning": [],
             "session_id": uuid.uuid4().hex,
         })
-        # Fire Tier 0 now, while the visitor still has THE LIBRARY ahead of
-        # them - see start_agentic_search()/listings_for(). Never delays
-        # this response: it's a daemon thread, and a no-op if disabled.
-        start_agentic_search(cfg, st.get("session_id"), industry, problem)
+        # Tier 0 is NO LONGER fired here. Racing the Library with a 75-110s call
+        # never worked, and the curated six must be deterministic at the stall.
+        # Agentic search is now the 7th option: triggered only when the visitor
+        # TYPES into "something else" at the marketplace - see run_checklist().
         return self._json({"ok": True, "industry": industry,
                            "industry_name": industry_name(cfg, industry),
                            "state": st})

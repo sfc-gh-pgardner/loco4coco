@@ -97,194 +97,1010 @@
     "fr": {
       "media": [
         {
-          "global_name": "GZSYZIIAKU",
-          "title": "AI Signals Crypto Sentiment",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZSUZCN9EG",
+          "title": "Population - Statistics - OECD - Free",
+          "provider": "Data Army Intel",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSOZ262LR",
-          "title": "Advanced TV Audience Insights",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZSYZG5AD",
+          "title": "NIQ-GfK Retail Purchasing Power for Product Lines in France",
+          "provider": "NIQ-GFK",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSYZMQ0QY",
-          "title": "Adverse Media Entities Data Set",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZT1ZQXT97",
+          "title": "Population in France and overseas in 2019",
+          "provider": "Atos",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZTWZO5G4T",
-          "title": "Alternative Data: Consumer Reviews, Support Call Transcripts & NLP Sentiment",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZT1ZQXT9J",
+          "title": "Income, Poverty, and Living Conditions in France-2019 (Iris)",
+          "provider": "Atos",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSTZVA0O9RA",
-          "title": "Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZT1ZQXT9N",
+          "title": "Population in France and overseas in 2018",
+          "provider": "Atos",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSVZ6EW2A",
-          "title": "European Broadband Markets 2017",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZT1ZQXT9R",
+          "title": "Population in France and overseas in 2017",
+          "provider": "Atos",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        }
+      ],
+      "healthcare": [
+        {
+          "global_name": "GZT1ZQXT93",
+          "title": "French National Health and Social Facilities",
+          "provider": "Atos",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSVZ6EW2M",
-          "title": "Global Broadband Tariff Time Series 2017",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZT1ZQXT97",
+          "title": "Population in France and overseas in 2019",
+          "provider": "Atos",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZTSZT83AIS",
-          "title": "Mastercard Audiences",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZT1ZQXT9J",
+          "title": "Income, Poverty, and Living Conditions in France-2019 (Iris)",
+          "provider": "Atos",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSOZ70FXV",
-          "title": "Tealium Audience Discovery",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZT1ZQXT9N",
+          "title": "Population in France and overseas in 2018",
+          "provider": "Atos",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT9R",
+          "title": "Population in France and overseas in 2017",
+          "provider": "Atos",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXTA0",
+          "title": "Inter-Regime Health Insurance Expenses in France (DAMIR)",
+          "provider": "Atos",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        }
+      ],
+      "financial": [
+        {
+          "global_name": "GZT1ZQXT9J",
+          "title": "Income, Poverty, and Living Conditions in France-2019 (Iris)",
+          "provider": "Atos",
+          "use_cases": [
+            "macroeconomic and inflation indicators"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZ290BV255",
+          "title": "Snowflake Public Data (Free)",
+          "provider": "Snowflake Public Data Products",
+          "use_cases": [
+            "macroeconomic and inflation indicators"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZRC7HQB",
+          "title": "CEIC Global Macro Economic Data",
+          "provider": "CEIC Data",
+          "use_cases": [
+            "macroeconomic and inflation indicators"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZRC7HQV",
+          "title": "CEIC Nowcasts",
+          "provider": "CEIC Data",
+          "use_cases": [
+            "macroeconomic and inflation indicators"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZRC7HRG",
+          "title": "CEIC World Macro Economic Data",
+          "provider": "CEIC Data",
+          "use_cases": [
+            "macroeconomic and inflation indicators"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        }
+      ],
+      "retail": [
+        {
+          "global_name": "GZSYZG5AD",
+          "title": "NIQ-GfK Retail Purchasing Power for Product Lines in France",
+          "provider": "NIQ-GFK",
+          "use_cases": [
+            "household income and geodemographic segmentation"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT97",
+          "title": "Population in France and overseas in 2019",
+          "provider": "Atos",
+          "use_cases": [
+            "household income and geodemographic segmentation"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT9J",
+          "title": "Income, Poverty, and Living Conditions in France-2019 (Iris)",
+          "provider": "Atos",
+          "use_cases": [
+            "household income and geodemographic segmentation"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT9N",
+          "title": "Population in France and overseas in 2018",
+          "provider": "Atos",
+          "use_cases": [
+            "household income and geodemographic segmentation"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT9R",
+          "title": "Population in France and overseas in 2017",
+          "provider": "Atos",
+          "use_cases": [
+            "household income and geodemographic segmentation"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        }
+      ],
+      "public": [
+        {
+          "global_name": "GZT0Z4CM1E9M9",
+          "title": "Overture Maps - Divisions",
+          "provider": "CARTO",
+          "use_cases": [
+            "census and administrative boundaries"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT8U",
+          "title": "French National Addresses",
+          "provider": "Atos",
+          "use_cases": [
+            "census and administrative boundaries"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT97",
+          "title": "Population in France and overseas in 2019",
+          "provider": "Atos",
+          "use_cases": [
+            "census and administrative boundaries"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT9J",
+          "title": "Income, Poverty, and Living Conditions in France-2019 (Iris)",
+          "provider": "Atos",
+          "use_cases": [
+            "census and administrative boundaries"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT9N",
+          "title": "Population in France and overseas in 2018",
+          "provider": "Atos",
+          "use_cases": [
+            "census and administrative boundaries"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT9R",
+          "title": "Population in France and overseas in 2017",
+          "provider": "Atos",
+          "use_cases": [
+            "census and administrative boundaries"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        }
+      ],
+      "manufacturing": [
+        {
+          "global_name": "GZSOZ8SOC",
+          "title": "Sales and Inventory Data for Retail Business Intelligence",
+          "provider": "SPS Commerce, Inc.",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZSVZEN2MD",
+          "title": "AIS SeaOrbis",
+          "provider": "Lloyd's List Intelligence",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZSYZFMOPO",
+          "title": "item+s Scope 3 Emission Factors (Sample)",
+          "provider": "ctrl+s GmbH",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0Z4CM1E9KJ",
+          "title": "Overture Maps - Transportation",
+          "provider": "CARTO",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0ZGCQ51RQ",
+          "title": "FactSet Supply Chain Relationships (sample)",
+          "provider": "FactSet",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0ZPWB4J7",
+          "title": "D&B Shipping Insights Sample",
+          "provider": "Dun & Bradstreet",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT8Y",
+          "title": "French National Identification System of Directory of Businesses and their Establishments",
+          "provider": "Atos",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTDZEPKDS",
+          "title": "Sample of Baltic Capesize data",
+          "provider": "Baltic Exchange",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZRC7HPE",
+          "title": "CEIC Alternative Data",
+          "provider": "CEIC Data",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZRC7HRC",
+          "title": "CEIC Shipping Data",
+          "provider": "CEIC Data",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZU6Z3U9MOEOB",
+          "title": "Boolean Data - SLA Reporting",
+          "provider": "Boolean Data Systems INC",
+          "use_cases": [
+            "supply chain and logistics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        }
+      ],
+      "energy": [],
+      "other": [
+        {
+          "global_name": "GZSNZ7F5UT",
+          "title": "Worldwide Address Data",
+          "provider": "Starschema",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0Z4CM1E9M9",
+          "title": "Overture Maps - Divisions",
+          "provider": "CARTO",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT8U",
+          "title": "French National Addresses",
+          "provider": "Atos",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT8Y",
+          "title": "French National Identification System of Directory of Businesses and their Establishments",
+          "provider": "Atos",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT93",
+          "title": "French National Health and Social Facilities",
+          "provider": "Atos",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT97",
+          "title": "Population in France and overseas in 2019",
+          "provider": "Atos",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT9N",
+          "title": "Population in France and overseas in 2018",
+          "provider": "Atos",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT1ZQXT9R",
+          "title": "Population in France and overseas in 2017",
+          "provider": "Atos",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         }
       ]
     },
     "de": {
       "media": [
         {
-          "global_name": "GZSYZIIAKU",
-          "title": "AI Signals Crypto Sentiment",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZSUZCN9EG",
+          "title": "Population - Statistics - OECD - Free",
+          "provider": "Data Army Intel",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSOZ262LR",
-          "title": "Advanced TV Audience Insights",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZSYZ5S9QG",
+          "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
+          "provider": "Acxiom EMEA",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSYZMQ0QY",
-          "title": "Adverse Media Entities Data Set",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZSYZG5AL",
+          "title": "GfK Population by Age Group & Gender Germany",
+          "provider": "NIQ-GFK",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZTWZO5G4T",
-          "title": "Alternative Data: Consumer Reviews, Support Call Transcripts & NLP Sentiment",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZT0Z4C8RF3GA",
+          "title": "AI Training Dataset from worldpopulationreview.com",
+          "provider": "Bright Data",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSTZVA0O9RA",
-          "title": "Automotive Intelligence – AI Audiences (Vehicle Ownership/Intent)",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZT8Z4NUHE",
+          "title": "Audience Data| 1.2B unique mobile users in APAC, EU, North America and MENA",
+          "provider": "Factori",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSVZ6EW2A",
-          "title": "European Broadband Markets 2017",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZTSZ290BV255",
+          "title": "Snowflake Public Data (Free)",
+          "provider": "Snowflake Public Data Products",
+          "use_cases": [
+            "audience segmentation and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        }
+      ],
+      "healthcare": [
+        {
+          "global_name": "GZSNZ7F5UH",
+          "title": "COVID-19 Epidemiological Data",
+          "provider": "Starschema",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSVZ6EW2M",
-          "title": "Global Broadband Tariff Time Series 2017",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZSTZ67BY9ORD",
+          "title": "Clinical Trials Research Database",
+          "provider": "Snowflake",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZTSZT83AIS",
-          "title": "Mastercard Audiences",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZSUZCN9EG",
+          "title": "Population - Statistics - OECD - Free",
+          "provider": "Data Army Intel",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZSOZ70FXV",
-          "title": "Tealium Audience Discovery",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukfrde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZSYZ5S9QG",
+          "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
+          "provider": "Acxiom EMEA",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZ1M7ZC3M49",
-          "title": "Behavioral Customer Segmentation - Sample",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "ukde",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZSYZG5AL",
+          "title": "GfK Population by Age Group & Gender Germany",
+          "provider": "NIQ-GFK",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         },
         {
-          "global_name": "GZT1ZW66H5",
-          "title": "Content Value/Engagement & Emotional Metrics for TV Programs (Sample)",
-          "provider": "(SE to confirm)",
-          "access": "(SE to confirm - likely Free; is_ready_for_import=true)",
-          "regions_swt": "de",
-          "ready": true,
-          "source": "deterministic SHOW AVAILABLE LISTINGS / media keywords 2026-09-16"
+          "global_name": "GZT0Z4C8RF3GA",
+          "title": "AI Training Dataset from worldpopulationreview.com",
+          "provider": "Bright Data",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0ZIFQPAI",
+          "title": "Movement Daily Activity Index 2020 (Sample)",
+          "provider": "Mapbox",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZ290BV255",
+          "title": "Snowflake Public Data (Free)",
+          "provider": "Snowflake Public Data Products",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTYZAPS3FX",
+          "title": "Global Covid Strategies",
+          "provider": "InSights",
+          "use_cases": [
+            "population health and demographics"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        }
+      ],
+      "financial": [
+        {
+          "global_name": "GZTSZ290BV255",
+          "title": "Snowflake Public Data (Free)",
+          "provider": "Snowflake Public Data Products",
+          "use_cases": [
+            "macroeconomic and inflation indicators"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZRC7HQB",
+          "title": "CEIC Global Macro Economic Data",
+          "provider": "CEIC Data",
+          "use_cases": [
+            "macroeconomic and inflation indicators"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZRC7HQV",
+          "title": "CEIC Nowcasts",
+          "provider": "CEIC Data",
+          "use_cases": [
+            "macroeconomic and inflation indicators"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZRC7HRG",
+          "title": "CEIC World Macro Economic Data",
+          "provider": "CEIC Data",
+          "use_cases": [
+            "macroeconomic and inflation indicators"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        }
+      ],
+      "retail": [],
+      "public": [
+        {
+          "global_name": "GZSYZ5S9QG",
+          "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
+          "provider": "Acxiom EMEA",
+          "use_cases": [
+            "census and administrative boundaries"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZSYZG5AL",
+          "title": "GfK Population by Age Group & Gender Germany",
+          "provider": "NIQ-GFK",
+          "use_cases": [
+            "census and administrative boundaries"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0Z4CM1E9M9",
+          "title": "Overture Maps - Divisions",
+          "provider": "CARTO",
+          "use_cases": [
+            "census and administrative boundaries"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZTSZ290BV255",
+          "title": "Snowflake Public Data (Free)",
+          "provider": "Snowflake Public Data Products",
+          "use_cases": [
+            "census and administrative boundaries"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        }
+      ],
+      "manufacturing": [],
+      "energy": [],
+      "other": [
+        {
+          "global_name": "GZ2FTZ5POFF",
+          "title": "MaxMind GeoLite City Database",
+          "provider": "MaxMind",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZSNZ7F5UT",
+          "title": "Worldwide Address Data",
+          "provider": "Starschema",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZSYZ43W9K16",
+          "title": "Germany H3 Travel Matrix",
+          "provider": "Dekart XYZ",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZSYZ5S9QG",
+          "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
+          "provider": "Acxiom EMEA",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0Z4CM1E9J2",
+          "title": "CARTO Academy - Data for tutorials",
+          "provider": "CARTO",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0Z4CM1E9KJ",
+          "title": "Overture Maps - Transportation",
+          "provider": "CARTO",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0Z4CM1E9KN",
+          "title": "Overture Maps - Buildings",
+          "provider": "CARTO",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0Z4CM1E9KR",
+          "title": "Overture Maps - Places",
+          "provider": "CARTO",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0Z4CM1E9KV",
+          "title": "Overture Maps - Base",
+          "provider": "CARTO",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0Z4CM1E9M9",
+          "title": "Overture Maps - Divisions",
+          "provider": "CARTO",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
+        },
+        {
+          "global_name": "GZT0Z4CM1E9NQ",
+          "title": "Overture Maps - Addresses",
+          "provider": "CARTO",
+          "use_cases": [
+            "geospatial boundaries and geocoding"
+          ],
+          "verified_title": null,
+          "ready": null,
+          "in_region": null,
+          "region_checked": "AWS_EU_CENTRAL_1"
         }
       ]
     }
   },
   "_generated": {
-    "at": "2026-09-16T17:57:47",
-    "note": "MEDIA candidates for SE review (deterministic; agentic cortex-exec was blocked). Confirm provider+access+fit, assign 6 primary + reserves, then promote into marketplace.json and run build_marketplace_json.py --mirror + load_context.py."
+    "at": "2026-09-20T20:32:56",
+    "note": "Agentic candidates for SE review. Promote good ones into marketplace.json (primary/reserve). NOT shipped as-is."
   }
 }

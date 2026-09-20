@@ -24,12 +24,14 @@ JSON_PATH = os.path.join(REFS, "marketplace.json")
 CAND_PATH = os.path.join(REFS, "marketplace-candidates.json")
 OUT = os.path.join(ROOT, "audit", "marketplace-se-review.html")
 LISTING = "https://app.snowflake.com/marketplace/listing/"
-REGION = "AWS_EU_CENTRAL_1"
 
-# event tab -> (profile, country blurb)
-EVENTS = [("London", "uk", "United Kingdom"),
-          ("Paris", "fr", "France"),
-          ("Berlin", "de", "Germany")]
+# event tab -> (profile, country, the EVENT LOCATION's region). The booth account
+# is always AWS Frankfurt, but a visitor never imports at the booth - they open
+# the links later from their own account - so a pick is judged on availability
+# where the VISITORS are, not where the booth writes.
+EVENTS = [("London", "uk", "United Kingdom", "AWS_EU_WEST_2"),
+          ("Paris", "fr", "France", "AWS_EU_WEST_3"),
+          ("Berlin", "de", "Germany", "AWS_EU_CENTRAL_1")]
 
 INDUSTRY_LABEL = {
     "healthcare": "Healthcare &amp; Life Sciences", "financial": "Financial Services",
@@ -41,14 +43,14 @@ ORDER = ["healthcare", "financial", "retail", "public", "manufacturing",
          "energy", "media", "other"]
 
 
-def importable(r):
+def importable(r, region):
     reg = r.get("regions") or ""
-    in_region = reg == "ALL" or REGION in reg
+    in_region = reg == "ALL" or region in reg
     if not in_region:
-        return '<td class="c no" title="Not offered in eu-central-1">✗</td>'
+        return '<td class="c no" title="Not offered in %s">\u2717</td>' % region
     if not r.get("ready", True):
-        return '<td class="c warn" title="In region but needs a request/trial">⚠</td>'
-    return '<td class="c yes">✓</td>'
+        return '<td class="c warn" title="Available but needs a request/trial">\u26a0</td>'
+    return '<td class="c yes">\u2713</td>'
 
 
 def link(gn, title):
@@ -56,17 +58,17 @@ def link(gn, title):
         LISTING, html.escape(gn or ""), html.escape(title or ""))
 
 
-def table(rows):
+def table(rows, region):
     out = ['<div class="table-wrap"><table><thead><tr><th>Dataset</th>'
            '<th>Provider</th><th>Access</th>'
-           '<th class="c" title="Importable on an eu-central-1 account">Usable</th>'
+           '<th class="c" title="Available in this event\'s region">Local</th>'
            '<th class="verdict">SE verdict</th></tr></thead><tbody>']
     for r in rows:
         out.append("<tr><td>%s</td><td>%s</td><td>%s</td>%s<td class=\"verdict\"></td></tr>" % (
             link(r.get("global_name"), r.get("title")),
             html.escape(r.get("provider") or ""),
             html.escape(r.get("access") or ""),
-            importable(r)))
+            importable(r, region)))
     out.append("</tbody></table></div>")
     return "\n".join(out)
 
@@ -92,14 +94,15 @@ def main():
         cand = json.load(open(CAND_PATH, encoding="utf-8")).get("profiles", {})
 
     tabs, panes = [], []
-    for i, (event, profile, country) in enumerate(EVENTS):
+    for i, (event, profile, country, region) in enumerate(EVENTS):
         active = " active" if i == 0 else ""
         tabs.append('<button class="tab%s" data-pane="pane-%s">%s</button>'
                     % (active, profile, event))
         body = ['<p class="sub">Suggestions chosen for local relevance to '
-                '<strong>%s</strong>. The booth account for this event is in '
-                'AWS Frankfurt, so every pick must also be importable on '
-                'eu-central-1.</p>' % country]
+                '<strong>%s</strong>, and judged on availability in '
+                '<code>%s</code> \u2014 the region this event\'s visitors live in. '
+                'The booth account is in AWS Frankfurt, but that is irrelevant here: '
+                'nobody imports anything at the booth.</p>' % (country, region)]
         prof = data.get(profile) or {}
         curated_any = any((prof.get(ind) or {}).get("primary") for ind in ORDER)
         if not curated_any:
@@ -114,10 +117,10 @@ def main():
                 continue
             body.append("<h3>%s</h3>" % INDUSTRY_LABEL[ind])
             if prim:
-                body.append(table(prim))
+                body.append(table(prim, region))
             if res:
                 body.append('<p class="sub">Reserves:</p>')
-                body.append(table(res))
+                body.append(table(res, region))
         # candidates awaiting promotion
         cprof = cand.get(profile) or {}
         cany = {k: v for k, v in cprof.items() if v}
@@ -182,13 +185,14 @@ TEMPLATE = """<!DOCTYPE html>
   <h1>Marketplace — SE review</h1>
   <p class="sub">Loco for CoCo · one tab per SWT event · generated {{GENERATED}} · from marketplace.json</p>
   <div class="legend">
-    Each event runs on its <strong>own ephemeral account, all in AWS Frankfurt</strong>, so the
-    cloud region is the same everywhere and is <em>not</em> what differs between events —
-    <strong>local relevance is</strong>. Attendees read the document later and attach data from
-    their own account, so a pick is judged on whether it is locally meaningful first.<br>
-    <strong>Usable</strong>: <span class="yes">✓</span> importable on eu-central-1 ·
-    <span class="warn">⚠</span> in region but needs a request/trial ·
-    <span class="no">✗</span> not offered in eu-central-1 (cannot be used at any of these events).
+    Each event runs on its <strong>own ephemeral account, all in AWS Frankfurt</strong> — but
+    <strong>that is not what decides these recommendations</strong>. Visitors never import
+    anything at the booth: they leave with links and open them later from their own account.
+    So each tab judges a dataset on local relevance to that city and on availability in
+    <strong>the event's own region</strong> (London eu-west-2, Paris eu-west-3, Berlin eu-central-1).<br>
+    <strong>Local</strong>: <span class="yes">✓</span> available in this event's region ·
+    <span class="warn">⚠</span> available but needs a request/trial ·
+    <span class="no">✗</span> not offered in this event's region.
     Titles link to the Marketplace listing.
   </div>
   <div class="tabs">{{TABS}}</div>

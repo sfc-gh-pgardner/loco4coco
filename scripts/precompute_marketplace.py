@@ -32,10 +32,12 @@ ROOT = os.path.dirname(HERE)
 REFS = os.path.join(ROOT, "skills", "loco4coco", "references")
 OUT = os.path.join(REFS, "marketplace-candidates.json")
 
-# Every SWT event account is stood up in AWS Frankfurt, so the region a candidate
-# must be importable in is CONSTANT - it is not the thing that varies per event.
-# What varies is the COUNTRY the listing should be relevant to.
-PROFILE_REGION = {"uk": "AWS_EU_CENTRAL_1", "fr": "AWS_EU_CENTRAL_1", "de": "AWS_EU_CENTRAL_1"}
+# The region a candidate is judged against is the EVENT LOCATION's region, NOT the
+# booth account's. Every event account is in AWS Frankfurt, but a visitor never
+# imports anything at the booth - they leave with links and open them later from
+# their own account, wherever they are. So a London recommendation is judged on
+# AWS_EU_WEST_2 availability even though the booth writes to eu-central-1.
+PROFILE_REGION = {"uk": "AWS_EU_WEST_2", "fr": "AWS_EU_WEST_3", "de": "AWS_EU_CENTRAL_1"}
 PROFILE_COUNTRY = {"uk": "the United Kingdom", "fr": "France", "de": "Germany"}
 
 INDUSTRIES = ["healthcare", "financial", "retail", "public",

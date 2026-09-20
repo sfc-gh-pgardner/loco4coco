@@ -22,9 +22,9 @@
     "_byline_comment": "Shown under the title on the start screen. Left EMPTY by default so a fresh cloner does not ship someone else's name at their own event. Set it to your own, or leave blank to show nothing."
   },
   "venues": {
-    "_comment": "The three SWT events. event.venue selects one; resolve_venue() in server.py overwrites event.city/language and sets event.market_profile from it. EACH EVENT RUNS ON ITS OWN EPHEMERAL ACCOUNT (stood up via DataOps Live), so one account = one event and LOCO4COCO.BOOTH in that account IS the per-event isolation - there are deliberately no per-event schemas. Every one of those accounts is in AWS Frankfurt, so `region` is CONSTANT at AWS_EU_CENTRAL_1 and is NOT the thing that varies between events: it only gates which listings are importable. What varies is market_profile (uk/fr/de), which selects the LOCALLY RELEVANT curated listings for that city - attendees read the doc later and attach data from their own account, so local relevance matters more than the booth's region. NOTE: only the 'en' UI copy deck exists; fr/de language codes are wired but the letter/narrative copy is still English (translation deprioritised).",
-    "london": { "city": "London", "language": "en", "region": "AWS_EU_CENTRAL_1", "market_profile": "uk" },
-    "paris":  { "city": "Paris",  "language": "fr", "region": "AWS_EU_CENTRAL_1", "market_profile": "fr" },
+    "_comment": "The three SWT events. event.venue selects one; resolve_venue() in server.py overwrites event.city/language/region and sets event.market_profile from it. TWO REGIONS EXIST AND THEY ARE NOT THE SAME THING. (1) `region` below is the EVENT LOCATION's cloud region and is used ONLY to judge which Marketplace datasets to RECOMMEND - London prioritises AWS_EU_WEST_2 listings, Paris AWS_EU_WEST_3, Berlin AWS_EU_CENTRAL_1. (2) The ACCOUNT's own region is always AWS_EU_CENTRAL_1 (every event runs on its own ephemeral AWS Frankfurt account) and is used ONLY for where SESSIONS/TURNS/blueprints are written - it must NEVER filter recommendations. The visitor never imports anything at the booth: they leave with links and open them later from their own account, so what matters is that a dataset is relevant and available WHERE THEY ARE, not whether the booth could attach it. Because one account serves one event, LOCO4COCO.BOOTH is the per-event separation and there are deliberately no per-event schemas. NOTE: only the 'en' UI copy deck exists; fr/de language codes are wired but the copy is still English (translation deprioritised).",
+    "london": { "city": "London", "language": "en", "region": "AWS_EU_WEST_2",    "market_profile": "uk" },
+    "paris":  { "city": "Paris",  "language": "fr", "region": "AWS_EU_WEST_3",    "market_profile": "fr" },
     "berlin": { "city": "Berlin", "language": "de", "region": "AWS_EU_CENTRAL_1", "market_profile": "de" }
   },
   "snowflake": {
@@ -661,9 +661,9 @@
       "de": "Germany"
     },
     "agentic": {
-      "_comment": "Tier 0, ahead of live. Built and end-to-end tested on PG_LONDON 2026-08-23, then DISABLED the same day: measured latency 70-110s+ (2 of 3 runs timed out) is too high and too variable to trust against an unmeasured Library dwell time. Replaced for now by a precompute pass instead - the same PrPr agentic search run offline, once, to add a verified 6th free-weighted pick per industry to marketplace-index.md (Tier 2). Code left in place and dormant; re-enable once real Library timing data exists or latency improves. No cap by design if re-enabled: an SE watches spend in cost.jsonl (kind=marketplace_agentic) and flips enabled back off by hand if needed.",
-      "enabled": false,
-      "timeout_seconds": 120,
+      "_comment": "THE 7th OPTION. Not the old racing-at-intake design: that was disabled because a 70-110s call cannot beat a visitor walking one stall. This is now triggered ONLY when a visitor TYPES something into the marketplace 'something else' box, fires in the BACKGROUND, and is merged into the takeaway document at the postbox if it finished. The six curated picks stay deterministic and are never waited on. The prompt is seeded from the EVENT: marketplace.locality gives the country and event.region the event's own region, so a Paris visitor gets French suggestions even though the booth account is in AWS Frankfurt. Measured on the Frankfurt account: ~75-110s per call, and it returns provider names that SQL cannot expose. No call cap by design - watch cost.jsonl (kind=marketplace_agentic).",
+      "enabled": true,
+      "timeout_seconds": 200,
       "connection": null
     },
     "industry_keywords": {

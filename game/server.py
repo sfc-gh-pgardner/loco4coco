@@ -938,13 +938,23 @@ _agentic_lock = threading.Lock()
 
 
 def run_agentic_search(cfg, industry, problem):
-    """Ask the marketplace-search skill for listings matched to what this
-    visitor actually typed, not just their industry bucket.
+    """Find Marketplace listings for what this visitor actually TYPED, restricted
+    to the region their event is in.
 
-    Deliberately does not go through run_exec(): that pushes live reasoning
-    into state.reasoning for the visible turn on screen, and this call runs
-    silently in the background while the visitor is elsewhere in the flow.
-    Same NDJSON parsing, no UI side effects.
+    Uses `cortex search marketplace` with a cloudRegion filter rather than asking
+    an agent in prose. That distinction is the whole reason this works:
+
+      MEASURED, free-form `cortex exec` prompt asking an agent to honour a region:
+        ~110-237s per call, and of 91 candidates collected that way, 78 were not
+        available in the event's region. Making the region a stated hard
+        requirement in the prompt changed nothing.
+      MEASURED, the same search with --filter '{"cloudRegion":["..."]}':
+        6.8-8.3s, every result already in region, provider names included.
+
+    The region is a FILTER PARAMETER, not something to ask for politely. All three
+    event regions were verified answering from this one AWS Frankfurt account,
+    because the Marketplace catalogue is global - which is what lets a London
+    booth recommend eu-west-2 data while writing its sessions to eu-central-1.
 
     Returns (rows, usage, ok, seconds). Never raises - every failure mode
     (CLI missing, timeout, bad JSON, empty result) comes back as ([], {}, False, t).
@@ -952,74 +962,84 @@ def run_agentic_search(cfg, industry, problem):
     ac = (cfg.get("marketplace") or {}).get("agentic") or {}
     c = cfg.get("coco") or {}
     ind_name = industry_name(cfg, industry) or industry
-    # Seed the search from the EVENT LOCATION, not from the booth account.
-    # market_profile says which country the event is in, so a Paris visitor is
-    # offered French data and a Berlin visitor German data - proven to work:
-    # asking "for Germany" returned GfK Population Germany and Acxiom EMEA
-    # Geo-Spatial DE. event.region is the EVENT's region (London = eu-west-2),
-    # NOT the account's (always eu-central-1): the visitor never imports anything
-    # at the booth, they open the links later from their own account, so what
-    # matters is availability where THEY are.
+    # Seeded from the EVENT LOCATION, never the booth account. event.region is the
+    # EVENT's region (London = eu-west-2); the account is always eu-central-1. The
+    # visitor never imports at the booth - they open the links later from their own
+    # account - so what matters is availability where THEY are.
     ev = cfg.get("event") or {}
     locality = (cfg.get("marketplace") or {}).get("locality") or {}
     country = locality.get(ev.get("market_profile") or "uk") or ""
     region = (ev.get("region") or "").strip().split(".")[-1]
-    where = f" Prefer listings relevant to {country}." if country else ""
-    in_region = (f" Prefer listings available in the {region} region, which is "
-                 f"where this event's visitors are based.") if region else ""
-    prompt = (
-        f"Use the marketplace-search skill to find Snowflake Marketplace "
-        f"listings relevant to this problem from a visitor in {ind_name}: "
-        f"\"{problem}\".{where}{in_region} Only FREE listings that can be "
-        f"imported (not by-request, not discover-only). "
-        f"Return ONLY a JSON array (no prose, no code fence) "
-        f"of objects with keys: title, provider, description, and "
-        f"global_name if you know it.")
-    cmd = [c.get("binary", "cortex"), "exec", prompt, "--format", "json",
-           "--bypass", "--no-history"]
+
+    query = f"{problem} for {ind_name}" + (f" in {country}" if country else "")
+    cmd = [c.get("binary", "cortex"), "search", "marketplace", query,
+           "--max-results", str(int(ac.get("max_results", 10)))]
+    if region:
+        cmd += ["--filter", json.dumps({"cloudRegion": [region]})]
     conn = ac.get("connection") or (cfg.get("snowflake") or {}).get("connection_name")
     if conn:
-        cmd += ["--connection", conn]
-    timeout = float(ac.get("timeout_seconds", 70))
+        cmd += ["-c", conn]
+    timeout = float(ac.get("timeout_seconds", 45))
     started = time.time()
-    final, usage, ok = "", {}, False
+    rows, ok = [], False
     try:
         p = subprocess.run(cmd, capture_output=True, text=True,
                            timeout=timeout, cwd=HERE)
-        for raw in (p.stdout or "").splitlines():
-            raw = raw.strip()
-            if not raw:
-                continue
-            try:
-                ev = json.loads(raw)
-            except json.JSONDecodeError:
-                continue
-            if ev.get("type") == "result":
-                final = (ev.get("result") or "").strip()
-                usage = ev.get("usage") or {}
-                ok = not ev.get("is_error")
-    except subprocess.TimeoutExpired:
+        payload = json.loads(p.stdout or "{}")
+        if "error" not in payload:
+            rows = _parse_marketplace_results(payload.get("results") or "")
+            ok = True
+    except (subprocess.TimeoutExpired, json.JSONDecodeError):
         pass
     except Exception:                                            # noqa: BLE001
         pass
     seconds = time.time() - started
-    log_cost(cfg, "marketplace_agentic", seconds, usage, ok, "exec")
-    rows = []
-    if ok and final:
-        m = re.search(r"\[.*\]", final, re.S)
+    log_cost(cfg, "marketplace_agentic", seconds, {}, ok, "search")
+    return rows, {}, ok, seconds
+
+
+# "  3. Some Title (MARKETPLACE LISTING - DATA)" then indented "Key: value" lines.
+_MP_ENTRY = re.compile(
+    r"^\s*\d+\.\s+(?P<title>.+?)\s+\(MARKETPLACE LISTING - (?P<kind>[A-Z ]+)\)\s*$")
+_MP_FIELD = re.compile(r"^\s+(?P<key>Provider|Subtitle|Global Name|URL):\s*(?P<val>.+?)\s*$")
+
+
+def _parse_marketplace_results(text):
+    """Turn the search's numbered text output into listing rows.
+
+    APPLICATION listings are dropped: a visitor is being handed data to join to
+    their own, and an app is not that. Anything without a global name is dropped
+    too - a link we cannot build is worse than one fewer suggestion.
+    """
+    out, cur = [], None
+
+    def flush(entry):
+        if not entry or entry.get("kind") == "APPLICATION":
+            return
+        gn = (entry.get("global_name") or "").strip()
+        if not gn or not entry.get("title"):
+            return
+        out.append({
+            "title": entry["title"],
+            "provider": (entry.get("provider") or "Snowflake Marketplace").strip(),
+            "access": "Found for what you asked for",
+            "url": (entry.get("url") or "").strip() or LISTING_URL + gn,
+            "global_name": gn,
+            "regions": "",
+        })
+
+    for line in text.splitlines():
+        m = _MP_ENTRY.match(line)
         if m:
-            try:
-                data = json.loads(m.group(0))
-                rows = [{"title": str(r.get("title") or "").strip(),
-                         "provider": str(r.get("provider") or "Snowflake Marketplace").strip(),
-                         "access": "Suggested by agentic search",
-                         "url": LISTING_URL + str(r.get("global_name") or ""),
-                         "global_name": str(r.get("global_name") or ""),
-                         "regions": ""}
-                        for r in data if isinstance(r, dict) and r.get("title")]
-            except (json.JSONDecodeError, TypeError):
-                rows = []
-    return rows, usage, ok, seconds
+            flush(cur)
+            cur = {"title": m.group("title").strip(), "kind": m.group("kind").strip()}
+            continue
+        if cur:
+            f = _MP_FIELD.match(line)
+            if f:
+                cur[f.group("key").lower().replace(" ", "_")] = f.group("val")
+    flush(cur)
+    return out
 
 
 def start_agentic_search(cfg, session_id, industry, problem):

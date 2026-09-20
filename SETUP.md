@@ -128,26 +128,57 @@ the account is proven rather than assumed.
 Edit `game/config.json`:
 
 **The one setting to change per event: `event.venue`.** Set it to `london`,
-`paris`, `frankfurt` or `berlin` and the game resolves the rest from the
-`venues` map - city label, visitor language, cloud region, and which curated
-marketplace profile to serve. You do not hand-set the region any more.
+`paris` or `berlin` and the game resolves the rest from the `venues` map - city
+label, visitor language, cloud region, and which curated marketplace profile to
+serve. You do not hand-set the region any more.
 
 ```jsonc
 "event": { "venue": "london", ... }
 ```
 
-| Venue | City | Language | Cloud region | Marketplace profile |
+| Venue | City | Language | Cloud region | Marketplace profile (locality) |
 |---|---|---|---|---|
-| `london` | London | en | AWS_EU_WEST_2 | uk |
-| `paris` | Paris | fr | AWS_EU_WEST_3 | fr |
-| `frankfurt` | Frankfurt | en | AWS_EU_CENTRAL_1 | de |
-| `berlin` | Berlin | en | AWS_EU_CENTRAL_1 | de |
+| `london` | London | en | AWS_EU_CENTRAL_1 | uk |
+| `paris` | Paris | fr | AWS_EU_CENTRAL_1 | fr |
+| `berlin` | Berlin | de | AWS_EU_CENTRAL_1 | de |
 
-Frankfurt and Berlin deliberately share a region and marketplace profile
-(`de`), because Marketplace availability is a property of the cloud region, not
-the city. **There is no UI for this yet** - it is a `config.json` edit, and the
-server does not hot-reload, so restart it after changing the venue. A small
-local `/admin` venue selector is planned.
+### One account per event
+
+**Each event runs on its own Snowflake account** (stood up via DataOps Live), and
+every one of those accounts is in **AWS Frankfurt**. Two things follow, and they
+are easy to get wrong:
+
+- **The cloud region is the same for every event** (`AWS_EU_CENTRAL_1`). It is
+  *not* what distinguishes London from Paris. What distinguishes them is
+  `market_profile`, which selects the **locally relevant** curated listings.
+  Attendees read their document later and attach data from their own account, so
+  a pick is judged on local relevance first - and on being importable on
+  eu-central-1, or they cannot attach it at all.
+- **Because one account serves one event, there is deliberately no per-event
+  schema.** `LOCO4COCO.BOOTH` in that account *is* the separation. Sessions carry
+  `EVENT_CITY` so the rows are still labelled.
+
+> **Known gap:** the curated `uk` list was originally verified against London's
+> own region, so four UK-only listings (Jaywing Census, CARTO Boundaries, CARTO
+> Spatial Features GBR, Met Office UK Land Surface Observations) are **not**
+> importable on eu-central-1 and cannot be offered at any of these events.
+> London needs re-curation alongside Paris and Berlin.
+
+### Several people setting up their own laptops
+
+The app holds no account details of its own, so this is the whole flow per person:
+
+```bash
+snow connection add                  # their own account
+# add a target for it in deploy/manifest.yml (copy an existing block)
+python3 deploy/bootstrap.py --target <THEIRS> --connection <THEIRS>
+# then set event.venue in game/config.json for the event they are running
+```
+
+`bootstrap.py` patches `game/config.json` to point at their connection and
+refuses to deploy if the connection is not on the account the target names, so
+two people cannot accidentally write into each other's account. Everything else
+(models, prompts, marketplace profiles) is identical from the clone.
 
 Other keys you may still set directly:
 

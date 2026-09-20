@@ -146,6 +146,12 @@ def main():
                     help="Cap the creative use-cases per industry (0 = all). Each "
                          "one is a separate ~75s agentic call, so 1 keeps a full "
                          "3-event sweep inside about 20 minutes.")
+    ap.add_argument("--no-verify", action="store_true",
+                    help="Collect candidates only, skip the SHOW AVAILABLE LISTINGS "
+                         "check. Use when the connection needs an interactive OAuth "
+                         "redirect (a background snow sql cannot complete one and the "
+                         "timeout is paid on every industry). Verify afterwards in one "
+                         "batch from a live session.")
     a = ap.parse_args()
 
     profiles = list(PROFILE_REGION) if a.all else a.profile
@@ -183,7 +189,8 @@ def main():
                     key = c["global_name"] or c["title"]
                     found.setdefault(key, {**c, "use_cases": []})
                     found[key]["use_cases"].append(uc)
-            ver = verify([c.get("global_name") for c in found.values()], region, a.connection)
+            ver = {} if a.no_verify else verify(
+                [c.get("global_name") for c in found.values()], region, a.connection)
             rows = []
             for c in found.values():
                 v = ver.get(c["global_name"], {})

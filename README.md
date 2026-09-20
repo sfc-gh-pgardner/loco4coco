@@ -65,11 +65,13 @@ Total CoCo wait is about 58s of the 300s budget, down from 144.5s before tuning.
 
 - **Python does not hot-reload.** Restart the server after editing `server.py` or
   `config.json`. HTML and CSS are served from disk.
-- **One toggle per event: `event.venue`** (`london` / `paris` / `frankfurt` / `berlin`).
+- **One toggle per event: `event.venue`** (`london` / `paris` / `berlin`).
   It resolves city, language, cloud region and marketplace profile from the `venues`
-  map in `config.json`. Frankfurt and Berlin share region and profile (`de`). It is a
-  config edit today (no UI; a local `/admin` selector is planned), and the marketplace
-  is UK-weighted for now - `paris`/`berlin` are region-correct but not yet localised.
+  map in `config.json`. **Each event runs on its own account, all in AWS Frankfurt**, so
+  the region is the same everywhere and is not what differs between events - the
+  marketplace profile (locality) is. One account per event also means there is no
+  per-event schema: `LOCO4COCO.BOOTH` in that account is the separation.
+  It is a config edit today (a local `/admin` selector is planned).
 - **Models are region-specific.** The fast/QA path defaults to `llama3.3-70b`, which works
   in both `AWS_EU_WEST_2` and `AWS_EU_CENTRAL_1`; `mistral-large2` is legacy in eu-central-1.
   It falls back to the agentic path automatically if inference fails.

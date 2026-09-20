@@ -65,8 +65,16 @@ def table(rows, region):
            '<th class="c" title="Available in this event\'s region">Local</th>'
            '<th class="verdict">SE verdict</th></tr></thead><tbody>']
     for r in rows:
-        out.append("<tr><td>%s</td><td>%s</td><td>%s</td>%s<td class=\"verdict\"></td></tr>" % (
-            link(r.get("global_name"), r.get("title")),
+        # A pick that filled a slot without matching the industry theme is flagged,
+        # because that is precisely the judgement call a reviewer should spend time
+        # on: where a city has no sector-specific data, the curator fills the six
+        # with real local datasets that are not squarely on topic.
+        note = r.get("demoted")
+        flag = (' <span class="warn" title="Filled the slot without an on-theme '
+                'match (%s) - check this one">\u26a0 weak fit</span>'
+                % html.escape(str(note))) if note and note != "beyond the six" else ""
+        out.append("<tr><td>%s%s</td><td>%s</td><td>%s</td>%s<td class=\"verdict\"></td></tr>" % (
+            link(r.get("global_name"), r.get("title")), flag,
             html.escape(r.get("provider") or ""),
             html.escape(r.get("access") or ""),
             importable(r, region)))

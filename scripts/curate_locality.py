@@ -54,7 +54,10 @@ INDUSTRIES = ["healthcare", "financial", "retail", "public",
 USE_CASES = {
     "healthcare": ["population health and demographics",
                    "hospitals and health facilities",
-                   "air quality and environmental health"],
+                   "air quality and environmental health",
+                   "disease prevalence and mortality",
+                   "deprivation and health inequality",
+                   "pharmaceutical and clinical research data"],
     "financial": ["macroeconomic and inflation indicators",
                   "company and business registries",
                   "ESG and sustainability risk",
@@ -68,22 +71,81 @@ USE_CASES = {
                "transport networks and road data",
                "public tenders and government spending"],
     "manufacturing": ["supply chain and logistics",
-                      "commodity and materials prices",
-                      "shipping and port activity",
-                      "company and supplier data"],
+                      "commodity and raw materials prices",
+                      "shipping, ports and freight",
+                      "company and supplier registries",
+                      "industrial production and output statistics",
+                      "energy and input costs for industry",
+                      "trade, imports and exports"],
     "energy": ["renewable generation and grid data",
                "weather and severe weather warnings",
-               "gas and oil market data",
-               "emissions and net-zero indicators"],
+               "gas and oil market prices",
+               "emissions and net-zero indicators",
+               "electricity consumption and demand",
+               "solar irradiance and wind resource",
+               "EV charging and utility customer data"],
     "media": ["audience segmentation and demographics",
               "broadband and telecoms coverage",
               "social media and sentiment",
-              "advertising and viewership"],
+              "advertising and viewership",
+              "mobile network performance",
+              "events, venues and attendance"],
     "other": ["geospatial boundaries and geocoding",
               "company registries",
               "economic indicators",
               "weather forecasts"],
 }
+
+# Does a pick actually belong in this industry's stall? The picker fills six slots
+# per industry, and where a city genuinely lacks sector-specific data the generic
+# population/geography datasets win every slot. MEASURED on the first pass: MBI
+# Sociodemographic Data for Germany led SEVEN of the eight German industries, and
+# French manufacturing was handed road traffic casualties and health facilities.
+# A pick with no thematic hit is demoted to reserve rather than deleted - it is
+# still real, checked, local data, just not a headline pick for that sector.
+THEME = {
+    "healthcare": ["health", "hospital", "clinic", "patient", "medical", "disease",
+                   "care", "air qual", "pharma", "mortal", "demograph",
+                   "population", "age", "deprivation"],
+    "financial": ["financ", "bank", "econom", "inflation", "macro", "compan",
+                  "registr", "esg", "carbon", "spend", "card", "credit",
+                  "market", "tax", "equity", "exchange", "purchasing power",
+                  "income", "risk", "insur"],
+    "retail": ["retail", "income", "consumer", "spend", "footfall", "mobility",
+               "price", "product", "store", "shop", "basket", "segment",
+               "purchasing power", "demograph", "weather", "catchment"],
+    "public": ["census", "boundar", "address", "propert", "transport", "road",
+               "tender", "government", "public", "deprivation", "planning",
+               "admin", "postcode", "iris", "population", "geospatial"],
+    "manufacturing": ["supply", "logistic", "commodit", "material", "shipping",
+                      "port", "vessel", "supplier", "manufact", "industr",
+                      "freight", "trade", "compan", "steel", "energy price",
+                      "production"],
+    "energy": ["energ", "renewab", "grid", "generation", "wind", "solar",
+               "electric", "gas", "oil", "emission", "carbon", "net-zero",
+               "weather", "power", "utilit", "charg", "irradiance",
+               "consumption", "fuel", "climate"],
+    "media": ["audience", "media", "social", "sentiment", "broadband", "telecom",
+              "telco", "network", "advertis", "viewership", "content", "mobile",
+              "coverage", "fiber", "fibre", "segment", "demograph", "event"],
+    "other": ["boundar", "geocod", "geospatial", "compan", "registr", "econom",
+              "weather", "address", "population", "h3", "travel", "census"],
+}
+
+# Content from the wrong country is a misfit even when it is available in region:
+# the first pass put American Community Survey in a London media stall.
+FOREIGN = {
+    "uk": ["american", " usa", " u.s.", "united states", "canada", "australia",
+           "germany", "german ", "france", "french"],
+    "fr": ["american", " usa", " u.s.", "united states", "canada", "australia",
+           "germany", "german ", "united kingdom", " uk", "britain"],
+    "de": ["american", " usa", " u.s.", "united states", "canada", "australia",
+           "france", "french", "united kingdom", " uk", "britain"],
+}
+
+# How many industries one listing may LEAD in, per city. Without this the same
+# generic dataset heads every stall and the six stop feeling chosen.
+MAX_PRIMARY_APPEARANCES = 3
 
 # A listing that cannot be attached is a dead end in a takeaway document, and an
 # application is not a dataset a visitor can join to their own data.
@@ -92,6 +154,16 @@ SKIP_KINDS = ("APPLICATION",)
 ENTRY = re.compile(
     r"^\s*\d+\.\s+(?P<title>.+?)\s+\(MARKETPLACE LISTING - (?P<kind>[A-Z ]+)\)\s*$")
 FIELD = re.compile(r"^\s+(?P<key>Provider|Subtitle|Global Name|URL):\s*(?P<val>.+?)\s*$")
+
+
+def on_theme(row, industry):
+    hay = (row.get("title", "") + " " + row.get("subtitle", "")).lower()
+    return any(k in hay for k in THEME.get(industry, []))
+
+
+def foreign(row, profile):
+    hay = (row.get("title", "") + " " + row.get("subtitle", "")).lower()
+    return any(k in hay for k in FOREIGN.get(profile, []))
 
 
 def search(query, region, conn, max_results, timeout):
@@ -192,6 +264,7 @@ def main():
     for profile in a.profile:
         region, country = PROFILE[profile]
         print(f"\n=== {profile}  region={region}  country={country}")
+        leads = {}          # global_name -> how many industries it already leads
         for industry in a.industry:
             found, order = {}, 0
             for uc in USE_CASES[industry]:
@@ -241,8 +314,29 @@ def main():
                     seen_uc.add(uc)
                     picked.append(r)
             picked += [r for r in rows if r not in picked]
+
+            # Now decide what may LEAD. A pick has to be on theme for this
+            # industry, be about this country rather than another, and not already
+            # be heading three other stalls. Everything rejected stays available as
+            # a reserve - it is real, checked, local data, just not a headline.
+            lead, bench = [], []
             for r in picked:
+                why = None
+                if not on_theme(r, industry):
+                    why = "off-theme"
+                elif foreign(r, profile):
+                    why = "other country"
+                elif leads.get(r["global_name"], 0) >= MAX_PRIMARY_APPEARANCES:
+                    why = "already leads 3 stalls"
+                if why or len(lead) >= a.primary:
+                    r["demoted"] = why or "beyond the six"
+                    bench.append(r)
+                else:
+                    lead.append(r)
+                    leads[r["global_name"]] = leads.get(r["global_name"], 0) + 1
+            for r in lead + bench:
                 r.pop("_rank", None)
+            picked = lead + bench
 
             block = {"primary": picked[:a.primary],
                      "reserve": picked[a.primary:a.primary + a.reserves]}
@@ -257,7 +351,8 @@ def main():
                                      if r["global_name"] not in have][:a.reserves]}
             print(f"  -> {industry}: {len(block['primary'])} primary, "
                   f"{len(block['reserve'])} reserve"
-                  f"{' (primary preserved)' if a.reserves_only else ''}")
+                  f"{' (primary preserved)' if a.reserves_only else ''}"
+                  f"{'' if a.reserves_only or len(lead) >= a.primary else '  on-theme only ' + str(len(lead))}")
             if not a.dry_run:
                 market["profiles"].setdefault(profile, {})[industry] = block
 

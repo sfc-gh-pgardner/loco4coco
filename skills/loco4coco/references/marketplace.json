@@ -4,7 +4,7 @@
     "at": "2026-09-16T17:39:34",
     "availability_measured": "2026-09-16",
     "curate_locality": {
-      "at": "2026-09-20 22:46",
+      "at": "2026-09-20 23:19",
       "profiles": [
         "uk"
       ],
@@ -72,32 +72,6 @@
         ],
         "reserve": [
           {
-            "global_name": "GZ1MOZBX00E",
-            "title": "Parks, Sports Facilities, Allotments - Great Britain: Open Greenspace",
-            "provider": "Ordnance Survey",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZ1MOZBX00E",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Britain’s greenspace open data. Locate public parks, sports facilities, play areas, allotments",
-            "use_cases": [
-              "hospitals and health facilities"
-            ]
-          },
-          {
-            "global_name": "GZTDZJKVCU",
-            "title": "National Severe Weather Warning Service",
-            "provider": "Met Office",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCU",
-            "regions": "AWS_US_GOV_EAST_1.AWS_US_GOV_EAST_1,AWS_US_GOV_EAST_1_FHPLUS.AWS_US_GOV_EAST_1_FHPLUS,AWS_US_GOV_WEST_1_DOD.AWS_US_GOV_WEST_1_DOD,AWS_US_GOV_WEST_1_FHPLUS.AWS_US_GOV_WEST_1_FHPLUS,AWS_US_GOV_WEST_2.AWS_US_GOV_WEST_2,AZURE_USGOVVIRGINIA.AZURE_USGOVVIRGINIA,AZURE_USGOVVIRGINIA_FHPLUS.AZURE_USGOVVIRGINIA_FHPLUS,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_5,PUBLIC.AWS_AP_SOUTHEAST_7,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_ME_CENTRAL_1,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_AUSTRALIA_SOUTHEAST2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
-            "ready": true,
-            "subtitle": "The Met Office is responsible for issuing weather warnings, which warn of impacts caused by severe weather.",
-            "use_cases": [
-              "air quality and environmental health"
-            ]
-          },
-          {
             "global_name": "GZSYZ12OIDE",
             "title": "MBI Sociodemographic Data United Kingdom Postcode Level",
             "provider": "Michael Bauer International GmbH",
@@ -107,7 +81,10 @@
             "ready": true,
             "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in the United Kingdom.",
             "use_cases": [
-              "population health and demographics"
+              "population health and demographics",
+              "disease prevalence and mortality",
+              "deprivation and health inequality",
+              "pharmaceutical and clinical research data"
             ]
           },
           {
@@ -122,7 +99,9 @@
             "use_cases": [
               "population health and demographics",
               "hospitals and health facilities",
-              "air quality and environmental health"
+              "air quality and environmental health",
+              "disease prevalence and mortality",
+              "deprivation and health inequality"
             ]
           },
           {
@@ -135,21 +114,51 @@
             "ready": true,
             "subtitle": "Two sample datasets proving many knowledge at individual level and household level",
             "use_cases": [
-              "population health and demographics"
+              "population health and demographics",
+              "pharmaceutical and clinical research data"
             ]
           },
           {
-            "global_name": "GZSYZ5S9QC",
-            "title": "Acxiom EMEA: Geo-Spatial Sample Data UK",
-            "provider": "Acxiom EMEA",
+            "global_name": "GZ1MOZBX00E",
+            "title": "Parks, Sports Facilities, Allotments - Great Britain: Open Greenspace",
+            "provider": "Ordnance Survey",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QC",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ1MOZBX00E",
             "regions": "ALL",
             "ready": true,
-            "subtitle": "UK Geographic Statistical Sample Data for Market Analysis on Postcode Level",
+            "subtitle": "Britain’s greenspace open data. Locate public parks, sports facilities, play areas, allotments",
             "use_cases": [
-              "population health and demographics"
-            ]
+              "hospitals and health facilities"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZTDZJKVCU",
+            "title": "National Severe Weather Warning Service",
+            "provider": "Met Office",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCU",
+            "regions": "AWS_US_GOV_EAST_1.AWS_US_GOV_EAST_1,AWS_US_GOV_EAST_1_FHPLUS.AWS_US_GOV_EAST_1_FHPLUS,AWS_US_GOV_WEST_1_DOD.AWS_US_GOV_WEST_1_DOD,AWS_US_GOV_WEST_1_FHPLUS.AWS_US_GOV_WEST_1_FHPLUS,AWS_US_GOV_WEST_2.AWS_US_GOV_WEST_2,AZURE_USGOVVIRGINIA.AZURE_USGOVVIRGINIA,AZURE_USGOVVIRGINIA_FHPLUS.AZURE_USGOVVIRGINIA_FHPLUS,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_5,PUBLIC.AWS_AP_SOUTHEAST_7,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_ME_CENTRAL_1,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_AUSTRALIA_SOUTHEAST2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
+            "ready": true,
+            "subtitle": "The Met Office is responsible for issuing weather warnings, which warn of impacts caused by severe weather.",
+            "use_cases": [
+              "air quality and environmental health"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ4OONQUW",
+            "title": "Dutch Central Bureau of Statistics Public Datasets - LEGACY (Archives & Longitudinal Series)",
+            "provider": "DDBM B.V.",
+            "access": "Paid",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ4OONQUW",
+            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4",
+            "ready": true,
+            "subtitle": "LEGACY (Archives & Longitudinal Series)",
+            "use_cases": [
+              "disease prevalence and mortality"
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -265,19 +274,6 @@
             ]
           },
           {
-            "global_name": "GZTSZRC7HRC",
-            "title": "CEIC Shipping Data",
-            "provider": "CEIC Data",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTSZRC7HRC",
-            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,AWS_US_EAST_1,AWS_US_EAST_2,AWS_US_WEST_2,AZURE_CENTRALUS,AZURE_EASTUS2,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
-            "ready": true,
-            "subtitle": "Visualize global trade logistics and port activity with daily updates.",
-            "use_cases": [
-              "macroeconomic and inflation indicators"
-            ]
-          },
-          {
             "global_name": "GZ1MOZMB44P",
             "title": "Uk Companies Insight Summary",
             "provider": "DataEco",
@@ -290,6 +286,20 @@
               "macroeconomic and inflation indicators",
               "company and business registries"
             ]
+          },
+          {
+            "global_name": "GZTSZRC7HRC",
+            "title": "CEIC Shipping Data",
+            "provider": "CEIC Data",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTSZRC7HRC",
+            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,AWS_US_EAST_1,AWS_US_EAST_2,AWS_US_WEST_2,AZURE_CENTRALUS,AZURE_EASTUS2,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
+            "ready": true,
+            "subtitle": "Visualize global trade logistics and port activity with daily updates.",
+            "use_cases": [
+              "macroeconomic and inflation indicators"
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -365,34 +375,6 @@
             ]
           },
           {
-            "global_name": "GZ2FRZE33RX",
-            "title": "On Demand Journeys",
-            "provider": "BT Active Intelligence",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZ2FRZE33RX",
-            "regions": "PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_EU_WEST_3,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4",
-            "ready": true,
-            "subtitle": "Origin Destination insights across the UK at LSOA level",
-            "use_cases": [
-              "footfall and mobility",
-              "weather driving retail demand"
-            ]
-          },
-          {
-            "global_name": "GZSYZ5S9QC",
-            "title": "Acxiom EMEA: Geo-Spatial Sample Data UK",
-            "provider": "Acxiom EMEA",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QC",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "UK Geographic Statistical Sample Data for Market Analysis on Postcode Level",
-            "use_cases": [
-              "household income and geodemographic segmentation",
-              "footfall and mobility"
-            ]
-          },
-          {
             "global_name": "GZSYZ12OIDE",
             "title": "MBI Sociodemographic Data United Kingdom Postcode Level",
             "provider": "Michael Bauer International GmbH",
@@ -421,6 +403,36 @@
             ]
           },
           {
+            "global_name": "GZ2FRZE33RX",
+            "title": "On Demand Journeys",
+            "provider": "BT Active Intelligence",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ2FRZE33RX",
+            "regions": "PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_EU_WEST_3,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4",
+            "ready": true,
+            "subtitle": "Origin Destination insights across the UK at LSOA level",
+            "use_cases": [
+              "footfall and mobility",
+              "weather driving retail demand"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ5S9QC",
+            "title": "Acxiom EMEA: Geo-Spatial Sample Data UK",
+            "provider": "Acxiom EMEA",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QC",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "UK Geographic Statistical Sample Data for Market Analysis on Postcode Level",
+            "use_cases": [
+              "household income and geodemographic segmentation",
+              "footfall and mobility"
+            ],
+            "demoted": "off-theme"
+          },
+          {
             "global_name": "GZT0ZIFQPAI",
             "title": "Movement Daily Activity Index 2020 (Sample)",
             "provider": "Mapbox",
@@ -431,7 +443,8 @@
             "subtitle": "Anonymous, aggregated, daily mobility data for every 100m grid tile in the US/UK/Germany",
             "use_cases": [
               "footfall and mobility"
-            ]
+            ],
+            "demoted": "other country"
           }
         ]
       },
@@ -520,21 +533,6 @@
             ]
           },
           {
-            "global_name": "GZ1MOZBX00Q",
-            "title": "Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas",
-            "provider": "Ordnance Survey",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZ1MOZBX00Q",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Built up area extents designed to underpin statistical analysis and contribute to policy enablement",
-            "use_cases": [
-              "census and administrative boundaries",
-              "transport networks and road data",
-              "public tenders and government spending"
-            ]
-          },
-          {
             "global_name": "GZSYZ7UQCDOX",
             "title": "MBI Global Area Boundaries",
             "provider": "Michael Bauer International GmbH",
@@ -543,19 +541,6 @@
             "regions": "ALL",
             "ready": true,
             "subtitle": "MBI's fresh area map data for well-founded decisions.",
-            "use_cases": [
-              "census and administrative boundaries"
-            ]
-          },
-          {
-            "global_name": "GZSYZ7UQCDOH",
-            "title": "Basic Sociodemographics-Bundle for Countries Worldwide",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOH",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions.",
             "use_cases": [
               "census and administrative boundaries"
             ]
@@ -574,6 +559,36 @@
               "addresses and property data",
               "transport networks and road data"
             ]
+          },
+          {
+            "global_name": "GZ1MOZBX00Q",
+            "title": "Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas",
+            "provider": "Ordnance Survey",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ1MOZBX00Q",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Built up area extents designed to underpin statistical analysis and contribute to policy enablement",
+            "use_cases": [
+              "census and administrative boundaries",
+              "transport networks and road data",
+              "public tenders and government spending"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ7UQCDOH",
+            "title": "Basic Sociodemographics-Bundle for Countries Worldwide",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOH",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions.",
+            "use_cases": [
+              "census and administrative boundaries"
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -636,46 +651,6 @@
         ],
         "reserve": [
           {
-            "global_name": "GZSYZ43W9K12",
-            "title": "UK H3 Travel Matrix",
-            "provider": "Dekart XYZ",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ43W9K12",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Nationwide UK origin–destination travel-time and distance matrix, pre-computed on the H3 grid.",
-            "use_cases": [
-              "supply chain and logistics"
-            ]
-          },
-          {
-            "global_name": "GZSYZ7UQCDLU",
-            "title": "MBI Purchasing Power Data United Kingdom Postcode Level",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDLU",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh purchasing power data for well-founded decisions in the United Kingdom",
-            "use_cases": [
-              "commodity and materials prices",
-              "company and supplier data"
-            ]
-          },
-          {
-            "global_name": "GZT0ZIFQPAI",
-            "title": "Movement Daily Activity Index 2020 (Sample)",
-            "provider": "Mapbox",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT0ZIFQPAI",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Anonymous, aggregated, daily mobility data for every 100m grid tile in the US/UK/Germany",
-            "use_cases": [
-              "shipping and port activity"
-            ]
-          },
-          {
             "global_name": "GZTSZRC7HRC",
             "title": "CEIC Shipping Data",
             "provider": "CEIC Data",
@@ -686,7 +661,8 @@
             "subtitle": "Visualize global trade logistics and port activity with daily updates.",
             "use_cases": [
               "supply chain and logistics",
-              "shipping and port activity"
+              "shipping, ports and freight",
+              "trade, imports and exports"
             ]
           },
           {
@@ -699,7 +675,9 @@
             "ready": true,
             "subtitle": "Industry Classification System codes, titles, descriptions, and parent-child hierarchical relationships.",
             "use_cases": [
-              "supply chain and logistics"
+              "supply chain and logistics",
+              "industrial production and output statistics",
+              "trade, imports and exports"
             ]
           },
           {
@@ -713,9 +691,51 @@
             "subtitle": "Industry Summary for UK Companies",
             "use_cases": [
               "supply chain and logistics",
-              "shipping and port activity",
-              "company and supplier data"
+              "company and supplier registries",
+              "industrial production and output statistics",
+              "trade, imports and exports"
             ]
+          },
+          {
+            "global_name": "GZSVZ9FU7N",
+            "title": "Chemical Price Assessments",
+            "provider": "ICIS (Independent Commodity Intelligence Services)",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ9FU7N",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Assessed market prices for a vast array of Chemical commodities and recycled plastics globally",
+            "use_cases": [
+              "commodity and raw materials prices"
+            ]
+          },
+          {
+            "global_name": "GZTDZM1AK5",
+            "title": "Company data",
+            "provider": "OpenCorporates",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZM1AK5",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Comprehensive Company Data for Compliance, Risk Assessment, and Business Intelligence in 140+ jurisdictions.",
+            "use_cases": [
+              "company and supplier registries"
+            ]
+          },
+          {
+            "global_name": "GZSYZ43W9K12",
+            "title": "UK H3 Travel Matrix",
+            "provider": "Dekart XYZ",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ43W9K12",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Nationwide UK origin–destination travel-time and distance matrix, pre-computed on the H3 grid.",
+            "use_cases": [
+              "supply chain and logistics",
+              "shipping, ports and freight"
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -778,20 +798,6 @@
         ],
         "reserve": [
           {
-            "global_name": "GZ2FRZQNY1",
-            "title": "UK Health Facts and Dimensions Sample",
-            "provider": "Facts and Dimensions Ltd",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZ2FRZQNY1",
-            "regions": "PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AZURE_UKSOUTH,PUBLIC.GCP_EUROPE_WEST2",
-            "ready": true,
-            "subtitle": "Huge array of health related stats and reference data - free sample",
-            "use_cases": [
-              "renewable generation and grid data",
-              "emissions and net-zero indicators"
-            ]
-          },
-          {
             "global_name": "GZTSZ36AC98",
             "title": "Corporate Climate Commitment ESG Data | Net Zero, Carbon Neutrality, and Carbon Positivity",
             "provider": "Tracenable",
@@ -805,16 +811,16 @@
             ]
           },
           {
-            "global_name": "GZSYZ12OIDE",
-            "title": "MBI Sociodemographic Data United Kingdom Postcode Level",
+            "global_name": "GZSYZ7UQCDOT",
+            "title": "Purchasing Power for Countries Worldwide",
             "provider": "Michael Bauer International GmbH",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12OIDE",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOT",
             "regions": "ALL",
             "ready": true,
-            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in the United Kingdom.",
+            "subtitle": "MBI's fresh purchasing power data for well-founded decisions.",
             "use_cases": [
-              "renewable generation and grid data"
+              "electricity consumption and demand"
             ]
           },
           {
@@ -828,7 +834,9 @@
             "subtitle": "MBI's fresh purchasing power data for well-founded decisions in the United Kingdom",
             "use_cases": [
               "renewable generation and grid data",
-              "emissions and net-zero indicators"
+              "emissions and net-zero indicators",
+              "electricity consumption and demand",
+              "EV charging and utility customer data"
             ]
           },
           {
@@ -841,21 +849,39 @@
             "ready": true,
             "subtitle": "Accurate weather forecasts for your chosen postcode sector",
             "use_cases": [
+              "weather and severe weather warnings",
+              "solar irradiance and wind resource"
+            ]
+          },
+          {
+            "global_name": "GZTDZJKVCM",
+            "title": "Global Spot Weather Forecasts",
+            "provider": "Met Office",
+            "access": "Paid",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCM",
+            "regions": "AWS_US_GOV_EAST_1.AWS_US_GOV_EAST_1,AWS_US_GOV_EAST_1_FHPLUS.AWS_US_GOV_EAST_1_FHPLUS,AWS_US_GOV_WEST_1_DOD.AWS_US_GOV_WEST_1_DOD,AWS_US_GOV_WEST_1_FHPLUS.AWS_US_GOV_WEST_1_FHPLUS,AZURE_USGOVVIRGINIA.AZURE_USGOVVIRGINIA,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
+            "ready": true,
+            "subtitle": "Accurate weather forecasts for your chosen location",
+            "use_cases": [
               "weather and severe weather warnings"
             ]
           },
           {
-            "global_name": "GZSTZIDI09S",
-            "title": "Intelligent Event Data for Department Stores & Retail, London UK - Sample",
-            "provider": "PredictHQ",
+            "global_name": "GZ2FRZQNY1",
+            "title": "UK Health Facts and Dimensions Sample",
+            "provider": "Facts and Dimensions Ltd",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSTZIDI09S",
-            "regions": "ALL",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ2FRZQNY1",
+            "regions": "PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AZURE_UKSOUTH,PUBLIC.GCP_EUROPE_WEST2",
             "ready": true,
-            "subtitle": "Free sample dataset of PredictHQ's Intelligent Event Data for retail and department stores",
+            "subtitle": "Huge array of health related stats and reference data - free sample",
             "use_cases": [
-              "weather and severe weather warnings"
-            ]
+              "renewable generation and grid data",
+              "emissions and net-zero indicators",
+              "electricity consumption and demand",
+              "solar irradiance and wind resource"
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -941,7 +967,22 @@
             "subtitle": "Two sample datasets proving many knowledge at individual level and household level",
             "use_cases": [
               "social media and sentiment",
-              "advertising and viewership"
+              "advertising and viewership",
+              "mobile network performance",
+              "events, venues and attendance"
+            ]
+          },
+          {
+            "global_name": "GZ2FRZE33RT",
+            "title": "Road Insights",
+            "provider": "BT Active Intelligence",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ2FRZE33RT",
+            "regions": "PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_EU_WEST_3,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4",
+            "ready": true,
+            "subtitle": "Gain valuable data on traffic flow and speed along specific road networks.",
+            "use_cases": [
+              "mobile network performance"
             ]
           },
           {
@@ -973,34 +1014,18 @@
             ]
           },
           {
-            "global_name": "GZSYZ5S9QC",
-            "title": "Acxiom EMEA: Geo-Spatial Sample Data UK",
-            "provider": "Acxiom EMEA",
+            "global_name": "GZ1MOZ2HCBPI0",
+            "title": "Addresses - UK: OS GB Address and OS Islands Address",
+            "provider": "Ordnance Survey",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QC",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ1MOZ2HCBPI0",
             "regions": "ALL",
             "ready": true,
-            "subtitle": "UK Geographic Statistical Sample Data for Market Analysis on Postcode Level",
+            "subtitle": "Sample data of over 40 million UK addresses, including location, classification and lifecycle",
             "use_cases": [
-              "audience segmentation and demographics",
-              "social media and sentiment",
-              "advertising and viewership"
-            ]
-          },
-          {
-            "global_name": "GZSYZ12OIDE",
-            "title": "MBI Sociodemographic Data United Kingdom Postcode Level",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12OIDE",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in the United Kingdom.",
-            "use_cases": [
-              "audience segmentation and demographics",
-              "social media and sentiment",
-              "advertising and viewership"
-            ]
+              "events, venues and attendance"
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -1076,19 +1101,6 @@
             ]
           },
           {
-            "global_name": "GZSYZ7UQCDLU",
-            "title": "MBI Purchasing Power Data United Kingdom Postcode Level",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDLU",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh purchasing power data for well-founded decisions in the United Kingdom",
-            "use_cases": [
-              "economic indicators"
-            ]
-          },
-          {
             "global_name": "GZTDZJKVCY",
             "title": "Postcode Sector Weather Forecasts",
             "provider": "Met Office",
@@ -1099,19 +1111,6 @@
             "subtitle": "Accurate weather forecasts for your chosen postcode sector",
             "use_cases": [
               "weather forecasts"
-            ]
-          },
-          {
-            "global_name": "GZ1MOZBX00Q",
-            "title": "Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas",
-            "provider": "Ordnance Survey",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZ1MOZBX00Q",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Built up area extents designed to underpin statistical analysis and contribute to policy enablement",
-            "use_cases": [
-              "geospatial boundaries and geocoding"
             ]
           },
           {
@@ -1139,6 +1138,34 @@
             "use_cases": [
               "geospatial boundaries and geocoding"
             ]
+          },
+          {
+            "global_name": "GZ1MOZMB44P",
+            "title": "Uk Companies Insight Summary",
+            "provider": "DataEco",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ1MOZMB44P",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Industry Summary for UK Companies",
+            "use_cases": [
+              "company registries",
+              "economic indicators"
+            ]
+          },
+          {
+            "global_name": "GZSYZ7UQCDLU",
+            "title": "MBI Purchasing Power Data United Kingdom Postcode Level",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDLU",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh purchasing power data for well-founded decisions in the United Kingdom",
+            "use_cases": [
+              "economic indicators"
+            ],
+            "demoted": "off-theme"
           }
         ]
       }
@@ -1157,33 +1184,9 @@
             "subtitle": "Population census - Infracommunal Reference System (IRIS)",
             "use_cases": [
               "population health and demographics",
-              "air quality and environmental health"
-            ]
-          },
-          {
-            "global_name": "GZT1ZQXT8Y",
-            "title": "French National Identification System of Directory of Businesses and their Establishments",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT8Y",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Certified repository of French businesses and their establishments recognized by the administration.",
-            "use_cases": [
-              "hospitals and health facilities"
-            ]
-          },
-          {
-            "global_name": "GZSYZ94J0",
-            "title": "ANNUAL REGIONAL PRODUCTION OF RENEWABLE ENERGIES IN FRANCE 2008 TO 2022",
-            "provider": "Keyrus",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94J0",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Trace the annual regional renewable energy production in France, considering diverse energy sources since 2008",
-            "use_cases": [
-              "air quality and environmental health"
+              "air quality and environmental health",
+              "disease prevalence and mortality",
+              "deprivation and health inequality"
             ]
           },
           {
@@ -1196,7 +1199,9 @@
             "ready": true,
             "subtitle": "Population census - Infracommunal Reference System (IRIS)",
             "use_cases": [
-              "population health and demographics"
+              "population health and demographics",
+              "disease prevalence and mortality",
+              "deprivation and health inequality"
             ]
           },
           {
@@ -1209,7 +1214,10 @@
             "ready": true,
             "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in France.",
             "use_cases": [
-              "population health and demographics"
+              "population health and demographics",
+              "disease prevalence and mortality",
+              "deprivation and health inequality",
+              "pharmaceutical and clinical research data"
             ]
           },
           {
@@ -1224,24 +1232,10 @@
             "use_cases": [
               "population health and demographics",
               "hospitals and health facilities",
-              "air quality and environmental health"
-            ]
-          }
-        ],
-        "reserve": [
-          {
-            "global_name": "GZSYZ94J4",
-            "title": "BODILY INJURY ROAD TRAFFIC ACCIDENTS IN FRANCE IN 2021",
-            "provider": "Keyrus",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94J4",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Découvrez des données détaillées sur les accidents de la route en France en 2021",
-            "use_cases": [
-              "population health and demographics",
-              "hospitals and health facilities",
-              "air quality and environmental health"
+              "air quality and environmental health",
+              "disease prevalence and mortality",
+              "deprivation and health inequality",
+              "pharmaceutical and clinical research data"
             ]
           },
           {
@@ -1255,8 +1249,87 @@
             "subtitle": "DAMIR (Dépenses d'Assurance maladie Inter Régimes) database",
             "use_cases": [
               "population health and demographics",
-              "hospitals and health facilities"
+              "hospitals and health facilities",
+              "disease prevalence and mortality",
+              "deprivation and health inequality",
+              "pharmaceutical and clinical research data"
             ]
+          },
+          {
+            "global_name": "GZSYZ7UQCDOH",
+            "title": "Basic Sociodemographics-Bundle for Countries Worldwide",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOH",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions.",
+            "use_cases": [
+              "deprivation and health inequality"
+            ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZT1ZQXT8Y",
+            "title": "French National Identification System of Directory of Businesses and their Establishments",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT8Y",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Certified repository of French businesses and their establishments recognized by the administration.",
+            "use_cases": [
+              "hospitals and health facilities"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ94J0",
+            "title": "ANNUAL REGIONAL PRODUCTION OF RENEWABLE ENERGIES IN FRANCE 2008 TO 2022",
+            "provider": "Keyrus",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94J0",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Trace the annual regional renewable energy production in France, considering diverse energy sources since 2008",
+            "use_cases": [
+              "air quality and environmental health",
+              "disease prevalence and mortality"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT1ZQXT9J",
+            "title": "Income, Poverty, and Living Conditions in France-2019 (Iris)",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT9J",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Economic data from INSEE by IRIS (smallest geographic entity)",
+            "use_cases": [
+              "deprivation and health inequality"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ94J4",
+            "title": "BODILY INJURY ROAD TRAFFIC ACCIDENTS IN FRANCE IN 2021",
+            "provider": "Keyrus",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94J4",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Découvrez des données détaillées sur les accidents de la route en France en 2021",
+            "use_cases": [
+              "population health and demographics",
+              "hospitals and health facilities",
+              "air quality and environmental health",
+              "disease prevalence and mortality",
+              "deprivation and health inequality"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZT0Z2BR4AC78",
@@ -1270,8 +1343,12 @@
             "use_cases": [
               "population health and demographics",
               "hospitals and health facilities",
-              "air quality and environmental health"
-            ]
+              "air quality and environmental health",
+              "disease prevalence and mortality",
+              "deprivation and health inequality",
+              "pharmaceutical and clinical research data"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ7UQCDLQ",
@@ -1283,34 +1360,10 @@
             "ready": true,
             "subtitle": "MBI's fresh purchasing power data for well-founded decisions in France.",
             "use_cases": [
-              "population health and demographics"
-            ]
-          },
-          {
-            "global_name": "GZSYZG5AD",
-            "title": "NIQ-GfK Retail Purchasing Power for Product Lines in France",
-            "provider": "NIQ-GFK",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZG5AD",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Local consumer spendings for food and non-food segments for postal and administrative areas in France",
-            "use_cases": [
-              "population health and demographics"
-            ]
-          },
-          {
-            "global_name": "GZT1ZQXT8U",
-            "title": "French National Addresses",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT8U",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Certified repository of French addresses and localities recognized by the administration",
-            "use_cases": [
-              "hospitals and health facilities"
-            ]
+              "population health and demographics",
+              "pharmaceutical and clinical research data"
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -1327,19 +1380,6 @@
             "subtitle": "Tracking inflation trends on a daily basis and ahead official numbers and consensus",
             "use_cases": [
               "macroeconomic and inflation indicators"
-            ]
-          },
-          {
-            "global_name": "GZT1ZQXT8Y",
-            "title": "French National Identification System of Directory of Businesses and their Establishments",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT8Y",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Certified repository of French businesses and their establishments recognized by the administration.",
-            "use_cases": [
-              "company and business registries"
             ]
           },
           {
@@ -1383,21 +1423,6 @@
             ]
           },
           {
-            "global_name": "GZTSZRC7HRC",
-            "title": "CEIC Shipping Data",
-            "provider": "CEIC Data",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTSZRC7HRC",
-            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,AWS_US_EAST_1,AWS_US_EAST_2,AWS_US_WEST_2,AZURE_CENTRALUS,AZURE_EASTUS2,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
-            "ready": true,
-            "subtitle": "Visualize global trade logistics and port activity with daily updates.",
-            "use_cases": [
-              "macroeconomic and inflation indicators"
-            ]
-          }
-        ],
-        "reserve": [
-          {
             "global_name": "GZTSZRC7HRG",
             "title": "CEIC World Macro Economic Data",
             "provider": "CEIC Data",
@@ -1406,19 +1431,6 @@
             "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,AWS_US_EAST_1,AWS_US_EAST_2,AWS_US_WEST_2,AZURE_CENTRALUS,AZURE_EASTUS2,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
             "ready": true,
             "subtitle": "Stay ahead with standardized, forward-looking global economic indicators.",
-            "use_cases": [
-              "macroeconomic and inflation indicators"
-            ]
-          },
-          {
-            "global_name": "GZT1ZQXT97",
-            "title": "Population in France and overseas in 2019",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT97",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
             "use_cases": [
               "macroeconomic and inflation indicators"
             ]
@@ -1437,6 +1449,50 @@
               "company and business registries",
               "consumer spend and card transactions"
             ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZT1ZQXT8Y",
+            "title": "French National Identification System of Directory of Businesses and their Establishments",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT8Y",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Certified repository of French businesses and their establishments recognized by the administration.",
+            "use_cases": [
+              "company and business registries"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZTSZRC7HRC",
+            "title": "CEIC Shipping Data",
+            "provider": "CEIC Data",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTSZRC7HRC",
+            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,AWS_US_EAST_1,AWS_US_EAST_2,AWS_US_WEST_2,AZURE_CENTRALUS,AZURE_EASTUS2,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
+            "ready": true,
+            "subtitle": "Visualize global trade logistics and port activity with daily updates.",
+            "use_cases": [
+              "macroeconomic and inflation indicators"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT1ZQXT97",
+            "title": "Population in France and overseas in 2019",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT97",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
+            "use_cases": [
+              "macroeconomic and inflation indicators"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZG5AD",
@@ -1450,7 +1506,8 @@
             "use_cases": [
               "macroeconomic and inflation indicators",
               "consumer spend and card transactions"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZSYZ94IV",
@@ -1465,7 +1522,8 @@
               "macroeconomic and inflation indicators",
               "company and business registries",
               "consumer spend and card transactions"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ12OIDA",
@@ -1480,7 +1538,8 @@
               "macroeconomic and inflation indicators",
               "company and business registries",
               "consumer spend and card transactions"
-            ]
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -1517,19 +1576,6 @@
             ]
           },
           {
-            "global_name": "GZSYZ94IV",
-            "title": "ANNUAL CONSUMPTION OF ELECTRICITY AND GAS BY DEPARTMENT AND BY SECTOR OF ACTIVITY",
-            "provider": "Keyrus",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94IV",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Explore 2011-2021's energy consumption trends by sector and region in France",
-            "use_cases": [
-              "weather driving retail demand"
-            ]
-          },
-          {
             "global_name": "GZSYZG5AD",
             "title": "NIQ-GfK Retail Purchasing Power for Product Lines in France",
             "provider": "NIQ-GFK",
@@ -1543,20 +1589,6 @@
               "footfall and mobility",
               "weather driving retail demand",
               "product and price benchmarks"
-            ]
-          },
-          {
-            "global_name": "GZT1ZQXT97",
-            "title": "Population in France and overseas in 2019",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT97",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
-            "use_cases": [
-              "household income and geodemographic segmentation",
-              "footfall and mobility"
             ]
           },
           {
@@ -1574,22 +1606,6 @@
               "weather driving retail demand",
               "product and price benchmarks"
             ]
-          }
-        ],
-        "reserve": [
-          {
-            "global_name": "GZT1ZQXT9R",
-            "title": "Population in France and overseas in 2017",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT9R",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
-            "use_cases": [
-              "household income and geodemographic segmentation",
-              "footfall and mobility"
-            ]
           },
           {
             "global_name": "GZT1ZQXT9J",
@@ -1605,6 +1621,65 @@
             ]
           },
           {
+            "global_name": "GZSYZ7UQCDOH",
+            "title": "Basic Sociodemographics-Bundle for Countries Worldwide",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOH",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions.",
+            "use_cases": [
+              "household income and geodemographic segmentation"
+            ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZSYZ94IV",
+            "title": "ANNUAL CONSUMPTION OF ELECTRICITY AND GAS BY DEPARTMENT AND BY SECTOR OF ACTIVITY",
+            "provider": "Keyrus",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94IV",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Explore 2011-2021's energy consumption trends by sector and region in France",
+            "use_cases": [
+              "weather driving retail demand"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT1ZQXT97",
+            "title": "Population in France and overseas in 2019",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT97",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
+            "use_cases": [
+              "household income and geodemographic segmentation",
+              "footfall and mobility"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT1ZQXT9R",
+            "title": "Population in France and overseas in 2017",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT9R",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
+            "use_cases": [
+              "household income and geodemographic segmentation",
+              "footfall and mobility"
+            ],
+            "demoted": "off-theme"
+          },
+          {
             "global_name": "GZT0Z2BR4AC78",
             "title": "Franciemes IRIS",
             "provider": "Precisely France",
@@ -1618,20 +1693,8 @@
               "footfall and mobility",
               "weather driving retail demand",
               "product and price benchmarks"
-            ]
-          },
-          {
-            "global_name": "GZSYZ7UQCDOH",
-            "title": "Basic Sociodemographics-Bundle for Countries Worldwide",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOH",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions.",
-            "use_cases": [
-              "household income and geodemographic segmentation"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ7UQCDOT",
@@ -1644,7 +1707,8 @@
             "subtitle": "MBI's fresh purchasing power data for well-founded decisions.",
             "use_cases": [
               "household income and geodemographic segmentation"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZSYZ94J4",
@@ -1657,7 +1721,8 @@
             "subtitle": "Découvrez des données détaillées sur les accidents de la route en France en 2021",
             "use_cases": [
               "footfall and mobility"
-            ]
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -1758,7 +1823,8 @@
             "subtitle": "MBI's fresh area map data for well-founded decisions.",
             "use_cases": [
               "census and administrative boundaries"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZT1ZQXT8U",
@@ -1773,7 +1839,8 @@
               "census and administrative boundaries",
               "addresses and property data",
               "transport networks and road data"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZT1ZQXT93",
@@ -1789,7 +1856,8 @@
               "addresses and property data",
               "transport networks and road data",
               "public tenders and government spending"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZSYZ12OIDA",
@@ -1805,7 +1873,8 @@
               "addresses and property data",
               "transport networks and road data",
               "public tenders and government spending"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZSYZ7UQCDLQ",
@@ -1819,7 +1888,8 @@
             "use_cases": [
               "census and administrative boundaries",
               "public tenders and government spending"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZSYZG5AD",
@@ -1833,7 +1903,8 @@
             "use_cases": [
               "census and administrative boundaries",
               "public tenders and government spending"
-            ]
+            ],
+            "demoted": "beyond the six"
           }
         ]
       },
@@ -1850,8 +1921,24 @@
             "subtitle": "Visualize global trade logistics and port activity with daily updates.",
             "use_cases": [
               "supply chain and logistics",
-              "commodity and materials prices",
-              "shipping and port activity"
+              "shipping, ports and freight",
+              "trade, imports and exports"
+            ]
+          },
+          {
+            "global_name": "GZSYZ94J0",
+            "title": "ANNUAL REGIONAL PRODUCTION OF RENEWABLE ENERGIES IN FRANCE 2008 TO 2022",
+            "provider": "Keyrus",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94J0",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Trace the annual regional renewable energy production in France, considering diverse energy sources since 2008",
+            "use_cases": [
+              "commodity and raw materials prices",
+              "industrial production and output statistics",
+              "energy and input costs for industry",
+              "trade, imports and exports"
             ]
           },
           {
@@ -1864,22 +1951,23 @@
             "ready": true,
             "subtitle": "Connect global commodity supply, demand, and pricing in one powerful dataset.",
             "use_cases": [
-              "commodity and materials prices"
+              "commodity and raw materials prices"
             ]
           },
           {
-            "global_name": "GZSYZ94J4",
-            "title": "BODILY INJURY ROAD TRAFFIC ACCIDENTS IN FRANCE IN 2021",
-            "provider": "Keyrus",
+            "global_name": "GZT1ZQXT8U",
+            "title": "French National Addresses",
+            "provider": "Atos",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94J4",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT8U",
             "regions": "ALL",
             "ready": true,
-            "subtitle": "Découvrez des données détaillées sur les accidents de la route en France en 2021",
+            "subtitle": "Certified repository of French addresses and localities recognized by the administration",
             "use_cases": [
-              "shipping and port activity",
-              "company and supplier data"
-            ]
+              "shipping, ports and freight",
+              "company and supplier registries"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZT0Z2BR4AC78",
@@ -1892,9 +1980,12 @@
             "subtitle": "IRIS, the smallest French statistical unit, is the polygon boundary to use for many local market data studies",
             "use_cases": [
               "supply chain and logistics",
-              "shipping and port activity",
-              "company and supplier data"
-            ]
+              "shipping, ports and freight",
+              "company and supplier registries",
+              "industrial production and output statistics",
+              "trade, imports and exports"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZT1ZQXT93",
@@ -1907,9 +1998,13 @@
             "subtitle": "Certified repository of French health and social facilities recognized by the administration",
             "use_cases": [
               "supply chain and logistics",
-              "shipping and port activity"
-            ]
-          },
+              "shipping, ports and freight",
+              "company and supplier registries"
+            ],
+            "demoted": "off-theme"
+          }
+        ],
+        "reserve": [
           {
             "global_name": "GZSYZG5AD",
             "title": "NIQ-GfK Retail Purchasing Power for Product Lines in France",
@@ -1921,11 +2016,13 @@
             "subtitle": "Local consumer spendings for food and non-food segments for postal and administrative areas in France",
             "use_cases": [
               "supply chain and logistics",
-              "commodity and materials prices"
-            ]
-          }
-        ],
-        "reserve": [
+              "commodity and raw materials prices",
+              "industrial production and output statistics",
+              "energy and input costs for industry",
+              "trade, imports and exports"
+            ],
+            "demoted": "off-theme"
+          },
           {
             "global_name": "GZSYZ7UQCDLQ",
             "title": "MBI Purchasing Power Data for France Postcode Level",
@@ -1937,10 +2034,12 @@
             "subtitle": "MBI's fresh purchasing power data for well-founded decisions in France.",
             "use_cases": [
               "supply chain and logistics",
-              "commodity and materials prices",
-              "shipping and port activity",
-              "company and supplier data"
-            ]
+              "commodity and raw materials prices",
+              "industrial production and output statistics",
+              "energy and input costs for industry",
+              "trade, imports and exports"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZT1ZQXT97",
@@ -1952,8 +2051,11 @@
             "ready": true,
             "subtitle": "Population census - Infracommunal Reference System (IRIS)",
             "use_cases": [
-              "supply chain and logistics"
-            ]
+              "supply chain and logistics",
+              "industrial production and output statistics",
+              "trade, imports and exports"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ12OIDA",
@@ -1966,10 +2068,10 @@
             "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in France.",
             "use_cases": [
               "supply chain and logistics",
-              "commodity and materials prices",
-              "shipping and port activity",
-              "company and supplier data"
-            ]
+              "company and supplier registries",
+              "industrial production and output statistics"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ94IV",
@@ -1981,23 +2083,28 @@
             "ready": true,
             "subtitle": "Explore 2011-2021's energy consumption trends by sector and region in France",
             "use_cases": [
-              "commodity and materials prices",
-              "shipping and port activity"
-            ]
+              "commodity and raw materials prices",
+              "industrial production and output statistics",
+              "energy and input costs for industry",
+              "trade, imports and exports"
+            ],
+            "demoted": "off-theme"
           },
           {
-            "global_name": "GZT1ZQXT8Y",
-            "title": "French National Identification System of Directory of Businesses and their Establishments",
-            "provider": "Atos",
+            "global_name": "GZSYZ94J4",
+            "title": "BODILY INJURY ROAD TRAFFIC ACCIDENTS IN FRANCE IN 2021",
+            "provider": "Keyrus",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT8Y",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94J4",
             "regions": "ALL",
             "ready": true,
-            "subtitle": "Certified repository of French businesses and their establishments recognized by the administration.",
+            "subtitle": "Découvrez des données détaillées sur les accidents de la route en France en 2021",
             "use_cases": [
-              "shipping and port activity",
-              "company and supplier data"
-            ]
+              "shipping, ports and freight",
+              "company and supplier registries",
+              "trade, imports and exports"
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -2015,34 +2122,38 @@
             "use_cases": [
               "renewable generation and grid data",
               "weather and severe weather warnings",
-              "gas and oil market data",
-              "emissions and net-zero indicators"
+              "gas and oil market prices",
+              "emissions and net-zero indicators",
+              "electricity consumption and demand",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
             ]
           },
           {
-            "global_name": "GZSTZ3TGTNLPT",
-            "title": "Intelligent Event Data: Hospitality, Travel & Tourism Data - Eiffel Tower, Paris Sample",
-            "provider": "PredictHQ",
+            "global_name": "GZSYZ7UQCDOT",
+            "title": "Purchasing Power for Countries Worldwide",
+            "provider": "Michael Bauer International GmbH",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSTZ3TGTNLPT",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOT",
             "regions": "ALL",
             "ready": true,
-            "subtitle": "Free sample event datased for hospitality, travel, & tourism around Eiffel Tower January 2022 - July 2023",
+            "subtitle": "MBI's fresh purchasing power data for well-founded decisions.",
             "use_cases": [
-              "weather and severe weather warnings"
+              "electricity consumption and demand",
+              "EV charging and utility customer data"
             ]
           },
           {
-            "global_name": "GZT1ZQXT97",
-            "title": "Population in France and overseas in 2019",
-            "provider": "Atos",
+            "global_name": "GZSYZGJWCN",
+            "title": "POIs - EV charging stations in Paris",
+            "provider": "Mytraffic",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT97",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZGJWCN",
             "regions": "ALL",
             "ready": true,
-            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
+            "subtitle": "POIs - EV charging stations in Paris",
             "use_cases": [
-              "emissions and net-zero indicators"
+              "EV charging and utility customer data"
             ]
           },
           {
@@ -2056,55 +2167,11 @@
             "subtitle": "Explore 2011-2021's energy consumption trends by sector and region in France",
             "use_cases": [
               "renewable generation and grid data",
-              "gas and oil market data",
-              "emissions and net-zero indicators"
-            ]
-          },
-          {
-            "global_name": "GZT0Z2BR4AC78",
-            "title": "Franciemes IRIS",
-            "provider": "Precisely France",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z2BR4AC78",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "IRIS, the smallest French statistical unit, is the polygon boundary to use for many local market data studies",
-            "use_cases": [
-              "renewable generation and grid data",
-              "weather and severe weather warnings",
-              "gas and oil market data",
-              "emissions and net-zero indicators"
-            ]
-          },
-          {
-            "global_name": "GZT1ZQXT93",
-            "title": "French National Health and Social Facilities",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT93",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Certified repository of French health and social facilities recognized by the administration",
-            "use_cases": [
-              "renewable generation and grid data",
-              "weather and severe weather warnings"
-            ]
-          }
-        ],
-        "reserve": [
-          {
-            "global_name": "GZSYZ12OIDA",
-            "title": "MBI Sociodemographic Data for France Postcode Level",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12OIDA",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in France.",
-            "use_cases": [
-              "renewable generation and grid data",
-              "gas and oil market data",
-              "emissions and net-zero indicators"
+              "gas and oil market prices",
+              "emissions and net-zero indicators",
+              "electricity consumption and demand",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
             ]
           },
           {
@@ -2132,9 +2199,97 @@
             "subtitle": "MBI's fresh purchasing power data for well-founded decisions in France.",
             "use_cases": [
               "renewable generation and grid data",
-              "gas and oil market data",
-              "emissions and net-zero indicators"
+              "emissions and net-zero indicators",
+              "electricity consumption and demand",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
             ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZSTZ3TGTNLPT",
+            "title": "Intelligent Event Data: Hospitality, Travel & Tourism Data - Eiffel Tower, Paris Sample",
+            "provider": "PredictHQ",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSTZ3TGTNLPT",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Free sample event datased for hospitality, travel, & tourism around Eiffel Tower January 2022 - July 2023",
+            "use_cases": [
+              "weather and severe weather warnings"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT1ZQXT97",
+            "title": "Population in France and overseas in 2019",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT97",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
+            "use_cases": [
+              "emissions and net-zero indicators",
+              "electricity consumption and demand",
+              "solar irradiance and wind resource"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT0Z2BR4AC78",
+            "title": "Franciemes IRIS",
+            "provider": "Precisely France",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z2BR4AC78",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "IRIS, the smallest French statistical unit, is the polygon boundary to use for many local market data studies",
+            "use_cases": [
+              "renewable generation and grid data",
+              "weather and severe weather warnings",
+              "emissions and net-zero indicators",
+              "electricity consumption and demand",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT1ZQXT93",
+            "title": "French National Health and Social Facilities",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT93",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Certified repository of French health and social facilities recognized by the administration",
+            "use_cases": [
+              "renewable generation and grid data",
+              "weather and severe weather warnings",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ12OIDA",
+            "title": "MBI Sociodemographic Data for France Postcode Level",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12OIDA",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in France.",
+            "use_cases": [
+              "renewable generation and grid data",
+              "emissions and net-zero indicators",
+              "electricity consumption and demand",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ94J4",
@@ -2146,34 +2301,11 @@
             "ready": true,
             "subtitle": "Découvrez des données détaillées sur les accidents de la route en France en 2021",
             "use_cases": [
-              "weather and severe weather warnings"
-            ]
-          },
-          {
-            "global_name": "GZTDZJKVCU",
-            "title": "National Severe Weather Warning Service",
-            "provider": "Met Office",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCU",
-            "regions": "AWS_US_GOV_EAST_1.AWS_US_GOV_EAST_1,AWS_US_GOV_EAST_1_FHPLUS.AWS_US_GOV_EAST_1_FHPLUS,AWS_US_GOV_WEST_1_DOD.AWS_US_GOV_WEST_1_DOD,AWS_US_GOV_WEST_1_FHPLUS.AWS_US_GOV_WEST_1_FHPLUS,AWS_US_GOV_WEST_2.AWS_US_GOV_WEST_2,AZURE_USGOVVIRGINIA.AZURE_USGOVVIRGINIA,AZURE_USGOVVIRGINIA_FHPLUS.AZURE_USGOVVIRGINIA_FHPLUS,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_5,PUBLIC.AWS_AP_SOUTHEAST_7,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_ME_CENTRAL_1,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_AUSTRALIA_SOUTHEAST2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
-            "ready": true,
-            "subtitle": "The Met Office is responsible for issuing weather warnings, which warn of impacts caused by severe weather.",
-            "use_cases": [
-              "weather and severe weather warnings"
-            ]
-          },
-          {
-            "global_name": "GZSYZG5AD",
-            "title": "NIQ-GfK Retail Purchasing Power for Product Lines in France",
-            "provider": "NIQ-GFK",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZG5AD",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Local consumer spendings for food and non-food segments for postal and administrative areas in France",
-            "use_cases": [
-              "emissions and net-zero indicators"
-            ]
+              "weather and severe weather warnings",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -2192,7 +2324,9 @@
               "audience segmentation and demographics",
               "broadband and telecoms coverage",
               "social media and sentiment",
-              "advertising and viewership"
+              "advertising and viewership",
+              "mobile network performance",
+              "events, venues and attendance"
             ]
           },
           {
@@ -2218,22 +2352,8 @@
             "ready": true,
             "subtitle": "Free sample event datased for hospitality, travel, & tourism around Eiffel Tower January 2022 - July 2023",
             "use_cases": [
-              "social media and sentiment"
-            ]
-          },
-          {
-            "global_name": "GZT1ZQXT97",
-            "title": "Population in France and overseas in 2019",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT97",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
-            "use_cases": [
-              "audience segmentation and demographics",
-              "broadband and telecoms coverage",
-              "social media and sentiment"
+              "social media and sentiment",
+              "events, venues and attendance"
             ]
           },
           {
@@ -2248,66 +2368,8 @@
             "use_cases": [
               "audience segmentation and demographics",
               "social media and sentiment",
-              "advertising and viewership"
-            ]
-          },
-          {
-            "global_name": "GZT1ZQXT9R",
-            "title": "Population in France and overseas in 2017",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT9R",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
-            "use_cases": [
-              "audience segmentation and demographics"
-            ]
-          }
-        ],
-        "reserve": [
-          {
-            "global_name": "GZT0Z2BR4AC78",
-            "title": "Franciemes IRIS",
-            "provider": "Precisely France",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z2BR4AC78",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "IRIS, the smallest French statistical unit, is the polygon boundary to use for many local market data studies",
-            "use_cases": [
-              "audience segmentation and demographics",
-              "broadband and telecoms coverage",
-              "social media and sentiment",
-              "advertising and viewership"
-            ]
-          },
-          {
-            "global_name": "GZSYZ7UQCDLQ",
-            "title": "MBI Purchasing Power Data for France Postcode Level",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDLQ",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh purchasing power data for well-founded decisions in France.",
-            "use_cases": [
-              "audience segmentation and demographics",
-              "social media and sentiment",
-              "advertising and viewership"
-            ]
-          },
-          {
-            "global_name": "GZTSZPM12Y",
-            "title": "Consumer Credit & Debit Card Transaction Data | European Spend",
-            "provider": "Consumer Edge",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTSZPM12Y",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "CE Vision EUR Aggregated Merchant-Attributable Alternative Dataset",
-            "use_cases": [
-              "audience segmentation and demographics"
+              "advertising and viewership",
+              "mobile network performance"
             ]
           },
           {
@@ -2321,35 +2383,122 @@
             "subtitle": "Certified repository of French health and social facilities recognized by the administration",
             "use_cases": [
               "broadband and telecoms coverage",
-              "social media and sentiment"
+              "social media and sentiment",
+              "mobile network performance",
+              "events, venues and attendance"
             ]
           },
           {
-            "global_name": "GZSYZ94IV",
-            "title": "ANNUAL CONSUMPTION OF ELECTRICITY AND GAS BY DEPARTMENT AND BY SECTOR OF ACTIVITY",
+            "global_name": "GZSYZ94J0",
+            "title": "ANNUAL REGIONAL PRODUCTION OF RENEWABLE ENERGIES IN FRANCE 2008 TO 2022",
             "provider": "Keyrus",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94IV",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ94J0",
             "regions": "ALL",
             "ready": true,
-            "subtitle": "Explore 2011-2021's energy consumption trends by sector and region in France",
+            "subtitle": "Trace the annual regional renewable energy production in France, considering diverse energy sources since 2008",
             "use_cases": [
-              "broadband and telecoms coverage",
-              "advertising and viewership"
-            ]
+              "mobile network performance"
+            ],
+            "demoted": "off-theme"
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZSYZGJWCJ",
+            "title": "Shopping center footfall - London and Paris",
+            "provider": "Mytraffic",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZGJWCJ",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Top 20 shopping center footfall - London and Paris",
+            "use_cases": [
+              "events, venues and attendance"
+            ],
+            "demoted": "off-theme"
           },
           {
-            "global_name": "GZT1ZQXT8U",
-            "title": "French National Addresses",
+            "global_name": "GZT1ZQXT97",
+            "title": "Population in France and overseas in 2019",
             "provider": "Atos",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT8U",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT97",
             "regions": "ALL",
             "ready": true,
-            "subtitle": "Certified repository of French addresses and localities recognized by the administration",
+            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
             "use_cases": [
-              "broadband and telecoms coverage"
-            ]
+              "audience segmentation and demographics",
+              "broadband and telecoms coverage",
+              "social media and sentiment",
+              "mobile network performance"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT1ZQXT9R",
+            "title": "Population in France and overseas in 2017",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT9R",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Population census - Infracommunal Reference System (IRIS)",
+            "use_cases": [
+              "audience segmentation and demographics"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT0Z2BR4AC78",
+            "title": "Franciemes IRIS",
+            "provider": "Precisely France",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z2BR4AC78",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "IRIS, the smallest French statistical unit, is the polygon boundary to use for many local market data studies",
+            "use_cases": [
+              "audience segmentation and demographics",
+              "broadband and telecoms coverage",
+              "social media and sentiment",
+              "advertising and viewership",
+              "mobile network performance",
+              "events, venues and attendance"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ7UQCDLQ",
+            "title": "MBI Purchasing Power Data for France Postcode Level",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDLQ",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh purchasing power data for well-founded decisions in France.",
+            "use_cases": [
+              "audience segmentation and demographics",
+              "social media and sentiment",
+              "advertising and viewership",
+              "mobile network performance",
+              "events, venues and attendance"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZTSZPM12Y",
+            "title": "Consumer Credit & Debit Card Transaction Data | European Spend",
+            "provider": "Consumer Edge",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTSZPM12Y",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "CE Vision EUR Aggregated Merchant-Attributable Alternative Dataset",
+            "use_cases": [
+              "audience segmentation and demographics"
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -2369,19 +2518,6 @@
               "company registries",
               "economic indicators",
               "weather forecasts"
-            ]
-          },
-          {
-            "global_name": "GZT1ZQXT8Y",
-            "title": "French National Identification System of Directory of Businesses and their Establishments",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT8Y",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Certified repository of French businesses and their establishments recognized by the administration.",
-            "use_cases": [
-              "company registries"
             ]
           },
           {
@@ -2435,22 +2571,6 @@
             "use_cases": [
               "geospatial boundaries and geocoding"
             ]
-          }
-        ],
-        "reserve": [
-          {
-            "global_name": "GZT1ZQXT93",
-            "title": "French National Health and Social Facilities",
-            "provider": "Atos",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT93",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Certified repository of French health and social facilities recognized by the administration",
-            "use_cases": [
-              "geospatial boundaries and geocoding",
-              "company registries"
-            ]
           },
           {
             "global_name": "GZT1ZQXT97",
@@ -2466,6 +2586,37 @@
               "company registries",
               "economic indicators"
             ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZT1ZQXT8Y",
+            "title": "French National Identification System of Directory of Businesses and their Establishments",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT8Y",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Certified repository of French businesses and their establishments recognized by the administration.",
+            "use_cases": [
+              "company registries"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT1ZQXT93",
+            "title": "French National Health and Social Facilities",
+            "provider": "Atos",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZQXT93",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Certified repository of French health and social facilities recognized by the administration",
+            "use_cases": [
+              "geospatial boundaries and geocoding",
+              "company registries"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ7UQCDLQ",
@@ -2479,7 +2630,8 @@
             "use_cases": [
               "geospatial boundaries and geocoding",
               "economic indicators"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ94IV",
@@ -2493,7 +2645,8 @@
             "use_cases": [
               "company registries",
               "economic indicators"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ94J4",
@@ -2507,7 +2660,8 @@
             "use_cases": [
               "company registries",
               "weather forecasts"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZG5AD",
@@ -2520,7 +2674,8 @@
             "subtitle": "Local consumer spendings for food and non-food segments for postal and administrative areas in France",
             "use_cases": [
               "economic indicators"
-            ]
+            ],
+            "demoted": "off-theme"
           }
         ]
       }
@@ -2540,33 +2695,22 @@
             "use_cases": [
               "population health and demographics",
               "hospitals and health facilities",
-              "air quality and environmental health"
+              "air quality and environmental health",
+              "disease prevalence and mortality",
+              "deprivation and health inequality"
             ]
           },
           {
-            "global_name": "GZSYZ43W9K16",
-            "title": "Germany H3 Travel Matrix",
-            "provider": "Dekart XYZ",
+            "global_name": "GZSNZ7F5UH",
+            "title": "COVID-19 Epidemiological Data",
+            "provider": "Starschema",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ43W9K16",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSNZ7F5UH",
             "regions": "ALL",
             "ready": true,
-            "subtitle": "Nationwide Germany origin–destination travel-time and distance matrix, pre-computed on the H3 grid.",
+            "subtitle": "Analytics-ready data on COVID-19: cases, vaccinations, healthcare resource availiability and more.",
             "use_cases": [
-              "hospitals and health facilities"
-            ]
-          },
-          {
-            "global_name": "GZSVZA7RAK",
-            "title": "Historical Weather Data Sample",
-            "provider": "Wetter.com",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSVZA7RAK",
-            "regions": "PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST4",
-            "ready": true,
-            "subtitle": "Hourly historical and climatology weather data on ZIP level",
-            "use_cases": [
-              "air quality and environmental health"
+              "disease prevalence and mortality"
             ]
           },
           {
@@ -2581,7 +2725,10 @@
             "use_cases": [
               "population health and demographics",
               "hospitals and health facilities",
-              "air quality and environmental health"
+              "air quality and environmental health",
+              "disease prevalence and mortality",
+              "deprivation and health inequality",
+              "pharmaceutical and clinical research data"
             ]
           },
           {
@@ -2595,24 +2742,11 @@
             "subtitle": "MBI's fresh sociodemographic data for well-founded decisions.",
             "use_cases": [
               "population health and demographics",
-              "air quality and environmental health"
+              "air quality and environmental health",
+              "disease prevalence and mortality",
+              "deprivation and health inequality"
             ]
           },
-          {
-            "global_name": "GZSYZ5S9QG",
-            "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
-            "provider": "Acxiom EMEA",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QG",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "DE Geographic Statistical Sample Data for Market Analysis on KGS14PLZ Level",
-            "use_cases": [
-              "population health and demographics"
-            ]
-          }
-        ],
-        "reserve": [
           {
             "global_name": "GZTYZAPS3FT",
             "title": "Demographics Data Bundle",
@@ -2638,6 +2772,66 @@
             "use_cases": [
               "population health and demographics"
             ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZSYZ43W9K16",
+            "title": "Germany H3 Travel Matrix",
+            "provider": "Dekart XYZ",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ43W9K16",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Nationwide Germany origin–destination travel-time and distance matrix, pre-computed on the H3 grid.",
+            "use_cases": [
+              "hospitals and health facilities",
+              "disease prevalence and mortality",
+              "deprivation and health inequality"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSVZA7RAK",
+            "title": "Historical Weather Data Sample",
+            "provider": "Wetter.com",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZA7RAK",
+            "regions": "PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST4",
+            "ready": true,
+            "subtitle": "Hourly historical and climatology weather data on ZIP level",
+            "use_cases": [
+              "air quality and environmental health"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ7UQCDOT",
+            "title": "Purchasing Power for Countries Worldwide",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOT",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh purchasing power data for well-founded decisions.",
+            "use_cases": [
+              "deprivation and health inequality"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ5S9QG",
+            "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
+            "provider": "Acxiom EMEA",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QG",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "DE Geographic Statistical Sample Data for Market Analysis on KGS14PLZ Level",
+            "use_cases": [
+              "population health and demographics"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ4OONQUW",
@@ -2649,8 +2843,10 @@
             "ready": true,
             "subtitle": "LEGACY (Archives & Longitudinal Series)",
             "use_cases": [
-              "population health and demographics"
-            ]
+              "population health and demographics",
+              "disease prevalence and mortality"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ4OONS95",
@@ -2663,33 +2859,8 @@
             "subtitle": "MODERN_83 (Population, Health & Social Data)",
             "use_cases": [
               "population health and demographics"
-            ]
-          },
-          {
-            "global_name": "GZSYZ12SH0Y",
-            "title": "Fiber Internet Coverage Dataset",
-            "provider": "GroupBWT",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12SH0Y",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Address-level internet availability, speed, and provider data for homes in Hamburg, Germany.",
-            "use_cases": [
-              "hospitals and health facilities"
-            ]
-          },
-          {
-            "global_name": "GZSTZIDI09G",
-            "title": "Intelligent Event Data: Attended Events, Munich - Sample",
-            "provider": "PredictHQ",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSTZIDI09G",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Free sample dataset of attended events in Munich, Germany from July 2022 - July 2023: 1 year historical",
-            "use_cases": [
-              "hospitals and health facilities"
-            ]
+            ],
+            "demoted": "beyond the six"
           }
         ]
       },
@@ -2748,21 +2919,6 @@
             ]
           },
           {
-            "global_name": "GZSYZ12OI8L",
-            "title": "MBI Sociodemographic Data for Germany",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12OI8L",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in Germany.",
-            "use_cases": [
-              "macroeconomic and inflation indicators",
-              "company and business registries",
-              "consumer spend and card transactions"
-            ]
-          },
-          {
             "global_name": "GZTSZRC7HRG",
             "title": "CEIC World Macro Economic Data",
             "provider": "CEIC Data",
@@ -2771,21 +2927,6 @@
             "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,AWS_US_EAST_1,AWS_US_EAST_2,AWS_US_WEST_2,AZURE_CENTRALUS,AZURE_EASTUS2,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
             "ready": true,
             "subtitle": "Stay ahead with standardized, forward-looking global economic indicators.",
-            "use_cases": [
-              "macroeconomic and inflation indicators"
-            ]
-          }
-        ],
-        "reserve": [
-          {
-            "global_name": "GZTSZRC7HRC",
-            "title": "CEIC Shipping Data",
-            "provider": "CEIC Data",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTSZRC7HRC",
-            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,AWS_US_EAST_1,AWS_US_EAST_2,AWS_US_WEST_2,AZURE_CENTRALUS,AZURE_EASTUS2,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
-            "ready": true,
-            "subtitle": "Visualize global trade logistics and port activity with daily updates.",
             "use_cases": [
               "macroeconomic and inflation indicators"
             ]
@@ -2803,6 +2944,38 @@
               "macroeconomic and inflation indicators",
               "consumer spend and card transactions"
             ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZSYZ12OI8L",
+            "title": "MBI Sociodemographic Data for Germany",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12OI8L",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in Germany.",
+            "use_cases": [
+              "macroeconomic and inflation indicators",
+              "company and business registries",
+              "consumer spend and card transactions"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZTSZRC7HRC",
+            "title": "CEIC Shipping Data",
+            "provider": "CEIC Data",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTSZRC7HRC",
+            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,AWS_US_EAST_1,AWS_US_EAST_2,AWS_US_WEST_2,AZURE_CENTRALUS,AZURE_EASTUS2,PUBLIC.AWS_AF_SOUTH_1,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
+            "ready": true,
+            "subtitle": "Visualize global trade logistics and port activity with daily updates.",
+            "use_cases": [
+              "macroeconomic and inflation indicators"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZG5AL",
@@ -2817,7 +2990,8 @@
               "macroeconomic and inflation indicators",
               "company and business registries",
               "consumer spend and card transactions"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZTSZ36AC8J",
@@ -2830,7 +3004,8 @@
             "subtitle": "Dataset covering all EU Taxonomy metrics reported by non-financial undertakings subject to the NFDR.",
             "use_cases": [
               "ESG and sustainability risk"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZTDZ1ELJB",
@@ -2843,7 +3018,8 @@
             "subtitle": "Disclosures ESG and Emissions Data Feed grants access to a >450 granular sustainability metrics.",
             "use_cases": [
               "ESG and sustainability risk"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZ1MOZ8VQG9",
@@ -2856,7 +3032,8 @@
             "subtitle": "Leading provider of European consumer spend data sourced directly from major European banks & card providers",
             "use_cases": [
               "consumer spend and card transactions"
-            ]
+            ],
+            "demoted": "beyond the six"
           }
         ]
       },
@@ -2919,38 +3096,6 @@
             ]
           },
           {
-            "global_name": "GZSYZ5S9QG",
-            "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
-            "provider": "Acxiom EMEA",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QG",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "DE Geographic Statistical Sample Data for Market Analysis on KGS14PLZ Level",
-            "use_cases": [
-              "household income and geodemographic segmentation",
-              "footfall and mobility"
-            ]
-          },
-          {
-            "global_name": "GZSYZG5AL",
-            "title": "GfK Population by Age Group & Gender Germany",
-            "provider": "NIQ-GFK",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZG5AL",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Population by age group and gender for local postal, administrative or microgeographic areas in Germany",
-            "use_cases": [
-              "household income and geodemographic segmentation",
-              "footfall and mobility",
-              "weather driving retail demand",
-              "product and price benchmarks"
-            ]
-          }
-        ],
-        "reserve": [
-          {
             "global_name": "GZSYZ7UQCDOH",
             "title": "Basic Sociodemographics-Bundle for Countries Worldwide",
             "provider": "Michael Bauer International GmbH",
@@ -2978,6 +3123,40 @@
               "footfall and mobility",
               "weather driving retail demand"
             ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZSYZ5S9QG",
+            "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
+            "provider": "Acxiom EMEA",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QG",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "DE Geographic Statistical Sample Data for Market Analysis on KGS14PLZ Level",
+            "use_cases": [
+              "household income and geodemographic segmentation",
+              "footfall and mobility"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZG5AL",
+            "title": "GfK Population by Age Group & Gender Germany",
+            "provider": "NIQ-GFK",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZG5AL",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Population by age group and gender for local postal, administrative or microgeographic areas in Germany",
+            "use_cases": [
+              "household income and geodemographic segmentation",
+              "footfall and mobility",
+              "weather driving retail demand",
+              "product and price benchmarks"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZTYZAPS3FT",
@@ -2990,7 +3169,8 @@
             "subtitle": "Statistical info about a population's characteristics like age, gender, income, ethnicity, and more.",
             "use_cases": [
               "household income and geodemographic segmentation"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZT1ZJ0SBG",
@@ -3003,7 +3183,8 @@
             "subtitle": "Our robust 220 million record consumer dataset is the source of our ZIP level data.",
             "use_cases": [
               "household income and geodemographic segmentation"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZT0ZIFQPAI",
@@ -3016,7 +3197,8 @@
             "subtitle": "Anonymous, aggregated, daily mobility data for every 100m grid tile in the US/UK/Germany",
             "use_cases": [
               "footfall and mobility"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZSYZ43W9K16",
@@ -3030,7 +3212,8 @@
             "use_cases": [
               "footfall and mobility",
               "weather driving retail demand"
-            ]
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -3106,6 +3289,21 @@
             ]
           },
           {
+            "global_name": "GZT0Z2BR4AC92",
+            "title": "World Boundaries Premium",
+            "provider": "Precisely",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z2BR4AC92",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Comprehensive global administrative geographies & neighborhood, suburb, land use, and postal geographies",
+            "use_cases": [
+              "census and administrative boundaries"
+            ]
+          }
+        ],
+        "reserve": [
+          {
             "global_name": "GZSYZ12OI8L",
             "title": "MBI Sociodemographic Data for Germany",
             "provider": "Michael Bauer International GmbH",
@@ -3119,10 +3317,9 @@
               "addresses and property data",
               "transport networks and road data",
               "public tenders and government spending"
-            ]
-          }
-        ],
-        "reserve": [
+            ],
+            "demoted": "off-theme"
+          },
           {
             "global_name": "GZSYZ7UQCDOH",
             "title": "Basic Sociodemographics-Bundle for Countries Worldwide",
@@ -3136,7 +3333,8 @@
               "census and administrative boundaries",
               "transport networks and road data",
               "public tenders and government spending"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ7UQCDOT",
@@ -3151,7 +3349,8 @@
               "census and administrative boundaries",
               "transport networks and road data",
               "public tenders and government spending"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ5S9QG",
@@ -3165,20 +3364,8 @@
             "use_cases": [
               "census and administrative boundaries",
               "addresses and property data"
-            ]
-          },
-          {
-            "global_name": "GZT0Z2BR4AC92",
-            "title": "World Boundaries Premium",
-            "provider": "Precisely",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z2BR4AC92",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Comprehensive global administrative geographies & neighborhood, suburb, land use, and postal geographies",
-            "use_cases": [
-              "census and administrative boundaries"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ43W9K16",
@@ -3192,7 +3379,8 @@
             "use_cases": [
               "census and administrative boundaries",
               "transport networks and road data"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZT0ZIFQPAI",
@@ -3207,7 +3395,8 @@
               "census and administrative boundaries",
               "addresses and property data",
               "transport networks and road data"
-            ]
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -3224,8 +3413,8 @@
             "subtitle": "Visualize global trade logistics and port activity with daily updates.",
             "use_cases": [
               "supply chain and logistics",
-              "shipping and port activity",
-              "company and supplier data"
+              "shipping, ports and freight",
+              "trade, imports and exports"
             ]
           },
           {
@@ -3238,105 +3427,7 @@
             "ready": true,
             "subtitle": "Connect global commodity supply, demand, and pricing in one powerful dataset.",
             "use_cases": [
-              "commodity and materials prices"
-            ]
-          },
-          {
-            "global_name": "GZT0ZIFQPAI",
-            "title": "Movement Daily Activity Index 2020 (Sample)",
-            "provider": "Mapbox",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT0ZIFQPAI",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Anonymous, aggregated, daily mobility data for every 100m grid tile in the US/UK/Germany",
-            "use_cases": [
-              "shipping and port activity"
-            ]
-          },
-          {
-            "global_name": "GZSYZ7UQCDOT",
-            "title": "Purchasing Power for Countries Worldwide",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOT",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh purchasing power data for well-founded decisions.",
-            "use_cases": [
-              "company and supplier data"
-            ]
-          },
-          {
-            "global_name": "GZSYZ43W9K16",
-            "title": "Germany H3 Travel Matrix",
-            "provider": "Dekart XYZ",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ43W9K16",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Nationwide Germany origin–destination travel-time and distance matrix, pre-computed on the H3 grid.",
-            "use_cases": [
-              "supply chain and logistics",
-              "shipping and port activity"
-            ]
-          },
-          {
-            "global_name": "GZSYZ12OI8L",
-            "title": "MBI Sociodemographic Data for Germany",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12OI8L",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in Germany.",
-            "use_cases": [
-              "supply chain and logistics",
-              "commodity and materials prices",
-              "shipping and port activity",
-              "company and supplier data"
-            ]
-          }
-        ],
-        "reserve": [
-          {
-            "global_name": "GZSYZG5AL",
-            "title": "GfK Population by Age Group & Gender Germany",
-            "provider": "NIQ-GFK",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZG5AL",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Population by age group and gender for local postal, administrative or microgeographic areas in Germany",
-            "use_cases": [
-              "supply chain and logistics",
-              "company and supplier data"
-            ]
-          },
-          {
-            "global_name": "GZSYZ12SH0Y",
-            "title": "Fiber Internet Coverage Dataset",
-            "provider": "GroupBWT",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12SH0Y",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Address-level internet availability, speed, and provider data for homes in Hamburg, Germany.",
-            "use_cases": [
-              "supply chain and logistics"
-            ]
-          },
-          {
-            "global_name": "GZSTZIDI09G",
-            "title": "Intelligent Event Data: Attended Events, Munich - Sample",
-            "provider": "PredictHQ",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSTZIDI09G",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Free sample dataset of attended events in Munich, Germany from July 2022 - July 2023: 1 year historical",
-            "use_cases": [
-              "shipping and port activity"
+              "commodity and raw materials prices"
             ]
           },
           {
@@ -3349,26 +3440,54 @@
             "ready": true,
             "subtitle": "Comprehensive Company Data for Compliance, Risk Assessment, and Business Intelligence in 140+ jurisdictions.",
             "use_cases": [
-              "company and supplier data"
+              "company and supplier registries"
             ]
           },
           {
-            "global_name": "GZSYZ12SH0I",
-            "title": "European Public Tenders Dataset – 800+ Sources, Daily Updates, OCDS Format",
-            "provider": "GroupBWT",
+            "global_name": "GZSTZIDI09G",
+            "title": "Intelligent Event Data: Attended Events, Munich - Sample",
+            "provider": "PredictHQ",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12SH0I",
-            "regions": "AWS_US_GOV_EAST_1.AWS_US_GOV_EAST_1,AWS_US_GOV_EAST_1_FHPLUS.AWS_US_GOV_EAST_1_FHPLUS,AWS_US_GOV_WEST_1_DOD.AWS_US_GOV_WEST_1_DOD,AWS_US_GOV_WEST_1_FHPLUS.AWS_US_GOV_WEST_1_FHPLUS,AWS_US_GOV_WEST_2.AWS_US_GOV_WEST_2,AZURE_USGOVVIRGINIA.AZURE_USGOVVIRGINIA,AZURE_USGOVVIRGINIA_FHPLUS.AZURE_USGOVVIRGINIA_FHPLUS,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_MEXICOCENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSTZIDI09G",
+            "regions": "ALL",
             "ready": true,
-            "subtitle": "Daily-updated public procurement data from 800+ EU sources, structured in OCDS format for analysis.",
+            "subtitle": "Free sample dataset of attended events in Munich, Germany from July 2022 - July 2023: 1 year historical",
             "use_cases": [
-              "company and supplier data"
-            ]
+              "shipping, ports and freight"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ7UQCDOT",
+            "title": "Purchasing Power for Countries Worldwide",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOT",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh purchasing power data for well-founded decisions.",
+            "use_cases": [
+              "industrial production and output statistics"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ43W9K16",
+            "title": "Germany H3 Travel Matrix",
+            "provider": "Dekart XYZ",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ43W9K16",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Nationwide Germany origin–destination travel-time and distance matrix, pre-computed on the H3 grid.",
+            "use_cases": [
+              "supply chain and logistics",
+              "shipping, ports and freight"
+            ],
+            "demoted": "off-theme"
           }
-        ]
-      },
-      "energy": {
-        "primary": [
+        ],
+        "reserve": [
           {
             "global_name": "GZSYZ12OI8L",
             "title": "MBI Sociodemographic Data for Germany",
@@ -3379,12 +3498,81 @@
             "ready": true,
             "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in Germany.",
             "use_cases": [
-              "renewable generation and grid data",
-              "weather and severe weather warnings",
-              "gas and oil market data",
-              "emissions and net-zero indicators"
-            ]
+              "supply chain and logistics",
+              "commodity and raw materials prices",
+              "shipping, ports and freight",
+              "company and supplier registries",
+              "industrial production and output statistics",
+              "trade, imports and exports"
+            ],
+            "demoted": "off-theme"
           },
+          {
+            "global_name": "GZSYZG5AL",
+            "title": "GfK Population by Age Group & Gender Germany",
+            "provider": "NIQ-GFK",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZG5AL",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Population by age group and gender for local postal, administrative or microgeographic areas in Germany",
+            "use_cases": [
+              "supply chain and logistics",
+              "shipping, ports and freight",
+              "company and supplier registries",
+              "industrial production and output statistics",
+              "trade, imports and exports"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ12SH0Y",
+            "title": "Fiber Internet Coverage Dataset",
+            "provider": "GroupBWT",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12SH0Y",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Address-level internet availability, speed, and provider data for homes in Hamburg, Germany.",
+            "use_cases": [
+              "supply chain and logistics"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSTZLT2II6",
+            "title": "Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.)",
+            "provider": "IBISWorld",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSTZLT2II6",
+            "regions": "PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
+            "ready": true,
+            "subtitle": "Industry Classification System codes, titles, descriptions, and parent-child hierarchical relationships.",
+            "use_cases": [
+              "company and supplier registries",
+              "industrial production and output statistics",
+              "trade, imports and exports"
+            ],
+            "demoted": "other country"
+          },
+          {
+            "global_name": "GZSYZ4OONQUW",
+            "title": "Dutch Central Bureau of Statistics Public Datasets - LEGACY (Archives & Longitudinal Series)",
+            "provider": "DDBM B.V.",
+            "access": "Paid",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ4OONQUW",
+            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4",
+            "ready": true,
+            "subtitle": "LEGACY (Archives & Longitudinal Series)",
+            "use_cases": [
+              "industrial production and output statistics"
+            ],
+            "demoted": "off-theme"
+          }
+        ]
+      },
+      "energy": {
+        "primary": [
           {
             "global_name": "GZSVZA7RAK",
             "title": "Historical Weather Data Sample",
@@ -3395,7 +3583,8 @@
             "ready": true,
             "subtitle": "Hourly historical and climatology weather data on ZIP level",
             "use_cases": [
-              "weather and severe weather warnings"
+              "weather and severe weather warnings",
+              "solar irradiance and wind resource"
             ]
           },
           {
@@ -3412,6 +3601,32 @@
             ]
           },
           {
+            "global_name": "GZSOZ1LLD8",
+            "title": "Global Weather & Climate Data by Pelmorex Weather Source",
+            "provider": "Pelmorex Weather Source",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSOZ1LLD8",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "NOAA based daily and hourly past, forecast & climatology weather data for select cities.",
+            "use_cases": [
+              "solar irradiance and wind resource"
+            ]
+          },
+          {
+            "global_name": "GZSYZGJWCN",
+            "title": "POIs - EV charging stations in Paris",
+            "provider": "Mytraffic",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZGJWCN",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "POIs - EV charging stations in Paris",
+            "use_cases": [
+              "EV charging and utility customer data"
+            ]
+          },
+          {
             "global_name": "GZSYZ7UQCDOT",
             "title": "Purchasing Power for Countries Worldwide",
             "provider": "Michael Bauer International GmbH",
@@ -3421,8 +3636,45 @@
             "ready": true,
             "subtitle": "MBI's fresh purchasing power data for well-founded decisions.",
             "use_cases": [
-              "renewable generation and grid data"
+              "renewable generation and grid data",
+              "electricity consumption and demand",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
             ]
+          },
+          {
+            "global_name": "GZSVZA7RAG",
+            "title": "Weather-based demand indices - Data sample",
+            "provider": "Wetter.com",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZA7RAG",
+            "regions": "PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST4",
+            "ready": true,
+            "subtitle": "32 modells telling demand changes based on weather",
+            "use_cases": [
+              "weather and severe weather warnings"
+            ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZSYZ12OI8L",
+            "title": "MBI Sociodemographic Data for Germany",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ12OI8L",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh sociodemographic data for well-founded decisions in Germany.",
+            "use_cases": [
+              "renewable generation and grid data",
+              "weather and severe weather warnings",
+              "emissions and net-zero indicators",
+              "electricity consumption and demand",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ12SH0Y",
@@ -3436,8 +3688,12 @@
             "use_cases": [
               "renewable generation and grid data",
               "weather and severe weather warnings",
-              "emissions and net-zero indicators"
-            ]
+              "emissions and net-zero indicators",
+              "electricity consumption and demand",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZG5AL",
@@ -3449,23 +3705,11 @@
             "ready": true,
             "subtitle": "Population by age group and gender for local postal, administrative or microgeographic areas in Germany",
             "use_cases": [
-              "renewable generation and grid data"
-            ]
-          }
-        ],
-        "reserve": [
-          {
-            "global_name": "GZSVZA7RAG",
-            "title": "Weather-based demand indices - Data sample",
-            "provider": "Wetter.com",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSVZA7RAG",
-            "regions": "PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST4",
-            "ready": true,
-            "subtitle": "32 modells telling demand changes based on weather",
-            "use_cases": [
-              "weather and severe weather warnings"
-            ]
+              "renewable generation and grid data",
+              "solar irradiance and wind resource",
+              "EV charging and utility customer data"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZTDZJKVCU",
@@ -3478,7 +3722,8 @@
             "subtitle": "The Met Office is responsible for issuing weather warnings, which warn of impacts caused by severe weather.",
             "use_cases": [
               "weather and severe weather warnings"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZSTZIDI09G",
@@ -3490,8 +3735,10 @@
             "ready": true,
             "subtitle": "Free sample dataset of attended events in Munich, Germany from July 2022 - July 2023: 1 year historical",
             "use_cases": [
-              "weather and severe weather warnings"
-            ]
+              "weather and severe weather warnings",
+              "electricity consumption and demand"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZTDZJKVCM",
@@ -3504,41 +3751,13 @@
             "subtitle": "Accurate weather forecasts for your chosen location",
             "use_cases": [
               "weather and severe weather warnings"
-            ]
-          },
-          {
-            "global_name": "GZSYZIKU15",
-            "title": "Automatic Carbon Footprinting (Scope 1, 2 & 3) - Sample",
-            "provider": "Climatiq",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZIKU15",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Convert operational data into carbon emission metrics, automatically.",
-            "use_cases": [
-              "emissions and net-zero indicators"
-            ]
+            ],
+            "demoted": "beyond the six"
           }
         ]
       },
       "media": {
         "primary": [
-          {
-            "global_name": "GZSYZG5AL",
-            "title": "GfK Population by Age Group & Gender Germany",
-            "provider": "NIQ-GFK",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZG5AL",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Population by age group and gender for local postal, administrative or microgeographic areas in Germany",
-            "use_cases": [
-              "audience segmentation and demographics",
-              "broadband and telecoms coverage",
-              "social media and sentiment",
-              "advertising and viewership"
-            ]
-          },
           {
             "global_name": "GZSYZ12SH0Y",
             "title": "Fiber Internet Coverage Dataset",
@@ -3551,7 +3770,9 @@
             "use_cases": [
               "broadband and telecoms coverage",
               "social media and sentiment",
-              "advertising and viewership"
+              "advertising and viewership",
+              "mobile network performance",
+              "events, venues and attendance"
             ]
           },
           {
@@ -3565,7 +3786,8 @@
             "subtitle": "Free sample dataset of attended events in Munich, Germany from July 2022 - July 2023: 1 year historical",
             "use_cases": [
               "social media and sentiment",
-              "advertising and viewership"
+              "advertising and viewership",
+              "events, venues and attendance"
             ]
           },
           {
@@ -3594,25 +3816,11 @@
               "audience segmentation and demographics",
               "broadband and telecoms coverage",
               "social media and sentiment",
-              "advertising and viewership"
+              "advertising and viewership",
+              "mobile network performance",
+              "events, venues and attendance"
             ]
           },
-          {
-            "global_name": "GZSYZ5S9QG",
-            "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
-            "provider": "Acxiom EMEA",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QG",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "DE Geographic Statistical Sample Data for Market Analysis on KGS14PLZ Level",
-            "use_cases": [
-              "audience segmentation and demographics",
-              "advertising and viewership"
-            ]
-          }
-        ],
-        "reserve": [
           {
             "global_name": "GZSYZ7UQCDOH",
             "title": "Basic Sociodemographics-Bundle for Countries Worldwide",
@@ -3624,34 +3832,8 @@
             "subtitle": "MBI's fresh sociodemographic data for well-founded decisions.",
             "use_cases": [
               "audience segmentation and demographics",
-              "social media and sentiment"
-            ]
-          },
-          {
-            "global_name": "GZ2FSZGU5YB",
-            "title": "GWI Core – Consumer Trends, Insights, and Market Data",
-            "provider": "GWI",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZ2FSZGU5YB",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "GWI Core - our flagship survey from over 50 markets. Global, on-demand, and accessible to everyone.",
-            "use_cases": [
-              "audience segmentation and demographics",
-              "social media and sentiment"
-            ]
-          },
-          {
-            "global_name": "GZTSZPM12Y",
-            "title": "Consumer Credit & Debit Card Transaction Data | European Spend",
-            "provider": "Consumer Edge",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTSZPM12Y",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "CE Vision EUR Aggregated Merchant-Attributable Alternative Dataset",
-            "use_cases": [
-              "audience segmentation and demographics"
+              "social media and sentiment",
+              "events, venues and attendance"
             ]
           },
           {
@@ -3666,6 +3848,86 @@
             "use_cases": [
               "broadband and telecoms coverage"
             ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZSYZG5AL",
+            "title": "GfK Population by Age Group & Gender Germany",
+            "provider": "NIQ-GFK",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZG5AL",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Population by age group and gender for local postal, administrative or microgeographic areas in Germany",
+            "use_cases": [
+              "audience segmentation and demographics",
+              "broadband and telecoms coverage",
+              "social media and sentiment",
+              "advertising and viewership",
+              "mobile network performance",
+              "events, venues and attendance"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZT0ZIFQPAI",
+            "title": "Movement Daily Activity Index 2020 (Sample)",
+            "provider": "Mapbox",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0ZIFQPAI",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Anonymous, aggregated, daily mobility data for every 100m grid tile in the US/UK/Germany",
+            "use_cases": [
+              "mobile network performance",
+              "events, venues and attendance"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ5S9QG",
+            "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
+            "provider": "Acxiom EMEA",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QG",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "DE Geographic Statistical Sample Data for Market Analysis on KGS14PLZ Level",
+            "use_cases": [
+              "audience segmentation and demographics",
+              "advertising and viewership"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZ2FSZGU5YB",
+            "title": "GWI Core – Consumer Trends, Insights, and Market Data",
+            "provider": "GWI",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZ2FSZGU5YB",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "GWI Core - our flagship survey from over 50 markets. Global, on-demand, and accessible to everyone.",
+            "use_cases": [
+              "audience segmentation and demographics",
+              "social media and sentiment"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZTSZPM12Y",
+            "title": "Consumer Credit & Debit Card Transaction Data | European Spend",
+            "provider": "Consumer Edge",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTSZPM12Y",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "CE Vision EUR Aggregated Merchant-Attributable Alternative Dataset",
+            "use_cases": [
+              "audience segmentation and demographics"
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ7UQCDOX",
@@ -3678,22 +3940,8 @@
             "subtitle": "MBI's fresh area map data for well-founded decisions.",
             "use_cases": [
               "broadband and telecoms coverage"
-            ]
-          },
-          {
-            "global_name": "GZSYZ43W9K16",
-            "title": "Germany H3 Travel Matrix",
-            "provider": "Dekart XYZ",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ43W9K16",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Nationwide Germany origin–destination travel-time and distance matrix, pre-computed on the H3 grid.",
-            "use_cases": [
-              "broadband and telecoms coverage",
-              "social media and sentiment",
-              "advertising and viewership"
-            ]
+            ],
+            "demoted": "off-theme"
           }
         ]
       },
@@ -3726,19 +3974,6 @@
             ]
           },
           {
-            "global_name": "GZSYZ7UQCDOT",
-            "title": "Purchasing Power for Countries Worldwide",
-            "provider": "Michael Bauer International GmbH",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOT",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "MBI's fresh purchasing power data for well-founded decisions.",
-            "use_cases": [
-              "economic indicators"
-            ]
-          },
-          {
             "global_name": "GZSVZA7RAK",
             "title": "Historical Weather Data Sample",
             "provider": "Wetter.com",
@@ -3749,19 +3984,6 @@
             "subtitle": "Hourly historical and climatology weather data on ZIP level",
             "use_cases": [
               "weather forecasts"
-            ]
-          },
-          {
-            "global_name": "GZSYZ5S9QG",
-            "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
-            "provider": "Acxiom EMEA",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QG",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "DE Geographic Statistical Sample Data for Market Analysis on KGS14PLZ Level",
-            "use_cases": [
-              "geospatial boundaries and geocoding"
             ]
           },
           {
@@ -3776,9 +3998,7 @@
             "use_cases": [
               "geospatial boundaries and geocoding"
             ]
-          }
-        ],
-        "reserve": [
+          },
           {
             "global_name": "GZSYZG5AL",
             "title": "GfK Population by Age Group & Gender Germany",
@@ -3795,6 +4015,49 @@
             ]
           },
           {
+            "global_name": "GZT0Z2BR4AC92",
+            "title": "World Boundaries Premium",
+            "provider": "Precisely",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z2BR4AC92",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "Comprehensive global administrative geographies & neighborhood, suburb, land use, and postal geographies",
+            "use_cases": [
+              "geospatial boundaries and geocoding"
+            ]
+          }
+        ],
+        "reserve": [
+          {
+            "global_name": "GZSYZ7UQCDOT",
+            "title": "Purchasing Power for Countries Worldwide",
+            "provider": "Michael Bauer International GmbH",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ7UQCDOT",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "MBI's fresh purchasing power data for well-founded decisions.",
+            "use_cases": [
+              "economic indicators"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZSYZ5S9QG",
+            "title": "Acxiom EMEA: Geo-Spatial Sample Data DE",
+            "provider": "Acxiom EMEA",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ5S9QG",
+            "regions": "ALL",
+            "ready": true,
+            "subtitle": "DE Geographic Statistical Sample Data for Market Analysis on KGS14PLZ Level",
+            "use_cases": [
+              "geospatial boundaries and geocoding"
+            ],
+            "demoted": "off-theme"
+          },
+          {
             "global_name": "GZSYZ12OI8L",
             "title": "MBI Sociodemographic Data for Germany",
             "provider": "Michael Bauer International GmbH",
@@ -3808,20 +4071,8 @@
               "company registries",
               "economic indicators",
               "weather forecasts"
-            ]
-          },
-          {
-            "global_name": "GZT0Z2BR4AC92",
-            "title": "World Boundaries Premium",
-            "provider": "Precisely",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT0Z2BR4AC92",
-            "regions": "ALL",
-            "ready": true,
-            "subtitle": "Comprehensive global administrative geographies & neighborhood, suburb, land use, and postal geographies",
-            "use_cases": [
-              "geospatial boundaries and geocoding"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZT0ZIFQPAI",
@@ -3834,7 +4085,8 @@
             "subtitle": "Anonymous, aggregated, daily mobility data for every 100m grid tile in the US/UK/Germany",
             "use_cases": [
               "geospatial boundaries and geocoding"
-            ]
+            ],
+            "demoted": "off-theme"
           },
           {
             "global_name": "GZSYZ12SH0Y",
@@ -3848,7 +4100,8 @@
             "use_cases": [
               "geospatial boundaries and geocoding",
               "company registries"
-            ]
+            ],
+            "demoted": "beyond the six"
           },
           {
             "global_name": "GZSYZ7UQCDOH",
@@ -3861,7 +4114,8 @@
             "subtitle": "MBI's fresh sociodemographic data for well-founded decisions.",
             "use_cases": [
               "geospatial boundaries and geocoding"
-            ]
+            ],
+            "demoted": "off-theme"
           }
         ]
       }

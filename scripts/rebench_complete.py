@@ -14,11 +14,13 @@ import snowflake.connector as sc
 CFG = json.load(open("game/config.json"))
 CONN = (CFG.get("snowflake") or {}).get("connection_name")
 
+# Current generation, taken from the Cortex Code model picker. Most of these
+# names work in SNOWFLAKE.CORTEX.COMPLETE too - the two namespaces overlap more
+# than expected, and benching the previous generation is what produced a default
+# that later went legacy.
 CANDIDATES = [
-    "claude-4-5-sonnet", "claude-4-sonnet", "claude-3-5-sonnet",
-    "openai-gpt-5", "openai-gpt-5-mini", "openai-gpt-4.1-mini",
-    "mistral-large2", "llama3.1-70b", "llama3.3-70b",
-    "snowflake-llama-3.3-70b", "claude-4-opus",
+    "claude-opus-5", "claude-sonnet-5", "openai-gpt-5.4", "grok-4.6",
+    "openai-gpt-5", "openai-gpt-5-mini", "llama3.1-70b",
 ]
 
 PROBE = (

@@ -80,6 +80,7 @@
       <dt>Industries on stall</dt><dd id="s-stall">&mdash;</dd>
       <dt>Reply model</dt><dd id="s-model">&mdash;</dd>
       <dt>Review model</dt><dd id="s-qa">&mdash;</dd>
+      <dt>Model proven</dt><dd id="s-model-ok">&mdash;</dd>
       <dt>Warm agent</dt><dd id="s-warm">&mdash;</dd>
       <dt>Visitor</dt><dd id="s-visitor">&mdash;</dd>
     </dl>
@@ -149,6 +150,22 @@ function paint(s) {
     ? 'unavailable' : s.industries_on_stall;
   $('s-model').textContent = s.complete_model || '—';
   $('s-qa').textContent = s.qa_model || '—';
+  // A configured model is not a working model. Say which it is, because the last
+  // time a model went legacy the only symptom was the booth feeling slow.
+  var mo = $('s-model-ok');
+  if (!s.model_checked) {
+    mo.textContent = 'not yet checked';
+    mo.style.color = '';
+  } else if (!s.model_verified) {
+    mo.textContent = 'NO USABLE MODEL — ' + (s.model_rejected || '');
+    mo.style.color = '#ff6b6b';
+  } else if (s.model_verified !== s.complete_model) {
+    mo.textContent = 'FELL BACK to ' + s.model_verified + ' — ' + (s.model_note || '');
+    mo.style.color = '#ffa94d';
+  } else {
+    mo.textContent = 'yes, ' + s.model_verified + ' answered';
+    mo.style.color = '#51cf66';
+  }
 
   const w = $('s-warm');
   if (s.warm_agent === null) { w.textContent = 'off'; w.className = 'idle'; }

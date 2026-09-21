@@ -149,7 +149,7 @@ def step_post_hook(conn, vals):
 
 
 def step_config(conn, vals):
-    print("\n[7/8] Pointing game/config.json at this account")
+    print("\n[8/9] Pointing game/config.json at this account")
     path = os.path.join(GAME, "config.json")
     with open(path, encoding="utf-8") as f:
         cfg = json.load(f)
@@ -168,7 +168,7 @@ def step_config(conn, vals):
 
 
 def step_smoke(skip):
-    print("\n[8/8] Smoke test")
+    print("\n[9/9] Smoke test")
     if skip:
         print("  skipped (--skip-smoke). The account is NOT proven.")
         return
@@ -179,6 +179,53 @@ def step_smoke(skip):
     print("\nDeployment proven end to end.")
 
 
+def step_keypair(conn, skip):
+    """Swap the booth onto key-pair auth so the keychain never interrupts a visit.
+
+    A DataOps event account is handed out with OAuth
+    (`client_store_temporary_credential = true`), which caches its token in the
+    macOS keychain. macOS then asks permission once per *process* that reads it,
+    and the booth is process-heavy: 3 per visitor, ~312 over a 100-visitor day.
+    Any one of those is a modal password dialog in front of a visitor.
+
+    Key-pair auth has no token to cache, so it never touches the keychain. This
+    runs it automatically rather than leaving it as a step an operator can skip.
+
+    It cannot be made completely invisible: registering a public key needs an
+    authenticated session first, and on a fresh laptop the only credential
+    available is OAuth. So a couple of prompts before this point are structural.
+    What this guarantees is that none happen once the doors open.
+    """
+    if skip:
+        print("\n[7/9] Key-pair auth: SKIPPED (--skip-keypair)")
+        print("   The booth will keep using the keychain: expect ~3 macOS "
+              "password prompts per visitor.")
+        return conn
+    print("\n[7/9] Key-pair auth: removing the keychain from the auth path")
+    script = os.path.join(os.path.dirname(HERE), "scripts", "setup_keypair.py")
+    if not os.path.exists(script):
+        print(f"   ! {script} missing, leaving auth as it is")
+        return conn
+    r = run([sys.executable, script, "--from", conn, "--name", "BOOTH"])
+    if r.returncode:
+        # Never fatal. A pool account that will not allow ALTER USER still runs
+        # the booth perfectly well - it just prompts. Losing a deploy over an
+        # ergonomics fix would be the wrong trade.
+        tail = (r.stderr or r.stdout or "").strip().splitlines()[-3:]
+        print("   ! could not set up key-pair auth, continuing on the existing "
+              "connection:")
+        for line in tail:
+            print(f"     {line[:150]}")
+        print("   The booth still works. Expect macOS keychain prompts, "
+              "including mid-visit.")
+        print("   Most likely cause: this account does not permit "
+              "ALTER USER ... SET RSA_PUBLIC_KEY.")
+        return conn
+    print("   BOOTH connection created and verified - no keychain from here on.")
+    print("   Use -c BOOTH for every snow and cortex command from now on.")
+    return "BOOTH"
+
+
 def main():
     ap = argparse.ArgumentParser(description="Deploy the Loco4CoCo booth.")
     ap.add_argument("--target", help="target from manifest.yml")
@@ -186,6 +233,9 @@ def main():
     ap.add_argument("--alias", default="bootstrap")
     ap.add_argument("--plan-only", action="store_true", help="stop after plan")
     ap.add_argument("--skip-smoke", action="store_true")
+    ap.add_argument("--skip-keypair", action="store_true",
+                    help="do not convert to key-pair auth (you will get macOS "
+                         "keychain prompts, ~3 per visitor)")
     a = ap.parse_args()
 
     target, tgt, vals = load_target(a.target)
@@ -222,7 +272,10 @@ def main():
     step_plan(a.connection, target, a.plan_only)
     step_deploy(a.connection, target, a.alias)
     step_post_hook(a.connection, vals)
-    step_config(a.connection, vals)
+    # Before step_config, which writes the connection name into game/config.json:
+    # if we converted to key-pair, that is the name the booth must record.
+    booth_conn = step_keypair(a.connection, a.skip_keypair)
+    step_config(booth_conn, vals)
     step_smoke(a.skip_smoke)
     return 0
 

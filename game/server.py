@@ -435,6 +435,69 @@ def sf_conn(cfg):
         return _conn
 
 
+PREFLIGHT = {"checked": False, "model": None, "tried": [], "note": ""}
+
+
+def preflight_complete_model(cfg):
+    """Prove the configured COMPLETE model answers; swap to a fallback if not.
+
+    A model name is a perishable dependency. claude-4-sonnet was measured,
+    chosen, and written into config, and then went to legacy state - after which
+    every COMPLETE call failed in ~0.5s, the exec fallback silently absorbed it,
+    and the only visible symptom was the booth feeling slow. QA had no fallback
+    at all, so it produced nothing for every visitor.
+
+    So the booth now asks the account, once, at startup. If the configured model
+    is dead it walks coco.complete_model_fallbacks in order and rewrites cfg in
+    place, which is enough because run_complete re-reads cfg on every call. The
+    result is surfaced in /admin so a degraded model is visible, not inferred.
+    """
+    c = cfg.get("coco") or {}
+    want = c.get("complete_model") or "openai-gpt-5.4"
+    chain = [want] + [m for m in (c.get("complete_model_fallbacks") or [])
+                      if m != want]
+    tried = []
+    for mdl in chain:
+        try:
+            cur = sf_conn(cfg).cursor()
+            try:
+                cur.execute("SELECT SNOWFLAKE.CORTEX.COMPLETE(%s, 'ping')",
+                            (mdl,))
+                cur.fetchone()
+            finally:
+                cur.close()
+        except Exception as e:                                   # noqa: BLE001
+            msg = str(e)
+            why = ("legacy" if "legacy" in msg else
+                   "unknown model" if "unknown model" in msg else
+                   msg[:80].replace("\n", " "))
+            tried.append(f"{mdl}: {why}")
+            print(f"[loco4coco] model preflight: {mdl} unusable ({why})")
+            continue
+        PREFLIGHT.update({"checked": True, "model": mdl, "tried": tried})
+        if mdl != want:
+            # Loud on purpose. A quiet swap is how the last one hid.
+            PREFLIGHT["note"] = (f"configured model {want} is unusable; "
+                                 f"running on {mdl}")
+            print(f"[loco4coco] *** {PREFLIGHT['note']} ***")
+            print("[loco4coco] *** update coco.complete_model and re-run "
+                  "scripts/rebench_complete.py ***")
+            (cfg.setdefault("coco", {}))["complete_model"] = mdl
+            if (cfg.get("qa") or {}).get("model") == want:
+                cfg["qa"]["model"] = mdl
+        else:
+            PREFLIGHT["note"] = f"{mdl} answered"
+            print(f"[loco4coco] model preflight: {mdl} ok")
+        return mdl
+    PREFLIGHT.update({"checked": True, "model": None, "tried": tried,
+                      "note": "NO usable COMPLETE model"})
+    print("[loco4coco] *** NO usable COMPLETE model. Tried: "
+          + "; ".join(tried) + " ***")
+    print("[loco4coco] *** Reflection turns will fall back to cortex exec "
+          "(~20s each) and QA will not run. Fix before opening. ***")
+    return None
+
+
 def run_complete(cfg, prompt, kind, job_id=None, model=None, timeout=None):
     """Call Cortex inference directly, in-process, with no agentic loop.
 
@@ -2845,6 +2908,13 @@ class Handler(BaseHTTPRequestHandler):
             "operator": ev.get("operator") or "",
             "complete_model": coco.get("complete_model") or "",
             "qa_model": (cfg.get("qa") or {}).get("model") or "",
+            # Whether the model was actually proven to answer, not just
+            # configured. A configured-but-dead model is the failure that hid
+            # behind the exec fallback for a whole test run.
+            "model_checked": PREFLIGHT.get("checked"),
+            "model_verified": PREFLIGHT.get("model") or "",
+            "model_note": PREFLIGHT.get("note") or "",
+            "model_rejected": "; ".join(PREFLIGHT.get("tried") or []),
             "warm_agent": warm,
             "industries_on_stall": stall,
             "context_source": source,
@@ -3288,12 +3358,20 @@ def main():
         threading.Thread(target=_warm, daemon=True).start()
         print("  warm-up   : dispatched")
     # Open the Snowflake connection now so the first visitor's fast-path turn
-    # pays ~2s, not the ~5s that includes connection setup.
+    # pays ~2s, not the ~5s that includes connection setup. Then prove the
+    # configured model actually answers, because a model name is a perishable
+    # dependency: claude-4-sonnet went to legacy state mid-project and every
+    # COMPLETE turn failed silently for a whole test run while the slow exec
+    # fallback covered for it. Better to find out here than in front of someone.
     def _warm_conn():
         try:
             sf_conn(cfg)
         except Exception:                                        # noqa: BLE001
             pass
+        try:
+            preflight_complete_model(cfg)
+        except Exception as e:                                    # noqa: BLE001
+            print(f"[loco4coco] model preflight skipped: {str(e)[:120]}")
     threading.Thread(target=_warm_conn, daemon=True).start()
     # Idle watchdog: if nothing hits the server for this many minutes (no browser
     # open, no test), it shuts itself down so it can never run for hours

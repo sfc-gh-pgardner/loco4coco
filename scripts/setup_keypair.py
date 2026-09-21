@@ -75,6 +75,78 @@ def generate_key(name):
     return priv, body
 
 
+def browser_auth(conf, name):
+    """True if this connection can pop a browser or a keychain dialog."""
+    c = conf.get(name)
+    if not isinstance(c, dict):
+        return False
+    a = str(c.get("authenticator") or "").lower()
+    return any(t in a for t in ("oauth", "externalbrowser", "sso"))
+
+
+def repoint_cortex_code(conf, new_name):
+    """Point Cortex Code at the key-pair connection, if it is on a browser one.
+
+    The booth being on key-pair is not sufficient. Operators are encouraged to
+    let Cortex Code do the setup, and Cortex Code holds its own connection. If
+    that one is OAuth it will interrupt with "Your identity was confirmed and
+    propagated to Snowflake PythonConnector" whenever its token expires - during
+    setup, or worse, mid-event with a visitor waiting.
+
+    Only rewritten when the current value is a browser-auth connection, so a
+    laptop already pointed at something safe is left alone.
+    """
+    path = HOME / ".snowflake" / "cortex" / "settings.json"
+    if not path.exists():
+        return
+    import json
+    try:
+        s = json.loads(path.read_text())
+    except Exception:                                            # noqa: BLE001
+        print(f"   ! could not read {path}, leaving Cortex Code as it is")
+        return
+    changed = []
+    for k in ("sqlConnectionName", "cortexAgentConnectionName"):
+        cur = s.get(k)
+        if cur and cur != new_name and browser_auth(conf, cur):
+            s[k] = new_name
+            changed.append(f"{k}: {cur} -> {new_name}")
+    if not changed:
+        print("   Cortex Code already on a connection that cannot prompt")
+        return
+    path.write_text(json.dumps(s, indent=2) + "\n")
+    for c in changed:
+        print(f"   Cortex Code {c}")
+    print("   Restart Cortex Code, or pick the connection in its picker, for "
+          "this to take effect.")
+
+
+def repoint_default(conf, new_name):
+    """Make the CLI default key-pair, if it currently is not.
+
+    Anything run without `-c` uses default_connection_name. If that points at an
+    OAuth connection, a stray command re-opens the browser. Left alone when the
+    existing default cannot prompt.
+    """
+    path = HOME / ".snowflake" / "config.toml"
+    if not path.exists():
+        return
+    text = path.read_text()
+    m = re.search(r'^\s*default_connection_name\s*=\s*"([^"]+)"',
+                  text, re.M)
+    cur = m.group(1) if m else None
+    if cur and not browser_auth(conf, cur):
+        print(f"   CLI default is {cur}, which cannot prompt - left alone")
+        return
+    if m:
+        text = text[:m.start()] + f'default_connection_name = "{new_name}"' \
+            + text[m.end():]
+    else:
+        text = f'default_connection_name = "{new_name}"\n' + text
+    path.write_text(text)
+    print(f"   CLI default connection: {cur or '(unset)'} -> {new_name}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--from", dest="src", required=True,
@@ -128,6 +200,12 @@ def main():
     print(f"   connected as {c2.fetchone()}")
     c2.close()
     cn2.close()
+    print(f"5. removing the other places a browser or keychain prompt can "
+          f"still come from")
+    conf2 = tomllib.loads(TOML.read_text())
+    repoint_cortex_code(conf2, a.name)
+    repoint_default(conf2, a.name)
+
     print(f"\nDone. Point game/config.json snowflake.connection_name at "
           f"{a.name}, and use -c {a.name} for every snow/cortex command.")
 

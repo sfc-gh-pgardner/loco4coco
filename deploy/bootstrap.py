@@ -223,6 +223,15 @@ def step_keypair(conn, skip):
         return conn
     print("   BOOTH connection created and verified - no keychain from here on.")
     print("   Use -c BOOTH for every snow and cortex command from now on.")
+    # Prove it, rather than assume it. The booth being on key-pair is not enough:
+    # the CLI default and Cortex Code hold their own connection names, and either
+    # can open a browser mid-event.
+    audit = os.path.join(os.path.dirname(HERE), "scripts",
+                         "check_auth_safety.py")
+    if os.path.exists(audit):
+        r2 = run([sys.executable, audit])
+        if r2.returncode:
+            print("   ! something can still prompt - see the audit above")
     return "BOOTH"
 
 

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loco for CoCo — booth admin</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: -apple-system, system-ui, sans-serif; margin: 0;
+         background: #2C3444; color: #E9EEF5; line-height: 1.5;
+         padding: clamp(18px, 4vw, 34px); }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 21px; margin: 0 0 2px; }
+  h1 span { color: #29B5E8; }
+  .sub { color: #9BA9BC; font-size: 13px; margin: 0 0 24px; }
+  .card { background: #242B39; border: 1px solid #3A4456; border-radius: 10px;
+          padding: 18px 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em;
+             color: #9BA9BC; margin: 0 0 14px; font-weight: 600; }
+  label { display: block; font-size: 13px; color: #9BA9BC; margin: 0 0 5px; }
+  select, input { width: 100%; box-sizing: border-box; font: inherit;
+                  padding: 9px 11px; border-radius: 7px; background: #1B212C;
+                  color: #E9EEF5; border: 1px solid #3A4456; }
+  select:focus, input:focus { outline: 2px solid #29B5E8; outline-offset: 1px; }
+  .row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .row > div { flex: 1 1 200px; }
+  .field { margin-bottom: 14px; }
+  button { font: inherit; font-weight: 600; cursor: pointer; padding: 10px 18px;
+           border-radius: 7px; border: 1px solid transparent; }
+  .primary { background: #29B5E8; color: #10222E; }
+  .ghost { background: transparent; color: #E9EEF5; border-color: #3A4456; }
+  .danger { background: transparent; color: #E5A0A0; border-color: #6B4141; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 7px 18px;
+       margin: 0; font-size: 14px; }
+  dt { color: #9BA9BC; }
+  dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .ok { color: #7FC98B; font-weight: 600; }
+  .bad { color: #E58B7B; font-weight: 600; }
+  .idle { color: #9BA9BC; }
+  #msg { min-height: 20px; font-size: 13px; margin-top: 12px; }
+  .note { font-size: 12px; color: #9BA9BC; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Loco for <span>CoCo</span> — booth admin</h1>
+  <p class="sub">Operator only. Not linked from the game.</p>
+
+  <div class="card">
+    <h2>This event</h2>
+    <div class="row">
+      <div class="field">
+        <label for="venue">Venue</label>
+        <select id="venue"></select>
+      </div>
+      <div class="field">
+        <label for="operator">Operator &amp; stand</label>
+        <input id="operator" placeholder="P Gardner / Stand 2" autocomplete="off">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="apply">Apply</button>
+      <span class="note" id="applynote">Takes effect on the next visitor. No restart needed.</span>
+    </div>
+    <p class="note">Operator is written to every visitor's row and
+      <strong>cannot be reconstructed after the event</strong>. Set it before doors open.</p>
+  </div>
+
+  <div class="card">
+    <h2>Status</h2>
+    <dl>
+      <dt>City</dt><dd id="s-city">&mdash;</dd>
+      <dt>Language</dt><dd id="s-lang">&mdash;</dd>
+      <dt>Marketplace region</dt><dd id="s-region">&mdash;</dd>
+      <dt>Dataset profile</dt><dd id="s-profile">&mdash;</dd>
+      <dt>Datasets loaded</dt><dd id="s-rows">&mdash;</dd>
+      <dt>Lists read from</dt><dd id="s-source">&mdash;</dd>
+      <dt>Connection</dt><dd id="s-conn">&mdash;</dd>
+      <dt>Industries on stall</dt><dd id="s-stall">&mdash;</dd>
+      <dt>Reply model</dt><dd id="s-model">&mdash;</dd>
+      <dt>Review model</dt><dd id="s-qa">&mdash;</dd>
+      <dt>Warm agent</dt><dd id="s-warm">&mdash;</dd>
+      <dt>Visitor</dt><dd id="s-visitor">&mdash;</dd>
+    </dl>
+    <p class="note">The marketplace region is where your <em>visitors</em> are, and
+      decides which datasets get recommended. It is not this account's region, which
+      you never need to know.</p>
+    <p class="note"><strong>Check &ldquo;datasets loaded&rdquo; before doors open.</strong>
+      It should be 90&ndash;96 for the chosen city. If it reads 0, this city's datasets
+      never reached the account and the stall will quietly serve London's instead &mdash;
+      re-run <code>deploy/load_context.py</code>. If &ldquo;lists read from&rdquo; says
+      <code>bundle</code> or <code>markdown</code> rather than <code>snowflake</code>,
+      the account read failed and you are on a committed copy that may be out of date.</p>
+  </div>
+
+  <div class="card">
+    <h2>Recover</h2>
+    <div class="actions">
+      <button class="ghost" id="reset">Clear visitor</button>
+      <button class="danger" id="restart">Restart server</button>
+    </div>
+    <p class="note"><strong>Clear visitor</strong> wipes the current session and recycles
+      the agent &mdash; the normal between-visitors action. <strong>Restart</strong> replaces
+      the whole process: only needed if replies have stopped coming back, or you edited
+      <code>server.py</code>. It takes a few seconds and the first reply afterwards is slow.</p>
+  </div>
+
+  <div id="msg"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let known = [];
+
+function say(text, bad) {
+  $('msg').textContent = text;
+  $('msg').className = bad ? 'bad' : 'ok';
+}
+
+function paint(s) {
+  known = s.venues || [];
+  const sel = $('venue');
+  if (sel.options.length !== known.length) {
+    sel.innerHTML = '';
+    known.forEach(v => {
+      const o = document.createElement('option');
+      o.value = v;
+      o.textContent = v.charAt(0).toUpperCase() + v.slice(1);
+      sel.appendChild(o);
+    });
+  }
+  if (document.activeElement !== sel) sel.value = s.venue || '';
+  if (document.activeElement !== $('operator')) $('operator').value = s.operator || '';
+
+  $('s-city').textContent = s.city || '—';
+  $('s-lang').textContent = s.language || '—';
+  $('s-region').textContent = s.marketplace_region || '—';
+  $('s-profile').textContent = s.market_profile || '—';
+  const rows = $('s-rows');
+  rows.textContent = s.listings_for_profile == null ? 'unknown' : s.listings_for_profile;
+  rows.className = (s.listings_for_profile === 0) ? 'bad'
+                 : (s.listings_for_profile > 0 ? 'ok' : 'idle');
+  const src = $('s-source');
+  src.textContent = s.context_source || '—';
+  src.className = s.context_source === 'snowflake' ? 'ok' : 'bad';
+  $('s-conn').textContent = s.connection || '—';
+  $('s-stall').textContent = s.industries_on_stall == null
+    ? 'unavailable' : s.industries_on_stall;
+  $('s-model').textContent = s.complete_model || '—';
+  $('s-qa').textContent = s.qa_model || '—';
+
+  const w = $('s-warm');
+  if (s.warm_agent === null) { w.textContent = 'off'; w.className = 'idle'; }
+  else if (s.warm_agent) { w.textContent = 'ready'; w.className = 'ok'; }
+  else { w.textContent = 'not running (falls back, still works)'; w.className = 'bad'; }
+
+  const v = $('s-visitor');
+  v.textContent = s.visitor_active ? ('in progress — ' + (s.stage || '?')) : 'none';
+  v.className = s.visitor_active ? 'ok' : 'idle';
+}
+
+async function refresh() {
+  try {
+    const r = await fetch('/api/admin/status');
+    paint(await r.json());
+  } catch (e) { say('Cannot reach the server.', true); }
+}
+
+$('apply').onclick = async () => {
+  say('');
+  const body = { venue: $('venue').value, operator: $('operator').value };
+  const r = await fetch('/api/admin/apply',
+    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body) });
+  const j = await r.json();
+  if (!r.ok) return say(j.error || 'Could not apply.', true);
+  paint(j);
+  say('Saved. ' + (j.city || '') + ' — active for the next visitor.');
+};
+
+$('reset').onclick = async () => {
+  await fetch('/api/reset', { method: 'POST' });
+  say('Visitor cleared.');
+  refresh();
+};
+
+$('restart').onclick = async () => {
+  if (!confirm('Restart the server? Any visitor mid-session is lost.')) return;
+  say('Restarting…');
+  try { await fetch('/api/admin/restart', { method: 'POST' }); } catch (e) {}
+  let tries = 0;
+  const poll = setInterval(async () => {
+    tries++;
+    try {
+      const r = await fetch('/api/admin/status', { cache: 'no-store' });
+      if (r.ok) { clearInterval(poll); paint(await r.json()); say('Back up.'); }
+    } catch (e) {
+      if (tries > 30) { clearInterval(poll); say('Did not come back — check the terminal.', true); }
+    }
+  }, 1000);
+};
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>

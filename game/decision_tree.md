@@ -1,60 +1,333 @@
 # Loco 4 CoCo - the booth decision tree
 
-_Generated from the live `config.json`, `archetypes.md` and `server.py`. Every option below is what a visitor is actually offered. Regenerate with `python3 game/decision_tree.py` after changing config._
+Every option a visitor is offered, every line CoCo speaks, and every dataset the booth recommends. Generated from the live app: `config.json`, `marketplace-index.md`, `archetypes.md` and `server.py`.
 
-## Why this document exists
+Regenerate with `python3 game/decision_tree.py`.
 
-A home stage and five screens shape the blueprint. All but one are precomputed by us; only the archetype is decided at runtime, and it matters which is which - only the precomputed ones can be improved by editing config.
+## 1. What the visitor does
 
-| Step | What the visitor does | Where the options come from | Tunable? |
-|---|---|---|---|
-| 0. The home stage | Answers where their data lives (platforms), which country they are in, and where their data and AI may run (residency) | `config.platforms`, `config.country`, `config.residency`, `config.sovereignty` | **Yes - fully precomputed** |
-| 1. The letter | Types name, company, industry, **and the problem in two sentences** | Industry list in `config.industries` | Yes - the list |
-| 2. The library | Ticks the data they hold | `industries.<key>.data_sources` | **Yes - fully precomputed** |
-| 3. The marketplace | Ticks data to join | `marketplace-index.md`, 6 verified listings per industry | **Yes - fully precomputed** |
-| 4. The workshop | Types one line describing the MVP | Free text | No - but the archetype it maps to is |
-| 5. The postbox | Posts it | - | - |
+Six stops. The letter is the whole intake on one screen; the four locations are walked to on a map in the order below.
 
-With `discovery: manual` there is now only ONE runtime decision: which of the 9 archetypes the visitor is routed to. Even that is no longer purely the model's - `game/context.py` resolves it deterministically from the visitor's own words scored against each archetype's pain text, and the model chooses from that shortlist. Everything else on this page is ours to set.
+| # | Stop | What the visitor gives us | Options come from | Select |
+| --- | --- | --- | --- | --- |
+| 0 | The letter | First name, employer, industry, the problem in two sentences, where the data lives and which countries they operate in | `industries` for the list, `platforms` and `country` for the chips; the problem is free text | Single industry, multi-select chips, free text |
+| 1 | The house | Nothing. CoCo reads back what the letter said and makes the security and AI point | - | - |
+| 2 | The Data Library | The data they already hold | `industries.<key>.data_sources` | Multi-select plus free text |
+| 3 | The Marketplace | Datasets to join to it | `marketplace-index.md` | Multi-select plus free text |
+| 4 | The Workshop | One line describing what the proof of concept should do | Free text | Free text |
+| 5 | The Postbox | Confirmation to send | - | Button |
 
-## The tree, top to bottom
+The map unlocks in this order: **The Data Library**, **The Marketplace**, **The Workshop**, **The Postbox**.
 
-```
-HOME STAGE   (precomputed; CoCo reacts to each with a pre-written line)
-  platform  ->  9 universal chips -> integration path in the blueprint
-  country   ->  8 options -> region logic
-  residency ->  4 options (sovereignty-framed) -> blueprint sovereignty section
-        |
-LETTER
-  industry  ->  one of 8
-  problem   ->  free text, 400 chars, threaded into every later prompt
-        |
-LIBRARY   (precomputed per industry)
-  data held ->  6 options per industry + "something else"
-        |
-MARKETPLACE
-  6-6 curated, region-verified options per industry  (discovery: manual)
-  every one is checked is_ready_for_import, so a visitor can attach it
-        |
-WORKSHOP
-  one line  ->  model picks 1 of 9 archetypes
-             ->  features + first step come from archetypes.md, no inference
-        |
-POSTBOX   ->  QA review, then blueprint (.docx) + QR. No email, no local record.
-```
+The visitor's answers reach the document by two routes. The library, marketplace and workshop answers are named back to them by the model, which picks from the closed lists in this document and never invents an entry. The archetype, its features and its first step are precomputed, so they are correct whether or not a model answers.
 
-## Per industry
+## 2. Every scripted line, in running order
 
-For each industry: what the library offers, and the six curated Marketplace listings it offers. Every listing is verified importable in the event region, so nothing here is a dead end. The live-search keywords are listed too, but they only bite if `locations.marketplace.discovery` is set back to `live`.
+Fixed copy, identical for every visitor, straight from `config.json`. Braced placeholders such as `{first_name}`, `{company}`, `{country}`, `{platform}` and `{region}` are filled from the visitor's own answers.
+
+The one-line replies CoCo speaks at the Library, Marketplace and Workshop are not listed here. Those are generated per visit, reflecting back what the visitor just picked.
+
+### 2.1 Intro card
+
+- **Title:** Loco for CoCo
+- **Button:** START
+- This is a fun way to experience the power of Cortex Code (CoCo) through the medium of an arcade game.
+- You have 5 minutes to explore what building a Proof of Concept on Snowflake really looks like, with CoCo as your guide to our features, marketplace datasets, and how enterprise-grade AI can bring your ideas to life.
+- You will leave with a personalised action plan for building it for real. Be daring, this is a flexible process with a genuinely useful outcome.
+- *Anything you type stays private*, only shared with you and Snowflake.
+
+Text wrapped in asterisks renders as a highlight colour rather than body text.
+
+### 2.2 The house: CoCo arrives and reads a letter
+
+- **arctic:** Somewhere in the Arctic...
+- **arctic_sub:** (Yes, penguins live in Antarctica, but CoCo is special!)
+- **bubble:** Wow, a letter from my friend! Shame I can't make out some of these words... (Please fill this in with your details)
+- **greeting:** Hey CoCo,
+- **body[0]:** It's your friend {first_name}!
+- **body[1]:** I've heard you and the Cortex Crew have been cooking up some amazing products recently.
+- **body[2]:** Me and my team at {company} wanted to learn more.
+- **body[3]:** We're particularly interested in {industry} and wanted to understand what a Proof of Concept (POC) would look like for this on Snowflake.
+- **body[4]:** Could you help us out?
+- **signoff:** Signed {first_name}
+- **button:** THAT'S BETTER
+- **line1:** A letter, from my friend {first_name}! Better get to work...
+- **line2:** Anyway, let's go and get this show on the road.
+- **map_line:** First stop is my Data Library. That's where I keep all the unstructured, semi-structured and structured data that would be useful for {first_name} and {company}.
+
+### 2.3 The letter: what the visitor types
+
+- **Your first name** (`first_name`) - placeholder: e.g. Priya
+- **Where you work** (`company`) - placeholder: e.g. NHS Trust, Barclays, Tesco
+- **industry_question:** And what world do you work in? I'll fill the library with the right shelves.
+- **confirm_industry:** I'm guessing {industry} from {company} - have I got that right?
+- **problem_label:** The problem you want to solve (two sentences)
+- **problem_placeholder:** e.g. our engineers waste hours hunting through old inspection reports. We want answers in seconds, with the source.
+
+The problem example above is the fallback. Once an industry is chosen it is replaced by that industry's own, and a "CoCo, you choose" button will draft a starting problem statement from the archetype pain lines, into an editable field.
+
+- **Healthcare & Life Sciences:** e.g. our clinicians re-read discharge summaries to find one detail. We want the answer in seconds, with the source.
+- **Financial Services:** e.g. every complaint is read by hand to spot the urgent ones. We want them sorted and routed the moment they land.
+- **Retail & Consumer Goods:** e.g. nobody can say why a line sold out in one region and sat still in another. We want that answered without a data team.
+- **Public Sector & Government:** e.g. our guidance sits in years of PDFs nobody can search. We want caseworkers to ask a question and get a cited answer.
+- **Manufacturing & Industrial:** e.g. we find out a machine was failing after it stopped. We want the warning while there is still time to act.
+- **Energy & Utilities:** e.g. engineer notes and meter data live apart, so we cannot connect a fault to what led to it. We want them joined up.
+- **Media, Telco & Entertainment:** e.g. we know what was watched but not why anyone churned. We want the two joined so we can see it coming.
+- **Something else:** e.g. the answer exists somewhere in our systems and it takes days to get it out. We want it in seconds, with the source.
+
+### 2.4 The letter: the stack and the location
+
+Asked on the letter itself, both multi-select. Where data and models may run is NOT asked: it is inferred from the location, because it only names the region in the sovereignty pillars and a visitor's own location answers it more honestly than a question about their compliance position.
+
+**We currently keep data on…**
+
+- **Hint:** Tap every platform it sits on. This is what decides how we get it into Snowflake.
+- Microsoft / Azure
+- AWS
+- Google Cloud
+- Oracle
+- SAP
+- On-premise / our own servers
+- SaaS apps (Salesforce, Workday, etc.)
+- Already in Snowflake
+- Not sure yet
+- **Cannot be combined with a named source:** Not sure yet
+
+**As you'll remember CoCo, we're based in**
+
+- **Hint:** Tap every country you have a base in. It helps me keep your data where your rules need it.
+- United Kingdom
+- Ireland
+- France
+- Germany
+- Netherlands
+- Nordics
+- Rest of EU
+- Somewhere else
+- **Free text option:** Somewhere else
+
+### 2.5 The letter: CoCo's reply to each answer
+
+- **platform_already:** Perfect - it's already in Snowflake, so we skip the plumbing and go straight to building.
+- **platform_unsure:** No problem - we'll work the plumbing out together, it's usually the easy part.
+- **platform_named:** Good - I know exactly how to get data out of {platform} and into Snowflake, in region and without copying it around.
+- **country:** {country}, lovely. I'll keep everything where {country}'s rules need it.
+
+Several countries may be picked, and CoCo answers on the strictest reading the location supports.
+
+### 2.6 The house: CoCo reads it back
+
+Spoken over the house scene once the letter is submitted. CoCo names what was given, then makes the security and AI point inside that summary. The region comes from the visitor's own location. Each line advances on a timer scaled to its length.
+
+- So, {first_name}, let me make sure I have this. {company_bit}{industry_bit}{platform_bit}I have the problem you want to solve, and that is the bit everything else hangs off.
+- Here is the part that matters before we start building. By default, all of this happens inside your own Snowflake account in {region}. Your data does not get copied out to be processed, and the AI models run in your own region, so nothing has to cross a border to be understood.
+- Snowflake never uses your Customer Data to train models made available to our customer base. Your data is not available to other customers or model developers. And you have control over your team's use of Snowflake AI Features through familiar role-based access control.
+- You will not have to move house for any of it either. Snowflake talks to what you already run, and with Iceberg your tables stay in open formats other engines can read, so there is no one way door.
+
+### 2.7 The blueprint: the four sovereignty pillars
+
+Printed verbatim in the document the visitor takes away.
+
+- **data:** By default your data does not leave {region}: it stays in your own Snowflake account, in region, not copied out to be processed.
+- **models:** By default, Cortex runs the AI models in your own region, so nothing has to cross a border to be understood.
+- **marketplace:** Marketplace data is shared live rather than copied, and you are only ever offered listings available in {region}.
+- **governance:** One set of controls - role-based access, masking, row-level policies - governs all of it, in one place.
+
+### 2.8 The four locations
+
+**The Data Library** - Data your company already holds
+
+- **narrative:** This is my magic data library, {first_name}. Every shelf can mimic something {company} already holds. You can ask me for anything, from MP3 to CSV, PDF to Parquet.
+- **heading:** Which of these do you work with at the moment?
+- **hint:** Tick everything that applies. Add your own if it's missing.
+- **other_label:** Something else you hold
+- **other_placeholder:** e.g. 20 years of inspection photographs
+
+**The Marketplace** - Data to enhance it
+
+- **narrative:** This is the Snowflake Marketplace, and every stall is a real company's data. You attach it and query it live, seconds later. You never copy it, you never build a pipeline for it, and you never pay to store it.
+- **heading:** What shall we join to your data?
+- **hint:** Live listings, filtered to what you can attach in this region. No ETL, no storage cost, refreshed by the provider. The same door works outwards: this is how you share your own data without handing over a copy.
+- **other_label:** Something else you'd join
+- **other_placeholder:** e.g. UK postcode boundaries, company registry data
+
+**The Workshop** - Build the POC
+
+- **narrative:** Bench cleared, forge lit. Tell me what the finished thing does and I'll draw up the plan.
+- **heading:** What do we want our Proof of Concept to do?
+- **hint:** Think big and say it in one line. An AI agent that answers for you, a dashboard that explains itself, an app your team actually opens every morning, something that spots trouble before it lands. Whatever it is, we forge it here.
+- **placeholder:** e.g. an agent that answers policy questions with citations
+
+**The Postbox** - Send the present
+
+- **narrative:** Wrapped, labelled and ready. Say the word and I'll put it in your hands.
+- **heading:** Shall I post it?
+- **hint:** I'll write it up properly and put it in the post.
+- **button:** POST IT TO ME
+
+### 2.9 The Data Library: the synthetic-data offer
+
+- CoCo can mimic any shelf as synthetic data so a POC can start before the real feed exists. Generate it in Snowflake with GENERATOR and RANDOM, or let Cortex fabricate realistic rows from a description.
+
+### 2.10 The Postbox: what CoCo says on send
+
+- **On success:** Wrapped and labelled, {first_name}. Scan the code on screen and it is yours - the link works for seven days.
+- **If staging fails:** I could not wrap it up this time - grab a Snowflake person and we will sort it.
+
+### 2.11 Screen furniture
+
+Prose that belongs to a screen rather than to a stop.
+
+- **history_banner:** Looking back — press ▶ to return to now
+- **handover_heading:** Take it with you now
+- **handover_body:** Scan this with your phone camera to download your Word blueprint. The link works for seven days.
+- **card_heading:** Scan to keep your card.
+- **card_body:** It saves straight to your phone. Yours to post - tag us and we will see it. Works for seven days.
+
+## 3. The datasets the booth recommends
+
+48 slots across 8 industries, filled by 31 distinct listings, for THIS venue. Each is a real listing on the Snowflake Marketplace - never invented - and is chosen for relevance to the event city. A pick is NOT judged on whether the booth account can attach it: the visitor never imports anything here, they leave with links and open them later from their own account.
 
 ### Healthcare & Life Sciences
 
-`healthcare` - 6 data sources, 6 curated joins, 16 live-search keywords, 0 pinned listings
+| Listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
+| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
+| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial | `GZTDZJKVCY` |
+| PubMed Biomedical Research Corpus | Snowflake | Free | `GZSTZ67BY9OQW` |
+| UK Health Facts and Dimensions Sample | Facts and Dimensions Ltd | Free | `GZ2FRZQNY1` |
+| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free | `GZSVZ1K7UU` |
 
-**Library - data they already hold**
+### Financial Services
 
-| Option | Note shown under it |
-|---|---|
+| Listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| Snowflake Public Data: Foreign Exchange Rates | Snowflake Public Data Products | Free 60-day trial | `GZTSZ290BVCAO` |
+| Inflation Forecasting - Headline & Core CPI by Country | Turnleaf Analytics | Free | `GZTDZ7DJU9` |
+| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` |
+| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
+| CSRHub ESG (Environment, Social, Governance) Fast Start | CSRHub LLC | Free 30-day trial | `GZT0ZI0XJ6Q` |
+| Banking Analytics Bundle | InSights | Free | `GZTYZAPS3FP` |
+
+### Retail & Consumer Goods
+
+| Listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial | `GZTDZJKVCY` |
+| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
+| PayCheck – UK household income estimates at postcode level - SAMPLE data | CACI Ltd | Free | `GZSVZ1K7UA` |
+| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
+| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
+| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free | `GZT0ZKUCHKL` |
+
+Pinned first when the live tier is enabled: `GZTDZJKVCY`, `GZSVZAJO3`.
+
+### Public Sector & Government
+
+| Listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
+| Address Spine – UK address level property information - Sample Data | CACI Ltd | Free | `GZSVZ1K7UQ` |
+| CARTO Boundaries | CARTO | Free | `GZT0Z4CM1E9L4` |
+| UK Land Surface Observations | Met Office | Free 14-day trial | `GZTDZJKVH3` |
+| National Severe Weather Warning Service | Met Office | Free | `GZTDZJKVCU` |
+| Administrative boundaries - Great Britain: Boundary Line - Open | Ordnance Survey | Free | `GZ1MOZBWYYT` |
+
+Pinned first when the live tier is enabled: `GZSVZAJO3`, `GZ1MOZBWYYT`, `GZSVZ1K7UQ`.
+
+### Manufacturing & Industrial
+
+| Listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| CEIC Commodities Data | CEIC Data | Free | `GZTSZRC7HQ3` |
+| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` |
+| Overture Maps - Transportation | CARTO | Free | `GZT0Z4CM1E9KJ` |
+| FactSet Supply Chain Relationships (sample) | FactSet | Free | `GZT0ZGCQ51RQ` |
+| D&B Shipping Insights Sample | Dun & Bradstreet | Free | `GZT0ZPWB4J7` |
+| Global Spot Weather Forecasts | Met Office | Free 14-day trial | `GZTDZJKVCM` |
+
+### Energy & Utilities
+
+| Listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| National Severe Weather Warning Service | Met Office | Free | `GZTDZJKVCU` |
+| UK Land Surface Observations | Met Office | Free 14-day trial | `GZTDZJKVH3` |
+| Yes Energy - Sample Data | Yes Energy | Free | `GZSOZ71OJH` |
+| Sample of GasMarketCube - Global Gas Supply, Demand and Trade | Rystad Energy | Free | `GZSVZ8MX1I` |
+| Wind Power Forecast, Day-ahead - Sample | Weather Solutions | Free | `GZSYZSRWU5` |
+| Crude oil price data | General Index | Free Trial | `GZTDZ1PNFO` |
+
+Pinned first when the live tier is enabled: `GZTDZJKVCM`, `GZTDZJKVCU`, `GZTDZJKVCY`.
+
+### Media, Telco & Entertainment
+
+| Listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
+| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
+| CARTO Boundaries | CARTO | Free | `GZT0Z4CM1E9L4` |
+| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free | `GZT0ZKUCHKL` |
+| GLP-1 Social Conversations Sample Dataset | Socialgist | Free | `GZT1ZFQ0JE5` |
+| American Community Survey, 2016 | data.world, Inc | Free | `GZSNZ4PHA6` |
+
+### Something else
+
+| Listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
+| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` |
+| CARTO Boundaries | CARTO | Free | `GZT0Z4CM1E9L4` |
+| Snowflake Public Data: Foreign Exchange Rates | Snowflake Public Data Products | Free 60-day trial | `GZTSZ290BVCAO` |
+| CARTO Analytics Toolbox | CARTO | Free | `GZT0Z4CM1E9NA` |
+| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
+
+Pinned first when the live tier is enabled: `GZTDZJKVCY`.
+
+### Which industries each listing appears in
+
+| Listing | Industries | Appears in |
+| --- | --- | --- |
+| UK (England and Wales only) Census 2021 - Trial | 5 | Healthcare & Life Sciences, Retail & Consumer Goods, Public Sector & Government, Media, Telco & Entertainment, Something else |
+| Acorn - Geodemographic Segmentation in the UK | 4 | Healthcare & Life Sciences, Retail & Consumer Goods, Media, Telco & Entertainment, Something else |
+| CARTO Boundaries | 3 | Public Sector & Government, Media, Telco & Entertainment, Something else |
+| Company Data UK (incl. Guernsey) - XL Dataset | 3 | Financial Services, Manufacturing & Industrial, Something else |
+| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | 2 | Financial Services, Retail & Consumer Goods |
+| National Severe Weather Warning Service | 2 | Public Sector & Government, Energy & Utilities |
+| Postcode Sector Weather Forecasts | 2 | Healthcare & Life Sciences, Retail & Consumer Goods |
+| Snowflake Public Data: Foreign Exchange Rates | 2 | Financial Services, Something else |
+| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | 2 | Retail & Consumer Goods, Media, Telco & Entertainment |
+| UK Land Surface Observations | 2 | Public Sector & Government, Energy & Utilities |
+| Address Spine – UK address level property information - Sample Data | 1 | Public Sector & Government |
+| Administrative boundaries - Great Britain: Boundary Line - Open | 1 | Public Sector & Government |
+| American Community Survey, 2016 | 1 | Media, Telco & Entertainment |
+| Banking Analytics Bundle | 1 | Financial Services |
+| CARTO Analytics Toolbox | 1 | Something else |
+| CEIC Commodities Data | 1 | Manufacturing & Industrial |
+| CSRHub ESG (Environment, Social, Governance) Fast Start | 1 | Financial Services |
+| Crude oil price data | 1 | Energy & Utilities |
+| D&B Shipping Insights Sample | 1 | Manufacturing & Industrial |
+| FactSet Supply Chain Relationships (sample) | 1 | Manufacturing & Industrial |
+| GLP-1 Social Conversations Sample Dataset | 1 | Media, Telco & Entertainment |
+| Global Spot Weather Forecasts | 1 | Manufacturing & Industrial |
+| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | 1 | Healthcare & Life Sciences |
+| Inflation Forecasting - Headline & Core CPI by Country | 1 | Financial Services |
+| Overture Maps - Transportation | 1 | Manufacturing & Industrial |
+| PayCheck – UK household income estimates at postcode level - SAMPLE data | 1 | Retail & Consumer Goods |
+| PubMed Biomedical Research Corpus | 1 | Healthcare & Life Sciences |
+| Sample of GasMarketCube - Global Gas Supply, Demand and Trade | 1 | Energy & Utilities |
+| UK Health Facts and Dimensions Sample | 1 | Healthcare & Life Sciences |
+| Wind Power Forecast, Day-ahead - Sample | 1 | Energy & Utilities |
+| Yes Energy - Sample Data | 1 | Energy & Utilities |
+
+## 4. What the visitor already holds
+
+The Data Library offers these per industry, plus a free-text option.
+
+### Healthcare & Life Sciences
+
+| Option | Shown underneath |
+| --- | --- |
 | Patient records | Structured clinical records in a PAS or EPR system |
 | Clinical notes & letters | Free text - discharge summaries, referrals, correspondence |
 | Referral & waiting list data | Pathways, breaches, appointment scheduling |
@@ -62,27 +335,10 @@ For each industry: what the library offers, and the six curated Marketplace list
 | Imaging & diagnostics | Scan metadata and reports |
 | Estates & operations | Beds, theatres, staffing rotas, supplies |
 
-**Marketplace - the six curated joins offered, all verified importable**
-
-| Listing | Provider | Access |
-|---|---|---|
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
-| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial |
-| PubMed Biomedical Research Corpus | Snowflake | Free |
-| UK Health Facts and Dimensions Sample | Facts and Dimensions Ltd | Free |
-| Household Acorn - geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free |
-
-**Live-search keywords** (16): clinical, patient, nhs, health, disease, epidemiolog, population health, prescrib, wellbeing, mortality, hospital, medic, pharma, drug, life science, biotech
-
 ### Financial Services
 
-`financial` - 6 data sources, 6 curated joins, 12 live-search keywords, 0 pinned listings
-
-**Library - data they already hold**
-
-| Option | Note shown under it |
-|---|---|
+| Option | Shown underneath |
+| --- | --- |
 | Transaction history | Card, payment and account movement |
 | Customer & account master | KYC records, product holdings, segments |
 | Positions & trades | Holdings, orders, execution history |
@@ -90,27 +346,10 @@ For each industry: what the library offers, and the six curated Marketplace list
 | Customer communications | Call transcripts, complaints, chat logs |
 | Regulatory reporting | Submissions and the reconciliations behind them |
 
-**Marketplace - the six curated joins offered, all verified importable**
-
-| Listing | Provider | Access |
-|---|---|---|
-| Snowflake Public Data: Foreign Exchange Rates | Snowflake Public Data Products | Free 60-day trial |
-| Inflation Forecasting - Headline & Core CPI by Country | Turnleaf Analytics | Free |
-| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial |
-| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free |
-| CSRHub ESG (Environment, Social, Governance) Fast Start | CSRHub LLC | Free 30-day trial |
-| Banking Analytics Bundle | InSights | Free |
-
-**Live-search keywords** (12): foreign exchange, inflation, credit, risk, equity, market, macro, payments, fraud, interest rate, economic, commodit
-
 ### Retail & Consumer Goods
 
-`retail` - 6 data sources, 6 curated joins, 11 live-search keywords, 2 pinned listings
-
-**Library - data they already hold**
-
-| Option | Note shown under it |
-|---|---|
+| Option | Shown underneath |
+| --- | --- |
 | Sales & till transactions | Basket-level sales by store and channel |
 | Inventory & stock positions | Availability, shrink, replenishment |
 | Loyalty & customer data | Membership, spend history, segments |
@@ -118,29 +357,10 @@ For each industry: what the library offers, and the six curated Marketplace list
 | Supplier & logistics data | Purchase orders, lead times, delivery performance |
 | Reviews & customer service | Free text feedback, returns reasons, contact logs |
 
-**Marketplace - the six curated joins offered, all verified importable**
-
-| Listing | Provider | Access |
-|---|---|---|
-| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
-| PayCheck - UK household income estimates at postcode level - SAMPLE data | CACI Ltd | Free |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
-| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free |
-| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free |
-
-**Live-search keywords** (11): consumer, footfall, spend, household income, demographic, acorn, basket, weather, postcode, segmentation, price
-
-**Pinned listings**: GZTDZJKVCY, GZSVZAJO3
-
 ### Public Sector & Government
 
-`public` - 6 data sources, 6 curated joins, 11 live-search keywords, 3 pinned listings
-
-**Library - data they already hold**
-
-| Option | Note shown under it |
-|---|---|
+| Option | Shown underneath |
+| --- | --- |
 | Case management records | Casework across service lines |
 | Policy & guidance documents | Years of PDFs, circulars and statutory guidance |
 | Citizen contact & correspondence | Calls, emails, webforms, complaints |
@@ -148,29 +368,10 @@ For each industry: what the library offers, and the six curated Marketplace list
 | Finance & procurement | Budgets, spend over threshold, contracts |
 | Performance & statutory returns | KPIs and central government reporting |
 
-**Marketplace - the six curated joins offered, all verified importable**
-
-| Listing | Provider | Access |
-|---|---|---|
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
-| Address Spine - UK address level property information - Sample Data | CACI Ltd | Free |
-| CARTO Boundaries | CARTO | Free |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
-| National Severe Weather Warning Service | Met Office | Free |
-| Administrative boundaries - Great Britain: Boundary Line - Open | Ordnance Survey | Free |
-
-**Live-search keywords** (11): census, postcode, deprivation, boundary, population, geospatial, planning, crime, education, transport, uprn
-
-**Pinned listings**: GZSVZAJO3, GZ1MOZBWYYT, GZSVZ1K7UQ
-
 ### Manufacturing & Industrial
 
-`manufacturing` - 6 data sources, 6 curated joins, 20 live-search keywords, 0 pinned listings
-
-**Library - data they already hold**
-
-| Option | Note shown under it |
-|---|---|
+| Option | Shown underneath |
+| --- | --- |
 | Machine & sensor telemetry | High frequency readings off the line |
 | Quality & defect records | Inspection results, scrap, rework |
 | Maintenance logs | Work orders and engineer free text |
@@ -178,27 +379,10 @@ For each industry: what the library offers, and the six curated Marketplace list
 | Supplier & inbound logistics | Component lead times and quality by supplier |
 | Energy consumption | Meter data by line and site |
 
-**Marketplace - the six curated joins offered, all verified importable**
-
-| Listing | Provider | Access |
-|---|---|---|
-| CEIC Commodities Data | CEIC Data | Free |
-| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial |
-| Overture Maps - Transportation | CARTO | Free |
-| FactSet Supply Chain Relationships (sample) | FactSet | Free |
-| D&B Shipping Insights Sample | Dun & Bradstreet | Free |
-| Solid United Nations Codes for Trade and Transport Locations | Solid Data LLC | Free 30-day trial |
-
-**Live-search keywords** (20): supply chain, logistics, commodit, shipping, freight, industrial, manufactur, materials, energy price, trade, tariff, production, inventory, supplier, port, vessel, steel, metal, company data, economic
-
 ### Energy & Utilities
 
-`energy` - 6 data sources, 6 curated joins, 11 live-search keywords, 3 pinned listings
-
-**Library - data they already hold**
-
-| Option | Note shown under it |
-|---|---|
+| Option | Shown underneath |
+| --- | --- |
 | Smart meter readings | Interval consumption at premise level |
 | Network & asset data | Substations, pipes, cables, condition |
 | Outage & fault records | Interruptions, causes, restoration times |
@@ -206,29 +390,10 @@ For each industry: what the library offers, and the six curated Marketplace list
 | Customer & billing | Accounts, tariffs, arrears, vulnerability flags |
 | Field engineer reports | Free text inspection and repair notes |
 
-**Marketplace - the six curated joins offered, all verified importable**
-
-| Listing | Provider | Access |
-|---|---|---|
-| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial |
-| National Severe Weather Warning Service | Met Office | Free |
-| Yes Energy - Sample Data | Yes Energy | Free |
-| Sample of GasMarketCube - Global Gas Supply, Demand and Trade | Rystad Energy | Free |
-| Wind Power Forecast, Day-ahead - Sample | Weather Solutions | Free |
-| Crude oil price data | General Index | Free Trial |
-
-**Live-search keywords** (11): weather, climate, emission, carbon, grid, renewable, solar, wind, temperature, energy, net zero
-
-**Pinned listings**: GZTDZJKVCM, GZTDZJKVCU, GZTDZJKVCY
-
 ### Media, Telco & Entertainment
 
-`media` - 6 data sources, 6 curated joins, 10 live-search keywords, 0 pinned listings
-
-**Library - data they already hold**
-
-| Option | Note shown under it |
-|---|---|
+| Option | Shown underneath |
+| --- | --- |
 | Viewing & listening events | Play, pause, completion by title and device |
 | Subscriber & account data | Plans, churn, lifetime value |
 | Content catalogue & metadata | Titles, rights, genres, availability windows |
@@ -236,27 +401,10 @@ For each industry: what the library offers, and the six curated Marketplace list
 | Advertising & campaign data | Impressions, fill rate, yield |
 | Customer support interactions | Call transcripts and chat logs |
 
-**Marketplace - the six curated joins offered, all verified importable**
-
-| Listing | Provider | Access |
-|---|---|---|
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
-| CARTO Boundaries | CARTO | Free |
-| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free |
-| GLP-1 Social Conversations Sample Dataset | Socialgist | Free |
-| American Community Survey, 2016 | data.world, Inc | Free |
-
-**Live-search keywords** (10): audience, media, broadband, mobile, advertising, viewership, telco, subscriber, content, social
-
 ### Something else
 
-`other` - 6 data sources, 6 curated joins, 6 live-search keywords, 1 pinned listings
-
-**Library - data they already hold**
-
-| Option | Note shown under it |
-|---|---|
+| Option | Shown underneath |
+| --- | --- |
 | Core operational records | Whatever your main system of record holds |
 | Documents & PDFs | Years of unstructured files nobody can query |
 | Customer or member data | Who you serve and what they have done |
@@ -264,59 +412,12 @@ For each industry: what the library offers, and the six curated Marketplace list
 | Emails, calls & tickets | Free text interactions |
 | Device or sensor data | Anything machine-generated and high volume |
 
-**Marketplace - the six curated joins offered, all verified importable**
+## 5. What gets built: the 9 archetypes
 
-| Listing | Provider | Access |
-|---|---|---|
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free |
-| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial |
-| CARTO Boundaries | CARTO | Free |
-| Snowflake Public Data: Foreign Exchange Rates | Snowflake Public Data Products | Free 60-day trial |
-| CARTO Analytics Toolbox | CARTO | Free |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free |
+The workshop takes one line of free text and resolves it to exactly one archetype. The features and the first step are precomputed per archetype, so they are instant and always drawn from the curated feature list.
 
-**Live-search keywords** (6): weather, census, demographic, postcode, economic, geospatial
-
-**Pinned listings**: GZTDZJKVCY
-
-## The platform question, and what it produces
-
-Asked once on the home stage, one tap, universal across industries. Each chip writes a concrete route into the blueprint, so this is the section that turns "we have the data somewhere" into a first task.
-
-| Chip | Route the blueprint prints |
-|---|---|
-| Microsoft / Azure | Openflow has a first-party connector for Azure Blob Storage and SQL Server. For Fabric or OneLake, register the Iceberg tables through a catalog integration and query them in place - no copy. |
-| AWS | Point an external stage at the S3 bucket with a storage integration, then Snowpipe for continuous load. If the data is already Iceberg in Glue, use a catalog integration and leave it where it is. |
-| Google Cloud | A storage integration over the GCS bucket plus an external stage. BigQuery data moves cleanly as Parquet exported to GCS, or through Openflow if you need it on a schedule. |
-| Oracle | Openflow's Oracle connector does change data capture, so you get an ongoing replica rather than a nightly dump. Start with the handful of tables the proof of concept actually reads. |
-| SAP | Either the SAP connector for Snowflake, or SAP Business Data Cloud sharing the data as Iceberg that Snowflake reads without a copy. The second route is usually faster to stand up. |
-| On-premise / our own servers | Openflow can run inside your network and push out, so nothing has to be exposed inbound. For a first proof of concept, a one-off bulk load of a representative extract is usually enough. |
-| SaaS apps (Salesforce, Workday, etc.) | Openflow has connectors for the common SaaS sources, and the Marketplace carries some of them as ready-made shares. Check the Marketplace first - it is the cheaper answer when it exists. |
-| Already in Snowflake | Nothing to move. Point the proof of concept at the existing tables and spend the saved time on the model and the interface instead. |
-| Not sure yet | Worth ten minutes with whoever owns the source before you build. The answer changes the effort more than any other decision here. |
-
-### Combinations, and the guardrails on them
-
-The chips are multi-select, so most visitors tap more than one. Before the guardrails, **16 of the 36 possible pairs produced a self-contradicting document** and **10 printed "Openflow" twice**. Both are fixed, and both are enforced twice - in the browser on tap, and again on the server when the blueprint is built - so a bypassed or mis-clicked UI still cannot produce a contradictory hand-out.
-
-| Selection | What the blueprint prints | Why |
-|---|---|---|
-| One cloud, e.g. **AWS** | That one route | The simple case |
-| **Azure + AWS** | Both routes, Azure first | Genuinely different routes; config order decides which is printed first, so it is the same document every time regardless of tap order |
-| **Already in Snowflake** alone | Its own line, no route | A legitimate answer on its own |
-| **Already in Snowflake** + any named source | The named source only; "Already in Snowflake" is dropped | A named source is actionable, so it wins - printing both said "nothing to move" and "here is how to move it" in the same document |
-| **Not sure yet** alone | Its own line, no route | A legitimate answer on its own |
-| **Not sure yet** + any named source | The named source only; "Not sure yet" is dropped | A named source is actionable, so it wins - printing both said "nothing to move" and "here is how to move it" in the same document |
-| More than 4 chips | The first 4 in config order | Caps the ingestion section so it reads as a plan, not a checklist. All 9 chips used to print 9 route paragraphs |
-
-Verified by exhausting every single, pair and triple combination: **0 contradictions and 0 cap overruns**, worst case bounded at 4 routes.
-
-## The 9 archetypes
-
-The workshop is free text, but it resolves to exactly one of these. Features and the first step are precomputed, so they are instant and always correct; only the summary and the considerations need the model.
-
-| Archetype | Features | Considerations in pool |
-|---|---|---|
+| Archetype | Features | Considerations available |
+| --- | --- | --- |
 | talk-to-my-data | Cortex Analyst, Semantic Views, Snowflake Intelligence | 5 |
 | ask-my-documents | Cortex Search, AI_PARSE_DOCUMENT, Cortex Agents | 5 |
 | extract-from-paperwork | AI_EXTRACT, AI_PARSE_DOCUMENT, Dynamic Tables | 5 |
@@ -327,7 +428,7 @@ The workshop is free text, but it resolves to exactly one of these. Features and
 | share-without-copying | Secure Data Sharing, Snowflake Marketplace, Dynamic Tables | 5 |
 | watch-it-live | Snowpipe Streaming, Dynamic Tables, Streams | 5 |
 
-**First steps**
+### The first step printed for each
 
 - **talk-to-my-data** - Write down the three questions people ask most, then model just the tables those need.
 - **ask-my-documents** - Put fifty representative documents on a stage and see what the parser returns before building anything.
@@ -339,182 +440,81 @@ The workshop is free text, but it resolves to exactly one of these. Features and
 - **share-without-copying** - Pick one dataset and one partner, and write down exactly which columns they may see.
 - **watch-it-live** - Define the one event worth reacting to, and how quickly someone must know about it.
 
-## Where the precomputed suggestions are weakest
+## 6. How the data gets into Snowflake
 
-Computed, not editorial - these are the counts that stand out.
+Each platform tapped on the letter prints a concrete route into the blueprint.
 
-- **Healthcare & Life Sciences** has no pinned listings, so if live search returns nothing recognisable there is no guaranteed good result.
-- **Financial Services** has no pinned listings, so if live search returns nothing recognisable there is no guaranteed good result.
-- **Manufacturing & Industrial** has no pinned listings, so if live search returns nothing recognisable there is no guaranteed good result.
-- **Media, Telco & Entertainment** has no pinned listings, so if live search returns nothing recognisable there is no guaranteed good result.
-- **Something else** has only 6 live-search keywords, so it will fall back to the curated list more often than the others.
+| Platform | Route printed |
+| --- | --- |
+| Microsoft / Azure | Openflow has a first-party connector for Azure Blob Storage and SQL Server. For Fabric or OneLake, register the Iceberg tables through a catalog integration and query them in place - no copy. |
+| AWS | Point an external stage at the S3 bucket with a storage integration, then Snowpipe for continuous load. If the data is already Iceberg in Glue, use a catalog integration and leave it where it is. |
+| Google Cloud | A storage integration over the GCS bucket plus an external stage. BigQuery data moves cleanly as Parquet exported to GCS, or through Openflow if you need it on a schedule. |
+| Oracle | Openflow's Oracle connector does change data capture, so you get an ongoing replica rather than a nightly dump. Start with the handful of tables the proof of concept actually reads. |
+| SAP | Either the SAP connector for Snowflake, or SAP Business Data Cloud sharing the data as Iceberg that Snowflake reads without a copy. The second route is usually faster to stand up. |
+| On-premise / our own servers | Openflow can run inside your network and push out, so nothing has to be exposed inbound. For a first proof of concept, a one-off bulk load of a representative extract is usually enough. |
+| SaaS apps (Salesforce, Workday, etc.) | Openflow has connectors for the common SaaS sources, and the Marketplace carries some of them as ready-made shares. Check the Marketplace first - it is the cheaper answer when it exists. |
+| Already in Snowflake | Nothing to move. Point the proof of concept at the existing tables and spend the saved time on the model and the interface instead. |
+| Not sure yet | Worth ten minutes with whoever owns the source before you build. The answer changes the effort more than any other decision here. |
 
-Two structural gaps worth a decision rather than a count:
+### When more than one is tapped
 
-- **No industry biases the archetype choice.** A hospital and a bank get the same 9 archetypes with the same weighting. A per-industry ordering, or two or three likely archetypes per industry, would make the forge both faster and more plausible.
-- **The data held does not narrow the marketplace suggestion.** Someone who ticked "clinical notes" is offered the same joins as someone who ticked "estates and operations". A held-to-join mapping is the highest-value precompute still missing.
+| Selection | What the blueprint prints |
+| --- | --- |
+| One platform | That route |
+| Several named platforms | Each route, in the order listed above, so the document does not depend on tap order |
+| Not sure yet, alone | Its own line, no route |
+| Not sure yet, with a named platform | The named platform only |
+| More than four platforms | The first four in the order listed above |
 
-## Where the visitor's time goes
+Already in Snowflake is not an exclusive answer: an estate can be part in Snowflake and part elsewhere. When it is picked alongside a named platform the blueprint prints this instead of "nothing to move": **Some of it is already here, so the proof of concept starts on those tables today while the rest lands alongside them.**
 
-A stop is only as good as the wait in front of it, so the transport each one uses is part of the decision tree, not an implementation detail.
+These rules are applied in the browser as the visitor taps, and again on the server when the blueprint is built.
 
-| Stop | Transport asked for | Ceiling |
-|---|---|---|
-| The Data Library | `complete` | 60s |
-| The Marketplace | `complete` | 60s |
-| The Workshop | `exec` | 60s |
-| The Postbox | `exec` | 60s |
+## 7. How each answer is produced
 
-**Measured before any of this was built** (5 visits, `game/cost.jsonl`): the Workshop stop was 75% of all model wait at a 26.0s median, because it was the only stop running a real `cortex exec`.
+| Stop | Model transport | Notes |
+| --- | --- | --- |
+| The Data Library | complete | A single fast completion that names the selection back. |
+| The Marketplace | complete | A single fast completion that names the selection back. |
+| The Workshop | exec | Agentic. CoCo's working is shown on screen as it arrives. |
+| The Postbox | - | No model turn. Runs the QA review, writes the document, returns the fixed line above. |
 
-`cortex exec` is a one-shot CI/CD entry point with no `--resume`, no `--session` and no `--daemon`, so every call is a cold process. Timed on a trivial prompt: 22.7s default, 19.4s with `--no-mcp`, 18.1s with every flag that helps. **About 18 seconds of that is startup, not thinking.**
+Every turn has a wall-clock ceiling of 60s. Past it, the visitor is served the precomputed archetype content instead of a slower sentence, so the document is complete either way.
 
-So the booth now leads with a warm `cortex mcp serve` process, which is the same binary in server mode, held open between visitors:
+One model call is in flight at a time. A second caller waits, so one visitor's content can never appear in another visitor's document.
 
-| | cold `cortex exec` | warm agent |
-|---|---|---|
-| startup | ~18s, every call | 1.3s, once |
-| a turn | ~26s | **~3.4s** |
+The closed lists in this document reach the model as text inside the prompt. The model picks from them and reflects them back; it is never asked to invent a feature, a listing or a fact.
 
-### Four layers, because a stand is not a laptop at a desk
+## 8. Review and delivery
 
-1. **warm agent** - `cortex mcp serve`, ~3.4s.
-2. **`cortex exec`** - a cold one-shot. Not started unless 20s of budget remain.
-3. **`COMPLETE`** - `SNOWFLAKE.CORTEX.COMPLETE`. Fast, non-agentic.
-4. **precomputed** - the archetype defaults in this document. No model at all.
+Before the document is written, it is reviewed. Deterministic checks always run and repair what is fixable from the closed lists: features that do not resolve to a documentation link are dropped, platforms are re-normalised, the sovereignty section is required when a residency rule was given, and a list of banned words is removed. Every change is recorded with its before and after.
 
-Layer 4 is why this document matters operationally: on a flat venue network with a suspended warehouse, what a visitor leaves with is exactly the precomputed content listed above. It is the floor, so it has to read well on its own.
+One further check asks a model whether the proof of concept addresses the problem the visitor described. It never blocks delivery.
 
-### Two constraints that are not negotiable
+The visitor leaves with a Word document, reached by scanning a QR code on screen. The link lasts 7 days. There is no email and no HTML page: the document is the only artifact.
 
-- **One in-flight agent call at a time.** Two calls were issued on one warm process without waiting: one asked for ALPHA, one asked for BRAVO, and both received ALPHA. Concurrent calls mis-correlate, which on a stand means one visitor's content in another visitor's document with no error raised. The pool holds a mutex; a second caller waits.
-- **Every turn has a wall-clock ceiling** (60s by default). The Library has been measured at a 127.3s outlier against a 2.2s median. Past the ceiling the visitor is better served by layer 4 than by a better sentence.
+## 9. Configuration
 
-### Retrieval is deterministic on purpose
+The flags that change what a visitor experiences.
 
-The closed lists reach the model as **content in the prompt**, not as a tool: `cortex exec` takes no tools except through MCP, and MCP is not guaranteed on a borrowed booth laptop. The corpus is ~150 rows, so `game/context.py` scores it in process and injects only the slice that matches the visitor's own words (~220 tokens).
+| Setting | Value | Effect |
+| --- | --- | --- |
+| `locations.marketplace.discovery` | `manual` | The curated listings in section 3 are served |
+| `marketplace.agentic.enabled` | `true` | Agentic listing search is on |
+| `qa.enabled` | `true` | Blueprint review runs before delivery |
+| `qa.model_review` | `true` | Relevance check included in the review |
+| `delivery.transport` | `qr` | Delivery is by QR code to a staged document |
+| `ask.enabled` | `false` | The optional free-question stop is not offered |
+| `event.marketplace_region` | `AWS_EU_WEST_2` | Biases which Marketplace datasets are recommended |
+| `event.time_limit_seconds` | `300` | The visit length the booth is built for |
 
-No search service, deliberately. At a Snowflake-branded event the same input must give the same document, and a visitor's pain language is bridged to our feature names through the archetype **pain** text - "we retype invoices all day" shares no token with `AI_EXTRACT`, but plenty with the pain line.
+### Constraints to be aware of
 
-## Pre-prepared scripts (for marketing review)
-
-Every fixed line a visitor sees or hears, in running order, straight from `config.json`. **These are pre-written and identical for every visitor.** The one-line replies CoCo speaks at the Library, Marketplace and Workshop are NOT listed here: they are generated per visit by the model (SNOWFLAKE.CORTEX.COMPLETE, `mistral-large2`), reflecting back what the visitor just picked. The model PICKS from closed lists and REFLECTS; it never writes the copy below, and it cannot invent a feature, guide or listing that is not in the curated lists.
-
-Placeholders in braces - `{country}`, `{platform}`, `{region}`, `{first_name}` - are filled from the visitor's own answers at runtime.
-
-### Intro card
-
-- **Title:** Loco for CoCo
-- **Button:** START
-- This is a fun way to experience the power of Cortex Code (CoCo) through the medium of an arcade game.
-- You have 5 minutes to explore the key aspects of building out a Proof of Concept on Snowflake with CoCo as your tour guide on our features, marketplace datasets and how enterprise-grade AI can bring your ideas to life.
-- After 5 minutes you will have a personalised action plan (scan it and keep it) to building out a project on Snowflake - be daring! This is a fun, flexible process with a very real and useful outcome!
-- Anything you type stays private - it is shared only with you and Snowflake, and never sold on or shared with anyone else.
-
-### Home stage - CoCo's narrative
-
-The penguin arrives, reads a letter, and walks the visitor to the questions. Every line is fixed:
-
-- **arctic:** Somewhere in the Arctic...
-- **arctic_sub:** (Yes, penguins live in Antarctica, but CoCo is special!)
-- **greeting:** Hey CoCo,
-- **body:** It's your friend {first_name}! I've heard you and the Cortex Crew have been cooking up some amazing products recently. Me and my team at {company} wanted to learn more. We're particularly interested in {industry} and wanted to understand what an MVP/POC would look like for this on Snowflake. Could you help us out?
-- **signoff:** Signed {first_name}
-- **button:** THAT'S BETTER
-- **line1:** A letter, from my friend {first_name}! Better get to work...
-- **line2:** Anyway, let's go and get this show on the road.
-- **map_line:** First stop is my Data Library. That's where I keep all the unstructured, semi-structured and structured data that would be useful for {first_name} and {company}.
-- **bubble:** Wow, a letter from my friend! Shame I can't make out some of these words... (Please fill this in with your details)
-
-### Home stage - the three questions
-
-**Where does your data live today?**
-
-- _Hint:_ Tap every platform it sits on. This is what decides how we get it into Snowflake.
-- Microsoft / Azure
-- AWS
-- Google Cloud
-- Oracle
-- SAP
-- On-premise / our own servers
-- SaaS apps (Salesforce, Workday, etc.)
-- Already in Snowflake
-- Not sure yet
-
-**And where is your company based?**
-
-- _Hint:_ One tap. It helps me keep your data where your rules need it.
-- United Kingdom
-- Ireland
-- France
-- Germany
-- Netherlands
-- Nordics
-- Rest of EU
-- Somewhere else
-
-**Where are your data and AI models allowed to run?**
-
-- _Hint:_ This shapes the region we build in. One tap.
-- {country} only
-- Anywhere in the EU is fine
-- The US is fine too
-- Not sure yet
-
-### Sovereignty - CoCo's reactions and blueprint pillars
-
-CoCo answers each home-stage choice with a fixed reassurance (`react`); the four `pillars` are reused verbatim in the blueprint's sovereignty section.
-
-Reactions:
-- **platform_already:** Perfect - it's already in Snowflake, so we skip the plumbing and go straight to building.
-- **platform_unsure:** No problem - we'll work the plumbing out together, it's usually the easy part.
-- **platform_named:** Good - I know exactly how to get data out of {platform} and into Snowflake, in region and without copying it around.
-- **country:** {country}, lovely. I'll keep everything where {country}'s rules need it.
-- **residency_country_only:** Understood - everything stays in {country}. Your data, the AI models, all of it.
-- **residency_eu:** Great - we'll keep it inside the EU. Data and models both, no border crossings.
-- **residency_us_ok:** Plenty of room to work with, then - and it still stays wherever you choose.
-- **residency_unsure:** We'll keep it close to home by default - you can always widen it later.
-
-Pillars:
-- **data:** Your data never leaves {region}: it stays in your own Snowflake account, in region, not copied out to be processed.
-- **models:** Cortex runs the AI models where your data already lives, so nothing crosses a border to be understood.
-- **marketplace:** Marketplace data is shared live rather than copied, and you are only ever offered listings available in {region}.
-- **governance:** One set of controls - role-based access, masking, row-level policies - governs all of it, in one place.
-
-### The letter - what the visitor types
-
-- **Prompt:** Please enter your details:
-- **Your first name** (`first_name`) - e.g. Priya
-- **Where you work** (`company`) - e.g. NHS Trust, Barclays, Tesco
-- Industry is picked from the 8-item list; the problem is free text (threaded into every later prompt and into the document).
-- **Library synthetic-data hint:** CoCo can mimic any shelf as synthetic data so a POC can start before the real feed exists. Generate it in Snowflake with GENERATOR and RANDOM, or let Cortex fabricate realistic rows from a description.
-
-### The workshop - the one line we ask for
-
-- **heading:** Ask CoCo one thing
-- **hint:** Optional. One question about your POC and CoCo will look it up properly.
-- **placeholder:** e.g. what would we need before we could trust the predictions?
-- **button:** ASK COCO
-- **skip:** SKIP THIS
-
-### The postbox - delivery lines
-
-CoCo speaks one of these when the visitor presses send (`{first_name}` is filled in if given):
-
-- **On success:** Wrapped and labelled, {first_name}. Scan the code on screen and it is yours - the link works for seven days.
-- **If staging fails:** I could not wrap it up this time - grab a Snowflake person and we will sort it.
-
-### The model prompts
-
-The one-line replies above are generated, not scripted - so for full transparency, every prompt the booth actually sends to Cortex (the shared preamble, the Library, Marketplace and Workshop turns, the background fill and the QA relevance check) is rendered verbatim against an example visitor in `skills/loco4coco/references/model-prompts.md`. Regenerate it with `python3 scripts/build_model_prompts.py`. The rule that governs all of them: the model only ever PICKS from our closed lists and REFLECTS them back - it is never asked to invent a feature, a listing or a fact, and the same visitor input yields the same document.
-
-## Flagged for review
-
-Decisions for a human, not code changes. None of these stop the booth running.
-
-- **Geo weighting is London-only.** The curated picks are scored with 19 UK preference terms and 20 non-UK demotion terms (`marketplace.geo`). Re-weight before Paris, or a French room is offered UK postcode data.
-- **11 of the 48 curated slots are time-limited trials** rather than perpetual Free. Everything is free to acquire and nothing is Paid, but some expire before a visitor is likely to act on it.
-- **The curated set repeats across industries.** 48 slots are filled by only 30 distinct listings. Most reused: UK (England and Wales only) Census 2021 - Trial (5 industries); Acorn - Geodemographic Segmentation in the UK (5 industries); Postcode Sector Weather Forecasts (3 industries); Company Data UK (incl. Guernsey) - XL Dataset (3 industries). This is the "why am I being offered the same thing again" problem, and it is content curation work rather than a bug.
-- **`is_ready_for_import` is the flag that decides whether a visitor can actually attach a listing**, and it is stricter than it looks. Measured on the London account: of 4,347 visible listings only 671 are importable. Every one of those is also not-by-request. The trap is the middle group - 2,594 listings are NOT by-request and still NOT importable, so they look freely available and cannot be mounted. Checking only region and by-request passes listings a visitor cannot use; that is how five unattachable entries once sat in the curated index undetected. `deploy/verify_context.py --listings` now checks the flag directly, and all 30 distinct curated listings pass it.
-- **The agentic marketplace tier stays disabled.** Re-timed 2026-08-24 at **117.1s** for one search - slower than the 70-110s originally measured, and far slower than a visitor walking one stall. It does return better matches (a "poor data quality" problem returned Ataccama Data Quality and Semarchy xDM rather than an industry keyword guess), but it does NOT verify region or `is_ready_for_import`, so its suggestions can be dead ends. Warming does not rescue it: the 117s is inference and tool time, not the ~18s of process startup.
+- Listing selection is weighted for the United Kingdom: 19 preference terms and 20 demotion terms. A room in another country needs these re-weighted.
+- 12 of the 48 slots are time-limited trials rather than perpetual free listings. All are free to acquire; none are paid.
+- 4 listings appear in three or more industries, the most reused being UK (England and Wales only) Census 2021 - Trial, Acorn - Geodemographic Segmentation in the UK. A visitor who has seen the booth before may be offered the same dataset again.
+- A listing is only offerable if Snowflake reports it as importable. That is stricter than being visible and not by-request, so the flag is checked directly rather than inferred.
+- No pinned fallback for: Healthcare & Life Sciences, Financial Services, Manufacturing & Industrial, Media, Telco & Entertainment. These industries rely entirely on the curated list in section 3.
+- The industry does not weight which archetype a visitor is routed to.
+- The data a visitor holds DOES narrow which datasets are suggested: each listing is tagged with what it is for and each library shelf with what it is, and selection intersects the two. There is no tag for unstructured text, because no curated listing serves it - a visitor whose problem is documents is ranked on their own words and their sector alone.
 

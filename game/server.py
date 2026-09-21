@@ -31,6 +31,7 @@ import os
 import posixpath
 import re
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -150,12 +151,19 @@ def resolve_venue(cfg):
     venues = cfg.get("venues") or {}
     v = venues.get(venue)
     if v:
-        for k in ("city", "language", "region"):
+        for k in ("city", "language", "marketplace_region"):
             if v.get(k):
                 ev[k] = v[k]
         ev["market_profile"] = v.get("market_profile") or "uk"
     else:
         ev.setdefault("market_profile", "uk")
+    # Accept a pre-rename config rather than serving an empty stall. `region` was
+    # renamed to `marketplace_region` because two different regions exist and the
+    # old name did not say which one it meant: this one biases which Marketplace
+    # datasets are RECOMMENDED, and has nothing to do with the account's region.
+    if not ev.get("marketplace_region") and ev.get("region"):
+        ev["marketplace_region"] = ev["region"]
+    ev.pop("region", None)
     cfg["event"] = ev
     return cfg
 
@@ -962,14 +970,16 @@ def run_agentic_search(cfg, industry, problem):
     ac = (cfg.get("marketplace") or {}).get("agentic") or {}
     c = cfg.get("coco") or {}
     ind_name = industry_name(cfg, industry) or industry
-    # Seeded from the EVENT LOCATION, never the booth account. event.region is the
-    # EVENT's region (London = eu-west-2); the account is always eu-central-1. The
+    # Seeded from the EVENT LOCATION, never the booth account.
+    # event.marketplace_region is the
+    # EVENT's region (London = eu-west-2); the account's own region is whatever
+    # the DataOps pool assigned and is irrelevant here. The
     # visitor never imports at the booth - they open the links later from their own
     # account - so what matters is availability where THEY are.
     ev = cfg.get("event") or {}
     locality = (cfg.get("marketplace") or {}).get("locality") or {}
     country = locality.get(ev.get("market_profile") or "uk") or ""
-    region = (ev.get("region") or "").strip().split(".")[-1]
+    region = region_short(cfg)
 
     query = f"{problem} for {ind_name}" + (f" in {country}" if country else "")
     cmd = [c.get("binary", "cortex"), "search", "marketplace", query,
@@ -1082,7 +1092,10 @@ def listings_agentic(cfg, session_id):
 
 
 def region_short(cfg):
-    return ((cfg.get("event") or {}).get("region") or "").strip().split(".")[-1]
+    """The EVENT's region, short form. Never the account's - see resolve_venue."""
+    ev = cfg.get("event") or {}
+    raw = ev.get("marketplace_region") or ev.get("region") or ""
+    return raw.strip().split(".")[-1]
 
 
 def refresh_live_listings(cfg, force=False):
@@ -1103,7 +1116,7 @@ def refresh_live_listings(cfg, force=False):
             return _live_cache["rows"], ""
         region = region_short(cfg)
         if not region:
-            _live_cache["error"] = "event.region is not set"
+            _live_cache["error"] = "event.marketplace_region is not set"
             return [], _live_cache["error"]
         try:
             cur = sf_conn(cfg).cursor()
@@ -1393,10 +1406,10 @@ def listings_curated(cfg, industry, state=None):
     # SE-reviewed belongs on the stall even if this particular region cannot
     # attach it; what it must never be is invented. In-region picks lead, the rest
     # fill the six, and the document is always six real datasets rather than one.
-    region = ((cfg.get("event") or {}).get("region") or "").strip()
+    region = region_short(cfg)
     if not region:
         return rows[:6]
-    short = region.split(".")[-1]
+    short = region
 
     def local(r):
         regs = (r.get("regions") or "").strip()
@@ -2712,6 +2725,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(500, str(e)[:200].encode("utf-8"))
         if path == "/api/delivery/check":
             return self._delivery_check()
+        if path == "/api/admin/status":
+            return self._admin_status()
+        if path == "/admin":
+            return self._file("admin.html")
         if path in ("/", "/index.html"):
             return self._file("index.html")
         safe = posixpath.normpath(path).lstrip("/")
@@ -2730,6 +2747,8 @@ class Handler(BaseHTTPRequestHandler):
             "/api/ask": self._ask,
             "/api/send": self._post_it,
             "/api/reset": self._reset,
+            "/api/admin/apply": self._admin_apply,
+            "/api/admin/restart": self._admin_restart,
             "/api/state": self._patch,
             "/api/card": self._card,
         }
@@ -2776,6 +2795,112 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"error": err or "presign failed"}, 502)
         write_state({"card_url": url})
         return self._json({"url": url})
+
+    def _admin_status(self):
+        """What the operator needs to see at a glance, and nothing a visitor
+        would care about. Cheap: no Snowflake round trip, so it can be polled."""
+        cfg = load_config()
+        ev = cfg.get("event") or {}
+        coco = cfg.get("coco") or {}
+        try:
+            stall = len(load_marketplace(ev.get("market_profile") or "uk") or {})
+        except Exception:                                        # noqa: BLE001
+            stall = None
+        # WHERE the closed lists came from, and how many rows this event's profile
+        # actually has. This is here because the failure it catches is silent: the
+        # Snowflake read falls back to the committed bundle on any error, and a
+        # stale bundle serves LONDON's datasets at a Paris booth with a full stall,
+        # eight industries and nothing in the log. Measured once for real.
+        source, prof_rows = "unknown", None
+        try:
+            data, source = bctx.load(conn=coco_connection())
+            want = ev.get("market_profile") or "uk"
+            prof_rows = sum(1 for r in (data.get("listings") or [])
+                            if r.get("market_profile") == want)
+        except Exception:                                        # noqa: BLE001
+            pass
+        warm = None
+        if coco.get("warm_agent", True):
+            try:
+                warm = bool(agent_pool.get_agent().alive())
+            except Exception:                                    # noqa: BLE001
+                warm = False
+        st = read_state()
+        return self._json({
+            "venue": ev.get("venue") or "",
+            "venues": [k for k in (cfg.get("venues") or {})
+                       if not k.startswith("_")],
+            "city": ev.get("city") or "",
+            "language": ev.get("language") or "",
+            "marketplace_region": ev.get("marketplace_region") or "",
+            "market_profile": ev.get("market_profile") or "",
+            "operator": ev.get("operator") or "",
+            "complete_model": coco.get("complete_model") or "",
+            "qa_model": (cfg.get("qa") or {}).get("model") or "",
+            "warm_agent": warm,
+            "industries_on_stall": stall,
+            "context_source": source,
+            "listings_for_profile": prof_rows,
+            "connection": coco_connection() or "",
+            "visitor_active": bool(st.get("visitor")),
+            "stage": st.get("stage") or "",
+        })
+
+    def _admin_apply(self):
+        """Change venue and operator without restarting anything.
+
+        config.json is re-read by load_config() on every request, so the only
+        thing that would go stale is the per-profile marketplace cache - flush it
+        and the next visitor sees the new city's stall. The venue must be one the
+        config actually defines: an unknown venue silently falls through to the
+        hand-configured event block, which is how you end up running Paris with
+        London's datasets.
+        """
+        body = self._body() or {}
+        venue = str(body.get("venue") or "").strip().lower()
+        operator = str(body.get("operator") or "").strip()[:120]
+        with open(CONFIG_PATH, encoding="utf-8") as f:
+            raw = json.load(f)
+        known = [k for k in (raw.get("venues") or {}) if not k.startswith("_")]
+        if venue and venue not in known:
+            return self._json({"error": "unknown venue %r; known: %s"
+                                        % (venue, ", ".join(known))}, 400)
+        ev = raw.setdefault("event", {})
+        if venue:
+            ev["venue"] = venue
+        ev["operator"] = operator
+        tmp = CONFIG_PATH + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(raw, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+        os.replace(tmp, CONFIG_PATH)
+        global _market_cache
+        _market_cache = None
+        return self._admin_status()
+
+    def _admin_restart(self):
+        """Re-exec this process in place.
+
+        Config and venue changes do NOT need this - they are picked up on the
+        next request. This exists for the two cases that genuinely need a new
+        process: server.py was edited, and the warm agent pool wedged (a
+        cancelled in-flight call can leave it unable to answer, and no amount of
+        config reloading fixes that).
+
+        Reply first, then re-exec on a short timer, or the operator's browser
+        gets a dead socket instead of a confirmation.
+        """
+        self._json({"restarting": True})
+
+        def go():
+            time.sleep(0.4)
+            try:
+                agent_pool.get_agent().stop()
+            except Exception:                                    # noqa: BLE001
+                pass
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+
+        threading.Thread(target=go, daemon=True).start()
 
     def _reset(self):
         # replace=True, so nothing from the previous visitor survives.

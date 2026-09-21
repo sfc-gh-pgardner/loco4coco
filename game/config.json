@@ -11,8 +11,8 @@
     "_venue_comment": "The ONE toggle a booth operator changes per event. Expands via the venues map below into city, language, cloud region and marketplace profile. One of: london, paris, frankfurt, berlin. Leave unset to hand-configure city/language/region directly.",
     "city": "London",
     "language": "en",
-    "region": "AWS_EU_WEST_2",
-    "_region_comment": "Marketplace listings are filtered to this region. Offering a visitor a share they cannot attach wastes the five minutes we just spent with them.",
+    "marketplace_region": "AWS_EU_WEST_2",
+    "_marketplace_region_comment": "The EVENT's region - where the visitors live. Used ONLY to decide which Marketplace datasets are PREFERRED in the recommendations. Resolved from event.venue; you do not set it by hand. It is NOT the account's region and must never be confused with it: the account's region only decides where SESSIONS/TURNS/blueprints are written, is whatever the DataOps pool assigned, and is never needed. Renamed from `region`, which did not say which of the two it meant. Offering a visitor a share they cannot attach wastes the five minutes we just spent with them.",
     "title": "Loco for CoCo",
     "subtitle": "Five minutes to your next data product",
     "time_limit_seconds": 300,
@@ -22,28 +22,28 @@
     "_byline_comment": "Shown under the title on the start screen. Left EMPTY by default so a fresh cloner does not ship someone else's name at their own event. Set it to your own, or leave blank to show nothing."
   },
   "venues": {
-    "_comment": "The three SWT events. event.venue selects one; resolve_venue() in server.py overwrites event.city/language/region and sets event.market_profile from it. TWO REGIONS EXIST AND THEY ARE NOT THE SAME THING. (1) `region` below is the EVENT LOCATION's cloud region and is used ONLY to judge which Marketplace datasets to RECOMMEND - London prioritises AWS_EU_WEST_2 listings, Paris AWS_EU_WEST_3, Berlin AWS_EU_CENTRAL_1. (2) The ACCOUNT's own region is always AWS_EU_CENTRAL_1 (every event runs on its own ephemeral AWS Frankfurt account) and is used ONLY for where SESSIONS/TURNS/blueprints are written - it must NEVER filter recommendations. The visitor never imports anything at the booth: they leave with links and open them later from their own account, so what matters is that a dataset is relevant and available WHERE THEY ARE, not whether the booth could attach it. Because one account serves one event, LOCO4COCO.BOOTH is the per-event separation and there are deliberately no per-event schemas. NOTE: only the 'en' UI copy deck exists; fr/de language codes are wired but the copy is still English (translation deprioritised).",
+    "_comment": "The three SWT events. event.venue selects one; resolve_venue() in server.py overwrites event.city/language/marketplace_region and sets event.market_profile from it. TWO REGIONS EXIST AND THEY ARE NOT THE SAME THING. (1) `marketplace_region` below is the EVENT LOCATION's cloud region and is used ONLY to judge which Marketplace datasets to RECOMMEND - London prioritises AWS_EU_WEST_2 listings, Paris AWS_EU_WEST_3, Berlin AWS_EU_CENTRAL_1. (2) The ACCOUNT's own region is whatever the DataOps pool assigns (register once per event at https://go.dataops.live/emea-swt/register; the account name is random and its region is not guaranteed) and is used ONLY for where SESSIONS/TURNS/blueprints are written - it must NEVER filter recommendations. Nothing in the setup asks the operator for the account's name or region, which is precisely why a random pool assignment is safe. The visitor never imports anything at the booth: they leave with links and open them later from their own account, so what matters is that a dataset is relevant and available WHERE THEY ARE, not whether the booth could attach it. Because one account serves one event, LOCO4COCO.BOOTH is the per-event separation and there are deliberately no per-event schemas. NOTE: only the 'en' UI copy deck exists; fr/de language codes are wired but the copy is still English (translation deprioritised).",
     "london": {
       "city": "London",
       "language": "en",
-      "region": "AWS_EU_WEST_2",
+      "marketplace_region": "AWS_EU_WEST_2",
       "market_profile": "uk"
     },
     "paris": {
       "city": "Paris",
       "language": "fr",
-      "region": "AWS_EU_WEST_3",
+      "marketplace_region": "AWS_EU_WEST_3",
       "market_profile": "fr"
     },
     "berlin": {
       "city": "Berlin",
       "language": "de",
-      "region": "AWS_EU_CENTRAL_1",
+      "marketplace_region": "AWS_EU_CENTRAL_1",
       "market_profile": "de"
     }
   },
   "snowflake": {
-    "connection_name": "PG_LONDON",
+    "connection_name": "Frankfurt_L4C",
     "database": "LOCO4COCO",
     "schema": "BOOTH",
     "sessions_table": "SESSIONS"
@@ -57,17 +57,18 @@
     "timeout_seconds": 180,
     "stream": true,
     "cost_log": "cost.jsonl",
-    "complete_model": "llama3.3-70b",
+    "complete_model": "claude-4-sonnet",
     "warm_agent": true,
     "warm_agent_comment": "Hold a `cortex mcp serve` process open between visitors. Measured ~3.4s per turn against ~26s for a cold `cortex exec`, because exec has no --resume/--session and pays ~18s of process startup every call. Strictly one in-flight call: concurrent calls on one process were proven to mis-correlate and return another call's answer. Set false to fall straight through to exec.",
     "turn_timeout": 60,
-    "turn_timeout_comment": "Wall-clock ceiling per turn. The Library has been measured at a 127.3s outlier against a 2.2s median; past the ceiling the visitor is better served by the precomputed answer than a better sentence."
+    "turn_timeout_comment": "Wall-clock ceiling per turn. The Library has been measured at a 127.3s outlier against a 2.2s median; past the ceiling the visitor is better served by the precomputed answer than a better sentence.",
+    "_complete_model_comment": "MEASURED on an AWS eu-central-1 event account, 3 reps on the real Library prompt: claude-4-sonnet 5.1s median, openai-gpt-5-mini 3.1s, llama3.1-70b 3.5s, mistral-large2 3.7s, llama3.3-70b 69.5s median and 33.7-111.4s range. claude-4-sonnet chosen on QUALITY at acceptable speed: it was the only one that named the right feature for the visitor's problem (Dynamic Tables) instead of a plausible-sounding wrong one - mistral-large2 recommended Time Travel for predicting supplier delays, and both llamas recommended Materialized Views. llama3.3-70b was the previous default and is a booth hazard: one stall could eat a third of the 300s visit. claude-4-5-sonnet, claude-3-7-sonnet, llama4-maverick, llama4-scout, openai-gpt-4.1 and deepseek-r1 are NOT available in eu-central-1 (512513). Re-measure per region before an event: availability and latency both move."
   },
   "qa": {
     "_comment": "The QA bot reviews the finished blueprint before it is staged. Deterministic checks always run and silently repair what is fixable from the closed lists (off-list features dropped, guide fallback, platforms re-normalised); each change is recorded to LOCO4COCO.BOOTH.QA_FINDINGS with before/after, and a summary lands on the SESSIONS row. model_review adds one fast COMPLETE call judging whether the POC addresses the visitor's stated problem - it fails open, never blocking the handover.",
     "enabled": true,
     "model_review": true,
-    "model": "llama3.3-70b",
+    "model": "claude-4-sonnet",
     "timeout_seconds": 12
   },
   "delivery": {

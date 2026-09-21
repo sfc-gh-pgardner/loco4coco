@@ -59,16 +59,30 @@ locs = cfg['locations']
 # only source of truth for what a visitor is offered.
 MARKET_PATH = os.path.join(os.path.dirname(HERE), 'skills', 'loco4coco',
                            'references', 'marketplace-index.md')
+# The mirror is keyed by profile now, not just industry: headings read
+# "## uk / healthcare / primary". This document describes ONE venue, so take that
+# venue's profile and read primary picks then reserves, which is the order the
+# stall itself assembles. Parsing only "## healthcare" silently yielded zero rows
+# and the document cheerfully reported "0 slots across 0 industries".
+_venue = ((cfg.get('event') or {}).get('venue') or '').strip().lower()
+_profile = (((cfg.get('venues') or {}).get(_venue) or {}).get('market_profile')
+            or 'uk')
 market = {}
 _cur_ind = None
 _row_re = re.compile(r"^\|\s*\[(?P<title>.+?)\]\((?P<url>[^)]+)\)\s*\|"
                      r"\s*(?P<prov>[^|]+?)\s*\|\s*(?P<acc>[^|]+?)\s*\|"
                      r"\s*`(?P<gname>[^`]+)`\s*\|")
 for line in io.open(MARKET_PATH, encoding='utf-8').read().splitlines():
-    h = re.match(r"^##\s+([a-z_]+)\s*$", line.strip())
+    h = re.match(r"^##\s+([a-z_]+)\s*/\s*([a-z_]+)\s*/\s*([a-z]+)\s*$",
+                 line.strip())
     if h:
-        _cur_ind = h.group(1)
-        market.setdefault(_cur_ind, [])
+        _prof, _ind, _kind = h.group(1), h.group(2), h.group(3)
+        # PRIMARY only. Reserves exist as a promotion pool and as filler when a
+        # city has fewer than six on-theme picks; they are not what the visitor is
+        # offered, so counting them reported 96 slots for a stall that shows 48.
+        _cur_ind = _ind if (_prof == _profile and _kind == 'primary') else None
+        if _cur_ind:
+            market.setdefault(_cur_ind, [])
         continue
     if not _cur_ind:
         continue
@@ -309,9 +323,11 @@ for _k in order():
     for _r in market.get(_k) or []:
         _titles[_r['title']] = _titles.get(_r['title'], 0) + 1
         _where.setdefault(_r['title'], []).append(ind_label(_k))
-w('%d slots across %d industries, filled by %d distinct listings. Each is a '
-  'real listing on the Snowflake Marketplace, verified attachable in the event '
-  'region, so nothing offered here is a dead end.'
+w('%d slots across %d industries, filled by %d distinct listings, for THIS '
+  'venue. Each is a real listing on the Snowflake Marketplace - never invented - '
+  'and is chosen for relevance to the event city. A pick is NOT judged on whether '
+  'the booth account can attach it: the visitor never imports anything here, they '
+  'leave with links and open them later from their own account.'
   % (_slots, len(market), len(_titles)))
 w('')
 for _k in order():
@@ -499,8 +515,9 @@ w('| `ask.enabled` | `%s` | %s |'
      'The optional free-question stop is not offered'
      if not (cfg.get('ask') or {}).get('enabled')
      else 'The optional free-question stop is offered'))
-w('| `event.region` | `%s` | Listings are filtered to what is attachable here |'
-  % q((cfg.get('event') or {}).get('region')))
+w('| `event.marketplace_region` | `%s` | Biases which Marketplace datasets are recommended |'
+  % q((cfg.get('event') or {}).get('marketplace_region')
+       or (cfg.get('event') or {}).get('region')))
 w('| `event.time_limit_seconds` | `%s` | The visit length the booth is built for |'
   % q((cfg.get('event') or {}).get('time_limit_seconds')))
 w('')

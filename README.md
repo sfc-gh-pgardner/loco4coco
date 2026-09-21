@@ -16,19 +16,29 @@ a Python standard-library server plus a browser canvas. No npm, no build step, n
 
 ## Setting it up
 
-New laptop, new account, never run this before: **[SETUP.md](SETUP.md)**.
+The whole setup is three things, and you only do two of them:
+
+1. **Get an account** — register at <https://go.dataops.live/emea-swt/register>, once per
+   event. The name is random and you never need it.
+2. **Connect** — `snow connection add`, then confirm
+   `cortex exec "Reply with the single word: ready." --no-mcp -c <conn>` answers.
+3. **Let Cortex Code do the rest** — paste the prompt in
+   **[SETUP.md](SETUP.md#let-cortex-code-do-it)**. It clones this repo, deploys, loads the
+   datasets, sets your venue and name, starts the server and proves it with a smoke test.
+
+Full longhand, and the operational side — the pre-flight before doors open, the cost
+guardrails, resetting between visitors, and the SDR export you must run before the
+account is torn down — is all in **[SETUP.md](SETUP.md)**.
 
 Already set up:
 
 ```bash
 cd game
-python3 server.py          # then open http://127.0.0.1:4747/
+python3 server.py          # visitor: http://127.0.0.1:4747/
+                           # operator: http://127.0.0.1:4747/admin
 ```
 
 ## Running an event
-
-`SETUP.md` also covers the operational side: the pre-flight before doors open,
-the cost guardrails, and resetting between visitors.
 
 ## How it is put together
 
@@ -66,15 +76,25 @@ Total CoCo wait is about 58s of the 300s budget, down from 144.5s before tuning.
 - **Python does not hot-reload.** Restart the server after editing `server.py` or
   `config.json`. HTML and CSS are served from disk.
 - **One toggle per event: `event.venue`** (`london` / `paris` / `berlin`).
-  It resolves city, language, cloud region and marketplace profile from the `venues`
-  map in `config.json`. **Each event runs on its own account, all in AWS Frankfurt**, so
-  the region is the same everywhere and is not what differs between events - the
-  marketplace profile (locality) is. One account per event also means there is no
-  per-event schema: `LOCO4COCO.BOOTH` in that account is the separation.
-  It is a config edit today (a local `/admin` selector is planned).
-- **Models are region-specific.** The fast/QA path defaults to `llama3.3-70b`, which works
-  in both `AWS_EU_WEST_2` and `AWS_EU_CENTRAL_1`; `mistral-large2` is legacy in eu-central-1.
-  It falls back to the agentic path automatically if inference fails.
+  It resolves city, language, marketplace region and dataset profile from the `venues`
+  map in `config.json`. Set it in **`/admin`** at the booth — venue and operator changes
+  take effect on the next visitor with no restart.
+  **Two regions exist and they are not the same thing.** `event.marketplace_region`
+  (London `AWS_EU_WEST_2`, Paris `AWS_EU_WEST_3`, Berlin `AWS_EU_CENTRAL_1`) decides which
+  datasets are *recommended*, because that is where the visitors are. The **account's**
+  region is whatever the DataOps pool assigned, decides only where rows are written, and
+  is never needed. Each event runs on its own account, so `LOCO4COCO.BOOTH` in that
+  account is the per-event separation and there are no per-event schemas.
+- **`deploy/load_context.py` is not optional.** It puts the city's datasets in the
+  account. Skip it and the game silently falls back to a committed copy, which can serve
+  another city's data with no visible symptom. `/admin` shows **datasets loaded** (expect
+  90–96) and **lists read from** (expect `snowflake`) so you can see it.
+- **Models are region-specific in availability *and* speed.** The fast/QA path defaults to
+  **`claude-4-sonnet`** — measured 5.1s median on an eu-central-1 event account, against
+  **69.5s median (33.7–111.4s)** for `llama3.3-70b`, the previous default. Re-measure if
+  you move region rather than assuming; several Claude, Llama-4 and OpenAI models are not
+  offered in eu-central-1 at all. It falls back to the agentic path automatically if
+  inference fails.
 - **Delivery is a QR to a presigned stage document, not an email.** The booth keeps
   nothing on the laptop and sends no email; the visitor scans the QR on screen and the
   document lands on their own phone.

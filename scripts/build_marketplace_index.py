@@ -53,7 +53,7 @@ def booth_defaults():
                   encoding="utf-8") as f:
             cfg = json.load(f)
         conn = ((cfg.get("snowflake") or {}).get("connection_name")) or None
-        region = ((cfg.get("event") or {}).get("region")) or None
+        region = ((cfg.get("event") or {}).get("marketplace_region")) or None
         if region:
             region = region.strip().split(".")[-1]
     except (OSError, json.JSONDecodeError):
@@ -202,7 +202,7 @@ def main():
         sys.exit("No connection. Pass --connection, or set "
                  "snowflake.connection_name in game/config.json.")
     if not a.region:
-        sys.exit("No region. Pass --region, or set event.region in "
+        sys.exit("No region. Pass --region, or set event.marketplace_region in "
                  "game/config.json.")
     print(f"Connection  : {a.connection}")
     print(f"Region      : {a.region}")

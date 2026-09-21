@@ -12,8 +12,8 @@ names cannot be scraped. The SE reviews marketplace-candidates.json and promotes
 the good ones into marketplace.json (primary or reserve).
 
     python3 scripts/precompute_marketplace.py --profile uk --industry media -c PG_LONDON
-    python3 scripts/precompute_marketplace.py --profile de --industry media energy -c Frankfurt_L4C
-    python3 scripts/precompute_marketplace.py --all -c Frankfurt_L4C          # everything (slow)
+    python3 scripts/precompute_marketplace.py --profile de --industry media energy -c BOOTH
+    python3 scripts/precompute_marketplace.py --all -c BOOTH          # everything (slow)
 
 Latency: each cortex exec is ~30-110s. Runs are serialised. Use --industry to
 scope. Offline, so latency does not matter the way it does at the booth.

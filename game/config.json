@@ -43,7 +43,7 @@
     }
   },
   "snowflake": {
-    "connection_name": "Frankfurt_L4C",
+    "connection_name": "BOOTH",
     "database": "LOCO4COCO",
     "schema": "BOOTH",
     "sessions_table": "SESSIONS"

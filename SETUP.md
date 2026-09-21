@@ -65,12 +65,16 @@ and tell me if any step fails rather than working around it.
 
 It will ask before anything destructive.
 
-**Two prompts you may see on the way through, both expected:**
+**One prompt you may see, and one you should never see:**
 
-- **macOS keychain: "python3.11 wants to access key com.snowflake.connector.python".**
-  Click **Always Allow**, once. See the keychain note under Troubleshooting — do this
-  during setup, not while a visitor is standing in front of you.
 - Cortex Code asking permission to run a command. Normal; approve it.
+- **macOS asking for your keychain password ("Python wants to access key
+  `com.snowflake.connector.python`").** If you see this, stop and run the key-pair step in
+  Step 2. A DataOps event account uses OAuth by default, which caches its token in the
+  keychain and raises that dialog once per process — **312 times over a 100-visitor day**,
+  including mid-visit. `python3 scripts/setup_keypair.py --from <your-connection> --name BOOTH`
+  removes it permanently. "Always Allow" does not.
+
 
 ## What you end up with
 
@@ -130,6 +134,30 @@ All three must succeed before you go further. If that last command returns
 `No models available`, Cortex Code is not authenticated for this connection. Fix it
 now - without it the Workshop and the 7th marketplace option quietly fall back to
 COMPLETE, and you will not find out until a visitor is standing in front of you.
+
+### Then swap to key-pair auth, as soon as you have cloned the repo
+
+`snow connection add` gives you OAuth against a DataOps account, which caches its token in
+the macOS keychain and raises a password dialog **once per process** — 10 during setup, then
+3 per visitor, 312 over a 100-visitor day. One of those can land mid-visit and the stand
+stops until somebody types a password. "Always Allow" does not fix it: the grant is per
+binary and is lost when the token refreshes.
+
+Key-pair auth has no token to cache, so it never touches the keychain at all. The script
+lives in the repo, so run this **immediately after Step 3**:
+
+```bash
+python3 scripts/setup_keypair.py --from MYBOOTH --name BOOTH
+```
+
+It generates an RSA key under `~/.snowflake/keys/` (0600), registers the public half on your
+event user, writes a `[BOOTH]` connection using `SNOWFLAKE_JWT`, and verifies it. `MYBOOTH`
+is left untouched, so it is reversible. From then on use `-c BOOTH` everywhere;
+`game/config.json` already points at `BOOTH`.
+
+You may still see two or three prompts before the swap. That is expected and harmless —
+what matters is that none of them can happen once the doors open.
+
 
 ## Step 3: get the code
 
@@ -497,30 +525,52 @@ not built. Until they exist, the query above *is* the handover.
 5. **First visitor felt slow.** Cold warehouse: the first inference call takes around 56s
    against roughly 4s afterwards. Pre-warm with a throwaway visitor.
 6. **`No models available`.** Cortex Code is not authenticated for that connection (Step 2).
-7. **macOS asks for your keychain password: "python3.11 wants to access key
-   `com.snowflake.connector.python`".** Expected, and you should deal with it deliberately
-   during setup rather than mid-visitor.
+7. **macOS keeps asking for your keychain password: "Python wants to access key
+   `com.snowflake.connector.python`".** Fix this properly in Step 2; do not try to live
+   with it.
 
-   The booth holds one pooled Snowflake connection through the Python connector, and if
-   your connection uses browser/OAuth auth (`authenticator = oauth_authorization_code`
-   with `client_store_temporary_credential = true`, which is what `snow connection add`
-   gives you by default against a DataOps account) the connector caches its token in the
-   macOS keychain. Each new Python process asks for access.
+   The cause is the auth mode, not the booth. A DataOps event account is handed out with
+   `authenticator = oauth_authorization_code` and `client_store_temporary_credential = true`.
+   That caches the OAuth token in the macOS keychain, and macOS asks permission once per
+   *process* that reads it. The booth is process-heavy by design, so the count is:
 
-   **Click "Always Allow", once, while you are setting up.** "Allow" only answers for that
-   process and it will ask again.
+   | when | authenticating processes |
+   | --- | --- |
+   | setup, once per event account | 10 |
+   | server start | 2 |
+   | **per visitor** | **3** (stage copy, presign, LIST) |
+   | a 100-visitor day | **312** |
 
-   Two follow-on points worth knowing:
+   Run `python3 scripts/count_auth_calls.py` to reproduce that count. The per-visitor number
+   is the one that matters: a modal password dialog can land in the middle of someone's
+   visit, and the stand stops until you type a password.
 
-   - Do not "fix" this by setting `client_store_temporary_credential = false`. That stops
-     the caching, so the connector falls back to the full OAuth browser flow instead — a
-     browser window opening mid-visitor is far worse than a keychain prompt.
-   - A cached OAuth token can expire during a long event day, and the recovery path is a
-     browser window. If you want to remove the whole class of problem, use **key-pair
-     auth** (`authenticator = SNOWFLAKE_JWT` with a `private_key_file`): no keychain, no
-     browser, nothing to expire mid-conversation. It costs you a key to generate and
-     register up front, so it is the right choice for a full day on a stand and overkill
-     for a ten-minute test.
+   **"Always Allow" is not a reliable fix.** The grant is scoped to one binary path, so
+   `snow`, `cortex` and the framework Python each need their own, and the grant is lost
+   whenever the token is rewritten on refresh. It also does nothing about the token expiring
+   during a long day, where the recovery path is a browser window opening mid-visit.
+
+   **The fix is key-pair auth, which has no token to cache and so never touches the keychain
+   at all.** One command, once per event account:
+
+   ```bash
+   python3 scripts/setup_keypair.py --from <your-oauth-connection> --name BOOTH
+   ```
+
+   That generates an unencrypted RSA key under `~/.snowflake/keys/` (0600), registers the
+   public half on your event user with `ALTER USER`, writes a `[BOOTH]` connection using
+   `SNOWFLAKE_JWT`, and verifies it. Your original connection is left untouched, so it is
+   reversible. The key is unencrypted deliberately — a passphrase would just reintroduce a
+   prompt, and the booth has to run unattended.
+
+   Then use `-c BOOTH` everywhere and set `snowflake.connection_name` to `BOOTH` in
+   `game/config.json` (already the default in this repo). Verified: five consecutive fresh
+   `snow sql` subprocesses, zero prompts, and 1.4–2.2s each against ~3.4s under OAuth.
+
+   Do **not** instead set `client_store_temporary_credential = false`. That stops the caching,
+   so the connector falls back to the full OAuth browser flow — a browser window opening
+   mid-visitor is worse than the dialog you were trying to remove.
+
 6. **The server vanished.** It idled out after 45 minutes.
 7. **Nobody got a monitor warning.** `monitor_notify_user` was empty, or the user has no
    email address. On hands-on-lab / event accounts the login user often has no email, so

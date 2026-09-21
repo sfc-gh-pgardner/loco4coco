@@ -42,11 +42,11 @@ If you do, something is still on OAuth. This matters more than it sounds: the bo
 Run this to find what is still unsafe:
 python3 scripts/check_auth_safety.py
 It checks all three places a connection gets resolved from, because fixing only the booth's own connection is not enough. Then fix whatever it names:
-python3 scripts/setup_keypair.py --from MYBOOTH --name BOOTH
+python3 scripts/setup_keypair.py --connection <the-name-from-step-0>
 One thing that will not show up in that audit: the connection picker inside Cortex Code is a runtime choice and is not written to settings.json. If you are getting browser reauth prompts while Cortex Code helps you, check what the picker is set to.
 H2:Set your city before the doors open
 Open http://127.0.0.1:4747/admin, choose your venue, and press Apply. Then load the datasets for that city:
-python3 deploy/load_context.py --connection BOOTH
+python3 deploy/load_context.py --connection <your-connection>
 This step is not optional. Without it the stall shows London's datasets whichever city you are in.
 H2:The four things to check before the doors open
 * The admin panel says Model proven, in green.

@@ -74,7 +74,7 @@ It will ask before anything destructive.
   `com.snowflake.connector.python`").** If you see this, stop and run the key-pair step in
   Step 2. A DataOps event account uses OAuth by default, which caches its token in the
   keychain and raises that dialog once per process — **312 times over a 100-visitor day**,
-  including mid-visit. `python3 scripts/setup_keypair.py --from <your-connection> --name BOOTH`
+  including mid-visit. `python3 scripts/setup_keypair.py --connection <your-connection>`
   removes it permanently. "Always Allow" does not.
 
 
@@ -149,13 +149,19 @@ Key-pair auth has no token to cache, so it never touches the keychain at all. Th
 lives in the repo, so run this **immediately after Step 3**:
 
 ```bash
-python3 scripts/setup_keypair.py --from MYBOOTH --name BOOTH
+python3 scripts/setup_keypair.py --connection MYBOOTH
 ```
 
-It generates an RSA key under `~/.snowflake/keys/` (0600), registers the public half on your
-event user, writes a `[BOOTH]` connection using `SNOWFLAKE_JWT`, and verifies it. `MYBOOTH`
-is left untouched, so it is reversible. From then on use `-c BOOTH` everywhere;
-`game/config.json` already points at `BOOTH`.
+Use the same connection name you created in Step 0. It generates an RSA key under
+`~/.snowflake/keys/` (0600), registers the public half on your event user, and rewrites that
+connection to use `SNOWFLAKE_JWT` — **in place, keeping the name**. `connections.toml` is
+backed up first, so it is reversible.
+
+Converting in place rather than creating a second connection is deliberate. Cortex Code's
+connection picker holds its own selection, and a new connection name would leave your
+original one still selected and still on OAuth — so the browser prompts would carry on.
+Keeping the name means the picker, `game/config.json` and every `-c` you have already typed
+all keep working.
 
 You may still see two or three prompts before the swap. That is expected and harmless —
 what matters is that none of them can happen once the doors open.
@@ -556,17 +562,18 @@ not built. Until they exist, the query above *is* the handover.
    at all.** One command, once per event account:
 
    ```bash
-   python3 scripts/setup_keypair.py --from <your-oauth-connection> --name BOOTH
+   python3 scripts/setup_keypair.py --connection <your-connection>
    ```
 
    That generates an unencrypted RSA key under `~/.snowflake/keys/` (0600), registers the
-   public half on your event user with `ALTER USER`, writes a `[BOOTH]` connection using
-   `SNOWFLAKE_JWT`, and verifies it. Your original connection is left untouched, so it is
-   reversible. The key is unencrypted deliberately — a passphrase would just reintroduce a
-   prompt, and the booth has to run unattended.
+   public half on your event user with `ALTER USER`, and rewrites that connection to
+   `SNOWFLAKE_JWT` in place, dropping `client_store_temporary_credential`.
+   `connections.toml` is backed up first. The key is unencrypted deliberately — a passphrase
+   would just reintroduce a prompt, and the booth has to run unattended.
 
-   Then use `-c BOOTH` everywhere and set `snowflake.connection_name` to `BOOTH` in
-   `game/config.json` (already the default in this repo). Verified: five consecutive fresh
+   The connection keeps its name, so nothing downstream changes: the same `-c` works, the
+   Cortex Code picker keeps its selection, and `game/config.json` already holds that name.
+   Restart Cortex Code afterwards so it rereads the file. Verified: five consecutive fresh
    `snow sql` subprocesses, zero prompts, and 1.4–2.2s each against ~3.4s under OAuth.
 
    Do **not** instead set `client_store_temporary_credential = false`. That stops the caching,

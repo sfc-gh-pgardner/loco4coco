@@ -191,6 +191,11 @@ def step_keypair(conn, skip):
     Key-pair auth has no token to cache, so it never touches the keychain. This
     runs it automatically rather than leaving it as a step an operator can skip.
 
+    It converts the connection from step 0 in place rather than creating a second
+    one. An earlier version created a connection called BOOTH; that left the
+    operator's own connection still selected in the Cortex Code picker, still on
+    OAuth, so the browser prompts carried on regardless.
+
     It cannot be made completely invisible: registering a public key needs an
     authenticated session first, and on a fresh laptop the only credential
     available is OAuth. So a couple of prompts before this point are structural.
@@ -206,7 +211,7 @@ def step_keypair(conn, skip):
     if not os.path.exists(script):
         print(f"   ! {script} missing, leaving auth as it is")
         return conn
-    r = run([sys.executable, script, "--from", conn, "--name", "BOOTH"])
+    r = run([sys.executable, script, "--connection", conn])
     if r.returncode:
         # Never fatal. A pool account that will not allow ALTER USER still runs
         # the booth perfectly well - it just prompts. Losing a deploy over an
@@ -221,8 +226,8 @@ def step_keypair(conn, skip):
         print("   Most likely cause: this account does not permit "
               "ALTER USER ... SET RSA_PUBLIC_KEY.")
         return conn
-    print("   BOOTH connection created and verified - no keychain from here on.")
-    print("   Use -c BOOTH for every snow and cortex command from now on.")
+    print(f"   {conn} converted and verified - no keychain from here on.")
+    print(f"   Keep using -c {conn}: the name has not changed.")
     # Prove it, rather than assume it. The booth being on key-pair is not enough:
     # the CLI default and Cortex Code hold their own connection names, and either
     # can open a browser mid-event.
@@ -232,7 +237,7 @@ def step_keypair(conn, skip):
         r2 = run([sys.executable, audit])
         if r2.returncode:
             print("   ! something can still prompt - see the audit above")
-    return "BOOTH"
+    return conn
 
 
 def main():

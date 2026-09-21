@@ -21,7 +21,7 @@ event runs on an AWS Frankfurt account, but the visitor never imports anything a
 the booth - they leave with links and open them later from their own account - so
 what matters is that a dataset is relevant and available where THEY are.
 
-    python3 scripts/curate_locality.py --profile fr de -c BOOTH
+    python3 scripts/curate_locality.py --profile fr de -c <your-connection>
     python3 scripts/curate_locality.py --profile fr --dry-run      # look first
 
 Writes profiles.<profile> in references/marketplace.json (6 primary + reserves

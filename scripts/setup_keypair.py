@@ -1,37 +1,35 @@
-"""Remove the macOS keychain from the booth's auth path, permanently.
+"""Convert the connection the operator already made onto key-pair auth, in place.
 
-WHY THIS EXISTS
+WHY IN PLACE
 
-The DataOps event accounts are handed out with `authenticator =
-oauth_authorization_code` and `client_store_temporary_credential = true`. That
-combination caches the OAuth token in the macOS keychain item
-`com.snowflake.connector.python`, and macOS asks permission on every *process*
-that reads it. The booth spawns a lot of processes - every `snow sql`, every
-`snow stage copy`, every `cortex exec` - so the operator gets a modal password
-dialog repeatedly, including mid-visit. "Always Allow" does not reliably end it,
-because the ACL is scoped per binary and is reset whenever the token is
-rewritten on refresh.
+An earlier version of this created a second connection called BOOTH. That was
+wrong. The operator already sets up a connection in step 0 against their assigned
+DataOps account, Cortex Code is already pointed at it, and it is already selected
+in the connection picker. Adding a second name meant a hardcoded value in config,
+a name nobody recognised, and a picker that still had the OAuth connection
+selected - so the browser prompts continued.
 
-Key-pair auth has no token to cache, so it never touches the keychain at all.
-It is also the only mode that works unattended, which is what a booth needs.
+So this rewrites that one connection: same name, same account, same user, key-pair
+instead of OAuth. Nothing downstream has to learn a new name, and the connection
+already selected in the picker stops prompting.
 
-WHAT THIS DOES
+WHY AT ALL
 
-  1. Generates an unencrypted 2048-bit RSA key under ~/.snowflake/keys/ (0600).
-     Unencrypted is deliberate: a passphrase would just reintroduce a prompt.
-  2. Registers the public half on the current user with ALTER USER.
-  3. Writes a new connection to connections.toml using SNOWFLAKE_JWT. The
-     original OAuth connection is left untouched, so this is reversible.
-  4. Verifies the new connection with a real query and confirms no keychain
-     item was read.
+DataOps event accounts are handed out with `authenticator =
+oauth_authorization_code` and `client_store_temporary_credential = true`. The
+OAuth token is cached in the macOS keychain, so macOS asks permission once per
+process - about 3 per visitor, ~312 over a hundred-visitor day - and when the
+token expires the recovery path is a browser window. Key-pair auth has no token
+to cache and nothing to expire.
 
 Usage:
-    python3 scripts/setup_keypair.py --from Frankfurt_L4C --name BOOTH
+    python3 scripts/setup_keypair.py --connection MYBOOTH
 """
 import argparse
-import os
+import datetime
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -39,6 +37,13 @@ import tomllib
 HOME = pathlib.Path.home()
 TOML = HOME / ".snowflake" / "connections.toml"
 KEYDIR = HOME / ".snowflake" / "keys"
+BROWSERY = ("oauth", "externalbrowser", "sso")
+# Keys that only make sense for a browser/OAuth flow and must not survive the
+# conversion - leaving client_store_temporary_credential behind would keep the
+# keychain in the path.
+OAUTH_ONLY = ("client_store_temporary_credential", "token", "token_file_path",
+              "oauth_client_id", "oauth_client_secret", "oauth_redirect_uri",
+              "password")
 
 
 def sh(cmd, **kw):
@@ -46,12 +51,16 @@ def sh(cmd, **kw):
 
 
 def generate_key(name):
-    """Unencrypted PKCS#8 private key plus its public half."""
+    """Unencrypted PKCS#8 private key plus its base64 public body.
+
+    Unencrypted is deliberate. A passphrase would reintroduce exactly the prompt
+    this exists to remove, and the booth has to run unattended on a stand.
+    """
     KEYDIR.mkdir(parents=True, exist_ok=True)
-    priv = KEYDIR / f"{name.lower()}_rsa_key.p8"
-    pub = KEYDIR / f"{name.lower()}_rsa_key.pub"
+    safe = re.sub(r"[^A-Za-z0-9_.-]", "_", name).lower()
+    priv = KEYDIR / f"{safe}_rsa_key.p8"
     if priv.exists():
-        print(f"  key already exists, reusing: {priv}")
+        print(f"   reusing existing key {priv}")
     else:
         r = sh(["openssl", "genrsa", "2048"])
         if r.returncode:
@@ -63,152 +72,98 @@ def generate_key(name):
             sys.exit(f"openssl pkcs8 failed: {r2.stderr[:300]}")
         priv.write_text(r2.stdout)
         priv.chmod(0o600)
-        print(f"  wrote private key {priv} (0600)")
+        print(f"   wrote {priv} (0600)")
     r3 = sh(["openssl", "rsa", "-in", str(priv), "-pubout"])
     if r3.returncode:
         sys.exit(f"openssl rsa -pubout failed: {r3.stderr[:300]}")
-    pub.write_text(r3.stdout)
-    pub.chmod(0o644)
-    # Snowflake wants the base64 body only, no PEM header/footer, no newlines.
     body = "".join(l.strip() for l in r3.stdout.splitlines()
                    if "-----" not in l)
     return priv, body
 
 
-def browser_auth(conf, name):
-    """True if this connection can pop a browser or a keychain dialog."""
-    c = conf.get(name)
-    if not isinstance(c, dict):
-        return False
-    a = str(c.get("authenticator") or "").lower()
-    return any(t in a for t in ("oauth", "externalbrowser", "sso"))
-
-
-def repoint_cortex_code(conf, new_name):
-    """Point Cortex Code at the key-pair connection, if it is on a browser one.
-
-    The booth being on key-pair is not sufficient. Operators are encouraged to
-    let Cortex Code do the setup, and Cortex Code holds its own connection. If
-    that one is OAuth it will interrupt with "Your identity was confirmed and
-    propagated to Snowflake PythonConnector" whenever its token expires - during
-    setup, or worse, mid-event with a visitor waiting.
-
-    Only rewritten when the current value is a browser-auth connection, so a
-    laptop already pointed at something safe is left alone.
-    """
-    path = HOME / ".snowflake" / "cortex" / "settings.json"
-    if not path.exists():
-        return
-    import json
-    try:
-        s = json.loads(path.read_text())
-    except Exception:                                            # noqa: BLE001
-        print(f"   ! could not read {path}, leaving Cortex Code as it is")
-        return
-    changed = []
-    for k in ("sqlConnectionName", "cortexAgentConnectionName"):
-        cur = s.get(k)
-        if cur and cur != new_name and browser_auth(conf, cur):
-            s[k] = new_name
-            changed.append(f"{k}: {cur} -> {new_name}")
-    if not changed:
-        print("   Cortex Code already on a connection that cannot prompt")
-        return
-    path.write_text(json.dumps(s, indent=2) + "\n")
-    for c in changed:
-        print(f"   Cortex Code {c}")
-    print("   Restart Cortex Code, or pick the connection in its picker, for "
-          "this to take effect.")
-
-
-def repoint_default(conf, new_name):
-    """Make the CLI default key-pair, if it currently is not.
-
-    Anything run without `-c` uses default_connection_name. If that points at an
-    OAuth connection, a stray command re-opens the browser. Left alone when the
-    existing default cannot prompt.
-    """
-    path = HOME / ".snowflake" / "config.toml"
-    if not path.exists():
-        return
-    text = path.read_text()
-    m = re.search(r'^\s*default_connection_name\s*=\s*"([^"]+)"',
-                  text, re.M)
-    cur = m.group(1) if m else None
-    if cur and not browser_auth(conf, cur):
-        print(f"   CLI default is {cur}, which cannot prompt - left alone")
-        return
-    if m:
-        text = text[:m.start()] + f'default_connection_name = "{new_name}"' \
-            + text[m.end():]
-    else:
-        text = f'default_connection_name = "{new_name}"\n' + text
-    path.write_text(text)
-    print(f"   CLI default connection: {cur or '(unset)'} -> {new_name}")
+def rewrite_block(text, name, priv):
+    """Replace one connection's auth lines, leaving every other block alone."""
+    pat = re.compile(rf'^\[{re.escape(name)}\]\s*$', re.M)
+    m = pat.search(text)
+    if not m:
+        sys.exit(f"connection [{name}] not found in {TOML}")
+    start = m.end()
+    nxt = re.search(r'^\[', text[start:], re.M)
+    end = start + (nxt.start() if nxt else len(text[start:]))
+    block, kept = text[start:end], []
+    for line in block.splitlines():
+        s = line.strip()
+        if not s:
+            continue
+        key = s.split("=", 1)[0].strip().lower()
+        if key in OAUTH_ONLY or key in ("authenticator", "private_key_file",
+                                        "private_key_path"):
+            continue
+        kept.append(line)
+    kept.append('authenticator = "SNOWFLAKE_JWT"')
+    kept.append(f'private_key_file = "{priv}"')
+    return text[:start] + "\n" + "\n".join(kept) + "\n\n" + text[end:]
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--from", dest="src", required=True,
-                    help="existing connection to copy account/user/role from")
-    ap.add_argument("--name", default="BOOTH",
-                    help="name for the new key-pair connection")
+    ap.add_argument("--connection", "-c", required=True,
+                    help="the connection you created in step 0; converted in place")
+    # Registering a public key needs an authenticated session, and if the
+    # connection being converted is the OAuth one that costs a prompt. --via lets
+    # you borrow a connection on the same account that does not prompt.
+    ap.add_argument("--via", default=None,
+                    help="authenticate the key registration through this connection instead")
     a = ap.parse_args()
 
     if not TOML.exists():
         sys.exit(f"no {TOML}")
     conf = tomllib.loads(TOML.read_text())
-    src = conf.get(a.src)
+    src = conf.get(a.connection)
     if not isinstance(src, dict):
-        sys.exit(f"connection {a.src} not found in {TOML}")
+        sys.exit(f"connection {a.connection} not found in {TOML}. "
+                 f"Known: {', '.join(k for k, v in conf.items() if isinstance(v, dict))}")
 
-    print(f"1. generating key for {a.name}")
-    priv, pub_body = generate_key(a.name)
+    auth = str(src.get("authenticator") or "password").lower()
+    if not any(t in auth for t in BROWSERY) and src.get("private_key_file"):
+        print(f"[{a.connection}] is already on key-pair auth - nothing to do.")
+        return 0
 
-    print(f"2. registering the public key on the account user via {a.src}")
+    print(f"1. generating a key for {a.connection}")
+    priv, pub_body = generate_key(a.connection)
+
+    via = a.via or a.connection
+    print(f"2. registering the public key on the account user (via {via})")
     import snowflake.connector as sc
-    cn = sc.connect(connection_name=a.src)
+    cn = sc.connect(connection_name=a.via or a.connection)
     cur = cn.cursor()
     cur.execute("SELECT CURRENT_USER(), CURRENT_ACCOUNT(), CURRENT_ROLE()")
     user, acct, role = cur.fetchone()
     cur.execute(f"ALTER USER {user} SET RSA_PUBLIC_KEY='{pub_body}'")
-    print(f"   RSA_PUBLIC_KEY set on {user} (account {acct}, role {role})")
+    print(f"   set on {user} (account {acct}, role {role})")
     cur.close()
     cn.close()
 
-    print(f"3. writing connection [{a.name}] to {TOML}")
-    # Hand-edit the TOML: tomllib is read-only and the file carries comments
-    # worth keeping.
-    text = TOML.read_text()
-    block = (f'\n[{a.name}]\n'
-             f'account = "{src.get("account", "")}"\n'
-             f'user = "{user}"\n'
-             f'role = "{src.get("role", role)}"\n'
-             f'authenticator = "SNOWFLAKE_JWT"\n'
-             f'private_key_file = "{priv}"\n')
-    for k in ("warehouse", "database", "schema"):
-        if src.get(k):
-            block += f'{k} = "{src[k]}"\n'
-    text = re.sub(rf'\n\[{re.escape(a.name)}\]\n(?:[^\[]*)', '\n', text)
-    TOML.write_text(text.rstrip("\n") + "\n" + block)
-    print(f"   [{a.name}] written, {a.src} left untouched")
+    print(f"3. converting [{a.connection}] to SNOWFLAKE_JWT, in place")
+    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup = TOML.with_suffix(f".toml.bak-{stamp}")
+    shutil.copy2(TOML, backup)
+    TOML.write_text(rewrite_block(TOML.read_text(), a.connection, priv))
+    print(f"   {a.connection} now uses key-pair; backup at {backup.name}")
 
-    print(f"4. verifying {a.name} with no keychain in the path")
-    cn2 = sc.connect(connection_name=a.name)
+    print(f"4. verifying, with no keychain and no browser in the path")
+    cn2 = sc.connect(connection_name=a.connection)
     c2 = cn2.cursor()
     c2.execute("SELECT CURRENT_USER(), CURRENT_ACCOUNT(), CURRENT_REGION()")
     print(f"   connected as {c2.fetchone()}")
     c2.close()
     cn2.close()
-    print(f"5. removing the other places a browser or keychain prompt can "
-          f"still come from")
-    conf2 = tomllib.loads(TOML.read_text())
-    repoint_cortex_code(conf2, a.name)
-    repoint_default(conf2, a.name)
 
-    print(f"\nDone. Point game/config.json snowflake.connection_name at "
-          f"{a.name}, and use -c {a.name} for every snow/cortex command.")
+    print(f"\nDone. {a.connection} keeps its name, so Cortex Code, the connection "
+          f"picker and game/config.json all keep working.")
+    print("If Cortex Code is open, restart it so it picks up the change.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

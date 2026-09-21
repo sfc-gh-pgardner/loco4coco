@@ -43,7 +43,7 @@
     }
   },
   "snowflake": {
-    "connection_name": "BOOTH",
+    "connection_name": "Frankfurt_L4C",
     "database": "LOCO4COCO",
     "schema": "BOOTH",
     "sessions_table": "SESSIONS"
@@ -59,7 +59,12 @@
     "cost_log": "cost.jsonl",
     "complete_model": "openai-gpt-5.4",
     "_complete_model_namespace": "SQL model, for SNOWFLAKE.CORTEX.COMPLETE (the Library, Marketplace and Postbox reflections, and QA). Do NOT put a coco.model value here without checking it, and do not put one of these in coco.model. The two namespaces OVERLAP but are not equal - measured on an AWS eu-central-1 event account: claude-sonnet-5, claude-opus-5, openai-gpt-5.4 and grok-4.6 work in BOTH; openai-gpt-5, openai-gpt-5-mini and llama3.1-70b work in COMPLETE ONLY; mistral-large2 is legacy in COMPLETE and rejected by cortex exec; gemini-flash-3.7 works in neither. Verify with scripts/rebench_complete.py, which tests COMPLETE specifically.",
-    "complete_model_fallbacks": ["openai-gpt-5", "claude-sonnet-5", "claude-opus-5", "grok-4.6"],
+    "complete_model_fallbacks": [
+      "openai-gpt-5",
+      "claude-sonnet-5",
+      "claude-opus-5",
+      "grok-4.6"
+    ],
     "complete_model_fallbacks_comment": "Tried in order at server start if complete_model does not answer. This exists because claude-4-sonnet went to legacy state mid-project and every COMPLETE turn failed silently for a whole test run while the slow exec fallback covered for it. A model name is a perishable dependency, so the booth now proves it at startup rather than discovering it in front of a visitor.",
     "warm_agent": true,
     "warm_agent_comment": "Hold a `cortex mcp serve` process open between visitors. Measured ~3.4s per turn against ~26s for a cold `cortex exec`, because exec has no --resume/--session and pays ~18s of process startup every call. Strictly one in-flight call: concurrent calls on one process were proven to mis-correlate and return another call's answer. Set false to fall straight through to exec.",
@@ -893,7 +898,7 @@
         "prefer": [
           "france",
           "french",
-          "français",
+          "fran\u00e7ais",
           "paris",
           "insee",
           "data.gouv",
@@ -901,7 +906,7 @@
           "siret",
           "iris",
           "commune",
-          "département",
+          "d\u00e9partement",
           "metropolitan france",
           "eurozone"
         ],
@@ -937,7 +942,7 @@
           "munich",
           "destatis",
           "bundes",
-          "länder",
+          "l\u00e4nder",
           "dax",
           "eurozone"
         ],
@@ -1218,7 +1223,7 @@
   },
   "platforms": {
     "_comment": "Where the data lives today. Asked on CoCo's home stage (moved out of the library 2026-08-25), one tap; decides the integration-path section of the blueprint.",
-    "heading": "We currently keep data on…",
+    "heading": "We currently keep data on\u2026",
     "hint": "Tap every platform it sits on. This is what decides how we get it into Snowflake.",
     "options": [
       "Microsoft / Azure",
@@ -1282,7 +1287,7 @@
   },
   "screens": {
     "_comment": "Visitor-facing prose that belongs to a screen rather than to a stop. It lived in index.html, which meant it never appeared in the \"every scripted line\" section of the decision tree, so the document claimed a completeness it did not have. Anything a visitor reads belongs here.",
-    "history_banner": "Looking back — press ▶ to return to now",
+    "history_banner": "Looking back \u2014 press \u25b6 to return to now",
     "handover_heading": "Take it with you now",
     "handover_body": "Scan this with your phone camera to download your Word blueprint. The link works for seven days.",
     "card_heading": "Scan to keep your card.",

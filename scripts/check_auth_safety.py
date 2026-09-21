@@ -80,7 +80,7 @@ def main():
         print("FAIL - these can open a browser or a keychain dialog mid-event:")
         for p in problems:
             print(f"  {p}")
-        print("\nFix: python3 scripts/setup_keypair.py --from <that> --name BOOTH")
+        print("\nFix: python3 scripts/setup_keypair.py --connection <that-connection>")
         return 1
     print("PASS - every resolved connection uses key-pair or password auth.")
     print("No browser flow and no keychain read is reachable from a booth run.")

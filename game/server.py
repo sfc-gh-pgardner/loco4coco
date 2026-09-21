@@ -435,6 +435,7 @@ def sf_conn(cfg):
         return _conn
 
 
+ACCOUNT = {"name": ""}
 PREFLIGHT = {"checked": False, "model": None, "tried": [], "note": ""}
 
 
@@ -2031,7 +2032,13 @@ def log_session(cfg, state):
         "COCO_SECONDS": int(state.get("coco_seconds") or 0),
         "INPUT_TOKENS": int(state.get("input_tokens") or 0),
         "OUTPUT_TOKENS": int(state.get("output_tokens") or 0),
-        "SE_OPERATOR": (cfg.get("event") or {}).get("operator", ""),
+        # Was a hand-typed "Name / Stand 2". Removed: nothing read it, and all
+        # 52 rows written before this change had it empty, so in practice it was
+        # never filled. The question it was meant to answer - which laptop
+        # produced this row - is already answered by the account, because a
+        # second laptop at an event gets its own pool account. So stamp the
+        # account instead: same information, nothing to type, nothing to forget.
+        "SE_OPERATOR": ACCOUNT.get("name", ""),
         "NOTES": f"{len(turns)} turns",
         # The qualification payload. Everything above is a pick from a list we
         # wrote; these two are the visitor's own words and their real estate.
@@ -2905,7 +2912,6 @@ class Handler(BaseHTTPRequestHandler):
             "language": ev.get("language") or "",
             "marketplace_region": ev.get("marketplace_region") or "",
             "market_profile": ev.get("market_profile") or "",
-            "operator": ev.get("operator") or "",
             "complete_model": coco.get("complete_model") or "",
             "qa_model": (cfg.get("qa") or {}).get("model") or "",
             # Whether the model was actually proven to answer, not just
@@ -2925,7 +2931,7 @@ class Handler(BaseHTTPRequestHandler):
         })
 
     def _admin_apply(self):
-        """Change venue and operator without restarting anything.
+        """Change the venue without restarting anything.
 
         config.json is re-read by load_config() on every request, so the only
         thing that would go stale is the per-profile marketplace cache - flush it
@@ -2936,7 +2942,6 @@ class Handler(BaseHTTPRequestHandler):
         """
         body = self._body() or {}
         venue = str(body.get("venue") or "").strip().lower()
-        operator = str(body.get("operator") or "").strip()[:120]
         with open(CONFIG_PATH, encoding="utf-8") as f:
             raw = json.load(f)
         known = [k for k in (raw.get("venues") or {}) if not k.startswith("_")]
@@ -2946,7 +2951,6 @@ class Handler(BaseHTTPRequestHandler):
         ev = raw.setdefault("event", {})
         if venue:
             ev["venue"] = venue
-        ev["operator"] = operator
         tmp = CONFIG_PATH + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(raw, f, indent=2, ensure_ascii=False)
@@ -3309,18 +3313,8 @@ def main():
     print(f"  account   : {cfg['snowflake']['connection_name']}")
     print(f"  transport : {(cfg.get('delivery') or {}).get('transport')}")
     print(f"  guides    : {len(load_guides())} primary forks loaded")
-    # Stand identity is the one field that cannot be reconstructed after the
-    # event. Every row is stamped with it at write time, so an empty value means
-    # a day's conversations arrive with no way to tell which stand produced them.
-    # Warn loudly rather than refuse: a booth that will not start is worse than
-    # one with a gap in its reporting.
-    _op = (cfg.get("event") or {}).get("operator", "")
-    if str(_op).strip():
-        print(f"  stand     : {_op}")
-    else:
-        print("  stand     : *** event.operator IS EMPTY *** every visitor row "
-              "will be unattributable. Set it in game/config.json now - it "
-              "cannot be added afterwards.")
+    # No stand field to check any more. Rows are attributed by account, which is
+    # resolved in the warm thread and needs nothing from the operator.
     # Warm the model so the first real visitor does not pay cold-start latency.
     #
     # This used to spawn a throwaway `cortex exec`, which warmed almost nothing:

@@ -55,8 +55,6 @@
         <select id="venue"></select>
       </div>
       <div class="field">
-        <label for="operator">Operator &amp; stand</label>
-        <input id="operator" placeholder="P Gardner / Stand 2" autocomplete="off">
       </div>
     </div>
     <div class="actions">
@@ -132,7 +130,6 @@ function paint(s) {
     });
   }
   if (document.activeElement !== sel) sel.value = s.venue || '';
-  if (document.activeElement !== $('operator')) $('operator').value = s.operator || '';
 
   $('s-city').textContent = s.city || '—';
   $('s-lang').textContent = s.language || '—';
@@ -186,7 +183,7 @@ async function refresh() {
 
 $('apply').onclick = async () => {
   say('');
-  const body = { venue: $('venue').value, operator: $('operator').value };
+  const body = { venue: $('venue').value };
   const r = await fetch('/api/admin/apply',
     { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body) });

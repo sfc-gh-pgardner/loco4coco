@@ -436,6 +436,25 @@ def sf_conn(cfg):
 
 
 ACCOUNT = {"name": ""}
+
+
+def account_name(cfg):
+    """The account this booth writes to, cached for the process lifetime.
+
+    Resolved lazily rather than in the warm thread so there is no ordering
+    dependency: if the first visitor arrives before warming finishes, the row is
+    still attributed. One query, once.
+    """
+    if ACCOUNT["name"]:
+        return ACCOUNT["name"]
+    try:
+        cur = sf_conn(cfg).cursor()
+        cur.execute("SELECT CURRENT_ACCOUNT()")
+        ACCOUNT["name"] = (cur.fetchone() or [""])[0] or ""
+        cur.close()
+    except Exception as e:                                        # noqa: BLE001
+        print(f"[loco4coco] could not resolve account name: {str(e)[:100]}")
+    return ACCOUNT["name"]
 PREFLIGHT = {"checked": False, "model": None, "tried": [], "note": ""}
 
 
@@ -2038,7 +2057,7 @@ def log_session(cfg, state):
         # produced this row - is already answered by the account, because a
         # second laptop at an event gets its own pool account. So stamp the
         # account instead: same information, nothing to type, nothing to forget.
-        "SE_OPERATOR": ACCOUNT.get("name", ""),
+        "SE_OPERATOR": account_name(cfg),
         "NOTES": f"{len(turns)} turns",
         # The qualification payload. Everything above is a pick from a list we
         # wrote; these two are the visitor's own words and their real estate.

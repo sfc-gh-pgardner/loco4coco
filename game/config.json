@@ -54,21 +54,21 @@
     "model": null,
     "effort": "low",
     "warm_up": true,
-    "timeout_seconds": 180,
     "stream": true,
     "cost_log": "cost.jsonl",
-    "complete_model": "claude-4-sonnet",
+    "complete_model": "openai-gpt-5",
     "warm_agent": true,
     "warm_agent_comment": "Hold a `cortex mcp serve` process open between visitors. Measured ~3.4s per turn against ~26s for a cold `cortex exec`, because exec has no --resume/--session and pays ~18s of process startup every call. Strictly one in-flight call: concurrent calls on one process were proven to mis-correlate and return another call's answer. Set false to fall straight through to exec.",
     "turn_timeout": 60,
     "turn_timeout_comment": "Wall-clock ceiling per turn. The Library has been measured at a 127.3s outlier against a 2.2s median; past the ceiling the visitor is better served by the precomputed answer than a better sentence.",
-    "_complete_model_comment": "MEASURED on an AWS eu-central-1 event account, 3 reps on the real Library prompt: claude-4-sonnet 5.1s median, openai-gpt-5-mini 3.1s, llama3.1-70b 3.5s, mistral-large2 3.7s, llama3.3-70b 69.5s median and 33.7-111.4s range. claude-4-sonnet chosen on QUALITY at acceptable speed: it was the only one that named the right feature for the visitor's problem (Dynamic Tables) instead of a plausible-sounding wrong one - mistral-large2 recommended Time Travel for predicting supplier delays, and both llamas recommended Materialized Views. llama3.3-70b was the previous default and is a booth hazard: one stall could eat a third of the 300s visit. claude-4-5-sonnet, claude-3-7-sonnet, llama4-maverick, llama4-scout, openai-gpt-4.1 and deepseek-r1 are NOT available in eu-central-1 (512513). Re-measure per region before an event: availability and latency both move."
+    "_complete_model_comment": "RE-MEASURED 2026-09-21 on an AWS eu-central-1 event account after the previous default BROKE. claude-4-sonnet went to legacy state and now returns a 400 in ~0.5s on every call ('The model claude-4-sonnet has been in legacy state'), so every COMPLETE turn was failing and the 20-27s cortex exec fallback was silently carrying the load. mistral-large2 is ALSO legacy now, and the entire Claude family (claude-4-5-sonnet, claude-3-5-sonnet, claude-4-opus) plus openai-gpt-4.1-mini and snowflake-llama-3.3-70b are unknown/unavailable here. Survivors, 2 reps on the Dynamic Tables quality probe: openai-gpt-5 1.6s and CORRECT; openai-gpt-5-mini 2.3s but recommended Streams and Tasks; llama3.1-70b 1.4s but recommended Materialized Views; llama3.3-70b 45.8s and also wrong. openai-gpt-5 is the only model that is both fast and right, so it is the default for replies and for QA. MODEL AVAILABILITY MOVES UNDER YOU: run scripts/rebench_complete.py against the event account before every event, and check /admin shows a reply model that actually answers.",
+    "timeout_seconds": 180
   },
   "qa": {
     "_comment": "The QA bot reviews the finished blueprint before it is staged. Deterministic checks always run and silently repair what is fixable from the closed lists (off-list features dropped, guide fallback, platforms re-normalised); each change is recorded to LOCO4COCO.BOOTH.QA_FINDINGS with before/after, and a summary lands on the SESSIONS row. model_review adds one fast COMPLETE call judging whether the POC addresses the visitor's stated problem - it fails open, never blocking the handover.",
     "enabled": true,
     "model_review": true,
-    "model": "claude-4-sonnet",
+    "model": "openai-gpt-5",
     "timeout_seconds": 12
   },
   "delivery": {

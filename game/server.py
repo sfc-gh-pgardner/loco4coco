@@ -239,9 +239,16 @@ def write_state(patch, replace=False):
 
 # ---------------------------------------------------------------- cost logging
 
-def log_cost(cfg, kind, seconds, usage, ok, transport="exec", model=None):
+def log_cost(cfg, kind, seconds, usage, ok, transport="exec", model=None,
+             error=None):
     """Append-only spend trail with the real token counts exec reports. We do
-    not cap the visitor, so this is the only way spend stays visible."""
+    not cap the visitor, so this is the only way spend stays visible.
+
+    `error` is recorded because omitting it hid a real defect for an entire test
+    run: when claude-4-sonnet went to legacy state every COMPLETE turn began
+    failing in ~0.5s, the exec fallback quietly absorbed it, and the log showed
+    ok=False with no reason. A failure you cannot attribute is one you will not
+    fix."""
     path = os.path.join(HERE, (cfg.get("coco") or {}).get("cost_log", "cost.jsonl"))
     u = usage or {}
     rec = {"at": time.time(), "kind": kind, "seconds": round(seconds, 2),
@@ -250,7 +257,7 @@ def log_cost(cfg, kind, seconds, usage, ok, transport="exec", model=None):
            "output_tokens": u.get("output_tokens"),
            "cache_read": u.get("cache_read_input_tokens"),
            "cache_write": u.get("cache_creation_input_tokens"),
-           "ok": ok}
+           "ok": ok, "error": error}
     try:
         with open(path, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec) + "\n")
@@ -476,7 +483,8 @@ def run_complete(cfg, prompt, kind, job_id=None, model=None, timeout=None):
 
     secs = time.time() - started
     ok = bool(reply) and not err
-    log_cost(cfg, kind, secs, usage, ok, "complete", mdl)
+    log_cost(cfg, kind, secs, usage, ok, "complete", mdl,
+             error=err or (None if reply else "empty reply"))
     meta = {"seconds": round(secs, 1), "usage": usage, "ok": ok,
             "transport": "complete", "model": mdl}
     if err:

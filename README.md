@@ -1,5 +1,7 @@
 # Loco for CoCo
 
+Setup: [TL;DR (one page)](https://docs.google.com/document/d/1TwRR5uurF8NHGTbQBiBQBs0fHV9lqqUZ7357WxY5e_E/edit) | [SETUP.md (full)](SETUP.md)
+
 A five-minute Cortex Code activation for **Snowflake World Tour**. A visitor drives a penguin
 round an arctic map, answers a few light questions, and leaves with the scaffolding for a POC:
 their idea in their own words, the Snowflake developer guide to fork, the

@@ -1,5 +1,7 @@
 # Loco for CoCo: Setup Guide
 
+**In a hurry?** There is a one-page TL;DR version of this guide: [Loco4CoCo — TL;DR setup](https://docs.google.com/document/d/1TwRR5uurF8NHGTbQBiBQBs0fHV9lqqUZ7357WxY5e_E/edit). This document is the long form, with the reasoning behind each choice.
+
 For someone who has never run this, on a fresh laptop, against a brand new Snowflake account.
 
 Last updated 2026-09-21.

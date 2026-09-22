@@ -7,7 +7,7 @@
     "idle_shutdown_minutes": 45
   },
   "event": {
-    "venue": "london",
+    "venue": "paris",
     "_venue_comment": "The ONE toggle a booth operator changes per event. Expands via the venues map below into city, language, cloud region and marketplace profile. One of: london, paris, frankfurt, berlin. Leave unset to hand-configure city/language/region directly.",
     "city": "London",
     "language": "en",
@@ -685,7 +685,7 @@
       "de": "Germany"
     },
     "agentic": {
-      "_comment": "THE 7th OPTION. Triggered ONLY when a visitor TYPES into the marketplace 'something else' box. Uses `cortex search marketplace` with a cloudRegion filter taken from event.marketplace_region (the EVENT\u2019s region, resolved from event.venue) - NOT a free-form agent prompt. MEASURED: the prompt route took 110-237s and returned out-of-region results 78 times out of 91; the filtered search takes 6.8-8.3s and is in-region by construction, with provider names included. All three event regions were verified answering from one AWS Frankfurt account, because the Marketplace catalogue is global. Still fired in the BACKGROUND and merged into the takeaway document at the postbox, so a slow call can never hold up the stall. The six curated picks stay deterministic and are never waited on. Watch cost.jsonl (kind=marketplace_agentic).",
+      "_comment": "THE 7th OPTION. Triggered ONLY when a visitor TYPES into the marketplace 'something else' box. Uses `cortex search marketplace` with a cloudRegion filter taken from event.marketplace_region (the EVENT’s region, resolved from event.venue) - NOT a free-form agent prompt. MEASURED: the prompt route took 110-237s and returned out-of-region results 78 times out of 91; the filtered search takes 6.8-8.3s and is in-region by construction, with provider names included. All three event regions were verified answering from one AWS Frankfurt account, because the Marketplace catalogue is global. Still fired in the BACKGROUND and merged into the takeaway document at the postbox, so a slow call can never hold up the stall. The six curated picks stay deterministic and are never waited on. Watch cost.jsonl (kind=marketplace_agentic).",
       "enabled": true,
       "timeout_seconds": 45,
       "connection": null,
@@ -897,7 +897,7 @@
         "prefer": [
           "france",
           "french",
-          "fran\u00e7ais",
+          "français",
           "paris",
           "insee",
           "data.gouv",
@@ -905,7 +905,7 @@
           "siret",
           "iris",
           "commune",
-          "d\u00e9partement",
+          "département",
           "metropolitan france",
           "eurozone"
         ],
@@ -941,7 +941,7 @@
           "munich",
           "destatis",
           "bundes",
-          "l\u00e4nder",
+          "länder",
           "dax",
           "eurozone"
         ],
@@ -1222,7 +1222,7 @@
   },
   "platforms": {
     "_comment": "Where the data lives today. Asked on CoCo's home stage (moved out of the library 2026-08-25), one tap; decides the integration-path section of the blueprint.",
-    "heading": "We currently keep data on\u2026",
+    "heading": "We currently keep data on…",
     "hint": "Tap every platform it sits on. This is what decides how we get it into Snowflake.",
     "options": [
       "Microsoft / Azure",
@@ -1286,7 +1286,7 @@
   },
   "screens": {
     "_comment": "Visitor-facing prose that belongs to a screen rather than to a stop. It lived in index.html, which meant it never appeared in the \"every scripted line\" section of the decision tree, so the document claimed a completeness it did not have. Anything a visitor reads belongs here.",
-    "history_banner": "Looking back \u2014 press \u25b6 to return to now",
+    "history_banner": "Looking back — press ▶ to return to now",
     "handover_heading": "Take it with you now",
     "handover_body": "Scan this with your phone camera to download your Word blueprint. The link works for seven days.",
     "card_heading": "Scan to keep your card.",

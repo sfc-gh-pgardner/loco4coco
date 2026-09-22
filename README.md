@@ -90,7 +90,8 @@ Total CoCo wait is about 58s of the 300s budget, down from 144.5s before tuning.
 - **`deploy/load_context.py` is not optional.** It puts the city's datasets in the
   account. Skip it and the game silently falls back to a committed copy, which can serve
   another city's data with no visible symptom. `/admin` shows **datasets loaded** (expect
-  90–96) and **lists read from** (expect `snowflake`) so you can see it.
+  88–100 — 48 offered picks plus a fallback pool whose size differs per city) and
+  **lists read from** (expect `snowflake`) so you can see it.
 - **Models are region-specific in availability *and* speed.** The fast/QA path defaults to
   **`openai-gpt-5.4`**, with `openai-gpt-5`, `claude-sonnet-5` and `claude-opus-5`
   behind it, all measured at 1.4–2.1s on an eu-central-1 event account, against

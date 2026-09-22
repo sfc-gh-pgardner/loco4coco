@@ -61,8 +61,8 @@
       <button class="primary" id="apply">Apply</button>
       <span class="note" id="applynote">Takes effect on the next visitor. No restart needed.</span>
     </div>
-    <p class="note">Operator is written to every visitor's row and
-      <strong>cannot be reconstructed after the event</strong>. Set it before doors open.</p>
+    <p class="note">Every visitor's row is stamped with this account, so which laptop
+      took a conversation stays answerable with nothing to type here.</p>
   </div>
 
   <div class="card">
@@ -117,6 +117,8 @@ function say(text, bad) {
   $('msg').className = bad ? 'bad' : 'ok';
 }
 
+let venueDirty = false;
+
 function paint(s) {
   known = s.venues || [];
   const sel = $('venue');
@@ -129,7 +131,12 @@ function paint(s) {
       sel.appendChild(o);
     });
   }
-  if (document.activeElement !== sel) sel.value = s.venue || '';
+  // Only overwrite the dropdown when the operator has not chosen something else
+  // yet. This used to test document.activeElement, which loses the race that
+  // matters: clicking Apply moves focus to the button, so a poll landing between
+  // the choice and the click reverted the selection and Apply then saved the OLD
+  // venue while reporting "Saved". Verified by driving the panel.
+  if (!venueDirty) sel.value = s.venue || '';
 
   $('s-city').textContent = s.city || '—';
   $('s-lang').textContent = s.language || '—';
@@ -181,6 +188,8 @@ async function refresh() {
   } catch (e) { say('Cannot reach the server.', true); }
 }
 
+$('venue').onchange = () => { venueDirty = true; };
+
 $('apply').onclick = async () => {
   say('');
   const body = { venue: $('venue').value };
@@ -189,7 +198,15 @@ $('apply').onclick = async () => {
       body: JSON.stringify(body) });
   const j = await r.json();
   if (!r.ok) return say(j.error || 'Could not apply.', true);
+  venueDirty = false;
   paint(j);
+  // Report what the server actually saved, not what was asked for, so a venue
+  // that did not take cannot look like one that did.
+  const got = j.venue || '';
+  if (body.venue && got && got !== body.venue) {
+    return say('Asked for ' + body.venue + ' but the booth is on ' + got
+               + '. Nothing changed.', true);
+  }
   say('Saved. ' + (j.city || '') + ' — active for the next visitor.');
 };
 

@@ -400,7 +400,7 @@ Open <http://127.0.0.1:4747/admin> and read four lines:
 | Line | Must say |
 |---|---|
 | Venue / City | the event you are actually at |
-| Datasets loaded | **90–96**. `0` means Step 6 never ran and you will serve the wrong city's data |
+| Datasets loaded | **88–100**, of which 48 are the six-per-stall a visitor sees; the rest are the fallback pool and its size differs per city (London 92, Paris 97, Berlin 91). `0` means Step 6 never ran and you will serve the wrong city's data |
 | Lists read from | **snowflake**. `bundle` or `markdown` means the account read failed and you are on a committed copy |
 | Operator | your name and stand — it cannot be recovered afterwards |
 
@@ -541,7 +541,8 @@ not built. Until they exist, the query above *is* the handover.
    `deploy/load_context.py` has not been run against this account (Step 6), so the game
    is falling back to the copy committed in the repo. Check `/admin`: **lists read from**
    should say `snowflake`, not `bundle` or `markdown`, and **datasets loaded** should be
-   90–96. This failure is otherwise completely silent.
+   88–100 — London 92, Paris 97, Berlin 91, of which 48 are always the picks a
+   visitor is offered. This failure is otherwise completely silent.
 4. **Marketplace stall is genuinely empty.** `event.marketplace_region` is unset — pick a
    venue in `/admin`.
 5. **First visitor felt slow.** Cold warehouse: the first inference call takes around 56s

@@ -2949,7 +2949,16 @@ class Handler(BaseHTTPRequestHandler):
             "context_source": source,
             "listings_for_profile": prof_rows,
             "connection": coco_connection() or "",
-            "visitor_active": bool(st.get("visitor")),
+            # A visitor counts as present only if they have told us something or
+            # moved off the attract loop. `bool(st.get("visitor"))` was always
+            # true, because the default state carries a visitor dict of empty
+            # strings, so the panel could never report an idle booth and "Clear
+            # visitor" appeared to do nothing.
+            "visitor_active": bool(
+                (st.get("stage") or "") not in ("", "attract")
+                or any((st.get("visitor") or {}).get(k)
+                       for k in ("first_name", "company", "industry", "problem"))
+            ),
             "stage": st.get("stage") or "",
         })
 

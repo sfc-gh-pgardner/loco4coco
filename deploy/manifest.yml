@@ -45,7 +45,7 @@ targets:
     templating_config: EVENT
 
   LONDON:
-    account_identifier: SFSEEUROPE-PG_LONDON
+    account_identifier: <your-account-locator>   # local-only; see note below
     project_name: LOCO4COCO_DEPLOY.PROJECTS.LOCO4COCO_BOOTH
     project_owner: ACCOUNTADMIN
     templating_config: LONDON
@@ -53,15 +53,26 @@ targets:
   # A genuinely different account AND region, so portability is proven rather
   # than assumed.
   US_WEST_DEMO:
-    account_identifier: SFSEEUROPE-US_WEST_DEMO_PG
+    account_identifier: <your-account-locator>   # local-only; see note below
     project_name: LOCO4COCO_DEPLOY.PROJECTS.LOCO4COCO_BOOTH
     project_owner: ACCOUNTADMIN
     templating_config: US_WEST_DEMO
 
-  # Snowflake World Tour event account (Frankfurt, eu-central-1). HOL account,
-  # real ID kept local-only via git skip-worktree. Runs the SWT LONDON game.
+  # Snowflake World Tour event account (eu-central-1). HOL account.
+  # ─────────────────────────────────────────────────────────────────────────
+  # The three account_identifiers above are PLACEHOLDERS in the committed file,
+  # on purpose: this repo's rule is that no real account locator is ever pushed
+  # (see the header). Fill in your own locator locally, then tell git to stop
+  # tracking your edit so it never leaves the laptop:
+  #     git update-index --skip-worktree deploy/manifest.yml
+  # To edit the file's tracked content again (rare), reverse it first:
+  #     git update-index --no-skip-worktree deploy/manifest.yml
+  # An earlier version of this comment claimed skip-worktree was already in
+  # effect when it was not, and the real HOL id was sitting in git. If you are
+  # not pinning these accounts at all, delete these three targets: the default
+  # EVENT target needs no id and is the path an event operator actually uses.
   FRANKFURT:
-    account_identifier: SFSEHOL-EMEA_SWT_FRZYKI
+    account_identifier: <your-account-locator>   # local-only; see note above
     project_name: LOCO4COCO_DEPLOY.PROJECTS.LOCO4COCO_BOOTH
     project_owner: ACCOUNTADMIN
     templating_config: FRANKFURT

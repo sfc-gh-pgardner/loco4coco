@@ -26,7 +26,7 @@
     },
     "paris_manufacturing": {
       "at": "2026-09-22 07:00",
-      "note": "Supersedes the 2026-09-21 verdict that Paris manufacturing was intentionally left at 4 primary picks because on-theme data was not offered in AWS_EU_WEST_3. A re-run of curate_locality.py --profile fr --industry manufacturing against AWS_EU_WEST_3 returned 6 on-theme, Free, is_ready_for_import listings, so the scarcity claim was too strong - the earlier run simply found less. The six were hand-merged rather than taken as the search returned them: CEIC Commodities Data was restored (a prior primary the re-run dropped) and the sixth slot went to the EU + UK B2B Company Database, which answers the script's own 'company and supplier registries' angle. Two weak-fit results were demoted to reserve - Hydrogen price data (too niche) and World Points of Interest Premium France (duplicates the France POI 19 Industry set). Franciemes IRIS stays deleted per the earlier review. Paris now matches London and Berlin at 6 primary."
+      "note": "Supersedes the 2026-09-21 verdict that Paris manufacturing was intentionally left at 4 primary picks because on-theme data was not offered in AWS_EU_WEST_3. A re-run of curate_locality.py --profile fr --industry manufacturing against AWS_EU_WEST_3 returned 6 on-theme, Free, is_ready_for_import listings, so the scarcity claim was too strong - the earlier run simply found less. The six were hand-merged rather than taken as the search returned them: CEIC Commodities Data was restored (a prior primary the re-run dropped) and the sixth slot went to the EU + UK B2B Company Database, which answers the script's own 'company and supplier registries' angle. Two weak-fit results were demoted to reserve - Hydrogen price data (too niche) and World Points of Interest Premium France (duplicates the France POI 19 Industry set). Franciemes IRIS stays deleted per the earlier review. Paris now matches London and Berlin at 6 primary. Follow-up measurement: the review also claimed Industry Classification Systems does not appear in the Paris catalogue at all. That is wrong - SHOW AVAILABLE LISTINGS reports it available in AWS_EU_WEST_3 and is_ready_for_import, and it is a primary in both London and Berlin, so it was swapped into Paris in place of European Gas Analytics, which reads as energy rather than manufacturing. The review was correct about the other two London picks: FactSet Supply Chain Relationships and Overture Maps - Transportation are genuinely not offered in AWS_EU_WEST_3."
     }
   },
   "profiles": {
@@ -1958,16 +1958,18 @@
             ]
           },
           {
-            "global_name": "GZTSZ1389Q7",
-            "title": "European Gas Analytics",
-            "provider": "S&P Global Energy",
+            "global_name": "GZSTZLT2II6",
+            "title": "Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.)",
+            "provider": "IBISWorld",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTSZ1389Q7",
-            "regions": "AWS_EU_WEST_3",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSTZLT2II6",
+            "regions": "PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_ME_CENTRAL2,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
             "ready": true,
-            "subtitle": "The European Gas Analytics dataset offers access to supply / demand forecasts, price forecasts, and outages.",
+            "subtitle": "Industry Classification System codes, titles, descriptions, and parent-child hierarchical relationships.",
             "use_cases": [
-              "energy and input costs for industry"
+              "company and supplier registries",
+              "industrial production and output statistics",
+              "trade, imports and exports"
             ]
           },
           {
@@ -2014,6 +2016,19 @@
           }
         ],
         "reserve": [
+          {
+            "global_name": "GZTSZ1389Q7",
+            "title": "European Gas Analytics",
+            "provider": "S&P Global Energy",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTSZ1389Q7",
+            "regions": "AWS_EU_WEST_3",
+            "ready": true,
+            "subtitle": "The European Gas Analytics dataset offers access to supply / demand forecasts, price forecasts, and outages.",
+            "use_cases": [
+              "energy and input costs for industry"
+            ]
+          },
           {
             "global_name": "GZSVZ3XQWG",
             "title": "OpenStreetMap France",
@@ -2087,20 +2102,6 @@
               "shipping, ports and freight",
               "company and supplier registries"
             ]
-          },
-          {
-            "global_name": "GZTSZYM29Q3",
-            "title": "United States Calculated Duty Paid",
-            "provider": "Trade Data Monitor",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTSZYM29Q3",
-            "regions": "AWS_EU_WEST_3",
-            "ready": true,
-            "subtitle": "Monthly Data on United States Duties Collected",
-            "use_cases": [
-              "trade, imports and exports"
-            ],
-            "demoted": "off-theme"
           }
         ]
       },

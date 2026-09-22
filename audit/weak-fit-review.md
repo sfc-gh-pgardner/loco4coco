@@ -120,3 +120,48 @@ that is a deliberate behaviour change to make on purpose.
 `French National Health and Social Facilities` still sits at position five of the **Paris
 media** stall. The curator did not flag it there so it was outside this review, but it is
 as questionable for media as it was for manufacturing. Worth a look next pass.
+
+## Superseded 2026-09-22: the Paris regional data gap was overstated
+
+The section above concluded that Paris manufacturing could not be brought to
+London's standard by re-curating, because the data was not there. That
+conclusion was too strong, and two of its supporting claims need separating.
+
+**Correct:** FactSet Supply Chain Relationships and Overture Maps –
+Transportation are genuinely not offered in `AWS_EU_WEST_3`. Re-measured against
+`SHOW AVAILABLE LISTINGS`, both still report absent.
+
+**Wrong:** Industry Classification Systems was said not to appear in the Paris
+catalogue at all. It does. It is available in `AWS_EU_WEST_3` and
+`is_ready_for_import`, and `marketplace.json` already carried `AWS_EU_WEST_3` in
+its own stored `regions` string, so the review contradicted data the repo
+already held.
+
+**Also wrong in effect:** re-running `curate_locality.py --profile fr --industry
+manufacturing` returned six on-theme, Free, importable Paris listings. The
+earlier run had simply found less. A shortage of results from one search is not
+evidence of a regional data gap.
+
+The practical consequence matters more than the bookkeeping. Because a stall is
+assembled primary-then-reserve and sliced to six, four primaries never showed a
+visitor four options — it showed six, with positions five and six filled by
+purchasing-power data. So "let Paris show four" was never the behaviour on the
+stand. The stall a Paris manufacturing visitor saw contained two off-theme picks,
+and that was a live defect rather than an accepted consequence.
+
+Paris manufacturing now stands at six on-theme primaries: CEIC Shipping Data,
+Commodity & energy price benchmarks, Industry Classification Systems, France
+Point-of-Interest (19 industry verticals), CEIC Commodities Data, and the EU + UK
+B2B Company Database. Each was asserted Free, `is_ready_for_import` and present
+in `AWS_EU_WEST_3` before being written. European Gas Analytics was found by the
+same search and demoted to reserve, because it reads as energy rather than
+manufacturing. Franciemes IRIS and French National Health and Social Facilities
+stay deleted, as this review decided.
+
+### The lesson worth keeping
+
+A curation run that comes up short and a region that lacks the data look
+identical from the output. Distinguishing them takes a second run, or a direct
+check against the catalogue for the specific listing being written off. This
+review wrote off a listing the repo's own stored `regions` string said was
+available, which is the cheapest possible check and was not done.

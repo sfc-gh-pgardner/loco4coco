@@ -184,21 +184,45 @@ covered a live game — observed at the postbox on 5/4. It is now a one-way latc
 dropped: check `/tmp/l4c.log` for `/api/state` errors, and do NOT reload — the
 latch survives a poll failure but not an F5.
 
-### The page slides downwards as CoCo answers
+### The page slides downwards as CoCo answers, or the map's bottom is cut off
 
-**Fixed 2026-09-22 (`290f056`).** `#bubble .msg` reserved ~2.6 lines but was
-allowed to grow to ~5, and `fitCanvas()` caches the chrome budget from the
-bubble's *measured* height, so a longer reply re-fitted the whole board under the
-visitor. The box is now a fixed six lines. Six, not the four it looks like:
-measured at the 1056px rail the bubble wraps at 99 chars/line, and across 62 real
-replies the median is 252 chars but the maximum is 531, with 14 of 62 over 400 —
-a four-line box silently scrolls the tail off about a quarter of what CoCo says.
-**If you retune `font-size` or `line-height` on the bubble, the height follows
-automatically** (it is `calc(1.55em * 6)`), but if you make replies longer you
-must re-measure: anything past ~590 characters starts scrolling again.
-The map cannot be cropped by this — width is solved from leftover height at a
-fixed 22:15 aspect — but it does get smaller on small screens (1366x768:
-768→637px). At 1920x1080 it is unchanged, already at its 1056px cap.
+**Fixed 2026-09-22 (`290f056`, corrected in `b1a9f34`).** Two faults with one
+cause: the chrome budget above the board.
+
+`#bubble .msg` reserved ~2.6 lines but could grow to ~5, and `fitCanvas()` cached
+that measurement, so a longer reply re-fitted the whole board mid-turn. The first
+attempt pinned the bubble at six lines. That did stop the slide but was the wrong
+trade — it left a permanently near-empty frame (two lines of text in a six-line
+box) *and* the cached budget was still dishonest, because it was taken on the
+attract screen where the tray is short; in play the tray fills with four location
+cards and grows, so the board was sized too tall and its bottom edge ran
+off-screen.
+
+Now the bubble's border **hugs its text, growing to a four-line ceiling**, and
+`chromeBudget()` reserves that four-line ceiling regardless of what the bubble
+currently shows, measuring the tray/hud/stagebar/gaps live instead of against a
+magic `+58`. The slack sits outside the border as column gap, so the board is
+sized once and never moves. Verified: budget constant at 320px across 1-, 3- and
+6-line replies while the bubble itself ranges 103→182px.
+
+**Interim, and the one thing left to build:** past four lines the overflow
+*scrolls*. The intended behaviour is to paginate into a further box the visitor
+advances through once they have read the first. Until that lands, do **not**
+"tidy" the CSS to `overflow:hidden` — that would silently truncate about a
+quarter of replies (measured: 99 chars/line at the 1056px rail, so four lines is
+~396 chars, and 14 of 62 real replies exceed it).
+
+### Half of the workshop brief is invisible
+
+**Fixed 2026-09-22 (`b1a9f34`).** `LET COCO CHOOSE` composes a sentence
+(`Build the most impactful thing for {industry} using {held} joined with {joined}`)
+that routinely runs past 100 characters, and `#c-compose` was an
+`<input type="text">` — a single-line field that cannot wrap, so the tail simply
+scrolled out of sight and the visitor saw half of the brief being submitted on
+their behalf. It is a wrapping `<textarea rows="2">` now. Enter still submits;
+shift+Enter inserts a newline. Related trap in the same area: `.cchoose` is
+`font:700 12px/1` with fixed padding, so a *button* label long enough to wrap
+would clip the same way — relevant the moment the UI is translated.
 
 ### CoCo has no voice inside a location
 

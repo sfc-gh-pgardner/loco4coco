@@ -51,28 +51,25 @@
   /* Long CoCo replies were clipped by a rigid box. The message now wraps and,
      only if it is genuinely long, scrolls inside a bounded bubble instead of
      pushing the canvas and tray off-screen. */
-  /* The box is FIXED and never grows or shrinks. min-height:68px (~2.6 lines)
-     against max-height:18vh (~5 lines on a 768-tall laptop) meant every reply
-     between three and four lines RESIZED the bubble, and because fitCanvas()
-     reserves the chrome from $('bubble').offsetHeight the board was re-fitted
-     underneath the visitor - the page appeared to slide downwards as CoCo
-     answered.
-     SIX lines, not the four that were eyeballed from a screenshot. MEASURED:
-     at the 1056px rail the box wraps at 99 chars/line, and across 62 real
-     seeded replies the median is 252 chars (3 lines) but the MAXIMUM is 531
-     (6 lines) with 14 of 62 over 400 - so a four-line box would have quietly
-     scrolled away the tail of about a quarter of everything CoCo says. Six
-     lines is the real ceiling, so nothing scrolls and nothing reflows. The
-     cost is dead space under a short reply, which is the unavoidable price of
-     a constant chrome budget; overflow-y:auto stays only as a net for outliers.
-     The map cannot be cropped by this: fitCanvas() solves width from the
-     leftover height at a fixed aspect, so a taller bubble yields a slightly
-     smaller board, never a clipped one - and at 1920x1080 it is unchanged,
-     because the board is already at its 1056px cap.
-     Expressed in em so it tracks font-size/line-height if either is retuned. */
+  /* The box GROWS WITH THE TEXT to a ceiling of four lines. It was briefly
+     pinned at a fixed six lines to stop it reflowing; that stopped the reflow
+     but left a permanently near-empty box above the board (two lines of text in
+     a six-line frame) and pushed the board's bottom edge off-screen. So the
+     border hugs the text now, and the reflow is prevented in fitCanvas()
+     instead, which reserves the FOUR-LINE WORST CASE regardless of what the
+     bubble currently shows - the slack sits outside the border as column gap
+     rather than inside it as dead space, so the board is sized once and never
+     re-fitted mid-turn.
+     INTERIM: past four lines the overflow scrolls. That is a stopgap, not the
+     design - the intent is to paginate into a further box the visitor advances
+     through once they have read this one. Until that lands, scrolling is what
+     keeps a long reply readable rather than truncated; do NOT "tidy" this to
+     overflow:hidden, which would silently cut text. MEASURED: at the 1056px
+     rail the box wraps at 99 chars/line, so four lines is ~396 chars, and 14 of
+     62 real replies exceed that. */
   #bubble .msg { margin-top:4px; font-size:17px; line-height:1.55;
     white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
-    height:calc(1.55em * 6); overflow-y:auto; }
+    max-height:calc(1.55em * 4); overflow-y:auto; }
   #hist { display:flex; gap:5px; align-items:center; }
   #hist button { background:#35424C; color:var(--dim); border:1px solid var(--line);
     border-radius:4px; font:inherit; font-size:11px; padding:1px 7px; cursor:pointer; }
@@ -211,10 +208,20 @@
   .opt .lb { font-size:13px; line-height:1.3; }
   .opt .nt { font-size:11px; color:var(--dim); margin-top:2px; line-height:1.3; }
 
-  input[type=text], input[type=email], select { width:100%; background:#191D27;
+  /* #c-compose is a TEXTAREA, not a text input. As an input it could not wrap,
+     and LET COCO CHOOSE writes a composed sentence ("Build the most impactful
+     thing for {industry} using {held} joined with {joined}") that is routinely
+     100+ characters - so the tail scrolled out of the field and the visitor saw
+     half a line of the brief being submitted on their behalf. It wraps and
+     grows to its rows instead. resize:none so it cannot be dragged over the
+     panel's CONFIRM. */
+  input[type=text], input[type=email], select, textarea { width:100%;
+    background:#191D27;
     color:var(--text); font:inherit; font-size:14px; border:2px solid #465C6D;
     border-radius:6px; padding:8px 10px; }
-  input:focus, select:focus { outline:none; border-color:var(--edge); }
+  textarea { resize:none; line-height:1.45; }
+  input:focus, select:focus, textarea:focus { outline:none;
+    border-color:var(--edge); }
   .fld { margin-bottom:8px; }
   .fld label { display:block; font-size:11px; color:var(--dim); margin-bottom:3px;
     letter-spacing:.08em; text-transform:uppercase; }
@@ -599,7 +606,7 @@
           <input type="text" id="c-other" autocomplete="off" spellcheck="false"></div>
         <div class="fld" id="c-composewrap" style="display:none">
           <button class="cchoose" id="c-coco-choose" style="display:none">LET COCO CHOOSE</button>
-          <input type="text" id="c-compose" autocomplete="off" spellcheck="false"></div>
+          <textarea id="c-compose" rows="2" autocomplete="off" spellcheck="false"></textarea></div>
         <div class="go"><button class="primary" id="c-go">CONFIRM</button>
           <span class="keys">ESC to step away</span></div>
       </div>
@@ -2895,7 +2902,11 @@ $('newv').addEventListener('click',async()=>{
 $('c-other').addEventListener('input',syncGo);
 $('c-other').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter') submitPanel(); });
 $('c-compose').addEventListener('input',syncGo);
-$('c-compose').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter') submitPanel(); });
+// Enter still submits - this is a one-line brief, not prose - but shift+Enter
+// leaves a newline, because it is a textarea now and swallowing that silently
+// would be surprising.
+$('c-compose').addEventListener('keydown',e=>{ e.stopPropagation();
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); submitPanel(); } });
 
 async function submitPanel(){
   const id=panelLoc, l=CFG.locations[id]||{}; if(!id) return;
@@ -3564,17 +3575,35 @@ function loop(){ tick++; stepMovement(); if(tick%2===0) stepType(); render();
 
 // The board was previously sized once at load, so moving the window at the
 // booth left it mis-sized until a reload.
-// The chrome budget is measured ONCE, at first fit, and reused. Measuring it
-// live meant a long reply (or the tray hiding itself on a fast turn) changed the
-// board size mid-turn, which read as the whole page sliding downwards.
-let chromeReserve=0;
+// The chrome budget must be CONSTANT (or the board is re-fitted mid-turn and the
+// page appears to slide downwards) but it must also be HONEST, or the board is
+// sized too tall and its bottom edge is clipped off-screen. Caching one
+// measurement taken at first fit was constant but dishonest: it read the bubble
+// and the tray on the attract screen, and in play the tray fills with four
+// location cards and grows. MEASURED on the clipped screenshot: wrap children
+// came to bubble+tray+hud+stagebar+hud-meta plus five 7px gaps, against a magic
+// "+58" that only approximated the last three.
+// So: measure the parts that are genuinely static LIVE, and reserve the bubble's
+// four-line CEILING rather than its current height. The bubble was the only
+// thing that moved, so pinning its contribution makes the whole budget stable
+// without understating anything.
+const BUBBLE_MAX_LINES = 4;
+function chromeBudget(){
+  const msg = document.querySelector('#bubble .msg');
+  const lh = msg ? (parseFloat(getComputedStyle(msg).lineHeight) || 26.35) : 26.35;
+  // the bubble at its ceiling: everything around the message, plus 4 lines of it
+  const b = $('bubble');
+  const bubbleMax = (b ? b.offsetHeight - (msg ? msg.offsetHeight : 0) : 0)
+                    + Math.ceil(lh * BUBBLE_MAX_LINES);
+  const h = id => { const e = $(id); return e && getComputedStyle(e).display !== 'none'
+                                          ? e.offsetHeight : 0; };
+  const gap = parseFloat(getComputedStyle($('wrap')).rowGap) || 7;
+  return bubbleMax + h('tray') + h('hud') + h('stagebar') + h('hud-meta')
+         + gap * 5 + 16;   // 16 = #wrap's own vertical padding
+}
 function fitCanvas(){
   const cv=$('cv'); if(!cv) return;
-  if(!chromeReserve){
-    chromeReserve=$('bubble').offsetHeight+$('hud').offsetHeight
-                 +$('tray').offsetHeight+58;
-  }
-  const chrome=chromeReserve+(trayOpen?140:0);
+  const chrome=chromeBudget()+(trayOpen?140:0);
   const w=Math.max(320,Math.min(innerWidth-24,1056,(innerHeight-chrome)*COLS/ROWS));
   cv.style.width=Math.round(w)+'px';
   cv.style.height=Math.round(w*ROWS/COLS)+'px';
@@ -3592,7 +3621,7 @@ function fitCanvas(){
   sceneW=sc.width; sceneH=sc.height;
   sceneCtx=sc.getContext('2d'); sceneCtx.imageSmoothingEnabled=false;
   fitCanvas();
-  addEventListener('resize',()=>{ chromeReserve=0; fitCanvas(); });
+  addEventListener('resize',()=>{ fitCanvas(); });
   document.documentElement.style.setProperty('--panel',CFG.theme.panel);
   document.documentElement.style.setProperty('--edge',CFG.theme.panel_edge);
   $('b-title').textContent=CFG.event.title;

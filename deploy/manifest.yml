@@ -72,7 +72,16 @@ templating:
     schema: BOOTH
     wh: LOCO4COCO_WH
     wh_size: XSMALL
-    auto_suspend: 60
+    # One hour, NOT the usual 60 seconds. The first inference call on a cold
+    # warehouse takes around 56s against roughly 4s once it is warm. A booth runs
+    # in bursts with gaps between visitors, so a 60s auto-suspend means a real
+    # share of visitors are the ones who pay that 56s - and a stranger watching a
+    # blank screen for a minute is the single worst thing this stand can do. An
+    # X-Small idling through an event day is cheap by comparison, and the same
+    # reasoning as hooks/post_hook.sql: nothing may interrupt a visit to save
+    # pennies. The account this was built on already runs 3600; this is the
+    # manifest catching up, so a fresh laptop behaves like the one we tested.
+    auto_suspend: 3600
     city: London
     language: en
     # There are deliberately NO resource-monitor values here. The booth must

@@ -1,0 +1,556 @@
+LOCO 4 COCO - THE BOOTH DECISION TREE
+
+Every option a visitor is offered, every line CoCo speaks, and every dataset the booth recommends. Generated from the live app: config.json, marketplace-index.md, archetypes.md and server.py.
+
+Regenerate with python3 game/decision_tree.py.
+
+1. WHAT THE VISITOR DOES
+
+Six stops. The letter is the whole intake on one screen; the four locations are walked to on a map in the order below.
+
+•  #: 0 · Stop: The letter · What the visitor gives us: First name, employer, industry, the problem in two sentences, where the data lives and which countries they operate in · Options come from: industries for the list, platforms and country for the chips; the problem is free text · Select: Single industry, multi-select chips, free text
+•  #: 1 · Stop: The house · What the visitor gives us: Nothing. CoCo reads back what the letter said and makes the security and AI point
+•  #: 2 · Stop: The Data Library · What the visitor gives us: The data they already hold · Options come from: industries.<key>.data_sources · Select: Multi-select plus free text
+•  #: 3 · Stop: The Marketplace · What the visitor gives us: Datasets to join to it · Options come from: marketplace-index.md · Select: Multi-select plus free text
+•  #: 4 · Stop: The Workshop · What the visitor gives us: One line describing what the proof of concept should do · Options come from: Free text · Select: Free text
+•  #: 5 · Stop: The Postbox · What the visitor gives us: Confirmation to send · Select: Button
+
+The map unlocks in this order: The Data Library, The Marketplace, The Workshop, The Postbox.
+
+The visitor's answers reach the document by two routes. The library, marketplace and workshop answers are named back to them by the model, which picks from the closed lists in this document and never invents an entry. The archetype, its features and its first step are precomputed, so they are correct whether or not a model answers.
+
+2. EVERY SCRIPTED LINE, IN RUNNING ORDER
+
+Fixed copy, identical for every visitor, straight from config.json. Braced placeholders such as {first_name}, {company}, {country}, {platform} and {region} are filled from the visitor's own answers.
+
+The one-line replies CoCo speaks at the Library, Marketplace and Workshop are not listed here. Those are generated per visit, reflecting back what the visitor just picked.
+
+2.1 Intro card
+
+•  Title: Loco for CoCo
+•  Button: START
+•  This is a fun way to experience the power of Cortex Code (CoCo) through the medium of an arcade game.
+•  You have 5 minutes to explore what building a Proof of Concept on Snowflake really looks like, with CoCo as your guide to our features, marketplace datasets, and how enterprise-grade AI can bring your ideas to life.
+•  You will leave with a personalised action plan for building it for real. Be daring, this is a flexible process with a genuinely useful outcome.
+•  Anything you type stays private, only shared with you and Snowflake.
+
+Text wrapped in asterisks renders as a highlight colour rather than body text.
+
+2.2 The house: CoCo arrives and reads a letter
+
+•  arctic: Somewhere in the Arctic...
+•  arctic_sub: (Yes, penguins live in Antarctica, but CoCo is special!)
+•  bubble: Wow, a letter from my friend! Shame I can't make out some of these words... (Please fill this in with your details)
+•  greeting: Hey CoCo,
+•  body[0]: It's your friend {first_name}!
+•  body[1]: I've heard you and the Cortex Crew have been cooking up some amazing products recently.
+•  body[2]: Me and my team at {company} wanted to learn more.
+•  body[3]: We're particularly interested in {industry} and wanted to understand what a Proof of Concept (POC) would look like for this on Snowflake.
+•  body[4]: Could you help us out?
+•  signoff: Signed {first_name}
+•  button: THAT'S BETTER
+•  line1: A letter, from my friend {first_name}! Better get to work...
+•  line2: Anyway, let's go and get this show on the road.
+•  map_line: First stop is my Data Library. That's where I keep all the unstructured, semi-structured and structured data that would be useful for {first_name} and {company}.
+
+2.3 The letter: what the visitor types
+
+•  Your first name (first_name) - placeholder: e.g. Priya
+•  Where you work (company) - placeholder: e.g. NHS Trust, Barclays, Tesco
+•  industry_question: And what world do you work in? I'll fill the library with the right shelves.
+•  confirm_industry: I'm guessing {industry} from {company} - have I got that right?
+•  problem_label: The problem you want to solve (two sentences)
+•  problem_placeholder: e.g. our engineers waste hours hunting through old inspection reports. We want answers in seconds, with the source.
+
+The problem example above is the fallback. Once an industry is chosen it is replaced by that industry's own, and a "CoCo, you choose" button will draft a starting problem statement from the archetype pain lines, into an editable field.
+
+•  Healthcare & Life Sciences: e.g. our clinicians re-read discharge summaries to find one detail. We want the answer in seconds, with the source.
+•  Financial Services: e.g. every complaint is read by hand to spot the urgent ones. We want them sorted and routed the moment they land.
+•  Retail & Consumer Goods: e.g. nobody can say why a line sold out in one region and sat still in another. We want that answered without a data team.
+•  Public Sector & Government: e.g. our guidance sits in years of PDFs nobody can search. We want caseworkers to ask a question and get a cited answer.
+•  Manufacturing & Industrial: e.g. we find out a machine was failing after it stopped. We want the warning while there is still time to act.
+•  Energy & Utilities: e.g. engineer notes and meter data live apart, so we cannot connect a fault to what led to it. We want them joined up.
+•  Media, Telco & Entertainment: e.g. we know what was watched but not why anyone churned. We want the two joined so we can see it coming.
+•  Something else: e.g. the answer exists somewhere in our systems and it takes days to get it out. We want it in seconds, with the source.
+
+2.4 The letter: the stack and the location
+
+Asked on the letter itself, both multi-select. Where data and models may run is NOT asked: it is inferred from the location, because it only names the region in the sovereignty pillars and a visitor's own location answers it more honestly than a question about their compliance position.
+
+We currently keep data on…
+
+•  Hint: Tap every platform it sits on. This is what decides how we get it into Snowflake.
+•  Microsoft / Azure
+•  AWS
+•  Google Cloud
+•  Oracle
+•  SAP
+•  On-premise / our own servers
+•  SaaS apps (Salesforce, Workday, etc.)
+•  Already in Snowflake
+•  Not sure yet
+•  Cannot be combined with a named source: Not sure yet
+
+As you'll remember CoCo, we're based in
+
+•  Hint: Tap every country you have a base in. It helps me keep your data where your rules need it.
+•  United Kingdom
+•  Ireland
+•  France
+•  Germany
+•  Netherlands
+•  Nordics
+•  Rest of EU
+•  Somewhere else
+•  Free text option: Somewhere else
+
+2.5 The letter: CoCo's reply to each answer
+
+•  platform_already: Perfect - it's already in Snowflake, so we skip the plumbing and go straight to building.
+•  platform_unsure: No problem - we'll work the plumbing out together, it's usually the easy part.
+•  platform_named: Good - I know exactly how to get data out of {platform} and into Snowflake, in region and without copying it around.
+•  country: {country}, lovely. I'll keep everything where {country}'s rules need it.
+
+Several countries may be picked, and CoCo answers on the strictest reading the location supports.
+
+2.6 The house: CoCo reads it back
+
+Spoken over the house scene once the letter is submitted. CoCo names what was given, then makes the security and AI point inside that summary. The region comes from the visitor's own location. Each line advances on a timer scaled to its length.
+
+•  So, {first_name}, let me make sure I have this. {company_bit}{industry_bit}{platform_bit}I have the problem you want to solve, and that is the bit everything else hangs off.
+•  Here is the part that matters before we start building. By default, all of this happens inside your own Snowflake account in {region}. Your data does not get copied out to be processed, and the AI models run in your own region, so nothing has to cross a border to be understood.
+•  Snowflake never uses your Customer Data to train models made available to our customer base. Your data is not available to other customers or model developers. And you have control over your team's use of Snowflake AI Features through familiar role-based access control.
+•  You will not have to move house for any of it either. Snowflake talks to what you already run, and with Iceberg your tables stay in open formats other engines can read, so there is no one way door.
+
+2.7 The blueprint: the four sovereignty pillars
+
+Printed verbatim in the document the visitor takes away.
+
+•  data: By default your data does not leave {region}: it stays in your own Snowflake account, in region, not copied out to be processed.
+•  models: By default, Cortex runs the AI models in your own region, so nothing has to cross a border to be understood.
+•  marketplace: Marketplace data is shared live rather than copied, and you are only ever offered listings available in {region}.
+•  governance: One set of controls - role-based access, masking, row-level policies - governs all of it, in one place.
+
+2.8 The four locations
+
+The Data Library - Data your company already holds
+
+•  narrative: This is my magic data library, {first_name}. Every shelf can mimic something {company} already holds. You can ask me for anything, from MP3 to CSV, PDF to Parquet.
+•  heading: Which of these do you work with at the moment?
+•  hint: Tick everything that applies. Add your own if it's missing.
+•  other_label: Something else you hold
+•  other_placeholder: e.g. 20 years of inspection photographs
+
+The Marketplace - Data to enhance it
+
+•  narrative: This is the Snowflake Marketplace, and every stall is a real company's data. You attach it and query it live, seconds later. You never copy it, you never build a pipeline for it, and you never pay to store it.
+•  heading: What shall we join to your data?
+•  hint: Live listings, filtered to what you can attach in this region. No ETL, no storage cost, refreshed by the provider. The same door works outwards: this is how you share your own data without handing over a copy.
+•  other_label: Something else you'd join
+•  other_placeholder: e.g. UK postcode boundaries, company registry data
+
+The Workshop - Build the POC
+
+•  narrative: Bench cleared, forge lit. Tell me what the finished thing does and I'll draw up the plan.
+•  heading: What do we want our Proof of Concept to do?
+•  hint: Think big and say it in one line. An AI agent that answers for you, a dashboard that explains itself, an app your team actually opens every morning, something that spots trouble before it lands. Whatever it is, we forge it here.
+•  placeholder: e.g. an agent that answers policy questions with citations
+
+The Postbox - Send the present
+
+•  narrative: Wrapped, labelled and ready. Say the word and I'll put it in your hands.
+•  heading: Shall I post it?
+•  hint: I'll write it up properly and put it in the post.
+•  button: POST IT TO ME
+
+2.9 The Data Library: the synthetic-data offer
+
+•  CoCo can mimic any shelf as synthetic data so a POC can start before the real feed exists. Generate it in Snowflake with GENERATOR and RANDOM, or let Cortex fabricate realistic rows from a description.
+
+2.10 The Postbox: what CoCo says on send
+
+•  On success: Wrapped and labelled, {first_name}. Scan the code on screen and it is yours - the link works for seven days.
+•  If staging fails: I could not wrap it up this time - grab a Snowflake person and we will sort it.
+
+2.11 Screen furniture
+
+Prose that belongs to a screen rather than to a stop.
+
+•  history_banner: Looking back — press ▶ to return to now
+•  handover_heading: Take it with you now
+•  handover_body: Scan this with your phone camera to download your Word blueprint. The link works for seven days.
+•  card_heading: Scan to keep your card.
+•  card_body: It saves straight to your phone. Yours to post - tag us and we will see it. Works for seven days.
+
+3. THE DATASETS THE BOOTH RECOMMENDS
+
+48 slots across 8 industries, filled by 31 distinct listings, for THIS venue. Each is a real listing on the Snowflake Marketplace - never invented - and is chosen for relevance to the event city. A pick is NOT judged on whether the booth account can attach it: the visitor never imports anything here, they leave with links and open them later from their own account.
+
+Healthcare & Life Sciences
+
+•  Listing: UK (England and Wales only) Census 2021 - Trial · Provider: Jaywing · Access: Free · Global name: GZSVZAJO3
+•  Listing: Acorn - Geodemographic Segmentation in the UK · Provider: CACI Ltd · Access: Free · Global name: GZSVZ1K7VF
+•  Listing: Postcode Sector Weather Forecasts · Provider: Met Office · Access: Free 14-day trial · Global name: GZTDZJKVCY
+•  Listing: PubMed Biomedical Research Corpus · Provider: Snowflake · Access: Free · Global name: GZSTZ67BY9OQW
+•  Listing: UK Health Facts and Dimensions Sample · Provider: Facts and Dimensions Ltd · Access: Free · Global name: GZ2FRZQNY1
+•  Listing: Household Acorn – geodemographic segmentation at household level SAMPLE DATA · Provider: CACI Ltd · Access: Free · Global name: GZSVZ1K7UU
+
+Financial Services
+
+•  Listing: Snowflake Public Data: Foreign Exchange Rates · Provider: Snowflake Public Data Products · Access: Free 60-day trial · Global name: GZTSZ290BVCAO
+•  Listing: Inflation Forecasting - Headline & Core CPI by Country · Provider: Turnleaf Analytics · Access: Free · Global name: GZTDZ7DJU9
+•  Listing: Company Data UK (incl. Guernsey) - XL Dataset · Provider: North Data GmbH · Access: Free 7-day trial · Global name: GZ2FSZH8URW
+•  Listing: Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) · Provider: IBISWorld · Access: Free · Global name: GZSTZLT2II6
+•  Listing: CSRHub ESG (Environment, Social, Governance) Fast Start · Provider: CSRHub LLC · Access: Free 30-day trial · Global name: GZT0ZI0XJ6Q
+•  Listing: Banking Analytics Bundle · Provider: InSights · Access: Free · Global name: GZTYZAPS3FP
+
+Retail & Consumer Goods
+
+•  Listing: Postcode Sector Weather Forecasts · Provider: Met Office · Access: Free 14-day trial · Global name: GZTDZJKVCY
+•  Listing: Acorn - Geodemographic Segmentation in the UK · Provider: CACI Ltd · Access: Free · Global name: GZSVZ1K7VF
+•  Listing: PayCheck – UK household income estimates at postcode level - SAMPLE data · Provider: CACI Ltd · Access: Free · Global name: GZSVZ1K7UA
+•  Listing: UK (England and Wales only) Census 2021 - Trial · Provider: Jaywing · Access: Free · Global name: GZSVZAJO3
+•  Listing: Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) · Provider: IBISWorld · Access: Free · Global name: GZSTZLT2II6
+•  Listing: Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) · Provider: CARTO · Access: Free · Global name: GZT0ZKUCHKL
+
+Pinned first when the live tier is enabled: GZTDZJKVCY, GZSVZAJO3.
+
+Public Sector & Government
+
+•  Listing: UK (England and Wales only) Census 2021 - Trial · Provider: Jaywing · Access: Free · Global name: GZSVZAJO3
+•  Listing: Address Spine – UK address level property information - Sample Data · Provider: CACI Ltd · Access: Free · Global name: GZSVZ1K7UQ
+•  Listing: CARTO Boundaries · Provider: CARTO · Access: Free · Global name: GZT0Z4CM1E9L4
+•  Listing: UK Land Surface Observations · Provider: Met Office · Access: Free 14-day trial · Global name: GZTDZJKVH3
+•  Listing: National Severe Weather Warning Service · Provider: Met Office · Access: Free · Global name: GZTDZJKVCU
+•  Listing: Administrative boundaries - Great Britain: Boundary Line - Open · Provider: Ordnance Survey · Access: Free · Global name: GZ1MOZBWYYT
+
+Pinned first when the live tier is enabled: GZSVZAJO3, GZ1MOZBWYYT, GZSVZ1K7UQ.
+
+Manufacturing & Industrial
+
+•  Listing: CEIC Commodities Data · Provider: CEIC Data · Access: Free · Global name: GZTSZRC7HQ3
+•  Listing: Company Data UK (incl. Guernsey) - XL Dataset · Provider: North Data GmbH · Access: Free 7-day trial · Global name: GZ2FSZH8URW
+•  Listing: Overture Maps - Transportation · Provider: CARTO · Access: Free · Global name: GZT0Z4CM1E9KJ
+•  Listing: FactSet Supply Chain Relationships (sample) · Provider: FactSet · Access: Free · Global name: GZT0ZGCQ51RQ
+•  Listing: D&B Shipping Insights Sample · Provider: Dun & Bradstreet · Access: Free · Global name: GZT0ZPWB4J7
+•  Listing: Global Spot Weather Forecasts · Provider: Met Office · Access: Free 14-day trial · Global name: GZTDZJKVCM
+
+Energy & Utilities
+
+•  Listing: National Severe Weather Warning Service · Provider: Met Office · Access: Free · Global name: GZTDZJKVCU
+•  Listing: UK Land Surface Observations · Provider: Met Office · Access: Free 14-day trial · Global name: GZTDZJKVH3
+•  Listing: Yes Energy - Sample Data · Provider: Yes Energy · Access: Free · Global name: GZSOZ71OJH
+•  Listing: Sample of GasMarketCube - Global Gas Supply, Demand and Trade · Provider: Rystad Energy · Access: Free · Global name: GZSVZ8MX1I
+•  Listing: Wind Power Forecast, Day-ahead - Sample · Provider: Weather Solutions · Access: Free · Global name: GZSYZSRWU5
+•  Listing: Crude oil price data · Provider: General Index · Access: Free Trial · Global name: GZTDZ1PNFO
+
+Pinned first when the live tier is enabled: GZTDZJKVCM, GZTDZJKVCU, GZTDZJKVCY.
+
+Media, Telco & Entertainment
+
+•  Listing: Acorn - Geodemographic Segmentation in the UK · Provider: CACI Ltd · Access: Free · Global name: GZSVZ1K7VF
+•  Listing: UK (England and Wales only) Census 2021 - Trial · Provider: Jaywing · Access: Free · Global name: GZSVZAJO3
+•  Listing: CARTO Boundaries · Provider: CARTO · Access: Free · Global name: GZT0Z4CM1E9L4
+•  Listing: Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) · Provider: CARTO · Access: Free · Global name: GZT0ZKUCHKL
+•  Listing: GLP-1 Social Conversations Sample Dataset · Provider: Socialgist · Access: Free · Global name: GZT1ZFQ0JE5
+•  Listing: American Community Survey, 2016 · Provider: data.world, Inc · Access: Free · Global name: GZSNZ4PHA6
+
+Something else
+
+•  Listing: UK (England and Wales only) Census 2021 - Trial · Provider: Jaywing · Access: Free · Global name: GZSVZAJO3
+•  Listing: Company Data UK (incl. Guernsey) - XL Dataset · Provider: North Data GmbH · Access: Free 7-day trial · Global name: GZ2FSZH8URW
+•  Listing: CARTO Boundaries · Provider: CARTO · Access: Free · Global name: GZT0Z4CM1E9L4
+•  Listing: Snowflake Public Data: Foreign Exchange Rates · Provider: Snowflake Public Data Products · Access: Free 60-day trial · Global name: GZTSZ290BVCAO
+•  Listing: CARTO Analytics Toolbox · Provider: CARTO · Access: Free · Global name: GZT0Z4CM1E9NA
+•  Listing: Acorn - Geodemographic Segmentation in the UK · Provider: CACI Ltd · Access: Free · Global name: GZSVZ1K7VF
+
+Pinned first when the live tier is enabled: GZTDZJKVCY.
+
+The fallbacks behind each stall
+
+44 further listings sit behind the 48 on offer, as the fallback pool. A visitor is not shown these. They exist so that a stall still fills if a pick is withdrawn or turns out not to be offered in the event region, and so a promotion has somewhere to come from. They are listed here because a fallback that nobody has read is not a fallback.
+
+Healthcare & Life Sciences
+
+•  Fallback listing: MBI Sociodemographic Data United Kingdom Postcode Level · Provider: Michael Bauer International GmbH · Access: Free · Global name: GZSYZ12OIDE
+•  Fallback listing: Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas · Provider: Ordnance Survey · Access: Free · Global name: GZ1MOZBX00Q
+•  Fallback listing: Choreograph UK behavioral,demographics & consumption data · Provider: Conexance by Choreograph · Access: Free · Global name: GZ1M7ZKTYD
+•  Fallback listing: Parks, Sports Facilities, Allotments - Great Britain: Open Greenspace · Provider: Ordnance Survey · Access: Free · Global name: GZ1MOZBX00E
+•  Fallback listing: National Severe Weather Warning Service · Provider: Met Office · Access: Free · Global name: GZTDZJKVCU
+
+Financial Services
+
+•  Fallback listing: CEIC World Macro Economic Data · Provider: CEIC Data · Access: Free · Global name: GZTSZRC7HRG
+•  Fallback listing: ESG Performance Score Core & Plus · Provider: ESG Book · Access: Free · Global name: GZTDZ1ELIY
+•  Fallback listing: Consumer Credit & Debit Card Transaction Data \ · Provider: European Spend · Access: Consumer Edge · Global name: Free · GZTSZPM12Y
+•  Fallback listing: MBI Purchasing Power Data United Kingdom Postcode Level · Provider: Michael Bauer International GmbH · Access: Free · Global name: GZSYZ7UQCDLU
+•  Fallback listing: Uk Companies Insight Summary · Provider: DataEco · Access: Free · Global name: GZ1MOZMB44P
+•  Fallback listing: CEIC Shipping Data · Provider: CEIC Data · Access: Free · Global name: GZTSZRC7HRC
+
+Retail & Consumer Goods
+
+•  Fallback listing: Household Acorn – geodemographic segmentation at household level SAMPLE DATA · Provider: CACI Ltd · Access: Free · Global name: GZSVZ1K7UU
+•  Fallback listing: MBI Sociodemographic Data United Kingdom Postcode Level · Provider: Michael Bauer International GmbH · Access: Free · Global name: GZSYZ12OIDE
+•  Fallback listing: Intelligent Event Data for Department Stores & Retail, London UK - Sample · Provider: PredictHQ · Access: Free · Global name: GZSTZIDI09S
+•  Fallback listing: On Demand Journeys · Provider: BT Active Intelligence · Access: Free · Global name: GZ2FRZE33RX
+•  Fallback listing: Acxiom EMEA: Geo-Spatial Sample Data UK · Provider: Acxiom EMEA · Access: Free · Global name: GZSYZ5S9QC
+•  Fallback listing: Movement Daily Activity Index 2020 (Sample) · Provider: Mapbox · Access: Free · Global name: GZT0ZIFQPAI
+
+Public Sector & Government
+
+•  Fallback listing: Road network - Great Britain: Open Roads · Provider: Ordnance Survey · Access: Free · Global name: GZ1MOZBX00A
+•  Fallback listing: European Public Tenders Dataset – 800+ Sources, Daily Updates, OCDS Format · Provider: GroupBWT · Access: Free · Global name: GZSYZ12SH0I
+•  Fallback listing: MBI Global Area Boundaries · Provider: Michael Bauer International GmbH · Access: Free · Global name: GZSYZ7UQCDOX
+•  Fallback listing: Addresses - UK: OS GB Address and OS Islands Address · Provider: Ordnance Survey · Access: Free · Global name: GZ1MOZ2HCBPI0
+•  Fallback listing: Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas · Provider: Ordnance Survey · Access: Free · Global name: GZ1MOZBX00Q
+•  Fallback listing: Basic Sociodemographics-Bundle for Countries Worldwide · Provider: Michael Bauer International GmbH · Access: Free · Global name: GZSYZ7UQCDOH
+
+Manufacturing & Industrial
+
+•  Fallback listing: CEIC Shipping Data · Provider: CEIC Data · Access: Free · Global name: GZTSZRC7HRC
+•  Fallback listing: Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) · Provider: IBISWorld · Access: Free · Global name: GZSTZLT2II6
+•  Fallback listing: Uk Companies Insight Summary · Provider: DataEco · Access: Free · Global name: GZ1MOZMB44P
+•  Fallback listing: Chemical Price Assessments · Provider: ICIS (Independent Commodity Intelligence Services) · Access: Free · Global name: GZSVZ9FU7N
+•  Fallback listing: Company data · Provider: OpenCorporates · Access: Free · Global name: GZTDZM1AK5
+•  Fallback listing: UK H3 Travel Matrix · Provider: Dekart XYZ · Access: Free · Global name: GZSYZ43W9K12
+
+Energy & Utilities
+
+•  Fallback listing: Corporate Climate Commitment ESG Data \ · Provider: Net Zero, Carbon Neutrality, and Carbon Positivity · Access: Tracenable · Global name: Free · GZTSZ36AC98
+•  Fallback listing: Purchasing Power for Countries Worldwide · Provider: Michael Bauer International GmbH · Access: Free · Global name: GZSYZ7UQCDOT
+•  Fallback listing: MBI Purchasing Power Data United Kingdom Postcode Level · Provider: Michael Bauer International GmbH · Access: Free · Global name: GZSYZ7UQCDLU
+•  Fallback listing: UK Health Facts and Dimensions Sample · Provider: Facts and Dimensions Ltd · Access: Free · Global name: GZ2FRZQNY1
+
+Media, Telco & Entertainment
+
+•  Fallback listing: European Broadband Markets 2017 · Provider: Expert Intelligence · Access: Free · Global name: GZSVZ6EW2A
+•  Fallback listing: Choreograph UK behavioral,demographics & consumption data · Provider: Conexance by Choreograph · Access: Free · Global name: GZ1M7ZKTYD
+•  Fallback listing: Road Insights · Provider: BT Active Intelligence · Access: Free · Global name: GZ2FRZE33RT
+•  Fallback listing: Household Acorn – geodemographic segmentation at household level SAMPLE DATA · Provider: CACI Ltd · Access: Free · Global name: GZSVZ1K7UU
+•  Fallback listing: Ocean – UK Consumer Database (41M Adults) · Provider: CACI Ltd · Access: Free · Global name: GZSVZ1K7VV
+•  Fallback listing: Addresses - UK: OS GB Address and OS Islands Address · Provider: Ordnance Survey · Access: Free · Global name: GZ1MOZ2HCBPI0
+
+Something else
+
+•  Fallback listing: Administrative boundaries - Great Britain: Boundary Line - Open · Provider: Ordnance Survey · Access: Free · Global name: GZ1MOZBWYYT
+•  Fallback listing: Addresses - UK: OS GB Address and OS Islands Address · Provider: Ordnance Survey · Access: Free · Global name: GZ1MOZ2HCBPI0
+•  Fallback listing: MBI Global Area Boundaries · Provider: Michael Bauer International GmbH · Access: Free · Global name: GZSYZ7UQCDOX
+•  Fallback listing: Uk Companies Insight Summary · Provider: DataEco · Access: Free · Global name: GZ1MOZMB44P
+•  Fallback listing: MBI Purchasing Power Data United Kingdom Postcode Level · Provider: Michael Bauer International GmbH · Access: Free · Global name: GZSYZ7UQCDLU
+
+Which industries each listing appears in
+
+•  Listing: UK (England and Wales only) Census 2021 - Trial · Industries: 5 · Appears in: Healthcare & Life Sciences, Retail & Consumer Goods, Public Sector & Government, Media, Telco & Entertainment, Something else
+•  Listing: Acorn - Geodemographic Segmentation in the UK · Industries: 4 · Appears in: Healthcare & Life Sciences, Retail & Consumer Goods, Media, Telco & Entertainment, Something else
+•  Listing: CARTO Boundaries · Industries: 3 · Appears in: Public Sector & Government, Media, Telco & Entertainment, Something else
+•  Listing: Company Data UK (incl. Guernsey) - XL Dataset · Industries: 3 · Appears in: Financial Services, Manufacturing & Industrial, Something else
+•  Listing: Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) · Industries: 2 · Appears in: Financial Services, Retail & Consumer Goods
+•  Listing: National Severe Weather Warning Service · Industries: 2 · Appears in: Public Sector & Government, Energy & Utilities
+•  Listing: Postcode Sector Weather Forecasts · Industries: 2 · Appears in: Healthcare & Life Sciences, Retail & Consumer Goods
+•  Listing: Snowflake Public Data: Foreign Exchange Rates · Industries: 2 · Appears in: Financial Services, Something else
+•  Listing: Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) · Industries: 2 · Appears in: Retail & Consumer Goods, Media, Telco & Entertainment
+•  Listing: UK Land Surface Observations · Industries: 2 · Appears in: Public Sector & Government, Energy & Utilities
+•  Listing: Address Spine – UK address level property information - Sample Data · Industries: 1 · Appears in: Public Sector & Government
+•  Listing: Administrative boundaries - Great Britain: Boundary Line - Open · Industries: 1 · Appears in: Public Sector & Government
+•  Listing: American Community Survey, 2016 · Industries: 1 · Appears in: Media, Telco & Entertainment
+•  Listing: Banking Analytics Bundle · Industries: 1 · Appears in: Financial Services
+•  Listing: CARTO Analytics Toolbox · Industries: 1 · Appears in: Something else
+•  Listing: CEIC Commodities Data · Industries: 1 · Appears in: Manufacturing & Industrial
+•  Listing: CSRHub ESG (Environment, Social, Governance) Fast Start · Industries: 1 · Appears in: Financial Services
+•  Listing: Crude oil price data · Industries: 1 · Appears in: Energy & Utilities
+•  Listing: D&B Shipping Insights Sample · Industries: 1 · Appears in: Manufacturing & Industrial
+•  Listing: FactSet Supply Chain Relationships (sample) · Industries: 1 · Appears in: Manufacturing & Industrial
+•  Listing: GLP-1 Social Conversations Sample Dataset · Industries: 1 · Appears in: Media, Telco & Entertainment
+•  Listing: Global Spot Weather Forecasts · Industries: 1 · Appears in: Manufacturing & Industrial
+•  Listing: Household Acorn – geodemographic segmentation at household level SAMPLE DATA · Industries: 1 · Appears in: Healthcare & Life Sciences
+•  Listing: Inflation Forecasting - Headline & Core CPI by Country · Industries: 1 · Appears in: Financial Services
+•  Listing: Overture Maps - Transportation · Industries: 1 · Appears in: Manufacturing & Industrial
+•  Listing: PayCheck – UK household income estimates at postcode level - SAMPLE data · Industries: 1 · Appears in: Retail & Consumer Goods
+•  Listing: PubMed Biomedical Research Corpus · Industries: 1 · Appears in: Healthcare & Life Sciences
+•  Listing: Sample of GasMarketCube - Global Gas Supply, Demand and Trade · Industries: 1 · Appears in: Energy & Utilities
+•  Listing: UK Health Facts and Dimensions Sample · Industries: 1 · Appears in: Healthcare & Life Sciences
+•  Listing: Wind Power Forecast, Day-ahead - Sample · Industries: 1 · Appears in: Energy & Utilities
+•  Listing: Yes Energy - Sample Data · Industries: 1 · Appears in: Energy & Utilities
+
+4. WHAT THE VISITOR ALREADY HOLDS
+
+The Data Library offers these per industry, plus a free-text option.
+
+Healthcare & Life Sciences
+
+•  Option: Patient records · Shown underneath: Structured clinical records in a PAS or EPR system
+•  Option: Clinical notes & letters · Shown underneath: Free text - discharge summaries, referrals, correspondence
+•  Option: Referral & waiting list data · Shown underneath: Pathways, breaches, appointment scheduling
+•  Option: Clinical trial data · Shown underneath: Protocols, recruitment, outcomes
+•  Option: Imaging & diagnostics · Shown underneath: Scan metadata and reports
+•  Option: Estates & operations · Shown underneath: Beds, theatres, staffing rotas, supplies
+
+Financial Services
+
+•  Option: Transaction history · Shown underneath: Card, payment and account movement
+•  Option: Customer & account master · Shown underneath: KYC records, product holdings, segments
+•  Option: Positions & trades · Shown underneath: Holdings, orders, execution history
+•  Option: Risk & capital models · Shown underneath: Exposures, limits, stress test inputs
+•  Option: Customer communications · Shown underneath: Call transcripts, complaints, chat logs
+•  Option: Regulatory reporting · Shown underneath: Submissions and the reconciliations behind them
+
+Retail & Consumer Goods
+
+•  Option: Sales & till transactions · Shown underneath: Basket-level sales by store and channel
+•  Option: Inventory & stock positions · Shown underneath: Availability, shrink, replenishment
+•  Option: Loyalty & customer data · Shown underneath: Membership, spend history, segments
+•  Option: Web & app clickstream · Shown underneath: Browse, search and cart behaviour
+•  Option: Supplier & logistics data · Shown underneath: Purchase orders, lead times, delivery performance
+•  Option: Reviews & customer service · Shown underneath: Free text feedback, returns reasons, contact logs
+
+Public Sector & Government
+
+•  Option: Case management records · Shown underneath: Casework across service lines
+•  Option: Policy & guidance documents · Shown underneath: Years of PDFs, circulars and statutory guidance
+•  Option: Citizen contact & correspondence · Shown underneath: Calls, emails, webforms, complaints
+•  Option: Assets & estates · Shown underneath: Property, highways, fleet, maintenance
+•  Option: Finance & procurement · Shown underneath: Budgets, spend over threshold, contracts
+•  Option: Performance & statutory returns · Shown underneath: KPIs and central government reporting
+
+Manufacturing & Industrial
+
+•  Option: Machine & sensor telemetry · Shown underneath: High frequency readings off the line
+•  Option: Quality & defect records · Shown underneath: Inspection results, scrap, rework
+•  Option: Maintenance logs · Shown underneath: Work orders and engineer free text
+•  Option: ERP & production planning · Shown underneath: Orders, BOMs, schedules, yields
+•  Option: Supplier & inbound logistics · Shown underneath: Component lead times and quality by supplier
+•  Option: Energy consumption · Shown underneath: Meter data by line and site
+
+Energy & Utilities
+
+•  Option: Smart meter readings · Shown underneath: Interval consumption at premise level
+•  Option: Network & asset data · Shown underneath: Substations, pipes, cables, condition
+•  Option: Outage & fault records · Shown underneath: Interruptions, causes, restoration times
+•  Option: Generation & dispatch · Shown underneath: Output, availability, curtailment
+•  Option: Customer & billing · Shown underneath: Accounts, tariffs, arrears, vulnerability flags
+•  Option: Field engineer reports · Shown underneath: Free text inspection and repair notes
+
+Media, Telco & Entertainment
+
+•  Option: Viewing & listening events · Shown underneath: Play, pause, completion by title and device
+•  Option: Subscriber & account data · Shown underneath: Plans, churn, lifetime value
+•  Option: Content catalogue & metadata · Shown underneath: Titles, rights, genres, availability windows
+•  Option: Network performance · Shown underneath: Throughput, latency, coverage, faults
+•  Option: Advertising & campaign data · Shown underneath: Impressions, fill rate, yield
+•  Option: Customer support interactions · Shown underneath: Call transcripts and chat logs
+
+Something else
+
+•  Option: Core operational records · Shown underneath: Whatever your main system of record holds
+•  Option: Documents & PDFs · Shown underneath: Years of unstructured files nobody can query
+•  Option: Customer or member data · Shown underneath: Who you serve and what they have done
+•  Option: Finance & billing · Shown underneath: Revenue, spend, invoices
+•  Option: Emails, calls & tickets · Shown underneath: Free text interactions
+•  Option: Device or sensor data · Shown underneath: Anything machine-generated and high volume
+
+5. WHAT GETS BUILT: THE 9 ARCHETYPES
+
+The workshop takes one line of free text and resolves it to exactly one archetype. The features and the first step are precomputed per archetype, so they are instant and always drawn from the curated feature list.
+
+•  Archetype: talk-to-my-data · Features: Cortex Analyst, Semantic Views, Snowflake Intelligence · Considerations available: 5
+•  Archetype: ask-my-documents · Features: Cortex Search, AI_PARSE_DOCUMENT, Cortex Agents · Considerations available: 5
+•  Archetype: extract-from-paperwork · Features: AI_EXTRACT, AI_PARSE_DOCUMENT, Dynamic Tables · Considerations available: 5
+•  Archetype: triage-and-classify · Features: AI_CLASSIFY, Dynamic Tables, Streams · Considerations available: 5
+•  Archetype: an-agent-that-acts · Features: Cortex Agents, Snowflake Intelligence, Semantic Views · Considerations available: 5
+•  Archetype: predict-what-happens-next · Features: ML Forecasting, ML Anomaly Detection, Snowflake Notebooks · Considerations available: 5
+•  Archetype: join-the-silos · Features: Dynamic Tables, Snowflake Marketplace, Semantic Views · Considerations available: 5
+•  Archetype: share-without-copying · Features: Secure Data Sharing, Snowflake Marketplace, Dynamic Tables · Considerations available: 5
+•  Archetype: watch-it-live · Features: Snowpipe Streaming, Dynamic Tables, Streams · Considerations available: 5
+
+The first step printed for each
+
+•  talk-to-my-data - Write down the three questions people ask most, then model just the tables those need.
+•  ask-my-documents - Put fifty representative documents on a stage and see what the parser returns before building anything.
+•  extract-from-paperwork - List the fields you actually need, then test extraction on your ugliest ten documents rather than your cleanest.
+•  triage-and-classify - Agree the categories with the people who act on them, then hand-label two hundred examples as your yardstick.
+•  an-agent-that-acts - Pick one action worth automating, and write down exactly what the agent must never do.
+•  predict-what-happens-next - Check you have enough history for the thing you want to predict before modelling anything.
+•  join-the-silos - Find the one key that links your two most important systems, and check how often it is missing.
+•  share-without-copying - Pick one dataset and one partner, and write down exactly which columns they may see.
+•  watch-it-live - Define the one event worth reacting to, and how quickly someone must know about it.
+
+6. HOW THE DATA GETS INTO SNOWFLAKE
+
+Each platform tapped on the letter prints a concrete route into the blueprint.
+
+•  Platform: Microsoft / Azure · Route printed: Openflow has a first-party connector for Azure Blob Storage and SQL Server. For Fabric or OneLake, register the Iceberg tables through a catalog integration and query them in place - no copy.
+•  Platform: AWS · Route printed: Point an external stage at the S3 bucket with a storage integration, then Snowpipe for continuous load. If the data is already Iceberg in Glue, use a catalog integration and leave it where it is.
+•  Platform: Google Cloud · Route printed: A storage integration over the GCS bucket plus an external stage. BigQuery data moves cleanly as Parquet exported to GCS, or through Openflow if you need it on a schedule.
+•  Platform: Oracle · Route printed: Openflow's Oracle connector does change data capture, so you get an ongoing replica rather than a nightly dump. Start with the handful of tables the proof of concept actually reads.
+•  Platform: SAP · Route printed: Either the SAP connector for Snowflake, or SAP Business Data Cloud sharing the data as Iceberg that Snowflake reads without a copy. The second route is usually faster to stand up.
+•  Platform: On-premise / our own servers · Route printed: Openflow can run inside your network and push out, so nothing has to be exposed inbound. For a first proof of concept, a one-off bulk load of a representative extract is usually enough.
+•  Platform: SaaS apps (Salesforce, Workday, etc.) · Route printed: Openflow has connectors for the common SaaS sources, and the Marketplace carries some of them as ready-made shares. Check the Marketplace first - it is the cheaper answer when it exists.
+•  Platform: Already in Snowflake · Route printed: Nothing to move. Point the proof of concept at the existing tables and spend the saved time on the model and the interface instead.
+•  Platform: Not sure yet · Route printed: Worth ten minutes with whoever owns the source before you build. The answer changes the effort more than any other decision here.
+
+When more than one is tapped
+
+•  Selection: One platform · What the blueprint prints: That route
+•  Selection: Several named platforms · What the blueprint prints: Each route, in the order listed above, so the document does not depend on tap order
+•  Selection: Not sure yet, alone · What the blueprint prints: Its own line, no route
+•  Selection: Not sure yet, with a named platform · What the blueprint prints: The named platform only
+•  Selection: More than four platforms · What the blueprint prints: The first four in the order listed above
+
+Already in Snowflake is not an exclusive answer: an estate can be part in Snowflake and part elsewhere. When it is picked alongside a named platform the blueprint prints this instead of "nothing to move": Some of it is already here, so the proof of concept starts on those tables today while the rest lands alongside them.
+
+These rules are applied in the browser as the visitor taps, and again on the server when the blueprint is built.
+
+7. HOW EACH ANSWER IS PRODUCED
+
+•  Stop: The Data Library · Model transport: complete · Notes: A single fast completion that names the selection back.
+•  Stop: The Marketplace · Model transport: complete · Notes: A single fast completion that names the selection back.
+•  Stop: The Workshop · Model transport: exec · Notes: Agentic. CoCo's working is shown on screen as it arrives.
+•  Stop: The Postbox · Notes: No model turn. Runs the QA review, writes the document, returns the fixed line above.
+
+Every turn has a wall-clock ceiling of 60s. Past it, the visitor is served the precomputed archetype content instead of a slower sentence, so the document is complete either way.
+
+One model call is in flight at a time. A second caller waits, so one visitor's content can never appear in another visitor's document.
+
+The transport named above is the first thing tried, not the only one. Beneath each stop sit four layers, and every one of them falls through to the next:
+
+1. A warm agent, held open between visitors so the startup cost is paid once when the booth opens rather than once per visitor.
+2. A cold one-shot agent process, which pays that startup on every call.
+3. A single non-agentic completion in Snowflake.
+4. The archetype's own precomputed content, which needs no model at all and is present in this repository.
+
+So the visitor is served something whichever layers are unavailable. The booth checks at startup whether this laptop's Cortex Code can hold a warm agent open, states the answer in the console, and uses the next layer down for every turn if it cannot.
+
+The closed lists in this document reach the model as text inside the prompt. The model picks from them and reflects them back; it is never asked to invent a feature, a listing or a fact.
+
+8. REVIEW AND DELIVERY
+
+Before the document is written, it is reviewed. Deterministic checks always run and repair what is fixable from the closed lists: features that do not resolve to a documentation link are dropped, platforms are re-normalised, the sovereignty section is required when a residency rule was given, and a list of banned words is removed. Every change is recorded with its before and after.
+
+One further check asks a model whether the proof of concept addresses the problem the visitor described. It never blocks delivery.
+
+The visitor leaves with a Word document, reached by scanning a QR code on screen. The link lasts 7 days. There is no email and no HTML page: the document is the only artifact.
+
+9. CONFIGURATION
+
+The flags that change what a visitor experiences.
+
+•  Setting: locations.marketplace.discovery · Value: manual · Effect: The curated listings in section 3 are served
+•  Setting: marketplace.agentic.enabled · Value: true · Effect: Agentic listing search is on
+•  Setting: qa.enabled · Value: true · Effect: Blueprint review runs before delivery
+•  Setting: qa.model_review · Value: true · Effect: Relevance check included in the review
+•  Setting: delivery.transport · Value: qr · Effect: Delivery is by QR code to a staged document
+•  Setting: ask.enabled · Value: false · Effect: The optional free-question stop is not offered
+•  Setting: event.marketplace_region · Value: AWS_EU_WEST_2 · Effect: Biases which Marketplace datasets are recommended
+•  Setting: event.time_limit_seconds · Value: 300 · Effect: The visit length the booth is built for
+
+Constraints to be aware of
+
+•  Listing selection is weighted for the United Kingdom: 19 preference terms and 20 demotion terms. A room in another country needs these re-weighted.
+•  12 of the 48 slots are time-limited trials rather than perpetual free listings. All are free to acquire; none are paid.
+•  4 listings appear in three or more industries, the most reused being UK (England and Wales only) Census 2021 - Trial, Acorn - Geodemographic Segmentation in the UK. A visitor who has seen the booth before may be offered the same dataset again.
+•  A listing is offerable if the catalogue still carries it, it is offered in the EVENT’s region, and a visitor can obtain it directly - not by-request and not discover-only. It is deliberately NOT judged on whether this account could import it: that flag answers “can THIS account attach it”, and every booth account is in one region while the three events are in three, so using it would reject listings the visitor can attach perfectly well.
+•  A stall widens its pool by borrowing from other industries when a listing matches what the visitor typed, which is right for data that travels - weather, boundaries, addresses, population, company registrations - and wrong for sector-specific reference data. 12 listings are protected from that for this venue and are offered in their own stall only.
+•  The curated six always win their own stall. Ranking changes the ORDER a visitor sees them in, and borrowed listings compete only for slots the six do not fill.
+•  No pinned fallback for: Healthcare & Life Sciences, Financial Services, Manufacturing & Industrial, Media, Telco & Entertainment. These industries rely entirely on the curated list in section 3.
+•  The industry does not weight which archetype a visitor is routed to.
+•  The data a visitor holds DOES narrow which datasets are suggested: each listing is tagged with what it is for and each library shelf with what it is, and selection intersects the two. There is no tag for unstructured text, because no curated listing serves it - a visitor whose problem is documents is ranked on their own words and their sector alone.

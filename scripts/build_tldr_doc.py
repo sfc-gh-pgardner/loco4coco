@@ -65,6 +65,17 @@ H2:If something breaks
 * The server disappeared. It no longer stops itself on idle, so this means the process died or the laptop slept. Start it again.
 H2:Restarting
 Use the Restart server button in the admin panel. There is no need to find the process.
+H2:If you want this in French or German
+Nobody on this project is doing the translation, so this is a handover list rather than a plan. The language codes are already wired: event.venue sets event.language to fr for Paris and de for Berlin and Frankfurt, and the booth passes that around. What is missing is the words. Today every language resolves to the same English copy. These are the surfaces that would have to change, and the order matters because each one is a different kind of work.
+* The copy deck, game/config.json. Roughly 400 strings: the intro, the letter, what CoCo says at each of the four locations, the sovereignty lines, the screen furniture and the send-off. This is the bulk of the visible text and the only part that is genuinely just translation. It is structured as one deck per language code, so a fr and a de deck sit alongside the existing en one.
+* The strings that never made it into the deck, game/index.html. About twenty short ones are still written into the page itself: button labels, the progress wording, the page indicator, error text. These are the actual blocker. They have to be lifted into config.json before any translator can see them, and that is code work, not language work.
+* The prompts, in config.json. Every model call carries its own instruction text. Translating the visitor-facing copy but leaving the prompts in English gets you an English reply under a French label, which is worse than not translating at all. Each prompt needs an explicit instruction to answer in the event language, and then re-testing, because a model told to answer in French will also drift in length and tone.
+* The QA agent. It reviews the blueprint before delivery and it does two different things. The deterministic checks match on English words and would silently stop firing against French or German text. The model review call is a prompt and needs the same treatment as above. A QA step that quietly passes everything is the most dangerous failure on this list, because nothing looks broken.
+* The document, rendered in game/server.py. Around twenty-five headings and fixed sentences are built into the Word file: section titles, the standing explanations, the first-step wording. The visitor's own words pass through untouched, but everything framing them is English and hardcoded.
+* The postcard. The shareable PNG is drawn in the browser per archetype, with its text baked into the drawing code. It also has to survive longer words: German compounds will overrun boxes that were laid out for English, so this one needs re-checking visually rather than just re-stringing.
+* The corpus, archetypes.md and marketplace-index.md. Archetype names, the pain text and the dataset descriptions. Note that regenerating these is a pipeline, not an edit: markdown, then the bundle, then the Snowflake tables, in that order.
+* This guide, the setup guide and the decision tree. All three are generated from the repo, so they follow the corpus rather than needing separate translation.
+What deliberately stays in English: the Snowflake developer guides and feature documentation, because that is how Snowflake publishes them; and the kick-off prompt the visitor pastes into their own Cortex Code session, because that is where it is going to be read.
 """
 
 

@@ -258,6 +258,12 @@ python3 deploy/load_context.py --connection MYBOOTH
 python3 deploy/verify_context.py --all --connection MYBOOTH
 ```
 
+`verify_context.py` **exits 0 on a healthy booth**. Only `FAIL` lines gate
+anything. The twelve `note` lines saying a listing is "live but not importable by
+this account" are expected and harmless — the booth *shows* listings and never
+imports one, so import-readiness is a property of your event account, not of the
+stand. Do not go hunting those on the morning of an event.
+
 This pushes the curated dataset lists — all three cities — into the account. Until it
 runs, the account has nothing to serve, and the game silently falls back to a copy
 committed in the repo. If that copy is older than the last curation, **a Paris booth
@@ -273,6 +279,12 @@ python3 game/context.py --bundle                    # md    -> context-bundle.js
 python3 deploy/load_context.py --connection MYBOOTH  # md    -> Snowflake tables
 ```
 
+Skipping the middle line is survivable but not silent: `verify_context.py`'s
+parity check compares all three layers and fails when they disagree. It has
+already caught exactly that — a committed bundle carrying nine duplicate rows and
+missing three listings while the markdown was correct. If parity fails, re-run
+`python3 game/context.py --bundle` and commit the result.
+
 ## Step 7: point the game at your event
 
 Start the server (Step 8), then open **<http://127.0.0.1:4747/admin>**. Pick your venue
@@ -283,6 +295,7 @@ and press Apply. That is the whole configuration.
 | `london` | London | en | AWS_EU_WEST_2 | uk |
 | `paris` | Paris | fr | AWS_EU_WEST_3 | fr |
 | `berlin` | Berlin | de | AWS_EU_CENTRAL_1 | de |
+| `frankfurt` | Frankfurt | de | AWS_EU_CENTRAL_1 | de |
 
 **Applying a venue does not need a restart.** The config is re-read on every request,
 and Apply flushes the dataset cache, so the change lands on the next visitor.
@@ -418,18 +431,26 @@ the account is wired end to end.
 
 ### Before doors open, every day, at every stand
 
-Open <http://127.0.0.1:4747/admin> and read four lines:
+Open <http://127.0.0.1:4747/admin> and read five lines:
 
 | Line | Must say |
 |---|---|
 | Venue / City | the event you are actually at |
 | Datasets loaded | **88–100**, of which 48 are the six-per-stall a visitor sees; the rest are the fallback pool and its size differs per city (London 92, Paris 97, Berlin 91). `0` means Step 6 never ran and you will serve the wrong city's data |
 | Lists read from | **snowflake**. `bundle` or `markdown` means the account read failed and you are on a committed copy |
-| Operator | your name and stand — it cannot be recovered afterwards |
+| Model proven | **yes, followed by a model name**, in green. Amber `FELL BACK to …` is fine — something answered. Red `NO USABLE MODEL` is the only version of this line that should stop you |
+| Warm agent | `ready` is ideal. `off` or `not running (falls back, still works)` is **also fine**, and shows in grey rather than red on purpose: the booth drops to a slower path and the visitor sees no difference |
 
 Then run **one throwaway visitor all the way through**. The first inference call on a cold
 warehouse takes around 56s against roughly 4s afterwards, and you do not want a stranger
 to be the one who discovers that.
+
+While you are in there: a long reply **pages itself**. The speech bubble holds four
+lines, and anything longer advances on its own after a readable pause, showing
+`1 / 2` while it does. Nobody has to press anything. The bubble is a fixed-height
+box in every state, so a short reply leaves some empty space inside its border —
+that is deliberate. It is what stops the board and the interior sliding up and
+down under a bubble that changes size, which visitors found disorienting.
 
 ## Running four stands
 

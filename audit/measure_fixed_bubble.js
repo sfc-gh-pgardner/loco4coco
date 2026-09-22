@@ -1,9 +1,15 @@
-// Does the bubble - and therefore the board below it - hold still?
+// Does the board below the bubble hold still while the bubble itself breathes?
 //
 // The complaint this answers: "both the interior location and map still move
 // around based on the text box changing size". So we do not measure the bubble's
 // height in isolation, we measure the TOP OF THE CANVAS in every state the
 // bubble can be in. If that number moves, the visitor sees the board jump.
+//
+// Updated 2026-09-22 for #bubbleslot. The bubble no longer has a fixed height -
+// pinning it left almost every reply in a box with visible dead space inside the
+// border. The slot reserves the worst case instead, so the contract is now:
+//   slot height CONSTANT, hud height CONSTANT, canvas top CONSTANT,
+//   bubble height VARIES, and bubble <= slot always.
 //
 // Run: node audit/measure_fixed_bubble.js [width] [height]
 const { chromium } = require('playwright');
@@ -47,10 +53,14 @@ const LONG  = FOUR + ' ' + FOUR + ' ' + FOUR;
     await p.waitForTimeout(250);
     const m = await p.evaluate(`(() => {
       const bub = document.getElementById('bubble');
+      const slot = document.getElementById('bubbleslot');
+      const hud = document.getElementById('hud');
       const cv = document.getElementById('cv');
       const r = cv ? cv.getBoundingClientRect() : null;
       return {
         bubble: bub ? bub.offsetHeight : null,
+        slot: slot ? slot.offsetHeight : null,
+        hud: hud ? hud.offsetHeight : null,
         cvTop: r ? Math.round(r.top) : null,
         cvBottom: r ? Math.round(r.bottom) : null,
         viewport: window.innerHeight,
@@ -62,6 +72,7 @@ const LONG  = FOUR + ' ' + FOUR + ' ' + FOUR;
     console.log(
       String(label).padEnd(34),
       'bubble=' + String(m.bubble).padStart(4),
+      'slot=' + String(m.slot).padStart(4),
       'cvTop=' + String(m.cvTop).padStart(5),
       'cvBottom=' + String(m.cvBottom).padStart(5),
       'vh=' + m.viewport,
@@ -111,12 +122,30 @@ const LONG  = FOUR + ' ' + FOUR + ' ' + FOUR;
 
   const tops = [...new Set(rows.map(r => r.cvTop))];
   const hs = [...new Set(rows.map(r => r.bubble))];
+  const slots = [...new Set(rows.map(r => r.slot))];
+  const huds = [...new Set(rows.map(r => r.hud))];
   console.log('\ndistinct bubble heights: ' + JSON.stringify(hs));
+  console.log('distinct slot heights  : ' + JSON.stringify(slots));
+  console.log('distinct hud heights   : ' + JSON.stringify(huds));
   console.log('distinct canvas tops   : ' + JSON.stringify(tops));
 
+  // The bubble must never be taller than the slot that reserves it: if it were,
+  // the overflow would push the board down and the reservation would be a lie.
+  const overflow = rows.filter(r => r.bubble > r.slot);
   const clipped = rows.filter(r => r.cvBottom > r.viewport);
   console.log('\n' + (tops.length === 1 ? 'PASS' : 'FAIL') + ' board position constant');
-  console.log((hs.length === 1 ? 'PASS' : 'FAIL') + ' bubble height constant');
+  console.log((slots.length === 1 ? 'PASS' : 'FAIL') + ' slot height constant');
+  console.log((huds.length === 1 ? 'PASS' : 'FAIL') + ' hud row height constant');
+  // Inverted deliberately on 2026-09-22. A constant bubble height used to be the
+  // requirement; it is now the bug. The bubble is supposed to hug its text, so a
+  // single distinct height across a one-line reply and a four-line one would
+  // mean the box is padded with dead space again - the thing the slot exists to
+  // move outside the border.
+  console.log((hs.length > 1 ? 'PASS' : 'FAIL')
+              + ' bubble height tracks its content');
+  console.log((overflow.length === 0 ? 'PASS' : 'FAIL') + ' bubble fits its slot'
+              + (overflow.length ? ' (worst ' +
+                  Math.max(...overflow.map(r => r.bubble - r.slot)) + 'px over)' : ''));
   console.log((clipped.length === 0 ? 'PASS' : 'FAIL') + ' board bottom edge on screen'
               + (clipped.length ? ' (worst overrun ' +
                   Math.max(...clipped.map(r => r.cvBottom - r.viewport)) + 'px)' : ''));
@@ -124,5 +153,7 @@ const LONG  = FOUR + ' ' + FOUR + ' ' + FOUR;
   if (errs.length) console.log('\nJS ERRORS:\n' + errs.join('\n'));
 
   await b.close();
-  process.exit(tops.length === 1 && hs.length === 1 && !clipped.length && after > before && !errs.length ? 0 : 1);
+  process.exit(tops.length === 1 && slots.length === 1 && huds.length === 1
+               && hs.length > 1 && !overflow.length && !clipped.length
+               && after > before && !errs.length ? 0 : 1);
 })();

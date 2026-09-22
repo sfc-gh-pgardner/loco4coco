@@ -558,7 +558,9 @@
       "heading": "Shall I post it?",
       "hint": "I'll write it up properly and put it in the post.",
       "narrative": "Wrapped, labelled and ready. Say the word and I'll put it in your hands.",
-      "button": "POST IT TO ME"
+      "_button_comment": "Two presses, two labels. The first press MAKES the thing, so it says so; the second press comes after the QR code is on screen, when the document already exists and all that is left is to watch it arrive. Both were 'POST IT TO ME', which read as if the first press had not worked.",
+      "button": "CREATE MY BLUEPRINT",
+      "button_sent": "SEE MY POSTCARD"
     }
   },
   "scenery": {

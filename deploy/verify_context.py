@@ -261,7 +261,7 @@ def check_listings_live(data, conn):
     # guess, SNOWFLAKE.DATA_SHARING_USAGE.LISTING_CATALOG, does not exist.
     sql = ('SHOW AVAILABLE LISTINGS; '
            'SELECT "global_name" AS G, "title" AS T, '
-           '"is_ready_for_import" AS R '
+           '"is_ready_for_import" AS R, "regions" AS RG '
            'FROM TABLE(RESULT_SCAN(LAST_QUERY_ID())) '
            'WHERE "global_name" IN (%s)' % lit)
     cmd = ["snow", "sql", "-q", sql, "--format", "json",
@@ -303,6 +303,76 @@ def check_listings_live(data, conn):
     elif not gone:
         ok("listings/live", "%d listings live (%d not importable by this account)"
            % (len(found), len(notready)))
+    check_listings_region(found)
+
+
+def check_listings_region(found):
+    """Every listing THIS venue puts on the stall must be available in THIS
+    venue's cloud region.
+
+    This is the check that matters most and was missing. The visitor imports
+    nothing at the booth - they walk away with links and open them later from
+    their own account, near the event - so a listing that is not offered in the
+    event's region is a dead end they discover at home, which is the one failure
+    this stand cannot see happen and cannot apologise for.
+
+    Scoped to the venue's own stall deliberately. The corpus holds every
+    profile's listings, so checking all of them would flag London's UK-only
+    geodata on a Berlin booth and report failures for a stall that is correct.
+    """
+    try:
+        import server                                             # noqa: PLC0415
+        cfg = server.load_config()
+        region = (server.region_short(cfg) or "").upper()
+        # What this venue actually OFFERS, not the whole corpus. load_marketplace()
+        # holds every profile's listings, so measuring against it flagged four UK
+        # datasets - the Census trial, CARTO Boundaries, GB Spatial Features and UK
+        # Land Surface Observations - as dead ends on a Berlin booth that never
+        # puts them on the stall. Ask the selector instead, the same way
+        # scripts/assert_listing_slots.py does, so the question is "could a visitor
+        # HERE be handed this?" rather than "does this exist somewhere?".
+        mine = set()
+        for ind in (cfg.get("industries") or {}):
+            srcs = (cfg["industries"][ind].get("data_sources")) or []
+            held = [(d.get("label") if isinstance(d, dict) else d) for d in srcs]
+            for h in ([], held):
+                st = {"visitor": {"industry": ind}, "held": h,
+                      "session_id": "verify"}
+                for r in server.listings_for(cfg, ind, state=st):
+                    if r.get("global_name"):
+                        mine.add(r["global_name"])
+    except Exception as e:                                        # noqa: BLE001
+        warn("listings/region", "could not resolve this venue's stall: %s: %s"
+             % (type(e).__name__, str(e)[:120]))
+        return
+    if not region:
+        warn("listings/region", "no event marketplace_region set; cannot check")
+        return
+    bad = []
+    for g in sorted(mine):
+        row = found.get(g)
+        if not row:
+            continue           # absence is already reported by listings/live
+        raw = str(row.get("RG") or "").strip()
+        if not raw:
+            note("listings/region", "%s reports no region list" % g)
+            continue
+        # 'ALL' means every region. Otherwise the column is a comma-separated
+        # list of "<scope>.<REGION>" pairs, so match on the region half only.
+        if raw.upper() == "ALL":
+            continue
+        regions = {p.strip().rsplit(".", 1)[-1].upper()
+                   for p in raw.split(",") if p.strip()}
+        if region not in regions:
+            bad.append((g, row.get("T") or ""))
+    for g, t in bad:
+        fail("listings/region",
+             "%s (%s) is on this venue's stall but is not available in %s - "
+             "the visitor could not use it after the event" % (g, t[:48], region))
+    if not bad:
+        ok("listings/region",
+           "all %d listings on this venue's stall are available in %s"
+           % (len(mine), region))
 
 
 def _configured_connection():

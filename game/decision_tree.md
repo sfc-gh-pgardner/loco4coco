@@ -163,7 +163,8 @@ Printed verbatim in the document the visitor takes away.
 - **narrative:** Wrapped, labelled and ready. Say the word and I'll put it in your hands.
 - **heading:** Shall I post it?
 - **hint:** I'll write it up properly and put it in the post.
-- **button:** POST IT TO ME
+- **button:** CREATE MY BLUEPRINT
+- **button_sent:** SEE MY POSTCARD
 
 ### 2.9 The Data Library: the synthetic-data offer
 

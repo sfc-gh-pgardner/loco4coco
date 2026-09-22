@@ -710,7 +710,9 @@ def run_turn(cfg, prompt, kind, loc=None, job_id=None, use_mcp=False,
 
 def base_context(cfg, state):
     vis = state.get("visitor") or {}
-    ind = industry_name(cfg, vis.get("industry"))
+    # Prose, not the label: this lands in "... at Acme, in {ind}." and the
+    # 'other' label would read "in Something else." Empty simply drops the clause.
+    ind = industry_prose(cfg, vis.get("industry"))
     ctx = [
         f"You are CoCo, the Snowflake penguin, at the Snowflake World Tour "
         f"{cfg['event']['city']} booth.",
@@ -733,7 +735,7 @@ def fill(tmpl, cfg, state, **extra):
         "first_name": vis.get("first_name") or "there",
         "company": vis.get("company") or "your organisation",
         "email": vis.get("email") or "you",
-        "industry": industry_name(cfg, vis.get("industry")) or "your sector",
+        "industry": industry_prose(cfg, vis.get("industry")) or "your sector",
         "held": ", ".join(state.get("held") or []) or "nothing yet",
         "joined": ", ".join(state.get("joined") or []) or "nothing yet",
         # Captured at the letter stage, so it is already in hand by the time the
@@ -761,6 +763,25 @@ def industry_name(cfg, key):
     if not key:
         return ""
     return ((cfg.get("industries") or {}).get(key) or {}).get("name", "")
+
+
+def industry_prose(cfg, key):
+    """The industry as it can appear in a SENTENCE.
+
+    'other' is a legitimate pick whose display label is 'Something else'. That
+    label is right on a button and wrong in prose: a visitor who picked it was
+    handed a blueprint saying the POC "gives Something else a single trusted
+    view", and CoCo offered to "build the most impactful thing for Something
+    else". Returning empty here lets each caller fall back to its own natural
+    phrase instead.
+
+    Anything that goes into a model prompt or a rendered sentence wants this.
+    industry_name() is still correct for the picker, the tiles and telemetry,
+    where the label is the label.
+    """
+    if not key or key == "other":
+        return ""
+    return industry_name(cfg, key)
 
 
 def infer_industry(cfg, company):
@@ -1579,7 +1600,7 @@ def build_coco_prompt(cfg, state):
     """
     vis = state.get("visitor") or {}
     poc = state.get("poc") or {}
-    ind = industry_name(cfg, vis.get("industry")) or "our sector"
+    ind = industry_prose(cfg, vis.get("industry")) or "our sector"
     held = state.get("held") or []
     joined = state.get("joined") or []
     listings = state.get("joined_listings") or []
@@ -2456,7 +2477,7 @@ def refine_poc(cfg, text):
             "never generic.\n\n"
             f"Person: {vis.get('first_name') or 'they'} at "
             f"{vis.get('company') or 'their organisation'}, "
-            f"{industry_name(cfg, vis.get('industry'))}.\n"
+            f"{industry_prose(cfg, vis.get('industry')) or 'sector not stated'}.\n"
             f"They hold: {', '.join(state.get('held') or []) or 'unspecified'}.\n"
             f"They will attach: {', '.join(state.get('joined') or []) or 'nothing yet'}.\n"
             f"They asked the POC to: \"{text}\"\n"

@@ -293,7 +293,7 @@ for lid in (cfg.get('unlock_order') or []):
     w('**%s** - %s' % (q(loc.get('name')), q(loc.get('represents'))))
     w('')
     for k in ('narrative', 'heading', 'hint', 'placeholder', 'other_label',
-              'other_placeholder', 'button'):
+              'other_placeholder', 'button', 'button_sent'):
         if loc.get(k):
             w('- **%s:** %s' % (k, q(loc.get(k))))
     w('')

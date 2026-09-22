@@ -31,3 +31,16 @@ audit/shots/
 
 # Playwright run output (absolute paths, not source)
 audit/results.json
+
+# Generated and internal-only, kept on disk but not shipped. The repo should be
+# what another SE needs to RUN the booth, not the record of how it was built.
+# Regenerate with: build_se_review_html.py / audit_marketplace_regions.py.
+audit/marketplace-se-review.html
+audit/marketplace-region-audit.json
+
+# Working records of decisions. Their history lives in git log and in the private
+# notes repo, not in the shipped tree.
+audit/weak-fit-review.md
+audit/setup-doc-changes.md
+audit/personas.md
+notes/

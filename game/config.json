@@ -40,6 +40,13 @@
       "language": "de",
       "marketplace_region": "AWS_EU_CENTRAL_1",
       "market_profile": "de"
+    },
+    "frankfurt": {
+      "_comment": "Added because _venue_comment already advertised frankfurt while this map did not define it. resolve_venue() answers an unknown venue by quietly defaulting market_profile to 'uk', so hand-setting event.venue to 'frankfurt' would have stood up a German booth serving London's datasets - the exact silent failure the setup guide warns about. Shares Berlin's profile and region: Frankfurt IS eu-central-1.",
+      "city": "Frankfurt",
+      "language": "de",
+      "marketplace_region": "AWS_EU_CENTRAL_1",
+      "market_profile": "de"
     }
   },
   "snowflake": {

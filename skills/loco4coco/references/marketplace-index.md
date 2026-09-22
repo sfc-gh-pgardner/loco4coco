@@ -290,9 +290,6 @@ Profiles: **uk** (London eu-west-2), **fr** (Paris eu-west-3), **de** (Frankfurt
 | [Address Fabric France](https://app.snowflake.com/marketplace/listing/GZT0Z2BR4AJ0A) | Precisely France | Free | `GZT0Z2BR4AJ0A` | AWS_EU_WEST_3 |
 | [Hydrogen price data](https://app.snowflake.com/marketplace/listing/GZTDZ1PNGH) | General Index | Free | `GZTDZ1PNGH` | AWS_EU_WEST_3 |
 | [World Points of Interest Premium France](https://app.snowflake.com/marketplace/listing/GZT0Z2BR4AC74) | Precisely France | Free | `GZT0Z2BR4AC74` | AWS_EU_WEST_3 |
-| [European Gas Analytics](https://app.snowflake.com/marketplace/listing/GZTSZ1389Q7) | S&P Global Energy | Free | `GZTSZ1389Q7` | AWS_EU_WEST_3 |
-| [OpenStreetMap France](https://app.snowflake.com/marketplace/listing/GZSVZ3XQWG) | Sonra | Free | `GZSVZ3XQWG` | AWS_EU_WEST_3 |
-| [Commodity & energy price benchmarks](https://app.snowflake.com/marketplace/listing/GZTDZ1PNFK) | General Index | Free | `GZTDZ1PNFK` | AWS_EU_WEST_3 |
 
 ## fr / energy / primary
 

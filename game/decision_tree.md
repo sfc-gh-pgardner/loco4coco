@@ -186,40 +186,40 @@ Prose that belongs to a screen rather than to a stop.
 
 ## 3. The datasets the booth recommends
 
-48 slots across 8 industries, filled by 31 distinct listings, for THIS venue. Each is a real listing on the Snowflake Marketplace - never invented - and is chosen for relevance to the event city. A pick is NOT judged on whether the booth account can attach it: the visitor never imports anything here, they leave with links and open them later from their own account.
+48 slots across 8 industries, filled by 33 distinct listings, for THIS venue. Each is a real listing on the Snowflake Marketplace - never invented - and is chosen for relevance to the event city. A pick is NOT judged on whether the booth account can attach it: the visitor never imports anything here, they leave with links and open them later from their own account.
 
 ### Healthcare & Life Sciences
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
-| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial | `GZTDZJKVCY` |
-| PubMed Biomedical Research Corpus | Snowflake | Free | `GZSTZ67BY9OQW` |
-| UK Health Facts and Dimensions Sample | Facts and Dimensions Ltd | Free | `GZ2FRZQNY1` |
-| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free | `GZSVZ1K7UU` |
+| Population in France and overseas in 2019 | Atos | Free | `GZT1ZQXT97` |
+| Population in France and overseas in 2017 | Atos | Free | `GZT1ZQXT9R` |
+| MBI Sociodemographic Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDA` |
+| French National Health and Social Facilities | Atos | Free | `GZT1ZQXT93` |
+| Inter-Regime Health Insurance Expenses in France (DAMIR) | Atos | Free | `GZT1ZQXTA0` |
+| Basic Sociodemographics-Bundle for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOH` |
 
 ### Financial Services
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Snowflake Public Data: Foreign Exchange Rates | Snowflake Public Data Products | Free 60-day trial | `GZTSZ290BVCAO` |
-| Inflation Forecasting - Headline & Core CPI by Country | Turnleaf Analytics | Free | `GZTDZ7DJU9` |
-| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` |
-| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
-| CSRHub ESG (Environment, Social, Governance) Fast Start | CSRHub LLC | Free 30-day trial | `GZT0ZI0XJ6Q` |
-| Banking Analytics Bundle | InSights | Free | `GZTYZAPS3FP` |
+| QuantCube CPI Nowcast | QuantCube Technology | Free | `GZTWZ4KVS1` |
+| ESG Performance Score Core & Plus | ESG Book | Free | `GZTDZ1ELIY` |
+| Consumer Credit & Debit Card Transaction Data \| European Spend | Consumer Edge | Free | `GZTSZPM12Y` |
+| MBI Purchasing Power Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLQ` |
+| CEIC World Macro Economic Data | CEIC Data | Free | `GZTSZRC7HRG` |
+| Franciemes IRIS | Precisely France | Free | `GZT0Z2BR4AC78` |
 
 ### Retail & Consumer Goods
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial | `GZTDZJKVCY` |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
-| PayCheck – UK household income estimates at postcode level - SAMPLE data | CACI Ltd | Free | `GZSVZ1K7UA` |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
-| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
-| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free | `GZT0ZKUCHKL` |
+| MBI Sociodemographic Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDA` |
+| Shopping center footfall - London and Paris | Mytraffic | Free | `GZSYZGJWCJ` |
+| NIQ-GfK Retail Purchasing Power for Product Lines in France | NIQ-GFK | Free | `GZSYZG5AD` |
+| MBI Purchasing Power Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLQ` |
+| Income, Poverty, and Living Conditions in France-2019 (Iris) | Atos | Free | `GZT1ZQXT9J` |
+| Basic Sociodemographics-Bundle for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOH` |
 
 Pinned first when the live tier is enabled: `GZTDZJKVCY`, `GZSVZAJO3`.
 
@@ -227,12 +227,12 @@ Pinned first when the live tier is enabled: `GZTDZJKVCY`, `GZSVZAJO3`.
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
-| Address Spine – UK address level property information - Sample Data | CACI Ltd | Free | `GZSVZ1K7UQ` |
-| CARTO Boundaries | CARTO | Free | `GZT0Z4CM1E9L4` |
-| UK Land Surface Observations | Met Office | Free 14-day trial | `GZTDZJKVH3` |
-| National Severe Weather Warning Service | Met Office | Free | `GZTDZJKVCU` |
-| Administrative boundaries - Great Britain: Boundary Line - Open | Ordnance Survey | Free | `GZ1MOZBWYYT` |
+| Population in France and overseas in 2019 | Atos | Free | `GZT1ZQXT97` |
+| Worldwide Address Data | Starschema | Free | `GZSNZ7F5UT` |
+| BODILY INJURY ROAD TRAFFIC ACCIDENTS IN FRANCE IN 2021 | Keyrus | Free | `GZSYZ94J4` |
+| European Public Tenders Dataset – 800+ Sources, Daily Updates, OCDS Format | GroupBWT | Free | `GZSYZ12SH0I` |
+| Population in France and overseas in 2017 | Atos | Free | `GZT1ZQXT9R` |
+| Franciemes IRIS | Precisely France | Free | `GZT0Z2BR4AC78` |
 
 Pinned first when the live tier is enabled: `GZSVZAJO3`, `GZ1MOZBWYYT`, `GZSVZ1K7UQ`.
 
@@ -240,23 +240,23 @@ Pinned first when the live tier is enabled: `GZSVZAJO3`, `GZ1MOZBWYYT`, `GZSVZ1K
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
+| CEIC Shipping Data | CEIC Data | Free | `GZTSZRC7HRC` |
+| Chemical Price Assessments | ICIS (Independent Commodity Intelligence Services) | Free | `GZSVZ9FU7N` |
+| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
+| France Point-of-Interest (POI) Dataset \| 19 Industry Verticals \| Nationwide Coverage | xMap | Free | `GZSXZGI2B7FW` |
 | CEIC Commodities Data | CEIC Data | Free | `GZTSZRC7HQ3` |
-| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` |
-| Overture Maps - Transportation | CARTO | Free | `GZT0Z4CM1E9KJ` |
-| FactSet Supply Chain Relationships (sample) | FactSet | Free | `GZT0ZGCQ51RQ` |
-| D&B Shipping Insights Sample | Dun & Bradstreet | Free | `GZT0ZPWB4J7` |
-| Global Spot Weather Forecasts | Met Office | Free 14-day trial | `GZTDZJKVCM` |
+| EU + UK B2B Company Database \| AI-Enriched | Explee | Free | `GZ2FQZ1KUUG1` |
 
 ### Energy & Utilities
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| National Severe Weather Warning Service | Met Office | Free | `GZTDZJKVCU` |
-| UK Land Surface Observations | Met Office | Free 14-day trial | `GZTDZJKVH3` |
-| Yes Energy - Sample Data | Yes Energy | Free | `GZSOZ71OJH` |
-| Sample of GasMarketCube - Global Gas Supply, Demand and Trade | Rystad Energy | Free | `GZSVZ8MX1I` |
-| Wind Power Forecast, Day-ahead - Sample | Weather Solutions | Free | `GZSYZSRWU5` |
-| Crude oil price data | General Index | Free Trial | `GZTDZ1PNFO` |
+| ANNUAL REGIONAL PRODUCTION OF RENEWABLE ENERGIES IN FRANCE 2008 TO 2022 | Keyrus | Free | `GZSYZ94J0` |
+| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
+| POIs - EV charging stations in Paris | Mytraffic | Free | `GZSYZGJWCN` |
+| ANNUAL CONSUMPTION OF ELECTRICITY AND GAS BY DEPARTMENT AND BY SECTOR OF ACTIVITY | Keyrus | Free | `GZSYZ94IV` |
+| Greenhouse Gas Emissions Inventory in France | Atos | Free | `GZT1ZQXT9V` |
+| MBI Purchasing Power Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLQ` |
 
 Pinned first when the live tier is enabled: `GZTDZJKVCM`, `GZTDZJKVCU`, `GZTDZJKVCY`.
 
@@ -264,149 +264,153 @@ Pinned first when the live tier is enabled: `GZTDZJKVCM`, `GZTDZJKVCU`, `GZTDZJK
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
-| CARTO Boundaries | CARTO | Free | `GZT0Z4CM1E9L4` |
-| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free | `GZT0ZKUCHKL` |
-| GLP-1 Social Conversations Sample Dataset | Socialgist | Free | `GZT1ZFQ0JE5` |
-| American Community Survey, 2016 | data.world, Inc | Free | `GZSNZ4PHA6` |
+| MBI Sociodemographic Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDA` |
+| European Broadband Markets 2017 | Expert Intelligence | Free | `GZSVZ6EW2A` |
+| Intelligent Event Data: Hospitality, Travel & Tourism Data - Eiffel Tower, Paris Sample | PredictHQ | Free | `GZSTZ3TGTNLPT` |
+| NIQ-GfK Retail Purchasing Power for Product Lines in France | NIQ-GFK | Free | `GZSYZG5AD` |
+| French National Health and Social Facilities | Atos | Free | `GZT1ZQXT93` |
+| Shopping center footfall - London and Paris | Mytraffic | Free | `GZSYZGJWCJ` |
 
 ### Something else
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
-| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` |
-| CARTO Boundaries | CARTO | Free | `GZT0Z4CM1E9L4` |
-| Snowflake Public Data: Foreign Exchange Rates | Snowflake Public Data Products | Free 60-day trial | `GZTSZ290BVCAO` |
-| CARTO Analytics Toolbox | CARTO | Free | `GZT0Z4CM1E9NA` |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
+| Franciemes IRIS | Precisely France | Free | `GZT0Z2BR4AC78` |
+| Income, Poverty, and Living Conditions in France-2019 (Iris) | Atos | Free | `GZT1ZQXT9J` |
+| Intelligent Event Data: Hospitality, Travel & Tourism Data - Eiffel Tower, Paris Sample | PredictHQ | Free | `GZSTZ3TGTNLPT` |
+| French National Addresses | Atos | Free | `GZT1ZQXT8U` |
+| MBI Global Area Boundaries | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOX` |
+| Population in France and overseas in 2019 | Atos | Free | `GZT1ZQXT97` |
 
 Pinned first when the live tier is enabled: `GZTDZJKVCY`.
 
 ### The fallbacks behind each stall
 
-44 further listings sit behind the 48 on offer, as the fallback pool. A visitor is not shown these. They exist so that a stall still fills if a pick is withdrawn or turns out not to be offered in the event region, and so a promotion has somewhere to come from. They are listed here because a fallback that nobody has read is not a fallback.
+46 further listings sit behind the 48 on offer, as the fallback pool. A visitor is not shown these. They exist so that a stall still fills if a pick is withdrawn or turns out not to be offered in the event region, and so a promotion has somewhere to come from. They are listed here because a fallback that nobody has read is not a fallback.
 
 **Healthcare & Life Sciences**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| MBI Sociodemographic Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDE` |
-| Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas | Ordnance Survey | Free | `GZ1MOZBX00Q` |
-| Choreograph UK behavioral,demographics & consumption data | Conexance by Choreograph | Free | `GZ1M7ZKTYD` |
-| Parks, Sports Facilities, Allotments - Great Britain: Open Greenspace | Ordnance Survey | Free | `GZ1MOZBX00E` |
-| National Severe Weather Warning Service | Met Office | Free | `GZTDZJKVCU` |
+| French National Identification System of Directory of Businesses and their Establishments | Atos | Free | `GZT1ZQXT8Y` |
+| ANNUAL REGIONAL PRODUCTION OF RENEWABLE ENERGIES IN FRANCE 2008 TO 2022 | Keyrus | Free | `GZSYZ94J0` |
+| Income, Poverty, and Living Conditions in France-2019 (Iris) | Atos | Free | `GZT1ZQXT9J` |
+| BODILY INJURY ROAD TRAFFIC ACCIDENTS IN FRANCE IN 2021 | Keyrus | Free | `GZSYZ94J4` |
+| Franciemes IRIS | Precisely France | Free | `GZT0Z2BR4AC78` |
+| MBI Purchasing Power Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLQ` |
 
 **Financial Services**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| CEIC World Macro Economic Data | CEIC Data | Free | `GZTSZRC7HRG` |
-| ESG Performance Score Core & Plus | ESG Book | Free | `GZTDZ1ELIY` |
-| Consumer Credit & Debit Card Transaction Data \| European Spend | Consumer Edge | Free | `GZTSZPM12Y` |
-| MBI Purchasing Power Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLU` |
-| Uk Companies Insight Summary | DataEco | Free | `GZ1MOZMB44P` |
+| French National Identification System of Directory of Businesses and their Establishments | Atos | Free | `GZT1ZQXT8Y` |
 | CEIC Shipping Data | CEIC Data | Free | `GZTSZRC7HRC` |
+| Population in France and overseas in 2019 | Atos | Free | `GZT1ZQXT97` |
+| NIQ-GfK Retail Purchasing Power for Product Lines in France | NIQ-GFK | Free | `GZSYZG5AD` |
+| ANNUAL CONSUMPTION OF ELECTRICITY AND GAS BY DEPARTMENT AND BY SECTOR OF ACTIVITY | Keyrus | Free | `GZSYZ94IV` |
+| MBI Sociodemographic Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDA` |
 
 **Retail & Consumer Goods**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free | `GZSVZ1K7UU` |
-| MBI Sociodemographic Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDE` |
-| Intelligent Event Data for Department Stores & Retail, London UK - Sample | PredictHQ | Free | `GZSTZIDI09S` |
-| On Demand Journeys | BT Active Intelligence | Free | `GZ2FRZE33RX` |
-| Acxiom EMEA: Geo-Spatial Sample Data UK | Acxiom EMEA | Free | `GZSYZ5S9QC` |
-| Movement Daily Activity Index 2020 (Sample) | Mapbox | Free | `GZT0ZIFQPAI` |
+| ANNUAL CONSUMPTION OF ELECTRICITY AND GAS BY DEPARTMENT AND BY SECTOR OF ACTIVITY | Keyrus | Free | `GZSYZ94IV` |
+| Population in France and overseas in 2019 | Atos | Free | `GZT1ZQXT97` |
+| Population in France and overseas in 2017 | Atos | Free | `GZT1ZQXT9R` |
+| Franciemes IRIS | Precisely France | Free | `GZT0Z2BR4AC78` |
+| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
+| BODILY INJURY ROAD TRAFFIC ACCIDENTS IN FRANCE IN 2021 | Keyrus | Free | `GZSYZ94J4` |
 
 **Public Sector & Government**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Road network - Great Britain: Open Roads | Ordnance Survey | Free | `GZ1MOZBX00A` |
-| European Public Tenders Dataset – 800+ Sources, Daily Updates, OCDS Format | GroupBWT | Free | `GZSYZ12SH0I` |
 | MBI Global Area Boundaries | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOX` |
-| Addresses - UK: OS GB Address and OS Islands Address | Ordnance Survey | Free | `GZ1MOZ2HCBPI0` |
-| Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas | Ordnance Survey | Free | `GZ1MOZBX00Q` |
-| Basic Sociodemographics-Bundle for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOH` |
+| French National Addresses | Atos | Free | `GZT1ZQXT8U` |
+| French National Health and Social Facilities | Atos | Free | `GZT1ZQXT93` |
+| MBI Sociodemographic Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDA` |
+| MBI Purchasing Power Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLQ` |
+| NIQ-GfK Retail Purchasing Power for Product Lines in France | NIQ-GFK | Free | `GZSYZG5AD` |
 
 **Manufacturing & Industrial**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| CEIC Shipping Data | CEIC Data | Free | `GZTSZRC7HRC` |
-| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
-| Uk Companies Insight Summary | DataEco | Free | `GZ1MOZMB44P` |
-| Chemical Price Assessments | ICIS (Independent Commodity Intelligence Services) | Free | `GZSVZ9FU7N` |
-| Company data | OpenCorporates | Free | `GZTDZM1AK5` |
-| UK H3 Travel Matrix | Dekart XYZ | Free | `GZSYZ43W9K12` |
+| Economic Analysis and Risk: Key Economic Drivers, Risk Scores & Forecasts | IBISWorld | Free | `GZSTZLT2IK0` |
+| Address Fabric France | Precisely France | Free | `GZT0Z2BR4AJ0A` |
+| Hydrogen price data | General Index | Free | `GZTDZ1PNGH` |
+| World Points of Interest Premium France | Precisely France | Free | `GZT0Z2BR4AC74` |
 
 **Energy & Utilities**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Corporate Climate Commitment ESG Data \| Net Zero, Carbon Neutrality, and Carbon Positivity | Tracenable | Free | `GZTSZ36AC98` |
-| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
-| MBI Purchasing Power Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLU` |
-| UK Health Facts and Dimensions Sample | Facts and Dimensions Ltd | Free | `GZ2FRZQNY1` |
+| Intelligent Event Data: Hospitality, Travel & Tourism Data - Eiffel Tower, Paris Sample | PredictHQ | Free | `GZSTZ3TGTNLPT` |
+| Population in France and overseas in 2019 | Atos | Free | `GZT1ZQXT97` |
+| Franciemes IRIS | Precisely France | Free | `GZT0Z2BR4AC78` |
+| French National Health and Social Facilities | Atos | Free | `GZT1ZQXT93` |
+| MBI Sociodemographic Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDA` |
+| BODILY INJURY ROAD TRAFFIC ACCIDENTS IN FRANCE IN 2021 | Keyrus | Free | `GZSYZ94J4` |
 
 **Media, Telco & Entertainment**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| European Broadband Markets 2017 | Expert Intelligence | Free | `GZSVZ6EW2A` |
-| Choreograph UK behavioral,demographics & consumption data | Conexance by Choreograph | Free | `GZ1M7ZKTYD` |
-| Road Insights | BT Active Intelligence | Free | `GZ2FRZE33RT` |
-| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free | `GZSVZ1K7UU` |
-| Ocean – UK Consumer Database (41M Adults) | CACI Ltd | Free | `GZSVZ1K7VV` |
-| Addresses - UK: OS GB Address and OS Islands Address | Ordnance Survey | Free | `GZ1MOZ2HCBPI0` |
+| ANNUAL REGIONAL PRODUCTION OF RENEWABLE ENERGIES IN FRANCE 2008 TO 2022 | Keyrus | Free | `GZSYZ94J0` |
+| Population in France and overseas in 2019 | Atos | Free | `GZT1ZQXT97` |
+| Population in France and overseas in 2017 | Atos | Free | `GZT1ZQXT9R` |
+| Franciemes IRIS | Precisely France | Free | `GZT0Z2BR4AC78` |
+| MBI Purchasing Power Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLQ` |
+| Consumer Credit & Debit Card Transaction Data \| European Spend | Consumer Edge | Free | `GZTSZPM12Y` |
 
 **Something else**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Administrative boundaries - Great Britain: Boundary Line - Open | Ordnance Survey | Free | `GZ1MOZBWYYT` |
-| Addresses - UK: OS GB Address and OS Islands Address | Ordnance Survey | Free | `GZ1MOZ2HCBPI0` |
-| MBI Global Area Boundaries | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOX` |
-| Uk Companies Insight Summary | DataEco | Free | `GZ1MOZMB44P` |
-| MBI Purchasing Power Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLU` |
+| French National Identification System of Directory of Businesses and their Establishments | Atos | Free | `GZT1ZQXT8Y` |
+| French National Health and Social Facilities | Atos | Free | `GZT1ZQXT93` |
+| MBI Purchasing Power Data for France Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLQ` |
+| ANNUAL CONSUMPTION OF ELECTRICITY AND GAS BY DEPARTMENT AND BY SECTOR OF ACTIVITY | Keyrus | Free | `GZSYZ94IV` |
+| BODILY INJURY ROAD TRAFFIC ACCIDENTS IN FRANCE IN 2021 | Keyrus | Free | `GZSYZ94J4` |
+| NIQ-GfK Retail Purchasing Power for Product Lines in France | NIQ-GFK | Free | `GZSYZG5AD` |
 
 ### Which industries each listing appears in
 
 | Listing | Industries | Appears in |
 | --- | --- | --- |
-| UK (England and Wales only) Census 2021 - Trial | 5 | Healthcare & Life Sciences, Retail & Consumer Goods, Public Sector & Government, Media, Telco & Entertainment, Something else |
-| Acorn - Geodemographic Segmentation in the UK | 4 | Healthcare & Life Sciences, Retail & Consumer Goods, Media, Telco & Entertainment, Something else |
-| CARTO Boundaries | 3 | Public Sector & Government, Media, Telco & Entertainment, Something else |
-| Company Data UK (incl. Guernsey) - XL Dataset | 3 | Financial Services, Manufacturing & Industrial, Something else |
-| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | 2 | Financial Services, Retail & Consumer Goods |
-| National Severe Weather Warning Service | 2 | Public Sector & Government, Energy & Utilities |
-| Postcode Sector Weather Forecasts | 2 | Healthcare & Life Sciences, Retail & Consumer Goods |
-| Snowflake Public Data: Foreign Exchange Rates | 2 | Financial Services, Something else |
-| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | 2 | Retail & Consumer Goods, Media, Telco & Entertainment |
-| UK Land Surface Observations | 2 | Public Sector & Government, Energy & Utilities |
-| Address Spine – UK address level property information - Sample Data | 1 | Public Sector & Government |
-| Administrative boundaries - Great Britain: Boundary Line - Open | 1 | Public Sector & Government |
-| American Community Survey, 2016 | 1 | Media, Telco & Entertainment |
-| Banking Analytics Bundle | 1 | Financial Services |
-| CARTO Analytics Toolbox | 1 | Something else |
+| Franciemes IRIS | 3 | Financial Services, Public Sector & Government, Something else |
+| MBI Purchasing Power Data for France Postcode Level | 3 | Financial Services, Retail & Consumer Goods, Energy & Utilities |
+| MBI Sociodemographic Data for France Postcode Level | 3 | Healthcare & Life Sciences, Retail & Consumer Goods, Media, Telco & Entertainment |
+| Population in France and overseas in 2019 | 3 | Healthcare & Life Sciences, Public Sector & Government, Something else |
+| Basic Sociodemographics-Bundle for Countries Worldwide | 2 | Healthcare & Life Sciences, Retail & Consumer Goods |
+| French National Health and Social Facilities | 2 | Healthcare & Life Sciences, Media, Telco & Entertainment |
+| Income, Poverty, and Living Conditions in France-2019 (Iris) | 2 | Retail & Consumer Goods, Something else |
+| Intelligent Event Data: Hospitality, Travel & Tourism Data - Eiffel Tower, Paris Sample | 2 | Media, Telco & Entertainment, Something else |
+| NIQ-GfK Retail Purchasing Power for Product Lines in France | 2 | Retail & Consumer Goods, Media, Telco & Entertainment |
+| Population in France and overseas in 2017 | 2 | Healthcare & Life Sciences, Public Sector & Government |
+| Shopping center footfall - London and Paris | 2 | Retail & Consumer Goods, Media, Telco & Entertainment |
+| ANNUAL CONSUMPTION OF ELECTRICITY AND GAS BY DEPARTMENT AND BY SECTOR OF ACTIVITY | 1 | Energy & Utilities |
+| ANNUAL REGIONAL PRODUCTION OF RENEWABLE ENERGIES IN FRANCE 2008 TO 2022 | 1 | Energy & Utilities |
+| BODILY INJURY ROAD TRAFFIC ACCIDENTS IN FRANCE IN 2021 | 1 | Public Sector & Government |
 | CEIC Commodities Data | 1 | Manufacturing & Industrial |
-| CSRHub ESG (Environment, Social, Governance) Fast Start | 1 | Financial Services |
-| Crude oil price data | 1 | Energy & Utilities |
-| D&B Shipping Insights Sample | 1 | Manufacturing & Industrial |
-| FactSet Supply Chain Relationships (sample) | 1 | Manufacturing & Industrial |
-| GLP-1 Social Conversations Sample Dataset | 1 | Media, Telco & Entertainment |
-| Global Spot Weather Forecasts | 1 | Manufacturing & Industrial |
-| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | 1 | Healthcare & Life Sciences |
-| Inflation Forecasting - Headline & Core CPI by Country | 1 | Financial Services |
-| Overture Maps - Transportation | 1 | Manufacturing & Industrial |
-| PayCheck – UK household income estimates at postcode level - SAMPLE data | 1 | Retail & Consumer Goods |
-| PubMed Biomedical Research Corpus | 1 | Healthcare & Life Sciences |
-| Sample of GasMarketCube - Global Gas Supply, Demand and Trade | 1 | Energy & Utilities |
-| UK Health Facts and Dimensions Sample | 1 | Healthcare & Life Sciences |
-| Wind Power Forecast, Day-ahead - Sample | 1 | Energy & Utilities |
-| Yes Energy - Sample Data | 1 | Energy & Utilities |
+| CEIC Shipping Data | 1 | Manufacturing & Industrial |
+| CEIC World Macro Economic Data | 1 | Financial Services |
+| Chemical Price Assessments | 1 | Manufacturing & Industrial |
+| Consumer Credit & Debit Card Transaction Data \| European Spend | 1 | Financial Services |
+| ESG Performance Score Core & Plus | 1 | Financial Services |
+| EU + UK B2B Company Database \| AI-Enriched | 1 | Manufacturing & Industrial |
+| European Broadband Markets 2017 | 1 | Media, Telco & Entertainment |
+| European Public Tenders Dataset – 800+ Sources, Daily Updates, OCDS Format | 1 | Public Sector & Government |
+| France Point-of-Interest (POI) Dataset \| 19 Industry Verticals \| Nationwide Coverage | 1 | Manufacturing & Industrial |
+| French National Addresses | 1 | Something else |
+| Greenhouse Gas Emissions Inventory in France | 1 | Energy & Utilities |
+| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | 1 | Manufacturing & Industrial |
+| Inter-Regime Health Insurance Expenses in France (DAMIR) | 1 | Healthcare & Life Sciences |
+| MBI Global Area Boundaries | 1 | Something else |
+| POIs - EV charging stations in Paris | 1 | Energy & Utilities |
+| Purchasing Power for Countries Worldwide | 1 | Energy & Utilities |
+| QuantCube CPI Nowcast | 1 | Financial Services |
+| Worldwide Address Data | 1 | Public Sector & Government |
 
 ## 4. What the visitor already holds
 
@@ -599,8 +603,7 @@ The flags that change what a visitor experiences.
 ### Constraints to be aware of
 
 - Listing selection is weighted for the United Kingdom: 19 preference terms and 20 demotion terms. A room in another country needs these re-weighted.
-- 12 of the 48 slots are time-limited trials rather than perpetual free listings. All are free to acquire; none are paid.
-- 4 listings appear in three or more industries, the most reused being UK (England and Wales only) Census 2021 - Trial, Acorn - Geodemographic Segmentation in the UK. A visitor who has seen the booth before may be offered the same dataset again.
+- 4 listings appear in three or more industries, the most reused being Population in France and overseas in 2019, MBI Sociodemographic Data for France Postcode Level. A visitor who has seen the booth before may be offered the same dataset again.
 - A listing is only offerable if Snowflake reports it as importable. That is stricter than being visible and not by-request, so the flag is checked directly rather than inferred.
 - No pinned fallback for: Healthcare & Life Sciences, Financial Services, Manufacturing & Industrial, Media, Telco & Entertainment. These industries rely entirely on the curated list in section 3.
 - The industry does not weight which archetype a visitor is routed to.

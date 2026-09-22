@@ -172,20 +172,20 @@ def main():
     json.dump({"checked": checked, "problems": problems}, open(out, "w"), indent=2)
     print("\nwrote %s" % out)
 
-    # A problem in a primary is visitor-facing; a problem in a reserve only bites
-    # when a primary is filtered out, so the two are reported and exited on
-    # differently. Reserves that are merely by-request are usually there on
-    # purpose, sunk to the back of the stall rather than deleted.
+    # EVERY pick is visitor-facing, reserves included. A stall borrows across
+    # industries within the profile, so a reserve is not a quiet backup: measured,
+    # a Paris energy visitor was offered two listings that existed only in
+    # manufacturing/reserve. Grading reserves as lower severity is what let two
+    # by-request listings reach a stall, so the tier is reported for context and
+    # not used to soften the verdict.
     prim = [p for p in problems if p["tier"] == "primary"]
     if not problems:
         print("PASS - every curated pick is sound in its own event region")
-    elif not prim:
-        print("PASS on primaries - %d reserve-only issue(s), which a visitor sees "
-              "only if a primary is filtered out" % len(problems))
     else:
-        print("FAIL - %d primary problem(s), %d reserve problem(s)"
-              % (len(prim), len(problems) - len(prim)))
-    return 1 if prim else 0
+        print("FAIL - %d problem(s): %d in a primary slot, %d in reserve. Reserves "
+              "count: any stall can borrow them." % (len(problems), len(prim),
+                                                    len(problems) - len(prim)))
+    return 1 if problems else 0
 
 
 if __name__ == "__main__":

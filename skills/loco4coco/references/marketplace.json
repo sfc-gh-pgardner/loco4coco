@@ -40,6 +40,12 @@
         "de/retail: 6->5",
         "de/manufacturing: 6->5",
         "de/energy: 6->5"
+      ],
+      "borrowing_note": "CORRECTION. An earlier pass sank by-request picks to the back of reserve on the assumption a reserve is only seen when a primary is filtered out. That is false: a stall borrows across industries within the profile, so any curated pick can be served in any stall. Measured - a Paris ENERGY visitor was offered two listings that existed only in manufacturing/reserve, both by-request. Every by-request and discover-only listing is therefore removed from the curated set outright, and the audit now treats every pick as visitor-facing rather than grading reserves as lower severity.",
+      "removed_unobtainable": [
+        "fr/manufacturing/reserve: European Gas Analytics",
+        "fr/manufacturing/reserve: OpenStreetMap France",
+        "fr/manufacturing/reserve: Commodity & energy price benchmarks"
       ]
     }
   },
@@ -2033,47 +2039,6 @@
               "supply chain and logistics",
               "shipping, ports and freight",
               "company and supplier registries"
-            ]
-          },
-          {
-            "global_name": "GZTSZ1389Q7",
-            "title": "European Gas Analytics",
-            "provider": "S&P Global Energy",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTSZ1389Q7",
-            "regions": "AWS_EU_WEST_3",
-            "ready": true,
-            "subtitle": "The European Gas Analytics dataset offers access to supply / demand forecasts, price forecasts, and outages.",
-            "use_cases": [
-              "energy and input costs for industry"
-            ]
-          },
-          {
-            "global_name": "GZSVZ3XQWG",
-            "title": "OpenStreetMap France",
-            "provider": "Sonra",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ3XQWG",
-            "regions": "AWS_EU_WEST_3",
-            "ready": true,
-            "subtitle": "Location data from OpenStreetMap for France",
-            "use_cases": [
-              "shipping, ports and freight"
-            ],
-            "demoted": "off-theme"
-          },
-          {
-            "global_name": "GZTDZ1PNFK",
-            "title": "Commodity & energy price benchmarks",
-            "provider": "General Index",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTDZ1PNFK",
-            "regions": "AWS_EU_WEST_3",
-            "ready": true,
-            "subtitle": "Daily price data & forward curves for crude oil, refined products & energy transition markets",
-            "use_cases": [
-              "commodity and raw materials prices",
-              "energy and input costs for industry"
             ]
           }
         ]

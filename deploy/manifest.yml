@@ -75,15 +75,11 @@ templating:
     auto_suspend: 60
     city: London
     language: en
-    # Monitor values are consumed by hooks/post_hook.sql, not by DCM - resource
-    # monitors are not a supported DEFINE entity.
-    monitor: LOCO4COCO_RM
-    monitor_quota: 100
-    # Deliberately NOT defaulted for the pinned targets. The username differs per
-    # account. An empty value is fine: post_hook.sql falls back to a notify-less
-    # monitor rather than failing, which is what the EVENT target relies on
-    # (a freshly provisioned account's user often has no email address at all).
-    monitor_notify_user: ""
+    # There are deliberately NO resource-monitor values here. The booth must
+    # never be suspendable: a credit cap that trips does not save money, it ends
+    # the activation in public, mid-visit. hooks/post_hook.sql now asserts that
+    # nothing is bound to the warehouse instead of creating a monitor. See its
+    # header for the two ways this was previously got wrong.
 
   configurations:
     # The event operator's config. city/language are cosmetic here and are
@@ -92,24 +88,16 @@ templating:
     EVENT:
       city: London
       language: en
-      monitor_quota: 100
-      monitor_notify_user: ""
     LONDON:
       city: London
       language: en
-      monitor_quota: 100
-      monitor_notify_user: PGARDNER
 
     US_WEST_DEMO:
       city: Test Bench
       language: en
       # Smaller quota: this target exists to prove deployment, not to run an event.
-      monitor_quota: 5
-      monitor_notify_user: PADDY
 
     # SWT London game, run on the Frankfurt HOL account. Only known user is USER.
     FRANKFURT:
       city: London
       language: en
-      monitor_quota: 100
-      monitor_notify_user: USER

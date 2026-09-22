@@ -1,90 +1,52 @@
 -- Post-hook: objects DCM Projects cannot define.
 --
--- Resource monitors are not in the DCM supported-entity list, so they are
--- created here instead. Snowflake's documented pattern for unsupported types is
--- a separate templated script run after the deploy:
+-- Snowflake's documented pattern for unsupported entity types is a separate
+-- templated script run after the deploy:
 --
 --   snow sql -f deploy/hooks/post_hook.sql --enable-templating JINJA \
---     -D monitor=LOCO4COCO_RM -D monitor_quota=100 \
---     -D wh=LOCO4COCO_WH -D monitor_notify_user=<a-real-user-in-your-account> -c <connection>
+--     -D wh=LOCO4COCO_WH -c <connection>
 --
 -- bootstrap.py runs this for you with the values from manifest.yml.
 --
 -- Idempotent by design: safe to re-run on every deploy.
 --
--- NOTIFY tolerance: the booth is notify-only by design (it warns but never
--- suspends the warehouse, so a busy stand is never cut off mid-visit). But on
--- Snowflake World Tour / hands-on-lab event accounts the login user often has
--- NO email address, and `NOTIFY_USERS=(that_user)` fails outright with 090269,
--- which used to abort the whole deploy. So the monitor is created inside a
--- scripting block that tries WITH notify first and falls back to creating it
--- WITHOUT notify if that fails. Either way the monitor exists and is bound to
--- the warehouse; a warning is printed below if nobody can be notified.
+-- ─────────────────────────────────────────────────────────────────────────────
+-- THERE IS DELIBERATELY NO RESOURCE MONITOR, AND NOTHING THAT CAN STOP THE GAME.
+--
+-- The booth runs all day with a queue of people in front of it. A credit limit
+-- that suspends the warehouse does not save money in any meaningful sense - it
+-- ends the activation, in public, mid-visit, with a stranger watching. The cost
+-- of that is far higher than the compute it would have saved: an X-Small
+-- warehouse doing a handful of COMPLETE calls per visitor is not where an account
+-- gets into trouble.
+--
+-- This has been got wrong twice, in opposite directions, so it is written down
+-- rather than left to judgement:
+--
+--   1. A monitor was created with DO NOTIFY triggers only. On an event account
+--      the pool user usually has no email address, and Snowflake silently DROPS
+--      notify triggers when there are no notify users - so the monitor reported a
+--      quota, fired nothing, warned nobody, and looked like a guardrail.
+--   2. A DO SUSPEND trigger was then added to make it real. That made it
+--      genuinely dangerous: it could have cut the stand off mid-visit.
+--
+-- Neither is wanted. Cost is observed, not enforced:
+--
+--   * game/cost.jsonl records every model call the booth makes, per visitor.
+--   * sql_statements/03-event-health.sql shows the per-visit and per-turn spend.
+--   * SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY has the credits, after
+--     the usual latency.
+--
+-- If you genuinely need a cap on a shared account, put it on a DIFFERENT
+-- warehouse and leave this one alone. Do not bind a monitor to LOCO4COCO_WH.
+-- ─────────────────────────────────────────────────────────────────────────────
 
-EXECUTE IMMEDIATE $$
-DECLARE
-  notified BOOLEAN DEFAULT FALSE;
-BEGIN
-{% if monitor_notify_user %}
-  BEGIN
-    CREATE RESOURCE MONITOR IF NOT EXISTS {{ monitor }}
-      WITH CREDIT_QUOTA = {{ monitor_quota }}
-        FREQUENCY = MONTHLY
-        START_TIMESTAMP = IMMEDIATELY
-        NOTIFY_USERS = ({{ monitor_notify_user }})
-        TRIGGERS ON 75 PERCENT DO NOTIFY
-                 ON 90 PERCENT DO NOTIFY
-                 ON 100 PERCENT DO NOTIFY;
-    ALTER RESOURCE MONITOR {{ monitor }} SET
-      CREDIT_QUOTA = {{ monitor_quota }}
-      NOTIFY_USERS = ({{ monitor_notify_user }})
-      TRIGGERS ON 75 PERCENT DO NOTIFY
-               ON 90 PERCENT DO NOTIFY
-               ON 100 PERCENT DO SUSPEND;
-    notified := TRUE;
-  EXCEPTION
-    WHEN OTHER THEN
-      notified := FALSE;
-  END;
-{% endif %}
-  IF (NOT notified) THEN
-    -- No usable notify user (empty, or the user has no email). Create the
-    -- monitor anyway so the quota exists; the triggers still fire, they just
-    -- warn nobody. This never suspends the warehouse.
-    CREATE RESOURCE MONITOR IF NOT EXISTS {{ monitor }}
-      WITH CREDIT_QUOTA = {{ monitor_quota }}
-        FREQUENCY = MONTHLY
-        START_TIMESTAMP = IMMEDIATELY
-        TRIGGERS ON 75 PERCENT DO NOTIFY
-                 ON 90 PERCENT DO NOTIFY
-                 ON 100 PERCENT DO NOTIFY;
-    -- Set the triggers on the ALTER too, not only in the CREATE. IF NOT EXISTS
-    -- skips the CREATE entirely when an earlier deploy already made the monitor,
-    -- and a bare SET CREDIT_QUOTA does not add triggers - measured on this
-    -- account, the live monitor carried a 100 credit quota with notify_triggers
-    -- and suspend_at both null, so the guardrail was decorative.
-    --
-    -- DO NOTIFY alone is not a guardrail here either: these accounts often have a
-    -- user with no email, so NOTIFY warns nobody and nothing stops. SUSPEND at
-    -- 100 percent is the backstop. It is a deliberate trade: suspending mid-event
-    -- would end the booth, but a stand that has burned its whole monthly quota is
-    -- already malfunctioning, and an unbounded spend on a shared account is worse.
-    ALTER RESOURCE MONITOR {{ monitor }} SET
-      CREDIT_QUOTA = {{ monitor_quota }}
-      TRIGGERS ON 75 PERCENT DO NOTIFY
-               ON 90 PERCENT DO NOTIFY
-               ON 100 PERCENT DO SUSPEND;
-  END IF;
+-- Make sure no monitor is attached, including one left behind by an earlier
+-- deploy of this project that did create one. UNSET is safe when there is none.
+ALTER WAREHOUSE {{ wh }} UNSET RESOURCE_MONITOR;
 
-  ALTER WAREHOUSE {{ wh }} SET RESOURCE_MONITOR = {{ monitor }};
-
-  RETURN IFF(notified,
-             'monitor bound, notify user set',
-             'monitor bound, NO notify user (nobody will be warned - set a user with an email)');
-END;
-$$;
-
--- Proof, not assumption: a monitor with no notify_users cannot warn anyone.
-SHOW RESOURCE MONITORS LIKE '{{ monitor }}';
-SELECT "name", "credit_quota", "notify_users", "level"
+-- Proof, not assumption: resource_monitor must read null, and the warehouse must
+-- be able to come back on its own after the 60s idle suspend.
+SHOW WAREHOUSES LIKE '{{ wh }}';
+SELECT "name", "resource_monitor", "auto_suspend", "auto_resume"
 FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));

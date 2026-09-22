@@ -13,7 +13,7 @@ Steps, in order:
   3. snow dcm create --if-not-exists
   4. snow dcm plan, shown in full and confirmed before anything is applied.
   5. snow dcm deploy
-  6. Run hooks/post_hook.sql for the resource monitor, which DCM cannot define.
+  6. Run hooks/post_hook.sql, which makes sure nothing can suspend the warehouse.
   7. Patch game/config.json to point at this account.
   8. Run game/smoke_test.py so the account is proven, not assumed.
 
@@ -126,26 +126,37 @@ def step_deploy(conn, target, alias):
 
 
 def step_post_hook(conn, vals):
-    print("\n[6/8] Resource monitor (DCM cannot define one)")
+    """Make sure nothing can suspend the booth's warehouse.
+
+    This step used to create a resource monitor. It no longer does, and that is
+    deliberate: the booth runs all day with a queue in front of it, and a credit
+    cap that suspends the warehouse does not save money, it ends the activation
+    in public mid-visit. See the header of hooks/post_hook.sql for the full
+    reasoning and the two ways this was previously got wrong.
+    """
+    print("\n[6/8] Making sure nothing can suspend the warehouse")
     cmd = ["snow", "sql", "-f", os.path.join(HERE, "hooks", "post_hook.sql"),
            "--enable-templating", "JINJA", "-c", conn, "--format", "json"]
-    for k in ("monitor", "monitor_quota", "wh", "monitor_notify_user"):
-        cmd += ["-D", f"{k}={vals[k]}"]
+    cmd += ["-D", f"wh={vals['wh']}"]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
     if r.returncode != 0:
         print(f"  WARNING: post-hook failed: {(r.stderr or r.stdout)[:300]}")
-        print("  The booth will still run, but nothing is capping its spend.")
+        print("  Check by hand that no resource monitor is bound to "
+              f"{vals['wh']}, or a visit could be cut off mid-flow.")
         return
-    # A monitor with empty notify_users cannot warn anyone, so check rather than assume.
-    rows, _ = sql(conn, f"SHOW RESOURCE MONITORS LIKE '{vals['monitor']}'")
-    notify = ""
+    # Proof, not assumption: read the warehouse back and say what is attached.
+    rows, _ = sql(conn, f"SHOW WAREHOUSES LIKE '{vals['wh']}'")
+    attached = ""
     if rows:
         first = rows[0] if isinstance(rows, list) else rows
         if isinstance(first, list):
             first = first[0] if first else {}
-        notify = first.get("notify_users") or ""
-    print(f"  {vals['monitor']}: quota {vals['monitor_quota']}, "
-          f"notify_users={notify or 'EMPTY - nobody will be warned'}")
+        attached = (first.get("resource_monitor") or "").strip()
+    if attached and attached.lower() != "null":
+        print(f"  WARNING: {attached} is still bound to {vals['wh']}. "
+              "It could suspend the booth mid-visit - detach it.")
+    else:
+        print(f"  {vals['wh']}: no resource monitor, nothing can suspend a visit")
 
 
 def step_config(conn, vals):

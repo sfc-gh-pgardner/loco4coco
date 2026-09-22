@@ -1,0 +1,41 @@
+{
+  "checked": 280,
+  "problems": [
+    {
+      "profile": "fr",
+      "city": "Paris",
+      "region": "AWS_EU_WEST_3",
+      "industry": "manufacturing",
+      "tier": "reserve",
+      "position": 5,
+      "global_name": "GZTSZ1389Q7",
+      "title": "European Gas Analytics",
+      "code": "REQUEST",
+      "detail": "is_by_request - the visitor must ask and wait"
+    },
+    {
+      "profile": "fr",
+      "city": "Paris",
+      "region": "AWS_EU_WEST_3",
+      "industry": "manufacturing",
+      "tier": "reserve",
+      "position": 6,
+      "global_name": "GZSVZ3XQWG",
+      "title": "OpenStreetMap France",
+      "code": "REQUEST",
+      "detail": "is_by_request - the visitor must ask and wait"
+    },
+    {
+      "profile": "fr",
+      "city": "Paris",
+      "region": "AWS_EU_WEST_3",
+      "industry": "manufacturing",
+      "tier": "reserve",
+      "position": 7,
+      "global_name": "GZTDZ1PNFK",
+      "title": "Commodity & energy price benchmarks",
+      "code": "REQUEST",
+      "detail": "is_by_request - the visitor must ask and wait"
+    }
+  ]
+}

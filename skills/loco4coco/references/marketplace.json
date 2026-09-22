@@ -27,6 +27,20 @@
     "paris_manufacturing": {
       "at": "2026-09-22 07:00",
       "note": "Supersedes the 2026-09-21 verdict that Paris manufacturing was intentionally left at 4 primary picks because on-theme data was not offered in AWS_EU_WEST_3. A re-run of curate_locality.py --profile fr --industry manufacturing against AWS_EU_WEST_3 returned 6 on-theme, Free, is_ready_for_import listings, so the scarcity claim was too strong - the earlier run simply found less. The six were hand-merged rather than taken as the search returned them: CEIC Commodities Data was restored (a prior primary the re-run dropped) and the sixth slot went to the EU + UK B2B Company Database, which answers the script's own 'company and supplier registries' angle. Two weak-fit results were demoted to reserve - Hydrogen price data (too niche) and World Points of Interest Premium France (duplicates the France POI 19 Industry set). Franciemes IRIS stays deleted per the earlier review. Paris now matches London and Berlin at 6 primary. Follow-up measurement: the review also claimed Industry Classification Systems does not appear in the Paris catalogue at all. That is wrong - SHOW AVAILABLE LISTINGS reports it available in AWS_EU_WEST_3 and is_ready_for_import, and it is a primary in both London and Berlin, so it was swapped into Paris in place of European Gas Analytics, which reads as energy rather than manufacturing. The review was correct about the other two London picks: FactSet Supply Chain Relationships and Overture Maps - Transportation are genuinely not offered in AWS_EU_WEST_3."
+    },
+    "region_audit": {
+      "at": "2026-09-22 07:33",
+      "how": "scripts/audit_marketplace_regions.py against SHOW AVAILABLE LISTINGS, each profile judged on its OWN event region",
+      "note": "No curated pick is withdrawn and none is missing from its own event region - 0 of 288 on both counts, so the curation itself is sound. Three real defects were fixed. A Paris manufacturing primary was is_by_request, meaning the visitor must ask the provider and wait rather than import; it was replaced with Chemical Price Assessments, which covers the same input-cost ground and is directly importable, and the by-request pick moved to the back of reserve. Two further by-request reserves were sunk to the back of their stalls. Nine reserves were labelled Paid, contradicting the rule that nothing Paid ships; they were dropped rather than replaced, because a shorter reserve list is honest where padding with off-theme picks would not be. is_ready_for_import is deliberately NOT used as a cross-region signal: it reports whether THIS account can import, so from a Frankfurt booth account it marks perfectly good London picks unavailable. Judging London on it would bin listings a London visitor could import without trouble.",
+      "dropped_paid_reserves": [
+        "uk/healthcare: 6->5",
+        "uk/energy: 6->4",
+        "uk/other: 6->5",
+        "de/healthcare: 6->4",
+        "de/retail: 6->5",
+        "de/manufacturing: 6->5",
+        "de/energy: 6->5"
+      ]
     }
   },
   "profiles": {
@@ -161,20 +175,6 @@
             "subtitle": "The Met Office is responsible for issuing weather warnings, which warn of impacts caused by severe weather.",
             "use_cases": [
               "air quality and environmental health"
-            ],
-            "demoted": "off-theme"
-          },
-          {
-            "global_name": "GZSYZ4OONQUW",
-            "title": "Dutch Central Bureau of Statistics Public Datasets - LEGACY (Archives & Longitudinal Series)",
-            "provider": "DDBM B.V.",
-            "access": "Paid",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ4OONQUW",
-            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4",
-            "ready": true,
-            "subtitle": "LEGACY (Archives & Longitudinal Series)",
-            "use_cases": [
-              "disease prevalence and mortality"
             ],
             "demoted": "off-theme"
           }
@@ -858,33 +858,6 @@
             ]
           },
           {
-            "global_name": "GZTDZJKVCY",
-            "title": "Postcode Sector Weather Forecasts",
-            "provider": "Met Office",
-            "access": "Paid",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCY",
-            "regions": "PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
-            "ready": true,
-            "subtitle": "Accurate weather forecasts for your chosen postcode sector",
-            "use_cases": [
-              "weather and severe weather warnings",
-              "solar irradiance and wind resource"
-            ]
-          },
-          {
-            "global_name": "GZTDZJKVCM",
-            "title": "Global Spot Weather Forecasts",
-            "provider": "Met Office",
-            "access": "Paid",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCM",
-            "regions": "AWS_US_GOV_EAST_1.AWS_US_GOV_EAST_1,AWS_US_GOV_EAST_1_FHPLUS.AWS_US_GOV_EAST_1_FHPLUS,AWS_US_GOV_WEST_1_DOD.AWS_US_GOV_WEST_1_DOD,AWS_US_GOV_WEST_1_FHPLUS.AWS_US_GOV_WEST_1_FHPLUS,AZURE_USGOVVIRGINIA.AZURE_USGOVVIRGINIA,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
-            "ready": true,
-            "subtitle": "Accurate weather forecasts for your chosen location",
-            "use_cases": [
-              "weather and severe weather warnings"
-            ]
-          },
-          {
             "global_name": "GZ2FRZQNY1",
             "title": "UK Health Facts and Dimensions Sample",
             "provider": "Facts and Dimensions Ltd",
@@ -1116,19 +1089,6 @@
             "subtitle": "Every administrative boundary in Great Britain, from parliamentary constituencies to council wards",
             "use_cases": [
               "geospatial boundaries and geocoding"
-            ]
-          },
-          {
-            "global_name": "GZTDZJKVCY",
-            "title": "Postcode Sector Weather Forecasts",
-            "provider": "Met Office",
-            "access": "Paid",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCY",
-            "regions": "PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
-            "ready": true,
-            "subtitle": "Accurate weather forecasts for your chosen postcode sector",
-            "use_cases": [
-              "weather forecasts"
             ]
           },
           {
@@ -1944,17 +1904,16 @@
             ]
           },
           {
-            "global_name": "GZTDZ1PNFK",
-            "title": "Commodity & energy price benchmarks",
-            "provider": "General Index",
+            "global_name": "GZSVZ9FU7N",
+            "title": "Chemical Price Assessments",
+            "provider": "ICIS (Independent Commodity Intelligence Services)",
             "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTDZ1PNFK",
-            "regions": "AWS_EU_WEST_3",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ9FU7N",
+            "regions": "ALL",
             "ready": true,
-            "subtitle": "Daily price data & forward curves for crude oil, refined products & energy transition markets",
+            "subtitle": "Assessed market prices for a vast array of Chemical commodities and recycled plastics globally",
             "use_cases": [
-              "commodity and raw materials prices",
-              "energy and input costs for industry"
+              "commodity and raw materials prices"
             ]
           },
           {
@@ -2017,33 +1976,6 @@
         ],
         "reserve": [
           {
-            "global_name": "GZTSZ1389Q7",
-            "title": "European Gas Analytics",
-            "provider": "S&P Global Energy",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTSZ1389Q7",
-            "regions": "AWS_EU_WEST_3",
-            "ready": true,
-            "subtitle": "The European Gas Analytics dataset offers access to supply / demand forecasts, price forecasts, and outages.",
-            "use_cases": [
-              "energy and input costs for industry"
-            ]
-          },
-          {
-            "global_name": "GZSVZ3XQWG",
-            "title": "OpenStreetMap France",
-            "provider": "Sonra",
-            "access": "Free",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ3XQWG",
-            "regions": "AWS_EU_WEST_3",
-            "ready": true,
-            "subtitle": "Location data from OpenStreetMap for France",
-            "use_cases": [
-              "shipping, ports and freight"
-            ],
-            "demoted": "off-theme"
-          },
-          {
             "global_name": "GZSTZLT2IK0",
             "title": "Economic Analysis and Risk: Key Economic Drivers, Risk Scores & Forecasts",
             "provider": "IBISWorld",
@@ -2101,6 +2033,47 @@
               "supply chain and logistics",
               "shipping, ports and freight",
               "company and supplier registries"
+            ]
+          },
+          {
+            "global_name": "GZTSZ1389Q7",
+            "title": "European Gas Analytics",
+            "provider": "S&P Global Energy",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTSZ1389Q7",
+            "regions": "AWS_EU_WEST_3",
+            "ready": true,
+            "subtitle": "The European Gas Analytics dataset offers access to supply / demand forecasts, price forecasts, and outages.",
+            "use_cases": [
+              "energy and input costs for industry"
+            ]
+          },
+          {
+            "global_name": "GZSVZ3XQWG",
+            "title": "OpenStreetMap France",
+            "provider": "Sonra",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZSVZ3XQWG",
+            "regions": "AWS_EU_WEST_3",
+            "ready": true,
+            "subtitle": "Location data from OpenStreetMap for France",
+            "use_cases": [
+              "shipping, ports and freight"
+            ],
+            "demoted": "off-theme"
+          },
+          {
+            "global_name": "GZTDZ1PNFK",
+            "title": "Commodity & energy price benchmarks",
+            "provider": "General Index",
+            "access": "Free",
+            "url": "https://app.snowflake.com/marketplace/listing/GZTDZ1PNFK",
+            "regions": "AWS_EU_WEST_3",
+            "ready": true,
+            "subtitle": "Daily price data & forward curves for crude oil, refined products & energy transition markets",
+            "use_cases": [
+              "commodity and raw materials prices",
+              "energy and input costs for industry"
             ]
           }
         ]
@@ -2828,35 +2801,6 @@
               "population health and demographics"
             ],
             "demoted": "off-theme"
-          },
-          {
-            "global_name": "GZSYZ4OONQUW",
-            "title": "Dutch Central Bureau of Statistics Public Datasets - LEGACY (Archives & Longitudinal Series)",
-            "provider": "DDBM B.V.",
-            "access": "Paid",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ4OONQUW",
-            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4",
-            "ready": true,
-            "subtitle": "LEGACY (Archives & Longitudinal Series)",
-            "use_cases": [
-              "population health and demographics",
-              "disease prevalence and mortality"
-            ],
-            "demoted": "off-theme"
-          },
-          {
-            "global_name": "GZSYZ4OONS95",
-            "title": "Dutch Central Bureau of Statistics Public Datasets - MODERN 83 (Population, Health & Social Data)",
-            "provider": "DDBM B.V.",
-            "access": "Paid",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ4OONS95",
-            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4",
-            "ready": true,
-            "subtitle": "MODERN_83 (Population, Health & Social Data)",
-            "use_cases": [
-              "population health and demographics"
-            ],
-            "demoted": "beyond the six"
           }
         ]
       },
@@ -3163,20 +3107,6 @@
             "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,AWS_US_EAST_1,AWS_US_EAST_2,AWS_US_WEST_2,AZURE_CENTRALUS,AZURE_EASTUS2,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTHEAST_3,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AWS_SA_EAST_1,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_KOREACENTRAL,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
             "ready": true,
             "subtitle": "Statistical info about a population's characteristics like age, gender, income, ethnicity, and more.",
-            "use_cases": [
-              "household income and geodemographic segmentation"
-            ],
-            "demoted": "beyond the six"
-          },
-          {
-            "global_name": "GZT1ZJ0SBG",
-            "title": "Average Income and Net Worth by US Zip Code (Financial Demographic Data)",
-            "provider": "Deep Sync",
-            "access": "Paid",
-            "url": "https://app.snowflake.com/marketplace/listing/GZT1ZJ0SBG",
-            "regions": "PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
-            "ready": true,
-            "subtitle": "Our robust 220 million record consumer dataset is the source of our ZIP level data.",
             "use_cases": [
               "household income and geodemographic segmentation"
             ],
@@ -3558,20 +3488,6 @@
               "supply chain and logistics"
             ],
             "demoted": "off-theme"
-          },
-          {
-            "global_name": "GZSYZ4OONQUW",
-            "title": "Dutch Central Bureau of Statistics Public Datasets - LEGACY (Archives & Longitudinal Series)",
-            "provider": "DDBM B.V.",
-            "access": "Paid",
-            "url": "https://app.snowflake.com/marketplace/listing/GZSYZ4OONQUW",
-            "regions": "AWS_EU_WEST_1,AWS_EU_WEST_2,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_2,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_3,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SWEDENCENTRAL,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST3,PUBLIC.GCP_EUROPE_WEST4",
-            "ready": true,
-            "subtitle": "LEGACY (Archives & Longitudinal Series)",
-            "use_cases": [
-              "industrial production and output statistics"
-            ],
-            "demoted": "off-theme"
           }
         ]
       },
@@ -3743,20 +3659,6 @@
               "electricity consumption and demand"
             ],
             "demoted": "off-theme"
-          },
-          {
-            "global_name": "GZTDZJKVCM",
-            "title": "Global Spot Weather Forecasts",
-            "provider": "Met Office",
-            "access": "Paid",
-            "url": "https://app.snowflake.com/marketplace/listing/GZTDZJKVCM",
-            "regions": "AWS_US_GOV_EAST_1.AWS_US_GOV_EAST_1,AWS_US_GOV_EAST_1_FHPLUS.AWS_US_GOV_EAST_1_FHPLUS,AWS_US_GOV_WEST_1_DOD.AWS_US_GOV_WEST_1_DOD,AWS_US_GOV_WEST_1_FHPLUS.AWS_US_GOV_WEST_1_FHPLUS,AZURE_USGOVVIRGINIA.AZURE_USGOVVIRGINIA,PUBLIC.AWS_AP_NORTHEAST_1,PUBLIC.AWS_AP_NORTHEAST_2,PUBLIC.AWS_AP_NORTHEAST_3,PUBLIC.AWS_AP_SOUTHEAST_1,PUBLIC.AWS_AP_SOUTHEAST_2,PUBLIC.AWS_AP_SOUTH_1,PUBLIC.AWS_CA_CENTRAL_1,PUBLIC.AWS_EU_CENTRAL_1,PUBLIC.AWS_EU_NORTH_1,PUBLIC.AWS_EU_WEST_1,PUBLIC.AWS_EU_WEST_2,PUBLIC.AWS_SA_EAST_1,PUBLIC.AWS_US_EAST_1,PUBLIC.AWS_US_EAST_2,PUBLIC.AWS_US_WEST_2,PUBLIC.AZURE_AUSTRALIAEAST,PUBLIC.AZURE_CANADACENTRAL,PUBLIC.AZURE_CENTRALINDIA,PUBLIC.AZURE_CENTRALUS,PUBLIC.AZURE_EASTUS2,PUBLIC.AZURE_JAPANEAST,PUBLIC.AZURE_NORTHEUROPE,PUBLIC.AZURE_SOUTHCENTRALUS,PUBLIC.AZURE_SOUTHEASTASIA,PUBLIC.AZURE_SWITZERLANDN,PUBLIC.AZURE_UAENORTH,PUBLIC.AZURE_UKSOUTH,PUBLIC.AZURE_WESTEUROPE,PUBLIC.AZURE_WESTUS2,PUBLIC.GCP_EUROPE_WEST2,PUBLIC.GCP_EUROPE_WEST4,PUBLIC.GCP_US_CENTRAL1,PUBLIC.GCP_US_EAST4",
-            "ready": true,
-            "subtitle": "Accurate weather forecasts for your chosen location",
-            "use_cases": [
-              "weather and severe weather warnings"
-            ],
-            "demoted": "beyond the six"
           }
         ]
       },

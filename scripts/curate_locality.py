@@ -219,6 +219,7 @@ def load_catalogue(path):
                 "ready": str(r[i["is_ready_for_import"]]).lower() == "true",
                 "by_request": str(r[i["is_by_request"]]).lower() == "true",
                 "monetized": str(r[i["is_monetized"]]).lower() == "true",
+                "discover_only": str(r[i["discover_only"]]).lower() == "true",
             }
     return out
 
@@ -277,9 +278,21 @@ def main():
                     if not gn or r.get("kind") in SKIP_KINDS:
                         continue
                     c = cat.get(gn.upper())
-                    # If we have the catalogue, trust it over the search index:
-                    # a listing that is not importable is a dead end in the doc.
-                    if c and not c["ready"]:
+                    # Reject on globally-true signals only.
+                    #
+                    # is_by_request means the visitor has to ask the provider and
+                    # wait, so "tick it and it is yours" is not true of it. One of
+                    # these reached a Paris primary slot before this check existed.
+                    #
+                    # is_ready_for_import is NOT used to reject. It reports whether
+                    # THIS account can import, and every booth account is Frankfurt
+                    # while the picks are judged for London, Paris or Berlin -
+                    # measured, it marks London listings unavailable that a London
+                    # visitor imports without trouble. The region string is the
+                    # signal that travels, and it is checked above.
+                    if c and c.get("by_request"):
+                        continue
+                    if c and c.get("discover_only"):
                         continue
                     if gn in found:
                         found[gn]["use_cases"].append(uc)

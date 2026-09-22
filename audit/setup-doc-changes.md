@@ -362,3 +362,25 @@ and region into a tracked file, add a deploy target, re-verify the marketplace
 against your own account" to **register, add a connection, run bootstrap, load the
 datasets, pick your venue and name in `/admin`, start the server**. Nothing to look
 up, nothing to paste.
+
+## Applied 2026-09-22 to the live Setup Guide doc
+
+Seven passages patched in place, verified by reading the doc back. Bulleted items
+were patched by replacing the text inside the paragraph rather than the paragraph
+itself, so the bullets survived; paragraph count is unchanged at 322.
+
+Two were actively wrong rather than merely stale. The troubleshooting entry for an
+empty Marketplace stall blamed `event.region` not matching the account's region,
+and the localisation TLDR told the reader to set `event.region` to the account's
+real region. Both invert the rule the whole design rests on: the account's region
+decides only where rows are written, and the event's region — resolved from
+`event.venue` — decides which datasets are offered. Following either entry serves
+visitors another city's data.
+
+The rest: the deploy-target step told the reader to add a target with a
+pool-assigned `account_identifier` and run `bootstrap.py --target PARIS`, which
+contradicts both SETUP.md and the manifest; a pre-flight step said to re-verify
+curated listings against the booth account, which is the check that bins listings
+a visitor could import perfectly well from their own; two duplicate `event.operator`
+passages described a field that no longer exists; and the slow-reply entry still
+offered `mistral-large2`, which is legacy on a Frankfurt event account.

@@ -252,8 +252,8 @@ python3 deploy/load_context.py --connection MYBOOTH  # md    -> Snowflake tables
 
 ## Step 7: point the game at your event
 
-Start the server (Step 8), then open **<http://127.0.0.1:4747/admin>**. Pick your venue,
-type your name and stand, press Apply. That is the whole configuration.
+Start the server (Step 8), then open **<http://127.0.0.1:4747/admin>**. Pick your venue
+and press Apply. That is the whole configuration.
 
 | Venue | City | Language | Marketplace region (recommendations) | Dataset profile |
 |---|---|---|---|---|
@@ -263,6 +263,12 @@ type your name and stand, press Apply. That is the whole configuration.
 
 **Applying a venue does not need a restart.** The config is re-read on every request,
 and Apply flushes the dataset cache, so the change lands on the next visitor.
+
+**Press Apply *after* `load_context.py`, not before.** Apply is the only thing that
+flushes the dataset cache. If you load a city's datasets while the server is
+already running and do not press Apply afterwards, the server can keep serving the
+datasets it read earlier for the rest of its life. Applying last, or using the
+restart button, avoids the question entirely.
 
 **Operator** is not something you type. `SESSIONS.SE_OPERATOR` is stamped with
 `CURRENT_ACCOUNT()` for every visitor, so "which laptop produced this row" stays
@@ -514,7 +520,7 @@ not built. Until they exist, the query above *is* the handover.
 ## Troubleshooting: what actually goes wrong
 
 1. **Edited `config.json` and nothing changed.** Config *is* re-read on every request, so
-   venue and operator changes land immediately — use `/admin` and press Apply. Only
+   venue changes land immediately — use `/admin` and press Apply. Only
    `server.py` edits need the restart button. HTML and CSS are served fresh from disk.
 2. **A Library or Marketplace reply is slow.** Those use direct Cortex inference and
    **models are region-specific, in availability and in speed.** The default is

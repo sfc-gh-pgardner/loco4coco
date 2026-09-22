@@ -29,22 +29,25 @@ you genuinely cannot determine a value:
    If that returns "No models available", stop and tell me - nothing else will
    work until it is fixed.
 
-3. Determine my account region by querying CURRENT_REGION(). Do not guess it, and
-   do not copy AWS_EU_WEST_2 from the config - if event.region does not match my
-   account the Marketplace stall will be empty.
+3. Do not look up my account's region, and do not put it anywhere in the config.
+   The account's region only decides where SESSIONS and TURNS are written. The
+   region that chooses Marketplace datasets is the EVENT's, and event.venue
+   already resolves it. Setting the stall's region from the account is the one
+   mistake that quietly gives visitors the wrong city's data.
 
-4. Add a deploy target to deploy/manifest.yml by copying the LONDON block. Set
-   account_identifier from my connection, and set monitor_notify_user to a real
-   user in my account - ask me if you cannot determine it. A resource monitor
-   with an empty notify list warns nobody.
+4. Do not add a deploy target. The default EVENT target in deploy/manifest.yml
+   deliberately pins no account and deploys wherever my connection points.
+   Pasting a pool-assigned account ID into a tracked file is friction, and risks
+   committing someone else's account identifier.
 
-5. Show me `python3 deploy/bootstrap.py --target <mine> --connection <conn>
-   --plan-only` output and WAIT for my approval before deploying for real.
+5. Show me `python3 deploy/bootstrap.py -c <conn> --plan-only` output and WAIT
+   for my approval before deploying for real.
 
-6. Update game/config.json: event.region to my region, event.city and
-   event.language for my event, snowflake.connection_name to my connection, and
-   ask me for event.operator in the form "My Name / Stand label". Tell me
-   explicitly that event.operator cannot be reconstructed after the event.
+6. Update game/config.json: set event.venue to my event (london, paris or
+   berlin) and snowflake.connection_name to my connection. Do not set
+   event.marketplace_region, event.city or event.language by hand — the venue
+   resolves all three. There is no operator or stand field to ask me for;
+   SESSIONS.SE_OPERATOR is stamped with the account automatically.
 
 7. Load the shared context: python3 deploy/load_context.py --connection <conn>
 

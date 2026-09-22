@@ -56,9 +56,8 @@ My Snowflake connection is called <MYBOOTH>. I have already registered at
 go.dataops.live/emea-swt/register and added the connection.
 
 Do all of it: install the Python packages, run deploy/bootstrap.py, run
-deploy/load_context.py, run deploy/verify_context.py --all, set event.venue and
-event.operator ("<Your Name> / Stand <N>"), start game/server.py, and run
-game/smoke_test.py against it.
+deploy/load_context.py, run deploy/verify_context.py --all, set event.venue,
+start game/server.py, and run game/smoke_test.py against it.
 
 Then tell me four things: the venue, how many datasets loaded for that city,
 whether the lists are being read from snowflake, and the smoke test result. Stop
@@ -265,12 +264,15 @@ type your name and stand, press Apply. That is the whole configuration.
 **Applying a venue does not need a restart.** The config is re-read on every request,
 and Apply flushes the dataset cache, so the change lands on the next visitor.
 
-**Operator** is written to `SESSIONS.SE_OPERATOR` for every visitor and **cannot be
-reconstructed after the event**. Format it `Your Name / Stand 2`. If you leave it blank,
-"which stand produced the best conversations" is unanswerable afterwards.
+**Operator** is not something you type. `SESSIONS.SE_OPERATOR` is stamped with
+`CURRENT_ACCOUNT()` for every visitor, so "which laptop produced this row" stays
+answerable with nothing to fill in: a second laptop at an event is given its own
+pool account. There was once a hand-typed `event.operator` field; no logic read
+it and every row written before its removal had it empty.
 
-You can still set `event.venue` and `event.operator` by hand in `game/config.json` if
-you prefer; `/admin` writes the same two keys.
+You can still set `event.venue` by hand in `game/config.json` if you prefer;
+`/admin` writes the same key. Do not set `event.marketplace_region` yourself — it
+is resolved from the venue, and it is the *event's* region, never the account's.
 
 ### When you *do* need the restart button
 

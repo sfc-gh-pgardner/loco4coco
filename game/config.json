@@ -7,7 +7,7 @@
     "idle_shutdown_minutes": 45
   },
   "event": {
-    "venue": "paris",
+    "venue": "london",
     "_venue_comment": "The ONE toggle a booth operator changes per event. Expands via the venues map below into city, language, cloud region and marketplace profile. One of: london, paris, frankfurt, berlin. Leave unset to hand-configure city/language/region directly.",
     "city": "London",
     "language": "en",

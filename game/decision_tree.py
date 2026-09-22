@@ -492,10 +492,15 @@ for lid in (cfg.get('unlock_order') or []):
         note = 'A single fast completion that names the selection back.'
     w('| %s | %s | %s |' % (q(loc.get('name')), q(tr or '-'), note))
 w('')
-w('Every turn has a wall-clock ceiling of %ss. Past it, the visitor is served '
-  'the precomputed archetype content instead of a slower sentence, so the '
-  'document is complete either way.'
-  % ((cfg.get('coco') or {}).get('turn_timeout') or 60))
+w('Every turn has a wall-clock ceiling. The quick stops are held to %ss, '
+  'because a proven model answers in about two and the only thing that ever '
+  'reaches the ceiling is a fault; the Workshop is allowed %ss, because it is '
+  'the one agentic turn and legitimately takes twenty to thirty. Past the '
+  'ceiling the visitor is served the precomputed archetype content instead of '
+  'a slower sentence, so the document is complete either way.'
+  % ((cfg.get('coco') or {}).get('turn_timeout') or 60,
+     ((cfg.get('locations') or {}).get('workshop') or {}).get('timeout')
+     or (cfg.get('coco') or {}).get('turn_timeout') or 60))
 w('')
 w('One model call is in flight at a time. A second caller waits, so one '
   'visitor\'s content can never appear in another visitor\'s document.')

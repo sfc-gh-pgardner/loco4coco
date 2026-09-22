@@ -78,18 +78,34 @@
        #d-more    its indicator line, even when there is nothing to indicate
        #yousaid   one line, clipped rather than wrapped
        #histback  one line
+     Each uses a FIXED height, not min-height. min-height was measured wrong on
+     2026-09-22: box-sizing is border-box here, so min-height:1.3em on #yousaid
+     was being consumed by its own 6px padding and 1px border and reserved only
+     ~9px of the ~14px line box it needed. The bubble grew 214 -> 220 the moment
+     "You said:" appeared and the whole board stepped down 6px - the exact fault
+     this block exists to prevent, hiding inside the fix for it. A fixed height
+     cannot be eaten by padding, so it is the only form used here now. All three
+     are nowrap: a fixed height plus wrapping text would clip instead of moving,
+     which is quieter but still wrong.
      The cost is dead space inside the border on a short reply. That is the
      deliberate trade: a still board beats a tight box. Do NOT make any of these
-     conditional again - that is precisely what made the board move. */
+     conditional again, and do NOT return any of them to min-height - those are
+     the two ways this has already been broken. */
   #bubble .msg { margin-top:4px; font-size:17px; line-height:1.55;
     white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
     height:calc(1.55em * 4); overflow-y:auto; }
   /* The page indicator. Not a control any more - pages advance themselves - so
      it takes no pointer and reserves its line unconditionally. */
-  #d-more { display:block; margin-top:6px; min-height:1.3em; font-size:11px;
+  /* The page indicator is BOTH a progress readout and a control: pages advance on
+     their own, and a visitor who has finished reading can tap to go early. It
+     reserves its line unconditionally either way (see the note above). */
+  #d-more { display:block; margin-top:6px; height:1.3em; font-size:11px;
     letter-spacing:.12em; color:var(--warm); user-select:none;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     visibility:hidden; pointer-events:none; }
   #d-more.on { visibility:visible; }
+  #d-more.tappable { pointer-events:auto; cursor:pointer; }
+  #d-more.tappable:hover { color:var(--edge); }
   #hist { display:flex; gap:5px; align-items:center; }
   #hist button { background:#35424C; color:var(--dim); border:1px solid var(--line);
     border-radius:4px; font:inherit; font-size:11px; padding:1px 7px; cursor:pointer; }
@@ -98,11 +114,14 @@
   #hist .at { font-size:10px; color:var(--dim); letter-spacing:.08em; }
   /* Both of these are reserved, not toggled: see the fixed-height note above. */
   #histback { visibility:hidden; font-size:10px; color:var(--warm); margin-top:5px;
-    min-height:1.2em; letter-spacing:.1em; text-transform:uppercase; }
+    height:1.25em; letter-spacing:.1em; text-transform:uppercase;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   #histback.on { visibility:visible; }
+  /* height, not min-height, and it includes the padding and border because
+     box-sizing is border-box - see the note above. */
   #yousaid { visibility:hidden; margin-top:6px; padding-top:6px;
     border-top:1px dashed #465C6D; font-size:12px; color:var(--dim);
-    min-height:1.3em; white-space:nowrap; overflow:hidden;
+    height:calc(1.3em + 7px); white-space:nowrap; overflow:hidden;
     text-overflow:ellipsis; }
   #yousaid.on { visibility:visible; }
 
@@ -2805,12 +2824,34 @@ async function showBp(){
   paintSendBtn(d);
   $('ov-bp').classList.add('on');
 }
+// Repaint the body from a fresher payload. The agentic search is merged server
+// side during delivery, which is AFTER this card first rendered, so without this
+// a find that arrived late would only ever appear in the document. The delivery
+// poll is already fetching the same endpoint every 700ms; this just stops it
+// throwing away the half of the answer it was not looking at.
+function repaintBp(d){
+  if(!d || !(d.poc||{}).poc_name) return;
+  const li=a=>(a||[]).map(x=>`<li>${esc(x)}</li>`).join('');
+  renderBpBody(d,(d.features||[]).map(f=>f.name||f).filter(Boolean),d.joined||[],li);
+}
 function renderBpBody(d,featNames,joinNames,li){
   const p=d.poc||{};
+  // The 7th option's agentic find reaches the DOCUMENT (blueprint_docx renders
+  // every joined_listings row) but used to be invisible here, because this card
+  // listed d.joined - the labels they ticked - and the agentic row is merged into
+  // joined_listings only. A visitor who typed "global movement data" was shown
+  // their own words back and no sign CoCo had matched anything, then found a
+  // Mapbox listing in the document. So: any listing whose title is not one of
+  // their picks is by definition something CoCo added, which needs no new server
+  // field to identify. Named separately rather than mixed into their list, because
+  // the honest claim is "we found this", not "you chose this".
+  const picked=new Set(joinNames);
+  const found=(d.listings||[]).map(r=>r&&r.title).filter(t=>t&&!picked.has(t));
   $('bp').innerHTML = `
     <h3>What you are building</h3><div style="font-size:15px">${esc(p.poc_name)}</div>
     <div style="font-size:13px;color:#8FA6B8;margin-top:3px">${esc(p.summary||'')}</div>
     ${joinNames.length?`<h3>Data you are attaching</h3><ul>${li(joinNames)}</ul>`:''}
+    ${found.length?`<h3>CoCo also found for you</h3><ul>${li(found)}</ul>`:''}
     ${featNames.length?`<h3>Snowflake features in play</h3><ul>${li(featNames.slice(0,4))}</ul>`:''}
     <div style="margin-top:12px;font-size:13px;color:#8FA6B8;line-height:1.5">
       The full brief, the Cortex Code prompt${p.guide_title?', the guide to fork':''}
@@ -2893,6 +2934,7 @@ async function sendPoc(){
     let d; try{ d=await (await fetch('/api/blueprint',{cache:'no-store'})).json(); }
     catch(e){ continue; }
     window.__bp=d;
+    repaintBp(d);
     if(d.document_url || d.queued || d.draft_created){ paintSendBtn(d); }
     if(d.document_url) return;
     // Something has to move on screen, or a twenty-second wait reads as a hang.
@@ -2972,6 +3014,11 @@ async function submitPanel(){
       const say=$('c-say'); say.classList.add('on');
       say.innerHTML='<b>CoCo</b>Let me look that up for you\u2026';
       $('c-opts').style.display='none'; $('c-otherwrap').style.display='none';
+      // LET COCO CHOOSE is an offer to answer FOR them. Once they have answered
+      // themselves the offer is spent, and leaving it on screen above their own
+      // words read as though their answer had not registered. It is restored
+      // when the bench is next opened (see the display reset in openPanel).
+      $('c-coco-choose').style.display='none';
       $('c-go').disabled=true; $('c-go').textContent='THINKING\u2026';
     } else {
       visited.add(id); closePanel();
@@ -3640,10 +3687,17 @@ function renderMore(){
   const b=$('d-more'); if(!b) return;
   const many=pages.length>1, last=pageI>=pages.length-1;
   b.classList.toggle('on',many);
-  // Reads as progress, not as a control: the visitor is told there is more coming
-  // and it arrives on its own. A booth visitor should never have to discover a
-  // button to finish reading a sentence.
-  b.textContent = many ? `${pageI+1} / ${pages.length}` + (last?'':'  \u2026') : '';
+  // Tappable only while there is somewhere to go, so the last page cannot be
+  // clicked into nothing.
+  b.classList.toggle('tappable',many&&!last);
+  // Reads as progress AND offers the shortcut: the visitor is told more is coming,
+  // it arrives on its own, and TAP TO SKIP is there for anyone who reads faster
+  // than the timer. A booth visitor should never HAVE to find a button to finish
+  // a sentence, but they should be able to.
+  b.textContent = many
+    ? (last ? `${pageI+1} / ${pages.length}`
+            : `${pageI+1} / ${pages.length}   \u00b7   TAP TO SKIP AHEAD  \u25b8`)
+    : '';
 }
 
 // Pages advance THEMSELVES once the page has finished typing, after a pause long
@@ -3689,8 +3743,9 @@ function stepType(){ if(typeI<typeTarget.length){ typeI+=2;
   el.scrollTop=el.scrollHeight;
   if(typeI>=typeTarget.length){ renderMore(); scheduleNextPage(); } } }
 
-// A tap on the bubble skips ahead rather than waiting, for anyone who reads fast.
-// It is an accelerator, not the mechanism: the pages arrive with or without it.
+// A tap on the indicator skips ahead rather than waiting, for anyone who reads
+// fast. It is an accelerator, not the mechanism: the pages arrive with or without
+// it, and tapping simply cancels the pending timer and moves now.
 $('d-more').addEventListener('click',e=>{ e.stopPropagation();
   if(pageI<pages.length-1) showPage(pageI+1); });
 

@@ -52,7 +52,7 @@ H2:The four things to check before the doors open
 * The admin panel says Model proven, in green.
 * The dataset profile matches your city, and datasets loaded is not zero.
 * A test visit produces a QR code that opens on your phone.
-* The admin panel says Connection: BOOTH.
+* The admin panel names the connection you created in step 0, and nothing else.
 H2:If something breaks
 * The stall shows the wrong city's datasets. You skipped load_context.py, or Apply was not pressed.
 * Replies are slow, around twenty seconds each. The model the booth is configured for has stopped working and it has fallen back to the slow path. The admin panel will say so.

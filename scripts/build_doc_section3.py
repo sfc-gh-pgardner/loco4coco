@@ -49,11 +49,14 @@ w('A pick is judged on whether it is relevant to the event\u2019s city, not on w
   'availability in the booth account is not a criterion, and listings are deliberately '
   'not dropped for failing it.')
 w()
-w('Paris manufacturing carries four picks rather than six. The on-theme data does not '
-  'exist in that region: Overture Maps \u2013 Transportation and FactSet Supply Chain '
-  'Relationships are not offered in AWS_EU_WEST_3, and Industry Classification Systems '
-  'is absent from that catalogue. Four honest picks beat six padded with hospital '
-  'locations.')
+w('Every stall carries six picks, in all three cities. Paris manufacturing was '
+  'once thought to be a regional gap, on the grounds that the data did not exist '
+  'in that region. Two of the three listings behind that claim really are absent '
+  'from AWS_EU_WEST_3 - Overture Maps \u2013 Transportation and FactSet Supply '
+  'Chain Relationships. The third, Industry Classification Systems, is available '
+  'there and is now a Paris pick. A re-run of the region-filtered search found '
+  'six on-theme Paris listings, so the shortfall was a thin search rather than a '
+  'thin catalogue.')
 w()
 
 for prof, city in CITY:

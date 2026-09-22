@@ -644,7 +644,8 @@ def run_turn(cfg, prompt, kind, loc=None, job_id=None, use_mcp=False,
     elif coco.get("warm_agent", True):
         agent = agent_pool.get_agent(
             connection=coco_connection(), model=coco.get("model"),
-            workdir=HERE, log=lambda m: print("[loco4coco] " + m))
+            workdir=HERE, log=lambda m: print("[loco4coco] " + m),
+            binary=coco.get("binary"))
         if agent.alive() or agent.start():
             ok, reply, meta = agent.ask(prompt, timeout=remaining())
             # log_cost lives inside run_exec and run_complete, so the warm path
@@ -3389,7 +3390,8 @@ def main():
             if c.get("warm_agent", True):
                 agent = agent_pool.get_agent(
                     connection=coco_connection(), model=c.get("model"),
-                    workdir=HERE, log=lambda m: print("[loco4coco] " + m))
+                    workdir=HERE, log=lambda m: print("[loco4coco] " + m),
+                    binary=c.get("binary"))
                 ok, note = agent.warm()
                 print("  warm-up   : warm agent %s (%s)"
                       % ("ready" if ok else "FAILED", note))

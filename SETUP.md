@@ -112,6 +112,19 @@ more reliable route.
 `cortex` is optional but strongly recommended: it powers the Workshop and the 7th
 marketplace option. Without it both fall back silently and the game still runs.
 
+**Any version will do, and the version is not pinned.** The booth uses three
+things from the CLI — `cortex exec --format json`, `cortex search marketplace` and
+`cortex mcp serve` — and the third is the one that varies between releases. All
+four ways it can fail (binary absent, exits immediately, serves without a
+`cortex_code_agent` tool, or serves and never replies) were tested with stub
+binaries, and each degrades in bounded time to `cortex exec`, so a laptop with an
+older or newer CLI gets a slower booth rather than a stuck one. If the warm agent
+is unavailable the startup log says so in plain words. Verified end to end on
+v1.1.91.
+
+If the CLI is installed somewhere that is not on `PATH`, set `coco.binary` in
+`game/config.json` to the absolute path — all three call sites read that setting.
+
 ## Step 2: get your event account, then create a connection
 
 **Register at <https://go.dataops.live/emea-swt/register>.** You will be assigned a

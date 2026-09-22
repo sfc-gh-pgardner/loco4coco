@@ -24,11 +24,12 @@ Most people would rather hand this to Cortex Code than type it. Paste this into 
 Set up the Loco4CoCo booth from https://github.com/sfc-gh-pgardner/loco4coco. Clone it into my Cortex Code plugins directory, run the bootstrap against my event connection, load the datasets for my city, and tell me the admin URL when you are done.
 It will ask permission before running commands. Approve them.
 H2:Or the five commands
-pip install snowflake-connector-python python-docx qrcode pyyaml
+pip3 install -r requirements.txt
 git clone https://github.com/sfc-gh-pgardner/loco4coco.git ~/.snowflake/cortex/plugins/loco4coco
 cd ~/.snowflake/cortex/plugins/loco4coco
 python3 deploy/bootstrap.py -c MYBOOTH
 python3 game/server.py
+Clone first, then install from requirements.txt inside the clone. The QR code needs segno specifically - not qrcode, which is a different library - and without it the handover degrades to a typed link.
 Register for your event account at https://go.dataops.live/emea-swt/register first, then create a connection with snow connection add and call it MYBOOTH.
 H2:Bootstrap handles the awkward parts for you
 * It converts your connection to key-pair auth, which is what stops macOS asking for your keychain password during a visit.
@@ -56,7 +57,8 @@ H2:The four things to check before the doors open
 * The admin panel names the connection you created in step 0, and nothing else.
 H2:If something breaks
 * The stall shows the wrong city's datasets. You skipped load_context.py, or Apply was not pressed.
-* Replies are slow, around twenty seconds each. The model the booth is configured for has stopped working and it has fallen back to the slow path. The admin panel will say so.
+* Replies are slow, around twenty seconds each. Either the model the booth is configured for has stopped working, or the warm agent could not start on this laptop's version of Cortex Code. Both fall back automatically and the admin panel and startup log will say which. The booth still works either way.
+* Any version of Cortex Code is fine. The booth checks at startup whether this one can hold a warm agent open, says so in plain words, and uses the slower path if it cannot. There is nothing to install or pin.
 * macOS keeps asking for a password. Run check_auth_safety.py and fix what it names.
 * The server disappeared. It no longer stops itself on idle, so this means the process died or the laptop slept. Start it again.
 H2:Restarting

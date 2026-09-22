@@ -46,10 +46,40 @@ laptop that had to be true rather than hoped for.
 Ambient MCP servers are not exposed: this laptop has eleven configured and the
 agent reported none of them. It does hold `bash`, `edit`, `write`, `sql_execute`
 and `web_fetch`, which is why `allowed_tools` defaults to a narrow list here.
+
+IT MUST SURVIVE A CORTEX VERSION THAT CANNOT SERVE IT
+-----------------------------------------------------
+The booth runs on a borrowed laptop with whatever `cortex` is installed on it,
+and `cortex mcp serve` is not a stable contract. Four failure modes were tested
+with stub binaries on PATH, and all four now degrade in BOUNDED time so that
+`run_turn`'s next layer (`cortex exec`) answers the visitor:
+
+    no `cortex` on PATH at all          start() -> False        0.0s
+    starts then exits immediately       start() -> False        0.0s
+    serves, but no cortex_code_agent    detected at startup     0.1s/turn
+    serves, initialises, never replies  TimeoutError            bounded
+
+The third and fourth were the dangerous ones. A version that exposes no
+`cortex_code_agent` is now detected ONCE by `_check_capability()` at startup and
+latched in `self.unsupported`, so `ask()` declines instantly rather than spending
+a slice of every visitor's budget rediscovering it.
+
+The fourth was a real defect, not a hypothetical: `_read_until()` computed a
+deadline but then blocked in `self._p.stdout.readline()`, which has no timeout, so
+the deadline was only ever checked BETWEEN lines. A CLI that started and then went
+quiet hung forever - and it hung *underneath* the whole fallback chain, so there
+was no exec, no COMPLETE and no precomputed answer, just a visitor watching an
+empty bubble. stdout is now drained by a daemon thread into a queue, which is what
+makes the deadline real. Do not "simplify" that back to a direct readline().
+
+`cortex resume [session_id]` appeared at top level in v1.1.91, but `cortex exec`
+still has no `--resume`/`--session`, so everything above still holds. Verified
+against v1.1.91: start 1.9s, then calls at 5.1s / 3.9s / 3.9s.
 """
 
 import json
 import os
+import queue
 import subprocess
 import threading
 import time
@@ -59,6 +89,8 @@ import uuid
 # bearing, not defensive.
 _START_TIMEOUT = 40
 _DEFAULT_TIMEOUT = 75
+_LIST_TIMEOUT = 10
+_AGENT_TOOL = "cortex_code_agent"
 
 # The agent has bash, edit, write and sql_execute available. A booth kiosk taking
 # free text from strangers should not, so the default is nothing at all: every
@@ -71,26 +103,34 @@ class CocoAgent:
     """One warm `cortex mcp serve` process, serialised by a mutex."""
 
     def __init__(self, connection=None, model=None, workdir=None,
-                 allowed_tools=None, log=None):
+                 allowed_tools=None, log=None, binary=None):
         self.connection = connection
         self.model = model
         self.workdir = workdir or os.getcwd()
+        # `cortex` may not be on PATH on a borrowed laptop, and server.py's exec
+        # and marketplace paths both honour config `coco.binary`. This one used
+        # to hardcode "cortex", so an operator who set an absolute path got a
+        # working exec and a warm agent that silently never started.
+        self.binary = binary or "cortex"
         self.allowed_tools = (SAFE_TOOLS if allowed_tools is None
                               else list(allowed_tools))
         self.log = log or (lambda *a, **k: None)
 
         self._p = None
+        self._q = None                       # lines from the reader thread
+        self._reader = None
         self._call_lock = threading.Lock()   # one in-flight tools/call
         self._io_lock = threading.Lock()     # guards process creation/teardown
         self._next_id = 1
         self._calls = 0
         self._failures = 0
         self.started_at = 0
+        self.unsupported = False             # CLI answered but cannot serve us
 
     # ------------------------------------------------------------- lifecycle
 
     def _spawn(self):
-        cmd = ["cortex", "mcp", "serve"]
+        cmd = [self.binary, "mcp", "serve"]
         self.log("pool: starting %s" % " ".join(cmd))
         p = subprocess.Popen(
             cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -98,6 +138,15 @@ class CocoAgent:
             cwd=self.workdir)
         self._p = p
         self._next_id = 1
+        # Drain stdout on a thread so _read_until's deadline can actually fire.
+        # readline() on the pipe blocks with no timeout, so a CLI that starts
+        # and then goes quiet - a version that does not speak this protocol -
+        # used to hang the turn forever, BELOW the fallback chain: no exec, no
+        # COMPLETE, no precomputed answer, just a visitor watching nothing.
+        self._q = queue.Queue()
+        self._reader = threading.Thread(target=self._drain, args=(p, self._q),
+                                        daemon=True)
+        self._reader.start()
         # Handshake. Without notifications/initialized the server accepts the
         # connection but never answers a tools/call.
         self._send({"jsonrpc": "2.0", "id": self._take_id(),
@@ -108,8 +157,44 @@ class CocoAgent:
                                               "version": "1"}}})
         self._read_until(1, timeout=_START_TIMEOUT)
         self._send({"jsonrpc": "2.0", "method": "notifications/initialized"})
+        # Prove the CLI can actually serve us BEFORE a visitor is waiting. Some
+        # versions start `mcp serve` happily but expose no cortex_code_agent, and
+        # discovering that per-turn spends a visitor's budget on a dead layer.
+        self._check_capability()
         self.started_at = time.time()
-        self.log("pool: ready")
+        self.log("pool: ready" if not self.unsupported
+                 else "pool: process up but NOT usable - falling through to exec")
+
+    @staticmethod
+    def _drain(p, q):
+        try:
+            for line in p.stdout:
+                q.put(line)
+        except Exception:
+            pass
+        finally:
+            q.put(None)          # sentinel: stdout closed
+
+    def _check_capability(self):
+        """Confirm the tool this class depends on exists. Never fatal."""
+        try:
+            cid = self._take_id()
+            self._send({"jsonrpc": "2.0", "id": cid, "method": "tools/list",
+                        "params": {}})
+            msg = self._read_until(cid, timeout=_LIST_TIMEOUT)
+            names = [t.get("name") for t in
+                     ((msg.get("result") or {}).get("tools") or [])]
+            if _AGENT_TOOL not in names:
+                self.unsupported = True
+                self.log("pool: this cortex exposes no %s (saw: %s) - the warm "
+                         "agent is UNAVAILABLE on this version, every turn will "
+                         "use exec instead"
+                         % (_AGENT_TOOL, ", ".join(n for n in names if n) or "none"))
+        except Exception as e:
+            # A CLI that will not list tools may still answer a call; do not
+            # condemn it on this evidence, just say so.
+            self.log("pool: could not verify %s (%s: %s) - continuing"
+                     % (_AGENT_TOOL, type(e).__name__, e))
 
     def start(self):
         with self._io_lock:
@@ -128,6 +213,9 @@ class CocoAgent:
 
     def _kill_locked(self):
         p, self._p = self._p, None
+        # Drop the queue with the process: a stale sentinel or a half-read reply
+        # left over from a dead process would desynchronise the next one's ids.
+        self._q, self._reader = None, None
         if not p:
             return
         for fn in (p.kill, p.wait):
@@ -163,11 +251,17 @@ class CocoAgent:
         that is precisely the failure mode this class is shaped to avoid.
         """
         deadline = time.time() + timeout
-        while time.time() < deadline:
+        while True:
+            left = deadline - time.time()
+            if left <= 0:
+                raise TimeoutError("no reply within %ss" % timeout)
             if not self.alive():
                 raise RuntimeError("agent process exited")
-            line = self._p.stdout.readline()
-            if not line:
+            try:
+                line = self._q.get(timeout=min(left, 1.0))
+            except queue.Empty:
+                continue          # re-check the deadline and liveness
+            if line is None:
                 raise RuntimeError("agent closed stdout")
             line = line.strip()
             if not line.startswith("{"):
@@ -183,7 +277,6 @@ class CocoAgent:
                          % (msg["id"], want_id))
                 continue
             return msg
-        raise TimeoutError("no reply within %ss" % timeout)
 
     # ----------------------------------------------------------------- calls
 
@@ -197,6 +290,15 @@ class CocoAgent:
         t0 = time.time()
         timeout = timeout or _DEFAULT_TIMEOUT
         meta = {"transport": "warm", "id": str(uuid.uuid4())[:8]}
+
+        # A CLI that starts `mcp serve` but exposes no cortex_code_agent cannot
+        # ever answer, so decline immediately rather than spending a slice of the
+        # visitor's budget proving it again on every turn. The caller reads this
+        # as an ordinary failure and drops to exec.
+        if self.unsupported:
+            meta.update({"waited": 0.0,
+                         "error": "warm agent unsupported on this cortex version"})
+            return False, "", meta
 
         # Waiting for the lock is part of the visitor's wall clock, so it is
         # measured separately from the call itself.
@@ -301,10 +403,11 @@ _agent = None
 _agent_lock = threading.Lock()
 
 
-def get_agent(connection=None, model=None, workdir=None, log=None):
+def get_agent(connection=None, model=None, workdir=None, log=None,
+              binary=None):
     global _agent
     with _agent_lock:
         if _agent is None:
             _agent = CocoAgent(connection=connection, model=model,
-                               workdir=workdir, log=log)
+                               workdir=workdir, log=log, binary=binary)
         return _agent

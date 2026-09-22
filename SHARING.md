@@ -147,7 +147,8 @@ elsewhere, and `REGIONS` in the table records what we knew in London.
 | Symptom | Cause | What to do |
 |---|---|---|
 | First visitor waits ~20s | Warm agent did not start | Check console for `warm agent FAILED`; it falls through to `cortex exec`, so the booth still works |
-| Every turn slow, not just the first | Running on layer 2 (`cortex exec`) | `coco.warm_agent` in config, or `cortex mcp serve` unavailable |
+| Every turn slow, not just the first | Running on layer 2 (`cortex exec`) | Either `coco.warm_agent` is false in config, or this laptop's `cortex` cannot hold a warm agent open. The startup log names which. Not worth fixing at the stand — it is slower, not broken |
+| `cortex` is installed but the warm agent never starts | The CLI is not on `PATH` | Set `coco.binary` in `game/config.json` to the absolute path. All three call sites — exec, marketplace search and the warm agent — read that one setting |
 | Blueprint names no features | Closed list empty — all three context layers failed | `python3 deploy/verify_context.py`; layer 3 is in the repo, so this means a broken checkout |
 | A visitor's document mentions someone else's company | **Stop the booth.** | This should be impossible: the pool serialises calls precisely to prevent it. Capture `game/cost.jsonl` and the console before restarting |
 | Warehouse credits climbing while idle | Not the agent | An idle warm process holds a session, not a warehouse. Look at `LOCO4COCO_RM` and `TURNS` |

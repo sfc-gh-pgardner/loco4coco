@@ -60,16 +60,35 @@
      bubble currently shows - the slack sits outside the border as column gap
      rather than inside it as dead space, so the board is sized once and never
      re-fitted mid-turn.
-     INTERIM: past four lines the overflow scrolls. That is a stopgap, not the
-     design - the intent is to paginate into a further box the visitor advances
-     through once they have read this one. Until that lands, scrolling is what
-     keeps a long reply readable rather than truncated; do NOT "tidy" this to
+     INTERIM NO LONGER: past four lines the reply is PAGINATED (splitPages() +
+     the MORE control), so the visitor advances through a box whose height never
+     changes. max-height and overflow-y:auto remain only as a safety net for a
+     page whose measured wrap overruns by a hair; do NOT "tidy" this to
      overflow:hidden, which would silently cut text. MEASURED: at the 1056px
-     rail the box wraps at 99 chars/line, so four lines is ~396 chars, and 14 of
-     62 real replies exceed that. */
+     rail the box wraps at ~99 chars/line, so four lines is ~396 chars, and 14
+     of 62 real replies exceed that - hence pages, not scrolling. */
   #bubble .msg { margin-top:4px; font-size:17px; line-height:1.55;
     white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
     max-height:calc(1.55em * 4); overflow-y:auto; }
+  /* While a reply HAS more than one page, the message box is pinned to the
+     four-line ceiling so every page of that reply is the same height. Without
+     this the final page - usually a short one - shrank the bubble and slid the
+     board up mid-turn, which is the reflow this layout exists to prevent. A
+     single-page reply still hugs its text, so short replies keep no dead space. */
+  #bubble.paged .msg { min-height:calc(1.55em * 4); }
+  /* MORE sits INSIDE the bubble and is only shown when a reply has further
+     pages, so it costs nothing on a short reply. chromeBudget() reserves the
+     four-line ceiling, which is measured with this control present. */
+  #d-more { display:none; margin-top:6px; min-height:1.3em; font-size:11px;
+    letter-spacing:.12em; color:var(--warm); cursor:pointer; user-select:none; }
+  #d-more.on { display:block; }
+  /* On the LAST page of a paged reply the control has nothing left to offer, but
+     removing it from the flow would take its height with it and slide the board
+     up by that much. So while paged it always occupies its slot and merely goes
+     invisible. */
+  #bubble.paged #d-more { display:block; visibility:hidden; pointer-events:none; }
+  #bubble.paged #d-more.on { visibility:visible; pointer-events:auto; }
+  #d-more:hover { color:var(--edge); }
   #hist { display:flex; gap:5px; align-items:center; }
   #hist button { background:#35424C; color:var(--dim); border:1px solid var(--line);
     border-radius:4px; font:inherit; font-size:11px; padding:1px 7px; cursor:pointer; }
@@ -459,6 +478,7 @@
         <button id="h-next" title="Next">&#9654;</button>
       </span></div>
     <div class="msg" id="d-msg"></div>
+    <div id="d-more"></div>
     <div id="yousaid"></div>
     <div id="histback"></div>
   </div>
@@ -679,6 +699,8 @@ const esc = s => String(s==null?'':s);
 
 let CFG=null, ST={}, OPTS={}, T=16, S=3, COLS=22, ROWS=15, map=[], ctx=null, tick=0;
 let nearId=null, panelOpen=false, panelLoc=null, visited=new Set();
+// One-shot: the board is re-fitted the first time the chrome has real height.
+let chromeSettled=false;
 let histIdx=null;            // null = live; otherwise an index into the history
 // CoCo's opening monologue over the house scene (line1, line2 and the summary
 // "your data stays yours" beats) is not a server turn, so it is kept here and
@@ -931,6 +953,19 @@ function drawSnowfall(g){
 }
 
 function render(){
+  // fitCanvas() first runs in init(), BEFORE the hud/tray/stagebar have any
+  // content, so chromeBudget() is understated at that moment and the board is
+  // sized too tall - MEASURED at 1440x900: budget 280 at init against 341 once
+  // the chrome exists, giving a 620px board where 558px fits. Idle that is
+  // invisible (the bubble sits below its four-line ceiling, so the slack
+  // absorbs it), but any reply that reaches four lines pushed the board's
+  // bottom edge 57px off-screen at 1280x800, 1440x900 and 1512x982 alike.
+  // So re-fit ONCE, as soon as the chrome is real. This is not a mid-turn
+  // re-fit: it happens before the visitor has a reply to read, and never again.
+  if(!chromeSettled && $('hud') && $('hud').offsetHeight>0
+     && $('tray') && $('tray').offsetHeight>0){
+    chromeSettled=true; fitCanvas();
+  }
   const g=ctx;
   g.fillStyle=CFG.theme.sky; g.fillRect(0,0,COLS*T*S,ROWS*T*S);
   drawGround(g);
@@ -3457,7 +3492,7 @@ function paintBubble(s){
   if(histIdx!==null && H[histIdx]){
     msg=H[histIdx].reply; said=H[histIdx].text;
   } else if(s.thinking){
-    msg=typeTarget || 'Let me think about that...';
+    msg=msgSource || 'Let me think about that...';
   } else if(s.reply){
     msg=s.reply; const t=turns[turns.length-1]; said=t?t.text:'';
   } else {
@@ -3550,19 +3585,101 @@ $('a-go').addEventListener('click',async()=>{
 });
 $('a-text').addEventListener('keydown',e=>{ if(e.key==='Enter') $('a-go').click(); });
 
-let typeTarget='',typeI=0;
+// A reply longer than the bubble's four-line ceiling is PAGINATED, not scrolled
+// and not truncated: the visitor reads four lines, presses MORE, and the next
+// four arrive in the same box. The box therefore never changes height, which is
+// the invariant chromeBudget() depends on (it reserves the four-line worst case
+// so the board is sized once and never re-fitted mid-turn).
+//
+// msgSource is the WHOLE reply; typeTarget is only the page being typed. The
+// early return compares against msgSource, because poll() re-sends the same
+// reply every tick and comparing against typeTarget would match page 1 and
+// silently discard the rest.
+let msgSource='',pages=[''],pageI=0,typeTarget='',typeI=0;
+
+// Chars-per-line cannot be assumed: the rail is fluid, so 99 holds only at the
+// full 1056px. Measure the real font against the real box width instead.
+function splitPages(m){
+  const el=$('d-msg');
+  const w=el?el.clientWidth:0;
+  if(!m) return [''];
+  if(!w) return [m];          // not laid out yet - one page, re-split on resize
+  const cs=getComputedStyle(el);
+  const c=document.createElement('canvas').getContext('2d');
+  c.font=`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const fits=s=>c.measureText(s).width<=w;
+  const lines=[];
+  // white-space:pre-wrap, so an explicit newline is a real line break.
+  for(const para of String(m).split('\n')){
+    if(!para){ lines.push(''); continue; }
+    let line='';
+    for(let word of para.split(/(\s+)/)){
+      if(!word) continue;
+      // overflow-wrap:anywhere - a single unbreakable token is split by char.
+      while(!fits(word) && word.length>1){
+        let i=1; while(i<word.length && fits(word.slice(0,i+1))) i++;
+        lines.push((line+word.slice(0,i)).trimEnd()||word.slice(0,i));
+        word=word.slice(i); line='';
+      }
+      if(fits(line+word)) line+=word;
+      else { lines.push(line.trimEnd()); line=word.trimStart(); }
+    }
+    lines.push(line.trimEnd());
+  }
+  const out=[];
+  for(let i=0;i<lines.length;i+=BUBBLE_MAX_LINES)
+    out.push(lines.slice(i,i+BUBBLE_MAX_LINES).join('\n'));
+  return out.length?out:[''];
+}
+
+function renderMore(){
+  const b=$('d-more'); if(!b) return;
+  const many=pages.length>1, last=pageI>=pages.length-1;
+  $('bubble').classList.toggle('paged',many);
+  b.classList.toggle('on',many&&!last);
+  b.textContent = (many&&!last) ? `MORE  ${pageI+1}/${pages.length}  \u25b8` : '';
+}
+
+function showPage(i,instant){
+  pageI=Math.max(0,Math.min(i,pages.length-1));
+  typeTarget=pages[pageI]; typeI=instant?typeTarget.length:0;
+  const el=$('d-msg');
+  if(el){ el.textContent=instant?typeTarget:''; el.scrollTop=0; }
+  renderMore();
+}
+
 // Recalled messages render INSTANTLY. The typewriter belongs to a reply that is
 // arriving now; replaying it while scrolling back through history makes an
 // already-read message feel like it is being generated again.
 function setMessage(m,instant){
-  if(m===typeTarget) return;
-  typeTarget=m; typeI=0;
-  if(instant){ typeI=m.length; const el=$('d-msg'); el.textContent=m; el.scrollTop=0; }
+  m=m||'';
+  if(m===msgSource) return;
+  msgSource=m; pages=splitPages(m);
+  showPage(0,!!instant);
 }
 function stepType(){ if(typeI<typeTarget.length){ typeI+=2;
   const el=$('d-msg'); el.textContent=typeTarget.slice(0,typeI);
-  // Keep the freshly typed tail visible when a reply is long enough to scroll.
-  el.scrollTop=el.scrollHeight; } }
+  // Keep the freshly typed tail visible in the rare case a measured page still
+  // overruns by a hair; the CSS keeps overflow-y:auto as that safety net.
+  el.scrollTop=el.scrollHeight;
+  if(typeI>=typeTarget.length) renderMore(); } }
+
+$('d-more').addEventListener('click',e=>{ e.stopPropagation(); showPage(pageI+1); });
+
+function repaginate(){
+  if(!msgSource) return;
+  // Count the characters already passed, ignoring whitespace so that a changed
+  // wrap point cannot drift the position.
+  const seen=pages.slice(0,pageI).join('').replace(/\s/g,'').length;
+  const done=typeI>=typeTarget.length;
+  pages=splitPages(msgSource);
+  let n=0,target=0;
+  for(let i=0;i<pages.length;i++){
+    if(n>=seen+1){ break; }
+    target=i; n+=pages[i].replace(/\s/g,'').length;
+  }
+  showPage(target,done);
+}
 
 async function poll(){
   try{ const r=await fetch('/api/state',{cache:'no-store'});
@@ -3593,8 +3710,23 @@ function chromeBudget(){
   const lh = msg ? (parseFloat(getComputedStyle(msg).lineHeight) || 26.35) : 26.35;
   // the bubble at its ceiling: everything around the message, plus 4 lines of it
   const b = $('bubble');
-  const bubbleMax = (b ? b.offsetHeight - (msg ? msg.offsetHeight : 0) : 0)
-                    + Math.ceil(lh * BUBBLE_MAX_LINES);
+  // MORE is display:none until a reply actually has a second page, so its height
+  // is not in bubble.offsetHeight when this runs. Reserve it UNCONDITIONALLY for
+  // the same reason the four-line ceiling is reserved: it appears mid-turn, and
+  // a budget that only counted it when visible would leave the board 20px too
+  // tall on every long reply.
+  const more = $('d-more');
+  let moreMax = 0;
+  if(more){ const ms = getComputedStyle(more);
+    moreMax = Math.ceil((parseFloat(ms.fontSize)||11) * 1.3)
+              + (parseFloat(ms.marginTop)||0); }
+  // When MORE is visible its box AND its top margin are already inside the
+  // bubble's height; take both out before adding the reserve back.
+  const moreNow = (more && more.offsetHeight)
+                  ? more.offsetHeight + (parseFloat(getComputedStyle(more).marginTop)||0)
+                  : 0;
+  const bubbleMax = (b ? b.offsetHeight - (msg ? msg.offsetHeight : 0) - moreNow : 0)
+                    + Math.ceil(lh * BUBBLE_MAX_LINES) + moreMax;
   const h = id => { const e = $(id); return e && getComputedStyle(e).display !== 'none'
                                           ? e.offsetHeight : 0; };
   const gap = parseFloat(getComputedStyle($('wrap')).rowGap) || 7;
@@ -3621,7 +3753,10 @@ function fitCanvas(){
   sceneW=sc.width; sceneH=sc.height;
   sceneCtx=sc.getContext('2d'); sceneCtx.imageSmoothingEnabled=false;
   fitCanvas();
-  addEventListener('resize',()=>{ fitCanvas(); });
+  // A resize changes the box width, so the wrap points move and the pages must
+  // be recut. Re-cutting from scratch would throw the visitor back to page 1,
+  // so land on whichever new page holds the text they were already reading.
+  addEventListener('resize',()=>{ fitCanvas(); repaginate(); });
   document.documentElement.style.setProperty('--panel',CFG.theme.panel);
   document.documentElement.style.setProperty('--edge',CFG.theme.panel_edge);
   $('b-title').textContent=CFG.event.title;

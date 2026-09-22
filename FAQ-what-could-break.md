@@ -108,6 +108,49 @@ call, not availability.
 
 ## The things that look fine and are not
 
+### The warm agent on a laptop with a different Cortex Code version
+
+**Fixed 2026-09-22.** The booth runs on whatever `cortex` is installed on the
+laptop it is handed, and `cortex mcp serve` is not a stable contract between
+versions. The fallback chain was documented as four layers deep, but one failure
+mode went *underneath* it.
+
+`_read_until()` in `agent_pool.py` computed a deadline and then blocked in
+`self._p.stdout.readline()`, which has **no timeout** — so the deadline was only
+ever checked *between* lines. A `cortex` that started `mcp serve` and then went
+quiet hung forever: no `exec`, no COMPLETE, no precomputed answer, just a visitor
+watching an empty bubble with a queue behind them. `start()` used the same
+function, so on such a version the booth hung before a fallback even existed.
+
+stdout is now drained by a daemon thread into a queue, which is what makes the
+deadline real. **Do not simplify that back to a direct `readline()`.**
+
+All four failure modes were then tested with stub binaries on PATH, and each now
+degrades in bounded time to `cortex exec`:
+
+| What the CLI does | Result | Cost |
+|---|---|---|
+| no `cortex` on PATH | `start()` → False | 0.0s |
+| starts, exits immediately | `start()` → False | 0.0s |
+| serves, no `cortex_code_agent` | detected at startup, latched | 0.1s/turn |
+| serves, initialises, never replies | `TimeoutError` | bounded |
+
+The third is the likeliest real-world case, and it used to be rediscovered on
+every single turn. `_check_capability()` now checks `tools/list` once at startup
+and logs plainly that **the warm agent is unavailable on this version and every
+turn will use exec** — a visible indicator rather than silent degradation. A CLI
+that will not answer `tools/list` is *not* condemned on that evidence; it is
+logged and allowed to try, because slow is not the same as broken.
+
+Also fixed: `agent_pool.py` hardcoded `"cortex"` while the exec and marketplace
+paths both honour `coco.binary`. On a laptop where the CLI is not on PATH, setting
+an absolute path in config gave a working `exec` beside a warm agent that silently
+never started. All three now read the same setting.
+
+Verified on v1.1.91: warm start 1.9s, calls at 5.1s/3.9s/3.9s; forcing the warm
+layer unavailable falls through to `exec` in 22.0s with `transport='exec'`; full
+`smoke_test.py` passes at 32.0s of the 300s budget.
+
 ### Curated picks not reaching visitors
 **MEASURED.** The home-bucket score treated a bucket's primaries and its reserves
 identically, so one theme match was enough to push a curated pick out of its own
@@ -205,12 +248,55 @@ magic `+58`. The slack sits outside the border as column gap, so the board is
 sized once and never moves. Verified: budget constant at 320px across 1-, 3- and
 6-line replies while the bubble itself ranges 103→182px.
 
-**Interim, and the one thing left to build:** past four lines the overflow
-*scrolls*. The intended behaviour is to paginate into a further box the visitor
-advances through once they have read the first. Until that lands, do **not**
-"tidy" the CSS to `overflow:hidden` — that would silently truncate about a
-quarter of replies (measured: 99 chars/line at the 1056px rail, so four lines is
-~396 chars, and 14 of 62 real replies exceed it).
+**The board's bottom edge was clipped at every laptop size — fixed 2026-09-22.**
+This was the outstanding "check it at real booth width" item, and the answer was
+yes, it was clipped. The cause is not the bubble: `fitCanvas()` first runs in
+`init()`, **before the hud, tray and stagebar have any content**, so
+`chromeBudget()` was understated and the board was sized too tall. MEASURED at
+1440x900: budget **280 at init against 341** once the chrome exists, giving a
+**620px** board where **558px** fits. Idle that is invisible, because the bubble
+sits below its four-line ceiling and the slack absorbs it — which is exactly why
+it survived every previous check. But any reply reaching four lines pushed the
+bottom edge **57px off-screen at 1280x800, 1440x900 and 1512x982 alike**.
+
+`render()` now re-fits **once**, as soon as the hud and tray have real height.
+That is not a mid-turn re-fit: it happens before the visitor has a reply to read
+and never again. After the fix, a four-line reply leaves the bottom edge at
+896/900, 978/982 and 796/800.
+
+Note for anyone verifying this: a naive "clipped" check comparing `#wrap` against
+`innerHeight` reports **false clean**, because `html` and `body` are
+`overflow:hidden` — the document never scrolls, so the overflow is silently
+cropped rather than measurable. Compare `$('cv').getBoundingClientRect().bottom`
+against `innerHeight` instead.
+
+**Long replies are now paginated, not scrolled (2026-09-22).** Past the four-line
+ceiling the reply is cut into pages and the visitor presses **MORE 1/2 ▸** to
+advance; the box never changes height, so paging through one reply cannot slide
+the board. Three things make that hold, and each was measured rather than assumed:
+
+- `splitPages()` measures the **real font against the real box width** with canvas
+  `measureText`. The old "99 chars/line" figure holds only at the full 1056px rail
+  — the panel width varies, and at 550px the same reply needs six pages, not three.
+- While a reply has more than one page, `#bubble.paged .msg` pins the message to
+  the four-line height and the MORE control keeps its slot (invisible on the last
+  page). Without both, the final — usually short — page shrank the bubble and slid
+  the board up: measured 159px, 159px, **146px** across three pages before the fix,
+  constant **160px** after.
+- `chromeBudget()` reserves the MORE control unconditionally, because it appears
+  mid-turn and a budget that counted it only when visible left the board ~20px too
+  tall on every long reply.
+
+Verified in headless Chromium at 420/550/760/1100/1400px: no page exceeds four
+lines, nothing is clipped, bubble height is constant across all pages, and **every
+character survives** — including a 500-character unbreakable token, and all 75
+visitor-facing config strings. A window resize mid-read re-cuts the pages and
+resumes on the page holding the text being read (measured: never skips ahead).
+
+`max-height`/`overflow-y:auto` remain only as a safety net for a page whose
+measured wrap overruns by a hair. Still do **not** "tidy" the CSS to
+`overflow:hidden` — with pagination in place it should never trigger, but if a
+measurement is ever off it would silently truncate rather than scroll.
 
 ### Half of the workshop brief is invisible
 

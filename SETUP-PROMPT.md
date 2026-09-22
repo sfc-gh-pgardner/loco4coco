@@ -54,8 +54,11 @@ you genuinely cannot determine a value:
 8. Run the gate: python3 deploy/verify_context.py --all
    Report every failure. Do not tell me the booth is ready if this is non-zero.
 
-9. Start the server, confirm http://127.0.0.1:4747/ answers, and confirm the
-   console shows "warm agent ready" rather than a warning.
+9. Start the server and confirm http://127.0.0.1:4747/ answers. The console
+   should show "warm agent ready". If instead it says the warm agent is
+   unavailable on this version of Cortex Code, that is NOT a setup failure:
+   every turn falls back to cortex exec and the booth still works, just more
+   slowly. Report which of the two you saw, and do not try to fix it.
 
 Then tell me, in a short list: which connection and region you used, what you
 created in Snowflake, anything you changed in a file, anything you could not

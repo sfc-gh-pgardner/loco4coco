@@ -44,6 +44,31 @@ ORDER = ["healthcare", "financial", "retail", "public", "manufacturing",
          "energy", "media", "other"]
 
 
+# The only two reasons a PRIMARY is a compromise, spelled out so the page reads
+# without a tooltip. 'off-theme' and 'other country' are the two demoted values
+# that marketplace.json ever carries; 'beyond the six' is not a compromise and
+# is never flagged.
+WEAKFIT = {
+    "off-theme": ("off-theme fill",
+                  "No sector-specific dataset is available for this city, so a "
+                  "real local dataset fills the slot. Fine to show \u2014 just "
+                  "not squarely on the industry theme."),
+    "other country": ("non-local",
+                      "On theme, but not from this event's own country. Shown "
+                      "because nothing closer to home was available."),
+}
+
+
+def weakfit_flag(note):
+    if not note or note == "beyond the six":
+        return ""
+    label, tip = WEAKFIT.get(
+        note, (html.escape(str(note)),
+               "Filled the slot without an on-theme match \u2014 check this one."))
+    return (' <span class="tag weak" title="%s">\u26a0 %s</span>'
+            % (html.escape(tip), label))
+
+
 def importable(r, region):
     reg = r.get("regions") or ""
     in_region = reg == "ALL" or region in reg
@@ -59,9 +84,12 @@ def link(gn, title):
         LISTING, html.escape(gn or ""), html.escape(title or ""))
 
 
-def table(rows, region):
-    out = ['<div class="table-wrap"><table><thead><tr><th>Dataset</th>'
-           '<th>Provider</th><th>Access</th>'
+def table(rows, region, reserve=False):
+    # reserve=True only changes the styling hook; the columns are identical so a
+    # reviewer reads a reserve exactly as they read a primary, just tinted.
+    cls = ' class="reserve"' if reserve else ""
+    out = ['<div class="table-wrap"><table%s><thead><tr><th>Dataset</th>' % cls
+           + '<th>Provider</th><th>Access</th>'
            '<th class="c" title="Available in this event\'s region">Local</th>'
            '<th class="verdict">SE verdict</th></tr></thead><tbody>']
     for r in rows:
@@ -69,10 +97,7 @@ def table(rows, region):
         # because that is precisely the judgement call a reviewer should spend time
         # on: where a city has no sector-specific data, the curator fills the six
         # with real local datasets that are not squarely on topic.
-        note = r.get("demoted")
-        flag = (' <span class="warn" title="Filled the slot without an on-theme '
-                'match (%s) - check this one">\u26a0 weak fit</span>'
-                % html.escape(str(note))) if note and note != "beyond the six" else ""
+        flag = weakfit_flag(r.get("demoted"))
         out.append("<tr><td>%s%s</td><td>%s</td><td>%s</td>%s<td class=\"verdict\"></td></tr>" % (
             link(r.get("global_name"), r.get("title")), flag,
             html.escape(r.get("provider") or ""),
@@ -146,8 +171,23 @@ def main():
             if prim:
                 body.append(table(prim, region))
             if res:
+                # KEEP THIS MARKER EXACT: check_doc_html_sync.py splits an
+                # industry's primary rows from its reserve rows on the literal
+                # string '<p class="sub">Reserves:'. Everything before it is
+                # counted as primary. The visible styling lives in the block
+                # below, which the gate ignores.
                 body.append('<p class="sub">Reserves:</p>')
-                body.append(table(res, region))
+                body.append(
+                    '<div class="reserve-block">'
+                    '<p class="reserve-lead"><strong>Backup picks.</strong> '
+                    'A visitor never sees these on their own. They come off the '
+                    'bench only to complete a set of six when this industry has '
+                    'fewer than six on-theme primaries, or when another '
+                    'industry borrows one to fill its own stall. Same region '
+                    'and access rules as a primary \u2014 they are real, usable '
+                    'datasets, just second choice for this theme.</p>')
+                body.append(table(res, region, reserve=True))
+                body.append('</div>')
         # candidates awaiting promotion
         cprof = cand.get(profile) or {}
         cany = {k: v for k, v in cprof.items() if v}
@@ -204,6 +244,21 @@ TEMPLATE = """<!DOCTYPE html>
     .yes { color: light-dark(#2f8f39,#79BE7E); font-weight: 700; }
     .no  { color: light-dark(#b4231a,#DF6C5A); font-weight: 700; }
     .warn{ color: light-dark(#a86a12,#E5C872); font-weight: 700; }
+    .tag { font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .tag.weak { color: light-dark(#a86a12,#E5C872); }
+    /* Reserves are the same table, wrapped and tinted Snowflake blue so a
+       reviewer can never mistake a bench pick for one of the curated six. */
+    .reserve-block { border-left: 4px solid #29B5E8;
+      background: light-dark(#eef7fd,#12222f); border-radius: 6px;
+      padding: 2px 14px 10px; margin: 2px 0 18px; }
+    .reserve-lead { color: light-dark(#3f5568,#a9c2d6); font-size: 13px;
+      margin: 10px 0; }
+    table.reserve tbody tr { background: light-dark(#f6fbfe,#0e1b26); }
+    .pill { display: inline-block; font-size: 12px; font-weight: 700;
+      padding: 1px 8px; border-radius: 10px; }
+    .pill.primary { background: light-dark(#e3f0e5,#1c2e21);
+      color: light-dark(#2f8f39,#79BE7E); }
+    .pill.reserve { background: light-dark(#e2f1fb,#132a3a); color: #29B5E8; }
     .verdict { background: light-dark(#fffdf5,#23262f); min-width: 130px; }
     code { background: light-dark(#eef2f7,#0f172a); padding: 1px 4px; border-radius: 4px; font-size: 12px; }
   </style>
@@ -221,6 +276,19 @@ TEMPLATE = """<!DOCTYPE html>
     <span class="warn">⚠</span> available but needs a request/trial ·
     <span class="no">✗</span> not offered in this event's region.
     Titles link to the Marketplace listing.
+    <br><br>
+    <strong>How to read a stall.</strong>
+    <span class="pill primary">Primary</span> is an on-theme, local pick — the six
+    a visitor actually sees for that industry.
+    <span class="pill reserve">Reserve</span> is a backup (shown in a blue block
+    under each table): it only comes off the bench to complete a set of six, or
+    when another industry borrows it. A reserve is a real, usable dataset — just
+    second choice for that theme.
+    A primary can still carry a flag when it was a compromise:
+    <span class="tag weak">⚠ off-theme fill</span> means the city had no
+    sector-specific data so a real local dataset fills the slot, and
+    <span class="tag weak">⚠ non-local</span> means the pick is on theme but not
+    from this event's own country. Hover either flag for the specifics.
   </div>
   <div class="tabs">{{TABS}}</div>
   {{PANES}}

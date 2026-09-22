@@ -22,18 +22,31 @@ for ind in inds:
         if len(rows) != 6:
             fails.append(f"{ind} / {label}: {len(rows)} rows, expected 6")
 
-# Every bucket_only listing must still be reachable in its OWN bucket.
-bo = set((cfg['marketplace'].get('bucket_only') or []))
+# bucket_only is now keyed by market profile, so read it the way the server does.
+_profile = (cfg.get('event') or {}).get('market_profile') or 'uk'
+bo = server._bucket_only_for(cfg, _profile)
 reachable = set()
 for ind in inds:
     st = {'visitor': {'industry': ind}, 'held': [], 'session_id': 'x'}
     for r in server.listings_for(cfg, ind, state=st):
         reachable.add(r.get('global_name'))
-for gn in bo:
-    home = [k for k, rows in market.items()
-            if any(r.get('global_name') == gn for r in rows)]
-    if gn not in reachable:
-        fails.append(f"bucket_only {gn} unreachable (home buckets: {home})")
+# The constraint the config actually states is NEGATIVE - a protected listing must
+# never be offered OUTSIDE its own bucket. The old check asserted the opposite, that
+# each one is reachable inside its bucket, which is not something the design
+# promises: a protected listing sitting in reserve legitimately may never surface.
+_home = {}
+for _k, _rows in market.items():
+    for _r in _rows:
+        _home.setdefault(_r.get('global_name'), set()).add(_k)
+for ind in inds:
+    for _held in ([], [(d.get('label') if isinstance(d, dict) else d)
+                       for d in ((cfg['industries'][ind].get('data_sources')) or [])]):
+        st = {'visitor': {'industry': ind}, 'held': _held, 'session_id': 'x'}
+        for r in server.listings_for(cfg, ind, state=st):
+            gn = r.get('global_name')
+            if gn in bo and ind not in _home.get(gn, set()):
+                fails.append(f"bucket_only {gn} leaked into {ind} "
+                             f"(belongs to {sorted(_home.get(gn, set()))})")
 
 # No listing may vanish from the catalogue entirely.
 all_gns = {r.get('global_name') for rows in market.values() for r in rows}
@@ -43,22 +56,20 @@ print('listings reachable :', len(reachable), 'of', len(all_gns))
 if never:
     print('never offered      :', sorted(never))
 
-# bucket_only is a flat list of global names, so it only protects the profile whose
-# listings are in it. Reported rather than failed: it is a curation gap for whoever
-# localises next, not a defect in the code under test.
+# Every profile must have its own protection. A flat list only covered the profile
+# it was written for, and that is how Paris and Berlin came to run with none at all
+# while the config read as though they were covered - so a profile with zero entries
+# is now a FAILURE, not a note.
 import json as _json
 _mk = _json.load(open('skills/loco4coco/references/marketplace.json'))['profiles']
 print()
-print('bucket_only protection by profile (a flat list only covers the profile it '
-      'was written for):')
+print('bucket_only protection by profile:')
 for _prof in sorted(_mk):
-    _in = set()
-    for _ind, _st in _mk[_prof].items():
-        for _t in ('primary', 'reserve'):
-            _in |= {r['global_name'] for r in _st[_t]}
-    _cov = len(bo & _in)
-    print('  %-3s %2d of %2d present%s' % (_prof, _cov, len(bo),
-          '' if _cov else '   <-- nothing is protected from cross-bucket borrowing here'))
+    _n = len(server._bucket_only_for(cfg, _prof))
+    print('  %-3s %2d listings protected' % (_prof, _n))
+    if not _n:
+        fails.append(f"profile {_prof} has no bucket_only protection - "
+                     "sector-specific data can be borrowed into any stall")
 
 print()
 if fails:
@@ -66,4 +77,4 @@ if fails:
     for f in fails:
         print('  -', f)
     raise SystemExit(1)
-print('every industry fills six slots; bucket_only listings stay reachable')
+print('every industry fills six slots; no protected listing leaks across buckets')

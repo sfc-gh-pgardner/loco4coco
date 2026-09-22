@@ -1178,21 +1178,49 @@
       ]
     },
     "_documents_gap_comment": "There is deliberately no \"documents\" theme. The curated set contains no listing that helps a visitor whose problem is unstructured text: PubMed and the social-conversations sample are reference corpora, not document-processing enablers, and tagging them that way surfaced biomedical papers to a council holding policy PDFs. This is a real gap in the curated set, recorded rather than papered over with a mis-tag.",
-    "_bucket_only_comment": "Listings that must never be borrowed into another industry. Cross-bucket borrowing is right for data that travels - weather, boundaries, company registrations - and wrong for sector-specific reference corpora: scoring alone offered PubMed biomedical papers to a council holding policy PDFs, because both matched on \"population\". These are offered in their own bucket only.",
-    "bucket_only": [
-      "GZSTZ67BY9OQW",
-      "GZ2FRZQNY1",
-      "GZT1ZFQ0JE5",
-      "GZSOZ71OJH",
-      "GZSVZ8MX1I",
-      "GZSYZSRWU5",
-      "GZTDZ1PNFO",
-      "GZTYZAPS3FP",
-      "GZT0ZI0XJ6Q",
-      "GZTDZ7DJU9",
-      "GZT0ZGCQ51RQ",
-      "GZT0ZPWB4J7"
-    ]
+    "_bucket_only_comment": "Listings that must never be borrowed into another industry, KEYED BY MARKET PROFILE. Cross-bucket borrowing is right for data that travels - weather, boundaries, addresses, population, company registrations, industry classifications - and wrong for sector-specific reference and market data: scoring alone once offered PubMed biomedical papers to a council holding policy PDFs, because both matched on 'population'. THIS USED TO BE A FLAT LIST and therefore only protected the profile it was written for: 12 of 12 entries were London listings, so Paris and Berlin had NO protection at all and a French health-insurance corpus could be borrowed into a manufacturing stall. It cannot be derived from the data - 37 London listings sit in exactly one industry and only 11 are protected - so it is a curation judgement and each profile needs its own entries. A flat list is still honoured, and is treated as uk.",
+    "bucket_only": {
+      "uk": [
+        "GZSTZ67BY9OQW",
+        "GZ2FRZQNY1",
+        "GZT1ZFQ0JE5",
+        "GZSOZ71OJH",
+        "GZSVZ8MX1I",
+        "GZSYZSRWU5",
+        "GZTDZ1PNFO",
+        "GZTYZAPS3FP",
+        "GZT0ZI0XJ6Q",
+        "GZTDZ7DJU9",
+        "GZT0ZGCQ51RQ",
+        "GZT0ZPWB4J7"
+      ],
+      "fr": [
+        "GZT1ZQXTA0",
+        "GZTWZ4KVS1",
+        "GZTDZ1ELIY",
+        "GZTSZRC7HRG",
+        "GZSVZ9FU7N",
+        "GZTDZ1PNGH",
+        "GZTSZRC7HQ3",
+        "GZSVZ6EW2A"
+      ],
+      "de": [
+        "GZSNZ7F5UH",
+        "GZTDZ1ELJB",
+        "GZTDZ1ELIY",
+        "GZTSZ36AC8J",
+        "GZ1MOZ8VQG9",
+        "GZTWZ4KVS1",
+        "GZTSZRC7HRG",
+        "GZTSZ36AC98",
+        "GZTSZRC7HQ3",
+        "GZ2FSZGU5YB",
+        "GZTSZT83AIS",
+        "GZSVZ6EW2A",
+        "GZSVZ5J5F",
+        "GZSYZGJWCJ"
+      ]
+    }
   },
   "sourcing": {
     "_comment": "Where data can come from when the visitor is NOT yet a Snowflake customer. Ordnance Survey lives here rather than in the Marketplace because it is not listed there in any region (checked 2026-08-17); Open UPRN exists but is not available in AWS_EU_WEST_2.",

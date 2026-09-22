@@ -1429,6 +1429,23 @@ def _held_themes(cfg, state):
     return out
 
 
+def _bucket_only_for(cfg, profile):
+    """Listings that may not be borrowed into another industry, for this profile.
+
+    Keyed by market profile, because the protection is per-listing and a listing
+    only exists in the profiles it was curated into. It was a flat list of London
+    global names once, which meant Paris and Berlin ran with NO protection at all
+    while the config read as though they were covered.
+
+    A flat list is still accepted and treated as uk, so an older config keeps
+    working rather than silently losing London's protection too.
+    """
+    raw = (cfg.get("marketplace") or {}).get("bucket_only") or []
+    if isinstance(raw, dict):
+        return set(raw.get(profile) or [])
+    return set(raw) if profile == "uk" else set()
+
+
 def listings_curated(cfg, industry, state=None):
     """Curated listings, ordered by what this visitor typed, filtered to region.
 
@@ -1462,7 +1479,7 @@ def listings_curated(cfg, industry, state=None):
     # Sector-specific reference data does not travel. Borrowing is for listings
     # that help anyone; a biomedical corpus is not one of them.
     own_gns = {r.get("global_name") for r in own}
-    bucket_only = set((cfg.get("marketplace") or {}).get("bucket_only") or [])
+    bucket_only = _bucket_only_for(cfg, profile)
     seen, scored = set(), []
     for bucket, rows in [(industry, own)] + sorted(market.items()):
         for r in rows:

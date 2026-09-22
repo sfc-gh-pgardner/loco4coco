@@ -500,6 +500,30 @@ w('')
 w('One model call is in flight at a time. A second caller waits, so one '
   'visitor\'s content can never appear in another visitor\'s document.')
 w('')
+# The table above names the LEAD layer for each stop. Beneath it there is a chain,
+# and a reader who only sees the lead would think a stop has one way of answering.
+w('The transport named above is the first thing tried, not the only one. Beneath '
+  'each stop sit %s, and every one of them falls through to the next:'
+  % ('four layers' if (cfg.get('coco') or {}).get('warm_agent', True)
+     else 'three layers'))
+w('')
+if (cfg.get('coco') or {}).get('warm_agent', True):
+    w('1. A warm agent, held open between visitors so the startup cost is paid '
+      'once when the booth opens rather than once per visitor.')
+    _n = 2
+else:
+    _n = 1
+w('%d. A cold one-shot agent process, which pays that startup on every call.'
+  % _n)
+w('%d. A single non-agentic completion in Snowflake.' % (_n + 1))
+w('%d. The archetype\'s own precomputed content, which needs no model at all '
+  'and is present in this repository.' % (_n + 2))
+w('')
+w('So the visitor is served something whichever layers are unavailable. The '
+  'booth checks at startup whether this laptop\'s Cortex Code can hold a warm '
+  'agent open, states the answer in the console, and uses the next layer down '
+  'for every turn if it cannot.')
+w('')
 w('The closed lists in this document reach the model as text inside the '
   'prompt. The model picks from them and reflects them back; it is never asked '
   'to invent a feature, a listing or a fact.')

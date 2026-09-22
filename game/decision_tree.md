@@ -571,6 +571,15 @@ Every turn has a wall-clock ceiling of 60s. Past it, the visitor is served the p
 
 One model call is in flight at a time. A second caller waits, so one visitor's content can never appear in another visitor's document.
 
+The transport named above is the first thing tried, not the only one. Beneath each stop sit four layers, and every one of them falls through to the next:
+
+1. A warm agent, held open between visitors so the startup cost is paid once when the booth opens rather than once per visitor.
+2. A cold one-shot agent process, which pays that startup on every call.
+3. A single non-agentic completion in Snowflake.
+4. The archetype's own precomputed content, which needs no model at all and is present in this repository.
+
+So the visitor is served something whichever layers are unavailable. The booth checks at startup whether this laptop's Cortex Code can hold a warm agent open, states the answer in the console, and uses the next layer down for every turn if it cannot.
+
 The closed lists in this document reach the model as text inside the prompt. The model picks from them and reflects them back; it is never asked to invent a feature, a listing or a fact.
 
 ## 8. Review and delivery

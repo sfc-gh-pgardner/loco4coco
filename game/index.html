@@ -21,15 +21,19 @@
      downwards as CoCo's reply lands. */
   #bubble, #tray, #hud, #stagebar { flex:0 0 auto; }
 
-  /* While a POV location panel is open, the chrome above the board is dead
-     weight: the panel restates CoCo's question and carries its own status, so
-     the bubble and the work tray are duplicating themselves while stealing
-     ~150px from the interior. On a 768-tall laptop that was the difference
-     between a room and a letterbox slot - sizePovCard() floored the scene at
-     190px because the chrome plus the panel's 340px reservation left nothing.
+  /* While a POV location panel is open the WORK TRAY is dead weight - the panel
+     carries its own status - so it still goes, buying the interior ~90px.
+     CoCo's bubble now STAYS. It was dropped with the tray because the two
+     together cost ~150px and sizePovCard() floored the scene at 190px, but
+     hiding it meant CoCo lost her voice at exactly the four stops where the
+     visitor is being asked something, and the chrome reappearing on exit was
+     itself a page-shift. It is safe to keep now that the bubble is a FIXED
+     four lines (see #bubble .msg): sizePovCard() measures the canvas's live
+     top edge, so the interior simply gets a tighter crop rather than being
+     mis-placed, and the panel's own floor is still honoured first.
      Hidden with display:none rather than visibility, so the flex column
      actually gives the height back. Restored the moment the panel closes. */
-  #wrap.povfocus #bubble, #wrap.povfocus #tray { display:none; }
+  #wrap.povfocus #tray { display:none; }
   .rail { width:100%; max-width:1056px; }
 
   /* ---------- CoCo's thought bubble: the ONLY place narrative appears ------- */
@@ -47,11 +51,28 @@
   /* Long CoCo replies were clipped by a rigid box. The message now wraps and,
      only if it is genuinely long, scrolls inside a bounded bubble instead of
      pushing the canvas and tray off-screen. */
-  /* min-height reserves the space a three-line reply needs, so short and long
-     messages occupy the same box and the chrome budget stays constant. */
+  /* The box is FIXED and never grows or shrinks. min-height:68px (~2.6 lines)
+     against max-height:18vh (~5 lines on a 768-tall laptop) meant every reply
+     between three and four lines RESIZED the bubble, and because fitCanvas()
+     reserves the chrome from $('bubble').offsetHeight the board was re-fitted
+     underneath the visitor - the page appeared to slide downwards as CoCo
+     answered.
+     SIX lines, not the four that were eyeballed from a screenshot. MEASURED:
+     at the 1056px rail the box wraps at 99 chars/line, and across 62 real
+     seeded replies the median is 252 chars (3 lines) but the MAXIMUM is 531
+     (6 lines) with 14 of 62 over 400 - so a four-line box would have quietly
+     scrolled away the tail of about a quarter of everything CoCo says. Six
+     lines is the real ceiling, so nothing scrolls and nothing reflows. The
+     cost is dead space under a short reply, which is the unavoidable price of
+     a constant chrome budget; overflow-y:auto stays only as a net for outliers.
+     The map cannot be cropped by this: fitCanvas() solves width from the
+     leftover height at a fixed aspect, so a taller bubble yields a slightly
+     smaller board, never a clipped one - and at 1920x1080 it is unchanged,
+     because the board is already at its 1056px cap.
+     Expressed in em so it tracks font-size/line-height if either is retuned. */
   #bubble .msg { margin-top:4px; font-size:17px; line-height:1.55;
     white-space:pre-wrap; word-break:break-word; overflow-wrap:anywhere;
-    min-height:68px; max-height:18vh; overflow-y:auto; }
+    height:calc(1.55em * 6); overflow-y:auto; }
   #hist { display:flex; gap:5px; align-items:center; }
   #hist button { background:#35424C; color:var(--dim); border:1px solid var(--line);
     border-radius:4px; font:inherit; font-size:11px; padding:1px 7px; cursor:pointer; }
@@ -1980,7 +2001,16 @@ function paintScreenCopy(){
   put('done-cardp',s.card_body);
 }
 
+// A ONE-WAY LATCH on the title card. It is not enough to gate on server state:
+// both guards below (haveVisitor(), firstLoad) read fields off ST, so a single
+// failed or partial /api/state poll mid-visit - visitor object missing,
+// updated_at absent - satisfied them and the title card reappeared OVER a live
+// game. Seen at the postbox on 5/4. Once this browser has started a visit the
+// card must never return, whatever the server says, so it latches on START and
+// on the first sight of a real stage and is only ever cleared by a reload.
+let titleDone=false;
 function openTitle(){
+  if(titleDone) return;
   const t=(CFG.intro)||{};
   $('t-title').textContent=t.title||'Loco for CoCo';
   // Asterisked phrases become a flat highlight, so the privacy promise reads
@@ -1990,6 +2020,7 @@ function openTitle(){
   $('ov-title').classList.add('on');
 }
 $('t-go').addEventListener('click',()=>{
+  titleDone=true;
   $('ov-title').classList.remove('on');
   startOpening();
 });
@@ -2609,8 +2640,10 @@ function openPanel(id){
   // the plain modal.
   const pov=isPov(id);
   if(pov){ openScene(id); $('ov-loc').classList.add('pov');
-           // Drop the bubble and tray BEFORE measuring: sizePovCard() reads
-           // the canvas's live top edge, so it must see the reclaimed space.
+           // Drop the TRAY before measuring: sizePovCard() reads the canvas's
+           // live top edge, so it must see the reclaimed space. The bubble
+           // stays (see the .povfocus rule) and is a fixed height, so it is
+           // part of that measurement rather than a moving target.
            $('wrap').classList.add('povfocus');
            sizePovCard(); }
   else { closeScene(); $('ov-loc').classList.remove('pov');
@@ -3467,8 +3500,12 @@ function onState(s){
     || $('ov-arctic').classList.contains('on') || $('ov-letter').classList.contains('on')
     || $('ov-home').classList.contains('on')
     || openingActive();
+  // Any stage past the attract screen means a visit is under way - latch the
+  // title card shut even if we never saw the START click (operator reload,
+  // resumed session), so a later state blip cannot bring it back.
+  if((s.stage||'') && s.stage!=='attract') titleDone=true;
   $('banner').classList.toggle('on', !haveVisitor() && !opening);
-  if(!haveVisitor() && !opening && firstLoad) openTitle();
+  if(!titleDone && !haveVisitor() && !opening && firstLoad) openTitle();
   sceneThinking = !!s.thinking;
   paintTray(s);
   paintBubble(s);

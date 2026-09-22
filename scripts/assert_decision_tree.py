@@ -32,7 +32,12 @@ def check(ok, msg):
 
 # ---------------------------------------------------------- 1. completeness
 def norm(s):
-    return re.sub(r'\s+', ' ', str(s or '')).strip()
+    # A pipe inside a listing title is escaped as \| so it cannot break the
+    # Markdown table it is printed in. That is presentation, not content, so both
+    # sides are unescaped before comparison - otherwise every listing whose title
+    # contains a pipe reports MISSING while being present and correct.
+    s = str(s or '').replace(r'\|', '|')
+    return re.sub(r'\s+', ' ', s).strip()
 
 
 # Intro, letter, trust, pillars, reactions, question copy: every string present.
@@ -67,17 +72,33 @@ for lid in (cfg.get('unlock_order') or []):
 # Every curated listing title and global name.
 sys.path.insert(0, 'game')
 import server  # noqa: E402
-market = server.load_marketplace()
+# The document makes TWO separate claims and they must be checked separately: the
+# six-per-stall a visitor is offered, and the fallback pool behind them. Counting
+# both as one number was how this check came to demand a slot total the document
+# has never stated.
+_profile = server.market_profile(cfg) if hasattr(server, 'market_profile') else (
+    ((cfg.get('venues') or {}).get((cfg.get('event') or {}).get('venue'))
+     or {}).get('market_profile')
+    or (cfg.get('event') or {}).get('market_profile') or 'uk')
+_mk = json.load(io.open('skills/loco4coco/references/marketplace.json',
+                        encoding='utf-8'))['profiles'][_profile]
 slots = 0
 titles = set()
-for k, rows in market.items():
-    for r in rows:
+reserve_n = 0
+for k, stall in _mk.items():
+    for r in stall.get('primary') or []:
         slots += 1
         titles.add(r['title'])
-        check(norm(r['title']) in nd, f"MISSING listing: {r['title'][:50]!r}")
-        gn = r.get('global_name')
-        if gn:
-            check(gn in doc, f"MISSING global_name: {gn}")
+    reserve_n += len(stall.get('reserve') or [])
+
+# Completeness covers the fallbacks too - an unread fallback is not a fallback.
+for k, stall in _mk.items():
+    for tier in ('primary', 'reserve'):
+        for r in stall.get(tier) or []:
+            check(norm(r['title']) in nd, f"MISSING {tier}: {r['title'][:46]!r}")
+            gn = r.get('global_name')
+            if gn:
+                check(gn in doc, f"MISSING global_name: {gn}")
 
 # Every industry's data sources.
 for k, b in (cfg.get('industries') or {}).items():
@@ -86,9 +107,11 @@ for k, b in (cfg.get('industries') or {}).items():
         check(norm(lab) in nd, f"MISSING data_source {k}: {norm(lab)[:40]!r}")
 
 # The computed counts must match reality, not be typed.
-check(f"{slots} slots" in doc, f"slot count {slots} not stated")
+check(f"{slots} slots" in doc, f"primary slot count {slots} not stated")
 check(f"{len(titles)} distinct listings" in doc,
       f"distinct count {len(titles)} not stated")
+check(f"{reserve_n} further listings" in doc,
+      f"fallback count {reserve_n} not stated")
 
 # Screen furniture is visitor-facing copy too, so the "every scripted line"
 # claim is false without it.

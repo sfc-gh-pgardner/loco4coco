@@ -284,6 +284,94 @@ Pinned first when the live tier is enabled: `GZTDZJKVCM`, `GZTDZJKVCU`, `GZTDZJK
 
 Pinned first when the live tier is enabled: `GZTDZJKVCY`.
 
+### The fallbacks behind each stall
+
+44 further listings sit behind the 48 on offer, as the fallback pool. A visitor is not shown these. They exist so that a stall still fills if a pick is withdrawn or turns out not to be offered in the event region, and so a promotion has somewhere to come from. They are listed here because a fallback that nobody has read is not a fallback.
+
+**Healthcare & Life Sciences**
+
+| Fallback listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| MBI Sociodemographic Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDE` |
+| Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas | Ordnance Survey | Free | `GZ1MOZBX00Q` |
+| Choreograph UK behavioral,demographics & consumption data | Conexance by Choreograph | Free | `GZ1M7ZKTYD` |
+| Parks, Sports Facilities, Allotments - Great Britain: Open Greenspace | Ordnance Survey | Free | `GZ1MOZBX00E` |
+| National Severe Weather Warning Service | Met Office | Free | `GZTDZJKVCU` |
+
+**Financial Services**
+
+| Fallback listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| CEIC World Macro Economic Data | CEIC Data | Free | `GZTSZRC7HRG` |
+| ESG Performance Score Core & Plus | ESG Book | Free | `GZTDZ1ELIY` |
+| Consumer Credit & Debit Card Transaction Data \| European Spend | Consumer Edge | Free | `GZTSZPM12Y` |
+| MBI Purchasing Power Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLU` |
+| Uk Companies Insight Summary | DataEco | Free | `GZ1MOZMB44P` |
+| CEIC Shipping Data | CEIC Data | Free | `GZTSZRC7HRC` |
+
+**Retail & Consumer Goods**
+
+| Fallback listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free | `GZSVZ1K7UU` |
+| MBI Sociodemographic Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDE` |
+| Intelligent Event Data for Department Stores & Retail, London UK - Sample | PredictHQ | Free | `GZSTZIDI09S` |
+| On Demand Journeys | BT Active Intelligence | Free | `GZ2FRZE33RX` |
+| Acxiom EMEA: Geo-Spatial Sample Data UK | Acxiom EMEA | Free | `GZSYZ5S9QC` |
+| Movement Daily Activity Index 2020 (Sample) | Mapbox | Free | `GZT0ZIFQPAI` |
+
+**Public Sector & Government**
+
+| Fallback listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| Road network - Great Britain: Open Roads | Ordnance Survey | Free | `GZ1MOZBX00A` |
+| European Public Tenders Dataset – 800+ Sources, Daily Updates, OCDS Format | GroupBWT | Free | `GZSYZ12SH0I` |
+| MBI Global Area Boundaries | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOX` |
+| Addresses - UK: OS GB Address and OS Islands Address | Ordnance Survey | Free | `GZ1MOZ2HCBPI0` |
+| Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas | Ordnance Survey | Free | `GZ1MOZBX00Q` |
+| Basic Sociodemographics-Bundle for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOH` |
+
+**Manufacturing & Industrial**
+
+| Fallback listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| CEIC Shipping Data | CEIC Data | Free | `GZTSZRC7HRC` |
+| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
+| Uk Companies Insight Summary | DataEco | Free | `GZ1MOZMB44P` |
+| Chemical Price Assessments | ICIS (Independent Commodity Intelligence Services) | Free | `GZSVZ9FU7N` |
+| Company data | OpenCorporates | Free | `GZTDZM1AK5` |
+| UK H3 Travel Matrix | Dekart XYZ | Free | `GZSYZ43W9K12` |
+
+**Energy & Utilities**
+
+| Fallback listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| Corporate Climate Commitment ESG Data \| Net Zero, Carbon Neutrality, and Carbon Positivity | Tracenable | Free | `GZTSZ36AC98` |
+| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
+| MBI Purchasing Power Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLU` |
+| UK Health Facts and Dimensions Sample | Facts and Dimensions Ltd | Free | `GZ2FRZQNY1` |
+
+**Media, Telco & Entertainment**
+
+| Fallback listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| European Broadband Markets 2017 | Expert Intelligence | Free | `GZSVZ6EW2A` |
+| Choreograph UK behavioral,demographics & consumption data | Conexance by Choreograph | Free | `GZ1M7ZKTYD` |
+| Road Insights | BT Active Intelligence | Free | `GZ2FRZE33RT` |
+| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free | `GZSVZ1K7UU` |
+| Ocean – UK Consumer Database (41M Adults) | CACI Ltd | Free | `GZSVZ1K7VV` |
+| Addresses - UK: OS GB Address and OS Islands Address | Ordnance Survey | Free | `GZ1MOZ2HCBPI0` |
+
+**Something else**
+
+| Fallback listing | Provider | Access | Global name |
+| --- | --- | --- | --- |
+| Administrative boundaries - Great Britain: Boundary Line - Open | Ordnance Survey | Free | `GZ1MOZBWYYT` |
+| Addresses - UK: OS GB Address and OS Islands Address | Ordnance Survey | Free | `GZ1MOZ2HCBPI0` |
+| MBI Global Area Boundaries | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOX` |
+| Uk Companies Insight Summary | DataEco | Free | `GZ1MOZMB44P` |
+| MBI Purchasing Power Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLU` |
+
 ### Which industries each listing appears in
 
 | Listing | Industries | Appears in |

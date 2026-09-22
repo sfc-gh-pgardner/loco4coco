@@ -68,7 +68,9 @@ _venue = ((cfg.get('event') or {}).get('venue') or '').strip().lower()
 _profile = (((cfg.get('venues') or {}).get(_venue) or {}).get('market_profile')
             or 'uk')
 market = {}
+reserves = {}
 _cur_ind = None
+_cur_res = None
 _row_re = re.compile(r"^\|\s*\[(?P<title>.+?)\]\((?P<url>[^)]+)\)\s*\|"
                      r"\s*(?P<prov>[^|]+?)\s*\|\s*(?P<acc>[^|]+?)\s*\|"
                      r"\s*`(?P<gname>[^`]+)`\s*\|")
@@ -80,19 +82,30 @@ for line in io.open(MARKET_PATH, encoding='utf-8').read().splitlines():
         # PRIMARY only. Reserves exist as a promotion pool and as filler when a
         # city has fewer than six on-theme picks; they are not what the visitor is
         # offered, so counting them reported 96 slots for a stall that shows 48.
-        _cur_ind = _ind if (_prof == _profile and _kind == 'primary') else None
-        if _cur_ind:
-            market.setdefault(_cur_ind, [])
+        # The visitor-facing six are PRIMARY. Reserves are collected separately
+        # rather than ignored: they are the documented fallback pool, so the tree
+        # has to account for them, but folding them into `market` reported 96
+        # slots for a stall that shows 48.
+        _cur_ind = None
+        _cur_res = None
+        if _prof == _profile:
+            if _kind == 'primary':
+                _cur_ind = _ind
+                market.setdefault(_ind, [])
+            elif _kind == 'reserve':
+                _cur_res = _ind
+                reserves.setdefault(_ind, [])
         continue
-    if not _cur_ind:
+    if not _cur_ind and not _cur_res:
         continue
     rm = _row_re.match(line.strip())
     if rm:
-        market[_cur_ind].append({'title': rm.group('title').strip(),
-                                 'provider': rm.group('prov').strip(),
-                                 'access': rm.group('acc').strip(),
-                                 'global_name': rm.group('gname').strip(),
-                                 'url': rm.group('url').strip()})
+        (market[_cur_ind] if _cur_ind else reserves[_cur_res]).append(
+            {'title': rm.group('title').strip(),
+             'provider': rm.group('prov').strip(),
+             'access': rm.group('acc').strip(),
+             'global_name': rm.group('gname').strip(),
+             'url': rm.group('url').strip()})
 
 O = []
 w = O.append
@@ -347,6 +360,32 @@ for _k in order():
     if pins:
         w('Pinned first when the live tier is enabled: %s.'
           % ', '.join('`%s`' % q(p) for p in pins))
+        w('')
+
+_res_rows = [r for _k in order() for r in (reserves.get(_k) or [])]
+_res_titles = {r['title'] for r in _res_rows}
+if _res_rows:
+    w('### The fallbacks behind each stall')
+    w('')
+    w('%d further listings sit behind the %d on offer, as the fallback pool. A '
+      'visitor is not shown these. They exist so that a stall still fills if a '
+      'pick is withdrawn or turns out not to be offered in the event region, and '
+      'so a promotion has somewhere to come from. They are listed here because a '
+      'fallback that nobody has read is not a fallback.'
+      % (len(_res_rows), _slots))
+    w('')
+    for _k in order():
+        rows = reserves.get(_k) or []
+        if not rows:
+            continue
+        w('**%s**' % ind_label(_k))
+        w('')
+        w('| Fallback listing | Provider | Access | Global name |')
+        w('| --- | --- | --- | --- |')
+        for r in rows:
+            w('| %s | %s | %s | `%s` |'
+              % (q(r['title']), q(r['provider']), q(r['access']),
+                 q(r['global_name'])))
         w('')
 
 w('### Which industries each listing appears in')

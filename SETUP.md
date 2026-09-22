@@ -167,7 +167,10 @@ python3 scripts/setup_keypair.py --connection MYBOOTH
 Use the same connection name you created in Step 0. It generates an RSA key under
 `~/.snowflake/keys/` (0600), registers the public half on your event user, and rewrites that
 connection to use `SNOWFLAKE_JWT` — **in place, keeping the name**. `connections.toml` is
-backed up first, so it is reversible.
+backed up first, so it is reversible. `deploy/bootstrap.py` also runs this same
+step automatically (it is on by default, and skips itself if you have already
+converted), so key-pair auth is part of setup either way — running it here first
+just means even the deploy is prompt-free.
 
 Converting in place rather than creating a second connection is deliberate. Cortex Code's
 connection picker holds its own selection, and a new connection name would leave your

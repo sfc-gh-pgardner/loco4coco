@@ -43,18 +43,29 @@ you genuinely cannot determine a value:
 5. Show me `python3 deploy/bootstrap.py -c <conn> --plan-only` output and WAIT
    for my approval before deploying for real.
 
-6. Update game/config.json: set event.venue to my event (london, paris or
-   berlin) and snowflake.connection_name to my connection. Do not set
-   event.marketplace_region, event.city or event.language by hand — the venue
-   resolves all three. There is no operator or stand field to ask me for;
+6. After I approve, run the real deploy: `python3 deploy/bootstrap.py -c <conn>`.
+   As well as creating the Snowflake objects, this converts my connection to
+   key-pair auth (SNOWFLAKE_JWT) in place — that is what stops the macOS keychain
+   from interrupting a visit with a password prompt, so it is part of setup, not
+   optional. Do NOT pass --skip-keypair. When it finishes, confirm the connection
+   landed on key-pair: `snow connection list` should show authenticator
+   SNOWFLAKE_JWT with a private_key_file, and there will be a timestamped
+   connections.toml backup. Tell me the result. If the conversion failed, say so
+   but do NOT stop — the booth still works on OAuth, you will just get occasional
+   keychain prompts.
+
+7. Set event.venue in game/config.json to my event (london, paris or berlin).
+   Do not set event.marketplace_region, event.city or event.language by hand —
+   the venue resolves all three. bootstrap already wrote snowflake.connection_name,
+   so leave it. There is no operator or stand field to ask me for;
    SESSIONS.SE_OPERATOR is stamped with the account automatically.
 
-7. Load the shared context: python3 deploy/load_context.py --connection <conn>
+8. Load the shared context: python3 deploy/load_context.py --connection <conn>
 
-8. Run the gate: python3 deploy/verify_context.py --all
+9. Run the gate: python3 deploy/verify_context.py --all
    Report every failure. Do not tell me the booth is ready if this is non-zero.
 
-9. Start the server and confirm http://127.0.0.1:4747/ answers. The console
+10. Start the server and confirm http://127.0.0.1:4747/ answers. The console
    should show "warm agent ready". If instead it says the warm agent is
    unavailable on this version of Cortex Code, that is NOT a setup failure:
    every turn falls back to cortex exec and the booth still works, just more

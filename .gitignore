@@ -44,3 +44,17 @@ audit/weak-fit-review.md
 audit/setup-doc-changes.md
 audit/personas.md
 notes/
+
+# Never commit private keys or connection files, even if one is generated inside
+# the repo directory by mistake. Key-pair setup writes to ~/.snowflake/keys, so
+# these should never appear here - this is defence in depth, not the normal path.
+*.p8
+*.pem
+*.key
+connections.toml
+# Locally generated visitor takeaways. Blueprints live on a Snowflake stage; a
+# stray .docx in the tree would be visitor content that must not ship.
+*.docx
+# Runtime outbox (email was removed). Keep the directory, ignore any contents.
+game/outbox/*
+!game/outbox/.gitkeep

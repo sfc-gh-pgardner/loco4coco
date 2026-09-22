@@ -91,14 +91,14 @@ def table(rows, region, reserve=False):
     out = ['<div class="table-wrap"><table%s><thead><tr><th>Dataset</th>' % cls
            + '<th>Provider</th><th>Access</th>'
            '<th class="c" title="Available in this event\'s region">Local</th>'
-           '<th class="verdict">SE verdict</th></tr></thead><tbody>']
+           '</tr></thead><tbody>']
     for r in rows:
         # A pick that filled a slot without matching the industry theme is flagged,
         # because that is precisely the judgement call a reviewer should spend time
         # on: where a city has no sector-specific data, the curator fills the six
         # with real local datasets that are not squarely on topic.
         flag = weakfit_flag(r.get("demoted"))
-        out.append("<tr><td>%s%s</td><td>%s</td><td>%s</td>%s<td class=\"verdict\"></td></tr>" % (
+        out.append("<tr><td>%s%s</td><td>%s</td><td>%s</td>%s</tr>" % (
             link(r.get("global_name"), r.get("title")), flag,
             html.escape(r.get("provider") or ""),
             html.escape(r.get("access") or ""),
@@ -116,15 +116,14 @@ def cand_table(rows):
     """
     out = ['<div class="table-wrap"><table><thead><tr><th>Candidate</th>'
            '<th>Provider</th><th>Access</th><th>Verified</th>'
-           '<th class="verdict">SE verdict</th></tr></thead><tbody>']
+           '</tr></thead><tbody>']
     rank = {"OK": 0, "RESERVE": 1, "REJECT": 2, "NOT FOUND": 3, "": 4}
     for r in sorted(rows, key=lambda x: rank.get(x.get("verdict") or "", 4)):
         v = r.get("verdict") or ""
         cls = {"OK": "yes", "RESERVE": "warn"}.get(v, "no") if v else ""
         mark = {"OK": "\u2713 usable", "RESERVE": "\u26a0 reserve"}.get(v, v.lower())
         out.append("<tr><td>%s</td><td>%s</td><td>%s</td>"
-                   "<td class=\"%s\" title=\"%s\">%s</td>"
-                   "<td class=\"verdict\"></td></tr>" % (
+                   "<td class=\"%s\" title=\"%s\">%s</td></tr>" % (
                        link(r.get("global_name"), r.get("title")
                             or r.get("claimed_title")),
                        html.escape(r.get("provider") or "(to confirm)"),
@@ -259,7 +258,6 @@ TEMPLATE = """<!DOCTYPE html>
     .pill.primary { background: light-dark(#e3f0e5,#1c2e21);
       color: light-dark(#2f8f39,#79BE7E); }
     .pill.reserve { background: light-dark(#e2f1fb,#132a3a); color: #29B5E8; }
-    .verdict { background: light-dark(#fffdf5,#23262f); min-width: 130px; }
     code { background: light-dark(#eef2f7,#0f172a); padding: 1px 4px; border-radius: 4px; font-size: 12px; }
   </style>
 </head>

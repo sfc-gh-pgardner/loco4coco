@@ -40,7 +40,7 @@ BEGIN
       NOTIFY_USERS = ({{ monitor_notify_user }})
       TRIGGERS ON 75 PERCENT DO NOTIFY
                ON 90 PERCENT DO NOTIFY
-               ON 100 PERCENT DO NOTIFY;
+               ON 100 PERCENT DO SUSPEND;
     notified := TRUE;
   EXCEPTION
     WHEN OTHER THEN
@@ -58,7 +58,22 @@ BEGIN
         TRIGGERS ON 75 PERCENT DO NOTIFY
                  ON 90 PERCENT DO NOTIFY
                  ON 100 PERCENT DO NOTIFY;
-    ALTER RESOURCE MONITOR {{ monitor }} SET CREDIT_QUOTA = {{ monitor_quota }};
+    -- Set the triggers on the ALTER too, not only in the CREATE. IF NOT EXISTS
+    -- skips the CREATE entirely when an earlier deploy already made the monitor,
+    -- and a bare SET CREDIT_QUOTA does not add triggers - measured on this
+    -- account, the live monitor carried a 100 credit quota with notify_triggers
+    -- and suspend_at both null, so the guardrail was decorative.
+    --
+    -- DO NOTIFY alone is not a guardrail here either: these accounts often have a
+    -- user with no email, so NOTIFY warns nobody and nothing stops. SUSPEND at
+    -- 100 percent is the backstop. It is a deliberate trade: suspending mid-event
+    -- would end the booth, but a stand that has burned its whole monthly quota is
+    -- already malfunctioning, and an unbounded spend on a shared account is worse.
+    ALTER RESOURCE MONITOR {{ monitor }} SET
+      CREDIT_QUOTA = {{ monitor_quota }}
+      TRIGGERS ON 75 PERCENT DO NOTIFY
+               ON 90 PERCENT DO NOTIFY
+               ON 100 PERCENT DO SUSPEND;
   END IF;
 
   ALTER WAREHOUSE {{ wh }} SET RESOURCE_MONITOR = {{ monitor }};

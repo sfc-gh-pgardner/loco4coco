@@ -1,5 +1,9 @@
 # Loco for CoCo
 
+**If something breaks:** [FAQ — what could break](FAQ-what-could-break.md), written
+from defects actually found. SQL for leads, health checks and session recovery is in
+[sql_statements/](sql_statements/README.md).
+
 Setup: [TL;DR (one page)](https://docs.google.com/document/d/1TwRR5uurF8NHGTbQBiBQBs0fHV9lqqUZ7357WxY5e_E/edit) | [SETUP.md (full)](SETUP.md)
 
 A five-minute Cortex Code activation for **Snowflake World Tour**. A visitor drives a penguin

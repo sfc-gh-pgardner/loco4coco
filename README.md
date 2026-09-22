@@ -92,8 +92,11 @@ Total CoCo wait is about 58s of the 300s budget, down from 144.5s before tuning.
   another city's data with no visible symptom. `/admin` shows **datasets loaded** (expect
   90–96) and **lists read from** (expect `snowflake`) so you can see it.
 - **Models are region-specific in availability *and* speed.** The fast/QA path defaults to
-  **`claude-4-sonnet`** — measured 5.1s median on an eu-central-1 event account, against
-  **69.5s median (33.7–111.4s)** for `llama3.3-70b`, the previous default. Re-measure if
+  **`openai-gpt-5.4`**, with `openai-gpt-5`, `claude-sonnet-5` and `claude-opus-5`
+  behind it, all measured at 1.4–2.1s on an eu-central-1 event account, against
+  **69.5s median (33.7–111.4s)** for `llama3.3-70b`. The earlier defaults
+  `claude-4-sonnet` and `mistral-large2` are both in legacy state now and return a
+  400 on every call, which is why the model is proven at startup. Re-measure if
   you move region rather than assuming; several Claude, Llama-4 and OpenAI models are not
   offered in eu-central-1 at all. It falls back to the agentic path automatically if
   inference fails.

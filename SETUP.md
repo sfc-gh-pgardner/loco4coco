@@ -343,12 +343,16 @@ Other keys you may still set directly:
 | `snowflake.connection_name` | Your connection (bootstrap normally sets this) |
 
 **Note the models are region-specific, in availability and in speed.** The default
-`coco.complete_model` and `qa.model` are both **`claude-4-sonnet`**, measured at 5.1s
-median on an eu-central-1 event account. It replaced `llama3.3-70b`, which measured a
-**69.5s median and ranged 33.7-111.4s** in the same region and could eat a third of the
-visit on one stall. `mistral-large2` is fast (3.7s) but recommended the wrong Snowflake
-feature on the test prompt. The **first** COMPLETE call on a cold warehouse takes around
-56s and later ones around 4s, so run one throwaway visitor through before doors open.
+`coco.complete_model` and `qa.model` are both **`openai-gpt-5.4`**, with
+`openai-gpt-5`, `claude-sonnet-5` and `claude-opus-5` behind them as fallbacks, all
+three verified at 1.4-2.1s on an eu-central-1 event account. The previous default
+`claude-4-sonnet` went to **legacy state** mid-project and now returns a 400 on
+every call, which is why the booth proves its model at startup instead of
+discovering the problem in front of a visitor. `mistral-large2` is also legacy now.
+`llama3.3-70b` is available but measured a **69.5s median, ranging 33.7-111.4s**,
+enough to eat a third of the visit on one stall. The **first** COMPLETE call on a
+cold warehouse takes around 56s and later ones around 4s, so run one throwaway
+visitor through before doors open.
 
 **How the marketplace stall is filled.** The six picks per industry are
 precomputed per city and committed in
@@ -524,12 +528,14 @@ not built. Until they exist, the query above *is* the handover.
    `server.py` edits need the restart button. HTML and CSS are served fresh from disk.
 2. **A Library or Marketplace reply is slow.** Those use direct Cortex inference and
    **models are region-specific, in availability and in speed.** The default is
-   `claude-4-sonnet`. Measured on an eu-central-1 event account, 3 reps each:
-   `claude-4-sonnet` 5.1s, `openai-gpt-5-mini` 3.1s, `llama3.1-70b` 3.5s,
-   `mistral-large2` 3.7s, and `llama3.3-70b` **69.5s median, ranging 33.7–111.4s** —
-   it was the previous default and is a booth hazard. Not available in eu-central-1 at
-   all: `claude-4-5-sonnet`, `claude-3-7-sonnet`, `llama4-maverick`, `llama4-scout`,
-   `openai-gpt-4.1`, `deepseek-r1`. If you move region, re-measure before the event
+   `openai-gpt-5.4`. Measured on an eu-central-1 event account: the primary and the
+   three fallbacks `openai-gpt-5`, `claude-sonnet-5` and `claude-opus-5` all answer
+   in 1.4–2.1s, while `llama3.3-70b` measured a **69.5s median, ranging 33.7–111.4s**
+   and is a booth hazard. `claude-4-sonnet` and `mistral-large2` are both in **legacy
+   state** and now return a 400 on every call, so do not set either. Also unavailable
+   in eu-central-1: `claude-4-5-sonnet`, `claude-3-7-sonnet`, `llama4-maverick`,
+   `llama4-scout`, `openai-gpt-4.1`, `deepseek-r1`. If you move region, re-measure
+   before the event
    with a one-line `SELECT SNOWFLAKE.CORTEX.COMPLETE(...)` — do not assume.
 3. **Marketplace stall shows the wrong city's datasets, or `/admin` says 0 loaded.**
    `deploy/load_context.py` has not been run against this account (Step 6), so the game
@@ -597,8 +603,8 @@ not built. Until they exist, the query above *is* the handover.
 
 ## If you change the fast model
 
-The two fast turns use `claude-4-sonnet` by default. Open-weight models need more prompt
-discipline than Claude: `mistral-large2` (a previous default) greeted the visitor by name on
+The two fast turns use `openai-gpt-5.4` by default. Open-weight models need more prompt
+discipline: `mistral-large2` (a previous default, now legacy) greeted the visitor by name on
 *every* turn and named vague capabilities such as "the ability to handle large datasets".
 Both are fixed in the prompts. If you change `coco.complete_model`, read a couple of Library
 and Marketplace replies and check for exactly those two failures before trusting it at a booth.

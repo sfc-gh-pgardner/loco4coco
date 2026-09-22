@@ -531,7 +531,11 @@ def run_complete(cfg, prompt, kind, job_id=None, model=None, timeout=None):
     to exec (Claude was unavailable via COMPLETE on this region once already).
     """
     c = cfg.get("coco") or {}
-    mdl = model or c.get("complete_model") or "mistral-large2"
+    # The last-resort default must be a model that actually answers. This used to
+    # read mistral-large2, which has since gone to legacy state and now returns a
+    # 400 on every call - so a config missing complete_model would have failed
+    # every COMPLETE turn while the slow exec fallback quietly carried the booth.
+    mdl = model or c.get("complete_model") or "openai-gpt-5"
     started = time.time()
     write_state({"reasoning": []})
     reply, err, usage = "", "", {}

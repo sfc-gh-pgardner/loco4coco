@@ -685,7 +685,7 @@
       "de": "Germany"
     },
     "agentic": {
-      "_comment": "THE 7th OPTION. Triggered ONLY when a visitor TYPES into the marketplace 'something else' box. Uses `cortex search marketplace` with a cloudRegion filter taken from event.region - NOT a free-form agent prompt. MEASURED: the prompt route took 110-237s and returned out-of-region results 78 times out of 91; the filtered search takes 6.8-8.3s and is in-region by construction, with provider names included. All three event regions were verified answering from one AWS Frankfurt account, because the Marketplace catalogue is global. Still fired in the BACKGROUND and merged into the takeaway document at the postbox, so a slow call can never hold up the stall. The six curated picks stay deterministic and are never waited on. Watch cost.jsonl (kind=marketplace_agentic).",
+      "_comment": "THE 7th OPTION. Triggered ONLY when a visitor TYPES into the marketplace 'something else' box. Uses `cortex search marketplace` with a cloudRegion filter taken from event.marketplace_region (the EVENT\u2019s region, resolved from event.venue) - NOT a free-form agent prompt. MEASURED: the prompt route took 110-237s and returned out-of-region results 78 times out of 91; the filtered search takes 6.8-8.3s and is in-region by construction, with provider names included. All three event regions were verified answering from one AWS Frankfurt account, because the Marketplace catalogue is global. Still fired in the BACKGROUND and merged into the takeaway document at the postbox, so a slow call can never hold up the stall. The six curated picks stay deterministic and are never waited on. Watch cost.jsonl (kind=marketplace_agentic).",
       "enabled": true,
       "timeout_seconds": 45,
       "connection": null,

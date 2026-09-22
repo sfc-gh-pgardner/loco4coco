@@ -60,6 +60,9 @@ MARKET_JSON_PATH = os.path.join(PLUGIN_ROOT, "skills", "loco4coco",
 LISTING_URL = "https://app.snowflake.com/marketplace/listing/"
 
 _lock = threading.Lock()
+# Bad venue names already warned about, so resolve_venue() complains once per
+# value rather than once per request. See the warning in resolve_venue().
+_venue_warned = set()
 
 MIME = {
     ".html": "text/html; charset=utf-8",
@@ -138,7 +141,8 @@ def load_config():
 def resolve_venue(cfg):
     """Expand a single `event.venue` toggle into city, language, cloud region
     and marketplace profile, so the operator changes ONE key to move the booth
-    from London to Paris, Frankfurt or Berlin.
+    from London to Paris or Berlin. Those are the three events; Frankfurt is the
+    ACCOUNT's region and is deliberately not a venue.
 
     The venue's values overwrite event.city/language/region in place, so every
     existing reader (region filter, templating, the index builder) sees the
@@ -156,6 +160,22 @@ def resolve_venue(cfg):
                 ev[k] = v[k]
         ev["market_profile"] = v.get("market_profile") or "uk"
     else:
+        if venue:
+            # A venue that is SET but not in the map is the one silent failure in
+            # this function: nothing is overwritten, market_profile falls back to
+            # 'uk', and the booth serves London's datasets under whatever city
+            # happens to be written in the event block. /api/venue refuses an
+            # unknown venue, so this can only be reached by hand-editing the
+            # file - which is exactly when nobody is watching. Warned once per
+            # bad value rather than per request, because load_config() runs on
+            # every request and a flooded log is a log nobody reads.
+            if venue not in _venue_warned:
+                _venue_warned.add(venue)
+                known = ", ".join(k for k in venues if not k.startswith("_"))
+                print("[loco4coco] WARNING: event.venue=%r is not a known venue "
+                      "(%s). Serving market_profile=%r and the event block as "
+                      "written - check /admin reads the city you expect."
+                      % (venue, known, ev.get("market_profile") or "uk"))
         ev.setdefault("market_profile", "uk")
     # Accept a pre-rename config rather than serving an empty stall. `region` was
     # renamed to `marketplace_region` because two different regions exist and the

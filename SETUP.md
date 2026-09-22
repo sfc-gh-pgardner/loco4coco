@@ -295,7 +295,11 @@ and press Apply. That is the whole configuration.
 | `london` | London | en | AWS_EU_WEST_2 | uk |
 | `paris` | Paris | fr | AWS_EU_WEST_3 | fr |
 | `berlin` | Berlin | de | AWS_EU_CENTRAL_1 | de |
-| `frankfurt` | Frankfurt | de | AWS_EU_CENTRAL_1 | de |
+
+Those three and no others. Frankfurt is the **account's** region, not an event, and
+is deliberately not a venue: `resolve_venue()` answers an unknown venue by quietly
+defaulting the dataset profile to `uk`, so inventing one would stand up a booth
+serving London's datasets with no error anywhere.
 
 **Applying a venue does not need a restart.** The config is re-read on every request,
 and Apply flushes the dataset cache, so the change lands on the next visitor.
@@ -651,7 +655,10 @@ not built. Until they exist, the query above *is* the handover.
    so the connector falls back to the full OAuth browser flow — a browser window opening
    mid-visitor is worse than the dialog you were trying to remove.
 
-6. **The server vanished.** It idled out after 45 minutes.
+6. **The server vanished.** It idled out after 45 minutes — which is why
+   `server.idle_shutdown_minutes` is now `0` (see "No idle shutdown" above). If the
+   server disappears today it was closed, the laptop slept, or it crashed; the
+   booth no longer times itself out during a quiet spell.
 7. **A visit was cut off, or the stand was dead when someone walked up.** Something is
    capping or stopping the booth, and nothing in this project should be. Check that no
    resource monitor is bound - `SHOW WAREHOUSES LIKE 'LOCO4COCO_WH'` must report

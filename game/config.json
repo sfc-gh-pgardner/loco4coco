@@ -8,8 +8,8 @@
     "idle_shutdown_minutes": 0
   },
   "event": {
-    "venue": "london",
-    "_venue_comment": "The ONE toggle a booth operator changes per event. Expands via the venues map below into city, language, cloud region and marketplace profile. One of: london, paris, frankfurt, berlin. Leave unset to hand-configure city/language/region directly.",
+    "venue": "berlin",
+    "_venue_comment": "The ONE toggle a booth operator changes per event. Expands via the venues map below into city, language, cloud region and marketplace profile. One of: london, paris, berlin - and ONLY those three, because they are the three SWT events. This comment used to list frankfurt as a fourth, which is wrong and was actively dangerous: Frankfurt is the ACCOUNT's region, not an event, and resolve_venue() answers an unknown venue by quietly defaulting market_profile to 'uk', so an operator who trusted this line and set venue to 'frankfurt' would have stood up a booth serving London's datasets with no error anywhere. Do not add a venue here without adding it to the venues map, and do not add one that is not an event. Leave unset to hand-configure city/language/region directly.",
     "city": "London",
     "language": "en",
     "marketplace_region": "AWS_EU_WEST_2",
@@ -40,13 +40,6 @@
       "language": "de",
       "marketplace_region": "AWS_EU_CENTRAL_1",
       "market_profile": "de"
-    },
-    "frankfurt": {
-      "_comment": "Added because _venue_comment already advertised frankfurt while this map did not define it. resolve_venue() answers an unknown venue by quietly defaulting market_profile to 'uk', so hand-setting event.venue to 'frankfurt' would have stood up a German booth serving London's datasets - the exact silent failure the setup guide warns about. Shares Berlin's profile and region: Frankfurt IS eu-central-1.",
-      "city": "Frankfurt",
-      "language": "de",
-      "marketplace_region": "AWS_EU_CENTRAL_1",
-      "market_profile": "de"
     }
   },
   "snowflake": {
@@ -74,8 +67,8 @@
     "complete_model_fallbacks_comment": "Tried in order at server start if complete_model does not answer. This exists because claude-4-sonnet went to legacy state mid-project and every COMPLETE turn failed silently for a whole test run while the slow exec fallback covered for it. A model name is a perishable dependency, so the booth now proves it at startup rather than discovering it in front of a visitor.",
     "warm_agent": true,
     "warm_agent_comment": "Hold a `cortex mcp serve` process open between visitors. Measured ~3.9s per turn against ~22s for a cold `cortex exec`, because exec has no --resume/--session and pays ~18s of process startup every call. Strictly one in-flight call: concurrent calls on one process were proven to mis-correlate and return another call’s answer. SAFE TO LEAVE TRUE ON ANY LAPTOP: `cortex mcp serve` is not a stable contract across versions, so all four ways it can fail (binary absent, exits at once, serves without a cortex_code_agent tool, or serves and never replies) were tested with stub binaries and each now degrades in bounded time to `cortex exec`. A version with no cortex_code_agent is detected once at startup and logged, not rediscovered every turn. Set false only to force the exec path for comparison.",
-    "turn_timeout": 20,
-    "turn_timeout_comment": "Wall-clock ceiling per turn, for the FAST stops. The Library has been measured at a 127.3s outlier against a 2.2s median; past the ceiling the visitor is better served by the precomputed answer than a better sentence. LOWERED 60 -> 20 on 2026-09-22 after grepping every timeout in the booth: with the warehouse held warm (auto_suspend 3600) a proven COMPLETE turn is 1.4-2.1s, so 60s was ~30x the measured worst case and could only ever be reached by a pathology - and when it was reached, a visitor stood in front of a frozen screen for a full minute with a queue behind them. 20s is still ~10x the median, and the thing on the other side of the ceiling is precomputed archetype content that is instant and good. The Workshop overrides this (locations.workshop.timeout) because it is the one agentic turn and legitimately takes 20-27s; this global is deliberately tight so any NEW fast stop inherits fail-fast rather than inheriting a minute.",
+    "turn_timeout": 30,
+    "turn_timeout_comment": "Wall-clock ceiling per turn, for the FAST stops. The Library has been measured at a 127.3s outlier against a 2.2s median; past the ceiling the visitor is better served by the precomputed answer than a better sentence. LOWERED 60 -> 30 on 2026-09-22 after grepping every timeout in the booth: with the warehouse held warm (auto_suspend 3600) a proven COMPLETE turn is 1.4-2.1s, so 60s was ~30x the measured worst case and could only ever be reached by a pathology - and when it was reached, a visitor stood in front of a frozen screen for a full minute with a queue behind them. 30s and NOT tighter, deliberately: a visitor who writes a long, complex brief earns a slower answer, and capping them out for being thorough would punish exactly the engagement this booth exists to provoke. So this is a floor under the worst case, not a target - roughly 14x the median, with the precomputed archetype content waiting on the other side of it. The Workshop overrides this (locations.workshop.timeout) because it is the one agentic turn and legitimately takes 20-27s.",
     "_complete_model_comment": "RE-MEASURED 2026-09-21 on an AWS eu-central-1 event account after the previous default BROKE. claude-4-sonnet went to legacy state and now returns a 400 in ~0.5s on every call ('The model claude-4-sonnet has been in legacy state'), so every COMPLETE turn was failing and the 20-27s cortex exec fallback was silently carrying the load. mistral-large2 is ALSO legacy now, and the entire Claude family (claude-4-5-sonnet, claude-3-5-sonnet, claude-4-opus) plus openai-gpt-4.1-mini and snowflake-llama-3.3-70b are unknown/unavailable here. Survivors, 2 reps on the Dynamic Tables quality probe: openai-gpt-5 1.6s and CORRECT; openai-gpt-5-mini 2.3s but recommended Streams and Tasks; llama3.1-70b 1.4s but recommended Materialized Views; llama3.3-70b 45.8s and also wrong. openai-gpt-5 is the only model that is both fast and right, so it is the default for replies and for QA. MODEL AVAILABILITY MOVES UNDER YOU: run scripts/rebench_complete.py against the event account before every event, and check /admin shows a reply model that actually answers.",
     "timeout_seconds": 180,
     "_complete_model_fallbacks_comment": "Tried in order when the primary is dead. All three verified in AWS_EU_CENTRAL_1 at 1.4-2.0s by scripts/audit_ai_paths.py. grok-4.6 was removed: it answers correctly but latency measured 2.7/48/53/77s, and a 50s median is worse than simply falling through to cortex exec at ~23s, so as a fallback it made things slower rather than safer.",

@@ -186,40 +186,40 @@ Prose that belongs to a screen rather than to a stop.
 
 ## 3. The datasets the booth recommends
 
-48 slots across 8 industries, filled by 31 distinct listings, for THIS venue. Each is a real listing on the Snowflake Marketplace - never invented - and is chosen for relevance to the event city. A pick is NOT judged on whether the booth account can attach it: the visitor never imports anything here, they leave with links and open them later from their own account.
+48 slots across 8 industries, filled by 32 distinct listings, for THIS venue. Each is a real listing on the Snowflake Marketplace - never invented - and is chosen for relevance to the event city. A pick is NOT judged on whether the booth account can attach it: the visitor never imports anything here, they leave with links and open them later from their own account.
 
 ### Healthcare & Life Sciences
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
-| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial | `GZTDZJKVCY` |
-| PubMed Biomedical Research Corpus | Snowflake | Free | `GZSTZ67BY9OQW` |
-| UK Health Facts and Dimensions Sample | Facts and Dimensions Ltd | Free | `GZ2FRZQNY1` |
-| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free | `GZSVZ1K7UU` |
+| GfK Population by Age Group & Gender Germany | NIQ-GFK | Free | `GZSYZG5AL` |
+| COVID-19 Epidemiological Data | Starschema | Free | `GZSNZ7F5UH` |
+| MBI Sociodemographic Data for Germany | Michael Bauer International GmbH | Free | `GZSYZ12OI8L` |
+| Basic Sociodemographics-Bundle for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOH` |
+| Demographics Data Bundle | InSights | Free | `GZTYZAPS3FT` |
+| Population - Statistics - OECD - Free | Data Army Intel | Free | `GZSUZCN9EG` |
 
 ### Financial Services
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Snowflake Public Data: Foreign Exchange Rates | Snowflake Public Data Products | Free 60-day trial | `GZTSZ290BVCAO` |
-| Inflation Forecasting - Headline & Core CPI by Country | Turnleaf Analytics | Free | `GZTDZ7DJU9` |
-| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` |
-| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
-| CSRHub ESG (Environment, Social, Governance) Fast Start | CSRHub LLC | Free 30-day trial | `GZT0ZI0XJ6Q` |
-| Banking Analytics Bundle | InSights | Free | `GZTYZAPS3FP` |
+| QuantCube CPI Nowcast | QuantCube Technology | Free | `GZTWZ4KVS1` |
+| Company data | OpenCorporates | Free | `GZTDZM1AK5` |
+| ESG Performance Score Core & Plus | ESG Book | Free | `GZTDZ1ELIY` |
+| Consumer Credit & Debit Card Transaction Data \| European Spend | Consumer Edge | Free | `GZTSZPM12Y` |
+| CEIC World Macro Economic Data | CEIC Data | Free | `GZTSZRC7HRG` |
+| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
 
 ### Retail & Consumer Goods
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Postcode Sector Weather Forecasts | Met Office | Free 14-day trial | `GZTDZJKVCY` |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
-| PayCheck – UK household income estimates at postcode level - SAMPLE data | CACI Ltd | Free | `GZSVZ1K7UA` |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
-| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
-| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free | `GZT0ZKUCHKL` |
+| MBI Sociodemographic Data for Germany | Michael Bauer International GmbH | Free | `GZSYZ12OI8L` |
+| Shopping center footfall - London and Paris | Mytraffic | Free | `GZSYZGJWCJ` |
+| Weather-based demand indices - Data sample | Wetter.com | Free | `GZSVZA7RAG` |
+| Retail Price Promo Sample | Daltix | Free | `GZSVZ5J5F` |
+| Basic Sociodemographics-Bundle for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOH` |
+| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
 
 Pinned first when the live tier is enabled: `GZTDZJKVCY`, `GZSVZAJO3`.
 
@@ -227,12 +227,12 @@ Pinned first when the live tier is enabled: `GZTDZJKVCY`, `GZSVZAJO3`.
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
-| Address Spine – UK address level property information - Sample Data | CACI Ltd | Free | `GZSVZ1K7UQ` |
-| CARTO Boundaries | CARTO | Free | `GZT0Z4CM1E9L4` |
-| UK Land Surface Observations | Met Office | Free 14-day trial | `GZTDZJKVH3` |
-| National Severe Weather Warning Service | Met Office | Free | `GZTDZJKVCU` |
-| Administrative boundaries - Great Britain: Boundary Line - Open | Ordnance Survey | Free | `GZ1MOZBWYYT` |
+| MBI Global Area Boundaries | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOX` |
+| Fiber Internet Coverage Dataset | GroupBWT | Free | `GZSYZ12SH0Y` |
+| Driving Behavior Events | Vianova | Free | `GZSYZ5FFSV` |
+| European Public Tenders Dataset – 800+ Sources, Daily Updates, OCDS Format | GroupBWT | Free | `GZSYZ12SH0I` |
+| GfK Population by Age Group & Gender Germany | NIQ-GFK | Free | `GZSYZG5AL` |
+| World Boundaries Premium | Precisely | Free | `GZT0Z2BR4AC92` |
 
 Pinned first when the live tier is enabled: `GZSVZAJO3`, `GZ1MOZBWYYT`, `GZSVZ1K7UQ`.
 
@@ -240,23 +240,23 @@ Pinned first when the live tier is enabled: `GZSVZAJO3`, `GZ1MOZBWYYT`, `GZSVZ1K
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
+| CEIC Shipping Data | CEIC Data | Free | `GZTSZRC7HRC` |
 | CEIC Commodities Data | CEIC Data | Free | `GZTSZRC7HQ3` |
-| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` |
+| Company data | OpenCorporates | Free | `GZTDZM1AK5` |
+| Germany H3 Travel Matrix | Dekart XYZ | Free | `GZSYZ43W9K16` |
+| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
 | Overture Maps - Transportation | CARTO | Free | `GZT0Z4CM1E9KJ` |
-| FactSet Supply Chain Relationships (sample) | FactSet | Free | `GZT0ZGCQ51RQ` |
-| D&B Shipping Insights Sample | Dun & Bradstreet | Free | `GZT0ZPWB4J7` |
-| Global Spot Weather Forecasts | Met Office | Free 14-day trial | `GZTDZJKVCM` |
 
 ### Energy & Utilities
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| National Severe Weather Warning Service | Met Office | Free | `GZTDZJKVCU` |
-| UK Land Surface Observations | Met Office | Free 14-day trial | `GZTDZJKVH3` |
-| Yes Energy - Sample Data | Yes Energy | Free | `GZSOZ71OJH` |
-| Sample of GasMarketCube - Global Gas Supply, Demand and Trade | Rystad Energy | Free | `GZSVZ8MX1I` |
-| Wind Power Forecast, Day-ahead - Sample | Weather Solutions | Free | `GZSYZSRWU5` |
-| Crude oil price data | General Index | Free Trial | `GZTDZ1PNFO` |
+| Historical Weather Data Sample | Wetter.com | Free | `GZSVZA7RAK` |
+| Corporate Climate Commitment ESG Data \| Net Zero, Carbon Neutrality, and Carbon Positivity | Tracenable | Free | `GZTSZ36AC98` |
+| Global Weather & Climate Data by Pelmorex Weather Source | Pelmorex Weather Source | Free | `GZSOZ1LLD8` |
+| POIs - EV charging stations in Paris | Mytraffic | Free | `GZSYZGJWCN` |
+| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
+| Weather-based demand indices - Data sample | Wetter.com | Free | `GZSVZA7RAG` |
 
 Pinned first when the live tier is enabled: `GZTDZJKVCM`, `GZTDZJKVCU`, `GZTDZJKVCY`.
 
@@ -264,149 +264,149 @@ Pinned first when the live tier is enabled: `GZTDZJKVCM`, `GZTDZJKVCU`, `GZTDZJK
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
-| CARTO Boundaries | CARTO | Free | `GZT0Z4CM1E9L4` |
-| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | CARTO | Free | `GZT0ZKUCHKL` |
-| GLP-1 Social Conversations Sample Dataset | Socialgist | Free | `GZT1ZFQ0JE5` |
-| American Community Survey, 2016 | data.world, Inc | Free | `GZSNZ4PHA6` |
+| Fiber Internet Coverage Dataset | GroupBWT | Free | `GZSYZ12SH0Y` |
+| Intelligent Event Data: Attended Events, Munich - Sample | PredictHQ | Free | `GZSTZIDI09G` |
+| Mastercard Audiences | Mastercard | Free | `GZTSZT83AIS` |
+| MBI Sociodemographic Data for Germany | Michael Bauer International GmbH | Free | `GZSYZ12OI8L` |
+| Basic Sociodemographics-Bundle for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOH` |
+| European Broadband Markets 2017 | Expert Intelligence | Free | `GZSVZ6EW2A` |
 
 ### Something else
 
 | Listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| UK (England and Wales only) Census 2021 - Trial | Jaywing | Free | `GZSVZAJO3` |
-| Company Data UK (incl. Guernsey) - XL Dataset | North Data GmbH | Free 7-day trial | `GZ2FSZH8URW` |
-| CARTO Boundaries | CARTO | Free | `GZT0Z4CM1E9L4` |
-| Snowflake Public Data: Foreign Exchange Rates | Snowflake Public Data Products | Free 60-day trial | `GZTSZ290BVCAO` |
-| CARTO Analytics Toolbox | CARTO | Free | `GZT0Z4CM1E9NA` |
-| Acorn - Geodemographic Segmentation in the UK | CACI Ltd | Free | `GZSVZ1K7VF` |
+| MBI Global Area Boundaries | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOX` |
+| Company data | OpenCorporates | Free | `GZTDZM1AK5` |
+| Historical Weather Data Sample | Wetter.com | Free | `GZSVZA7RAK` |
+| Germany H3 Travel Matrix | Dekart XYZ | Free | `GZSYZ43W9K16` |
+| GfK Population by Age Group & Gender Germany | NIQ-GFK | Free | `GZSYZG5AL` |
+| World Boundaries Premium | Precisely | Free | `GZT0Z2BR4AC92` |
 
 Pinned first when the live tier is enabled: `GZTDZJKVCY`.
 
 ### The fallbacks behind each stall
 
-44 further listings sit behind the 48 on offer, as the fallback pool. A visitor is not shown these. They exist so that a stall still fills if a pick is withdrawn or turns out not to be offered in the event region, and so a promotion has somewhere to come from. They are listed here because a fallback that nobody has read is not a fallback.
+43 further listings sit behind the 48 on offer, as the fallback pool. A visitor is not shown these. They exist so that a stall still fills if a pick is withdrawn or turns out not to be offered in the event region, and so a promotion has somewhere to come from. They are listed here because a fallback that nobody has read is not a fallback.
 
 **Healthcare & Life Sciences**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| MBI Sociodemographic Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDE` |
-| Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas | Ordnance Survey | Free | `GZ1MOZBX00Q` |
-| Choreograph UK behavioral,demographics & consumption data | Conexance by Choreograph | Free | `GZ1M7ZKTYD` |
-| Parks, Sports Facilities, Allotments - Great Britain: Open Greenspace | Ordnance Survey | Free | `GZ1MOZBX00E` |
-| National Severe Weather Warning Service | Met Office | Free | `GZTDZJKVCU` |
+| Germany H3 Travel Matrix | Dekart XYZ | Free | `GZSYZ43W9K16` |
+| Historical Weather Data Sample | Wetter.com | Free | `GZSVZA7RAK` |
+| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
+| Acxiom EMEA: Geo-Spatial Sample Data DE | Acxiom EMEA | Free | `GZSYZ5S9QG` |
 
 **Financial Services**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| CEIC World Macro Economic Data | CEIC Data | Free | `GZTSZRC7HRG` |
-| ESG Performance Score Core & Plus | ESG Book | Free | `GZTDZ1ELIY` |
-| Consumer Credit & Debit Card Transaction Data \| European Spend | Consumer Edge | Free | `GZTSZPM12Y` |
-| MBI Purchasing Power Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLU` |
-| Uk Companies Insight Summary | DataEco | Free | `GZ1MOZMB44P` |
+| MBI Sociodemographic Data for Germany | Michael Bauer International GmbH | Free | `GZSYZ12OI8L` |
 | CEIC Shipping Data | CEIC Data | Free | `GZTSZRC7HRC` |
+| GfK Population by Age Group & Gender Germany | NIQ-GFK | Free | `GZSYZG5AL` |
+| EU Taxonomy Data \| Turnover, OPEX & CAPEX Taxonomy-Aligned & Eligible \| ESG Data Sample | Tracenable | Free | `GZTSZ36AC8J` |
+| ESG & Emissions Disclosure Data | ESG Book | Free | `GZTDZ1ELJB` |
+| Pan European Debit and Credit Card Transaction Datasets | Fable Data | Free | `GZ1MOZ8VQG9` |
 
 **Retail & Consumer Goods**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free | `GZSVZ1K7UU` |
-| MBI Sociodemographic Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ12OIDE` |
-| Intelligent Event Data for Department Stores & Retail, London UK - Sample | PredictHQ | Free | `GZSTZIDI09S` |
-| On Demand Journeys | BT Active Intelligence | Free | `GZ2FRZE33RX` |
-| Acxiom EMEA: Geo-Spatial Sample Data UK | Acxiom EMEA | Free | `GZSYZ5S9QC` |
+| Acxiom EMEA: Geo-Spatial Sample Data DE | Acxiom EMEA | Free | `GZSYZ5S9QG` |
+| GfK Population by Age Group & Gender Germany | NIQ-GFK | Free | `GZSYZG5AL` |
+| Demographics Data Bundle | InSights | Free | `GZTYZAPS3FT` |
 | Movement Daily Activity Index 2020 (Sample) | Mapbox | Free | `GZT0ZIFQPAI` |
+| Germany H3 Travel Matrix | Dekart XYZ | Free | `GZSYZ43W9K16` |
 
 **Public Sector & Government**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Road network - Great Britain: Open Roads | Ordnance Survey | Free | `GZ1MOZBX00A` |
-| European Public Tenders Dataset – 800+ Sources, Daily Updates, OCDS Format | GroupBWT | Free | `GZSYZ12SH0I` |
-| MBI Global Area Boundaries | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOX` |
-| Addresses - UK: OS GB Address and OS Islands Address | Ordnance Survey | Free | `GZ1MOZ2HCBPI0` |
-| Urban Extents for Cities, Towns and Villages - Great Britain: Open Built Up Areas | Ordnance Survey | Free | `GZ1MOZBX00Q` |
+| MBI Sociodemographic Data for Germany | Michael Bauer International GmbH | Free | `GZSYZ12OI8L` |
 | Basic Sociodemographics-Bundle for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOH` |
+| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
+| Acxiom EMEA: Geo-Spatial Sample Data DE | Acxiom EMEA | Free | `GZSYZ5S9QG` |
+| Germany H3 Travel Matrix | Dekart XYZ | Free | `GZSYZ43W9K16` |
+| Movement Daily Activity Index 2020 (Sample) | Mapbox | Free | `GZT0ZIFQPAI` |
 
 **Manufacturing & Industrial**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| CEIC Shipping Data | CEIC Data | Free | `GZTSZRC7HRC` |
-| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | IBISWorld | Free | `GZSTZLT2II6` |
-| Uk Companies Insight Summary | DataEco | Free | `GZ1MOZMB44P` |
-| Chemical Price Assessments | ICIS (Independent Commodity Intelligence Services) | Free | `GZSVZ9FU7N` |
-| Company data | OpenCorporates | Free | `GZTDZM1AK5` |
-| UK H3 Travel Matrix | Dekart XYZ | Free | `GZSYZ43W9K12` |
+| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
+| Intelligent Event Data: Attended Events, Munich - Sample | PredictHQ | Free | `GZSTZIDI09G` |
+| MBI Sociodemographic Data for Germany | Michael Bauer International GmbH | Free | `GZSYZ12OI8L` |
+| GfK Population by Age Group & Gender Germany | NIQ-GFK | Free | `GZSYZG5AL` |
+| Fiber Internet Coverage Dataset | GroupBWT | Free | `GZSYZ12SH0Y` |
 
 **Energy & Utilities**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Corporate Climate Commitment ESG Data \| Net Zero, Carbon Neutrality, and Carbon Positivity | Tracenable | Free | `GZTSZ36AC98` |
-| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
-| MBI Purchasing Power Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLU` |
-| UK Health Facts and Dimensions Sample | Facts and Dimensions Ltd | Free | `GZ2FRZQNY1` |
+| MBI Sociodemographic Data for Germany | Michael Bauer International GmbH | Free | `GZSYZ12OI8L` |
+| Fiber Internet Coverage Dataset | GroupBWT | Free | `GZSYZ12SH0Y` |
+| GfK Population by Age Group & Gender Germany | NIQ-GFK | Free | `GZSYZG5AL` |
+| National Severe Weather Warning Service | Met Office | Free | `GZTDZJKVCU` |
+| Intelligent Event Data: Attended Events, Munich - Sample | PredictHQ | Free | `GZSTZIDI09G` |
 
 **Media, Telco & Entertainment**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| European Broadband Markets 2017 | Expert Intelligence | Free | `GZSVZ6EW2A` |
-| Choreograph UK behavioral,demographics & consumption data | Conexance by Choreograph | Free | `GZ1M7ZKTYD` |
-| Road Insights | BT Active Intelligence | Free | `GZ2FRZE33RT` |
-| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | CACI Ltd | Free | `GZSVZ1K7UU` |
-| Ocean – UK Consumer Database (41M Adults) | CACI Ltd | Free | `GZSVZ1K7VV` |
-| Addresses - UK: OS GB Address and OS Islands Address | Ordnance Survey | Free | `GZ1MOZ2HCBPI0` |
+| GfK Population by Age Group & Gender Germany | NIQ-GFK | Free | `GZSYZG5AL` |
+| Movement Daily Activity Index 2020 (Sample) | Mapbox | Free | `GZT0ZIFQPAI` |
+| Acxiom EMEA: Geo-Spatial Sample Data DE | Acxiom EMEA | Free | `GZSYZ5S9QG` |
+| GWI Core – Consumer Trends, Insights, and Market Data | GWI | Free | `GZ2FSZGU5YB` |
+| Consumer Credit & Debit Card Transaction Data \| European Spend | Consumer Edge | Free | `GZTSZPM12Y` |
+| MBI Global Area Boundaries | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOX` |
 
 **Something else**
 
 | Fallback listing | Provider | Access | Global name |
 | --- | --- | --- | --- |
-| Administrative boundaries - Great Britain: Boundary Line - Open | Ordnance Survey | Free | `GZ1MOZBWYYT` |
-| Addresses - UK: OS GB Address and OS Islands Address | Ordnance Survey | Free | `GZ1MOZ2HCBPI0` |
-| MBI Global Area Boundaries | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOX` |
-| Uk Companies Insight Summary | DataEco | Free | `GZ1MOZMB44P` |
-| MBI Purchasing Power Data United Kingdom Postcode Level | Michael Bauer International GmbH | Free | `GZSYZ7UQCDLU` |
+| Purchasing Power for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOT` |
+| Acxiom EMEA: Geo-Spatial Sample Data DE | Acxiom EMEA | Free | `GZSYZ5S9QG` |
+| MBI Sociodemographic Data for Germany | Michael Bauer International GmbH | Free | `GZSYZ12OI8L` |
+| Movement Daily Activity Index 2020 (Sample) | Mapbox | Free | `GZT0ZIFQPAI` |
+| Fiber Internet Coverage Dataset | GroupBWT | Free | `GZSYZ12SH0Y` |
+| Basic Sociodemographics-Bundle for Countries Worldwide | Michael Bauer International GmbH | Free | `GZSYZ7UQCDOH` |
 
 ### Which industries each listing appears in
 
 | Listing | Industries | Appears in |
 | --- | --- | --- |
-| UK (England and Wales only) Census 2021 - Trial | 5 | Healthcare & Life Sciences, Retail & Consumer Goods, Public Sector & Government, Media, Telco & Entertainment, Something else |
-| Acorn - Geodemographic Segmentation in the UK | 4 | Healthcare & Life Sciences, Retail & Consumer Goods, Media, Telco & Entertainment, Something else |
-| CARTO Boundaries | 3 | Public Sector & Government, Media, Telco & Entertainment, Something else |
-| Company Data UK (incl. Guernsey) - XL Dataset | 3 | Financial Services, Manufacturing & Industrial, Something else |
-| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | 2 | Financial Services, Retail & Consumer Goods |
-| National Severe Weather Warning Service | 2 | Public Sector & Government, Energy & Utilities |
-| Postcode Sector Weather Forecasts | 2 | Healthcare & Life Sciences, Retail & Consumer Goods |
-| Snowflake Public Data: Foreign Exchange Rates | 2 | Financial Services, Something else |
-| Spatial Features (GBR, Quadgrid 15 and H3 Res. 8) | 2 | Retail & Consumer Goods, Media, Telco & Entertainment |
-| UK Land Surface Observations | 2 | Public Sector & Government, Energy & Utilities |
-| Address Spine – UK address level property information - Sample Data | 1 | Public Sector & Government |
-| Administrative boundaries - Great Britain: Boundary Line - Open | 1 | Public Sector & Government |
-| American Community Survey, 2016 | 1 | Media, Telco & Entertainment |
-| Banking Analytics Bundle | 1 | Financial Services |
-| CARTO Analytics Toolbox | 1 | Something else |
+| Basic Sociodemographics-Bundle for Countries Worldwide | 3 | Healthcare & Life Sciences, Retail & Consumer Goods, Media, Telco & Entertainment |
+| Company data | 3 | Financial Services, Manufacturing & Industrial, Something else |
+| GfK Population by Age Group & Gender Germany | 3 | Healthcare & Life Sciences, Public Sector & Government, Something else |
+| MBI Sociodemographic Data for Germany | 3 | Healthcare & Life Sciences, Retail & Consumer Goods, Media, Telco & Entertainment |
+| Purchasing Power for Countries Worldwide | 3 | Financial Services, Retail & Consumer Goods, Energy & Utilities |
+| Fiber Internet Coverage Dataset | 2 | Public Sector & Government, Media, Telco & Entertainment |
+| Germany H3 Travel Matrix | 2 | Manufacturing & Industrial, Something else |
+| Historical Weather Data Sample | 2 | Energy & Utilities, Something else |
+| MBI Global Area Boundaries | 2 | Public Sector & Government, Something else |
+| Weather-based demand indices - Data sample | 2 | Retail & Consumer Goods, Energy & Utilities |
+| World Boundaries Premium | 2 | Public Sector & Government, Something else |
 | CEIC Commodities Data | 1 | Manufacturing & Industrial |
-| CSRHub ESG (Environment, Social, Governance) Fast Start | 1 | Financial Services |
-| Crude oil price data | 1 | Energy & Utilities |
-| D&B Shipping Insights Sample | 1 | Manufacturing & Industrial |
-| FactSet Supply Chain Relationships (sample) | 1 | Manufacturing & Industrial |
-| GLP-1 Social Conversations Sample Dataset | 1 | Media, Telco & Entertainment |
-| Global Spot Weather Forecasts | 1 | Manufacturing & Industrial |
-| Household Acorn – geodemographic segmentation at household level SAMPLE DATA | 1 | Healthcare & Life Sciences |
-| Inflation Forecasting - Headline & Core CPI by Country | 1 | Financial Services |
+| CEIC Shipping Data | 1 | Manufacturing & Industrial |
+| CEIC World Macro Economic Data | 1 | Financial Services |
+| COVID-19 Epidemiological Data | 1 | Healthcare & Life Sciences |
+| Consumer Credit & Debit Card Transaction Data \| European Spend | 1 | Financial Services |
+| Corporate Climate Commitment ESG Data \| Net Zero, Carbon Neutrality, and Carbon Positivity | 1 | Energy & Utilities |
+| Demographics Data Bundle | 1 | Healthcare & Life Sciences |
+| Driving Behavior Events | 1 | Public Sector & Government |
+| ESG Performance Score Core & Plus | 1 | Financial Services |
+| European Broadband Markets 2017 | 1 | Media, Telco & Entertainment |
+| European Public Tenders Dataset – 800+ Sources, Daily Updates, OCDS Format | 1 | Public Sector & Government |
+| Global Weather & Climate Data by Pelmorex Weather Source | 1 | Energy & Utilities |
+| Industry Classification Systems (NAICS, ANZSIC, ISIC, UK-SIC, etc.) | 1 | Manufacturing & Industrial |
+| Intelligent Event Data: Attended Events, Munich - Sample | 1 | Media, Telco & Entertainment |
+| Mastercard Audiences | 1 | Media, Telco & Entertainment |
 | Overture Maps - Transportation | 1 | Manufacturing & Industrial |
-| PayCheck – UK household income estimates at postcode level - SAMPLE data | 1 | Retail & Consumer Goods |
-| PubMed Biomedical Research Corpus | 1 | Healthcare & Life Sciences |
-| Sample of GasMarketCube - Global Gas Supply, Demand and Trade | 1 | Energy & Utilities |
-| UK Health Facts and Dimensions Sample | 1 | Healthcare & Life Sciences |
-| Wind Power Forecast, Day-ahead - Sample | 1 | Energy & Utilities |
-| Yes Energy - Sample Data | 1 | Energy & Utilities |
+| POIs - EV charging stations in Paris | 1 | Energy & Utilities |
+| Population - Statistics - OECD - Free | 1 | Healthcare & Life Sciences |
+| QuantCube CPI Nowcast | 1 | Financial Services |
+| Retail Price Promo Sample | 1 | Retail & Consumer Goods |
+| Shopping center footfall - London and Paris | 1 | Retail & Consumer Goods |
 
 ## 4. What the visitor already holds
 
@@ -567,7 +567,7 @@ These rules are applied in the browser as the visitor taps, and again on the ser
 | The Workshop | exec | Agentic. CoCo's working is shown on screen as it arrives. |
 | The Postbox | - | No model turn. Runs the QA review, writes the document, returns the fixed line above. |
 
-Every turn has a wall-clock ceiling. The quick stops are held to 20s, because a proven model answers in about two and the only thing that ever reaches the ceiling is a fault; the Workshop is allowed 60s, because it is the one agentic turn and legitimately takes twenty to thirty. Past the ceiling the visitor is served the precomputed archetype content instead of a slower sentence, so the document is complete either way.
+Every turn has a wall-clock ceiling. The quick stops are held to 30s, because a proven model answers in about two and the only thing that ever reaches the ceiling is a fault; the Workshop is allowed 60s, because it is the one agentic turn and legitimately takes twenty to thirty. Past the ceiling the visitor is served the precomputed archetype content instead of a slower sentence, so the document is complete either way.
 
 One model call is in flight at a time. A second caller waits, so one visitor's content can never appear in another visitor's document.
 
@@ -608,10 +608,9 @@ The flags that change what a visitor experiences.
 ### Constraints to be aware of
 
 - Listing selection is weighted for the United Kingdom: 19 preference terms and 20 demotion terms. A room in another country needs these re-weighted.
-- 12 of the 48 slots are time-limited trials rather than perpetual free listings. All are free to acquire; none are paid.
-- 4 listings appear in three or more industries, the most reused being UK (England and Wales only) Census 2021 - Trial, Acorn - Geodemographic Segmentation in the UK. A visitor who has seen the booth before may be offered the same dataset again.
+- 5 listings appear in three or more industries, the most reused being GfK Population by Age Group & Gender Germany, MBI Sociodemographic Data for Germany. A visitor who has seen the booth before may be offered the same dataset again.
 - A listing is offerable if the catalogue still carries it, it is offered in the EVENT’s region, and a visitor can obtain it directly - not by-request and not discover-only. It is deliberately NOT judged on whether this account could import it: that flag answers “can THIS account attach it”, and every booth account is in one region while the three events are in three, so using it would reject listings the visitor can attach perfectly well.
-- A stall widens its pool by borrowing from other industries when a listing matches what the visitor typed, which is right for data that travels - weather, boundaries, addresses, population, company registrations - and wrong for sector-specific reference data. 12 listings are protected from that for this venue and are offered in their own stall only.
+- A stall widens its pool by borrowing from other industries when a listing matches what the visitor typed, which is right for data that travels - weather, boundaries, addresses, population, company registrations - and wrong for sector-specific reference data. 14 listings are protected from that for this venue and are offered in their own stall only.
 - The curated six always win their own stall. Ranking changes the ORDER a visitor sees them in, and borrowed listings compete only for slots the six do not fill.
 - No pinned fallback for: Healthcare & Life Sciences, Financial Services, Manufacturing & Industrial, Media, Telco & Entertainment. These industries rely entirely on the curated list in section 3.
 - The industry does not weight which archetype a visitor is routed to.

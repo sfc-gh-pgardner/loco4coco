@@ -36,11 +36,22 @@ print('tokens from that problem   :',
       sorted(server._problem_tokens(st))[:12])
 
 fails = []
-# Both Met Office energy listings must survive.
-for gn, name in (('GZTDZJKVCU', 'National Severe Weather Warning Service'),
-                 ('GZTDZJKVH3', 'UK Land Surface Observations')):
-    if gn not in got:
-        fails.append(f'{name} missing from an energy visitor\'s stall')
+# Both Met Office energy listings must survive - but they are UK listings, and
+# this gate asserts them by global name. On a Paris or Berlin booth the energy
+# bucket is French or German by design, so asserting them there reports two
+# failures for a stall that is correct, and a gate that cries wolf on the
+# morning of an event is worse than no gate (same reasoning as verify_context.py).
+# The regression this file exists to catch is the RANKING bug, not the UK list,
+# so the coincidental-word-match assertion below still runs for every venue.
+_profile = (cfg.get('event') or {}).get('market_profile') or 'uk'
+if _profile == 'uk':
+    for gn, name in (('GZTDZJKVCU', 'National Severe Weather Warning Service'),
+                     ('GZTDZJKVH3', 'UK Land Surface Observations')):
+        if gn not in got:
+            fails.append(f'{name} missing from an energy visitor\'s stall')
+else:
+    print(f'\nnote: market_profile={_profile!r}, so the two UK Met Office '
+          f'assertions are skipped; the ranking assertions still run')
 # A coincidental word match must not displace the bucket.
 for bad in ('Industry Classification', 'Spatial Features'):
     if any(bad in t for t in titles):

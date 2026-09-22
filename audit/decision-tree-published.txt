@@ -507,7 +507,7 @@ These rules are applied in the browser as the visitor taps, and again on the ser
 •  Stop: The Workshop · Model transport: exec · Notes: Agentic. CoCo's working is shown on screen as it arrives.
 •  Stop: The Postbox · Notes: No model turn. Runs the QA review, writes the document, returns the fixed line above.
 
-Every turn has a wall-clock ceiling. The quick stops are held to 20s, because a proven model answers in about two and the only thing that ever reaches the ceiling is a fault; the Workshop is allowed 60s, because it is the one agentic turn and legitimately takes twenty to thirty. Past the ceiling the visitor is served the precomputed archetype content instead of a slower sentence, so the document is complete either way.
+Every turn has a wall-clock ceiling. The quick stops are held to 30s and the Workshop to 60s, because it is the one agentic turn and legitimately takes twenty to thirty. Neither is a target: a proven model answers a quick stop in about two seconds, and the ceiling exists only so that a fault cannot hold a visitor at a frozen screen. It is deliberately not tighter than that, because a visitor who writes a long, complex brief earns a slower answer. Past the ceiling the visitor is served the precomputed archetype content instead of a slower sentence, so the document is complete either way.
 
 One model call is in flight at a time. A second caller waits, so one visitor's content can never appear in another visitor's document.
 

@@ -174,7 +174,11 @@ function paint(s) {
   const w = $('s-warm');
   if (s.warm_agent === null) { w.textContent = 'off'; w.className = 'idle'; }
   else if (s.warm_agent) { w.textContent = 'ready'; w.className = 'ok'; }
-  else { w.textContent = 'not running (falls back, still works)'; w.className = 'bad'; }
+  // Deliberately NOT red. The warm agent is an accelerator, not a dependency:
+  // when it cannot start the booth falls through to exec, to COMPLETE, and then
+  // to precomputed content, and the visitor sees a working stand either way.
+  // A red row here sent an operator hunting a fault that did not exist.
+  else { w.textContent = 'not running (falls back, still works)'; w.className = 'idle'; }
 
   const v = $('s-visitor');
   v.textContent = s.visitor_active ? ('in progress — ' + (s.stage || '?')) : 'none';

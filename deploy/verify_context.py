@@ -18,8 +18,20 @@ Link and listing checks touch the network, so they are opt-in:
     python3 deploy/verify_context.py --listings      # + query the Marketplace
     python3 deploy/verify_context.py --all
 
-Exit code is the number of failures, so it drops straight into a shell gate.
-A WARN never fails the run; a FAIL always does.
+Exit code is the number of BOOTH-BLOCKING failures, so it drops straight into a
+shell gate. Three severities, and the distinction matters on event day:
+
+  FAIL  the booth will hand a visitor something wrong. Gates the run.
+  note  true of this account, not of the booth. Printed in full, never gates.
+  warn  the check itself could not run. Never gates.
+
+The "note" severity exists because the loudest finding here - a listing that is
+live in the Marketplace but not ready for THIS account to import - says nothing
+about whether the booth works. The booth shows listings and hands out a document
+naming them; it never imports one. Treating that as a failure meant a healthy
+booth reported 12 failures, and an operator following the setup prompt would have
+refused to open a stand that was working perfectly. A gate that cries wolf on the
+morning of an event is worse than no gate.
 """
 
 import argparse
@@ -38,12 +50,19 @@ sys.path.insert(0, HERE)
 
 import context as ctx  # noqa: E402
 
-FAILS, WARNS = [], []
+FAILS, WARNS, NOTES = [], [], []
 
 
 def fail(check, detail):
     FAILS.append((check, detail))
     print("  FAIL  %-22s %s" % (check, detail))
+
+
+def note(check, detail):
+    """A finding that is real, worth printing, and not the booth's problem.
+    Never contributes to the exit code - see the exit-code note in the docstring."""
+    NOTES.append((check, detail))
+    print("  note  %-22s %s" % (check, detail))
 
 
 def warn(check, detail):
@@ -273,10 +292,17 @@ def check_listings_live(data, conn):
         fail("listings/live", "%s is no longer in the catalog" % g)
     notready = [g for g, r in found.items()
                 if str(r.get("R")).lower() in ("false", "0", "none", "")]
+    # Import-readiness is a property of THIS account's entitlements and region,
+    # not of the listing or of the booth. The visitor never imports anything at
+    # the stand, so this cannot spoil a visit - it is printed and moves on.
     for g in notready:
-        fail("listings/importable", "%s is not ready for import" % g)
+        note("listings/importable",
+             "%s is live but not importable by this account (harmless at the booth)" % g)
     if not gone and not notready:
         ok("listings/live", "%d listings live and importable" % len(found))
+    elif not gone:
+        ok("listings/live", "%d listings live (%d not importable by this account)"
+           % (len(found), len(notready)))
 
 
 def _configured_connection():
@@ -329,7 +355,10 @@ def main():
                                    ("--listings", do_listings)) if not on]
         print("\nskipped network checks: %s" % ", ".join(skipped))
 
-    print("\n%d failures, %d warnings" % (len(FAILS), len(WARNS)))
+    print("\n%d failures, %d warnings, %d notes" % (len(FAILS), len(WARNS), len(NOTES)))
+    if NOTES and not FAILS:
+        print("The notes above are account-local and do not affect the booth. "
+              "Nothing here blocks opening the stand.")
     return len(FAILS)
 
 

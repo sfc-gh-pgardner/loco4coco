@@ -50,11 +50,13 @@ Load the datasets for your city first, then open http://127.0.0.1:4747/admin, ch
 python3 deploy/load_context.py --connection <your-connection>
 That order matters. Apply is the only thing that clears the dataset cache, so pressing it last is what guarantees the stall shows what you just loaded.
 This step is not optional. Without it the stall shows London's datasets whichever city you are in.
-H2:The four things to check before the doors open
-* The admin panel says Model proven, in green.
+H2:The six things to check before the doors open
+* The admin panel's Model proven row reads yes, followed by a model name, in green.
 * The dataset profile matches your city, and datasets loaded is not zero.
 * A test visit produces a QR code that opens on your phone.
 * The admin panel names the connection you created in step 0, and nothing else.
+* Pre-flight reports failures. Run python3 deploy/verify_context.py --all. Only FAIL lines matter, and there should be none. The note lines about listings not importable by this account are expected and harmless: the booth shows listings, it never imports one.
+* The admin panel's Warm agent row. Ready is ideal; off or not running is fine too, and is shown in grey rather than red because the booth works either way.
 H2:If something breaks
 * The stall shows the wrong city's datasets. You skipped load_context.py, or Apply was not pressed.
 * Replies are slow, around twenty seconds each. Either the model the booth is configured for has stopped working, or the warm agent could not start on this laptop's version of Cortex Code. Both fall back automatically and the admin panel and startup log will say which. The booth still works either way.

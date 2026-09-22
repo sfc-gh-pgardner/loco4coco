@@ -43,6 +43,23 @@ print('listings reachable :', len(reachable), 'of', len(all_gns))
 if never:
     print('never offered      :', sorted(never))
 
+# bucket_only is a flat list of global names, so it only protects the profile whose
+# listings are in it. Reported rather than failed: it is a curation gap for whoever
+# localises next, not a defect in the code under test.
+import json as _json
+_mk = _json.load(open('skills/loco4coco/references/marketplace.json'))['profiles']
+print()
+print('bucket_only protection by profile (a flat list only covers the profile it '
+      'was written for):')
+for _prof in sorted(_mk):
+    _in = set()
+    for _ind, _st in _mk[_prof].items():
+        for _t in ('primary', 'reserve'):
+            _in |= {r['global_name'] for r in _st[_t]}
+    _cov = len(bo & _in)
+    print('  %-3s %2d of %2d present%s' % (_prof, _cov, len(bo),
+          '' if _cov else '   <-- nothing is protected from cross-bucket borrowing here'))
+
 print()
 if fails:
     print(f'FAILURES ({len(fails)}):')

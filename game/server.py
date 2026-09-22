@@ -1475,7 +1475,18 @@ def listings_curated(cfg, industry, state=None):
             hay = (str(r.get("title") or "") + " "
                    + str(r.get("provider") or "")).lower()
             hits = sum(1 for t in toks if t in hay)
-            base = 2 if r in own else 0
+            # PRECEDENCE, not a nudge. `own` holds this bucket's primaries AND
+            # its reserves, so a bonus of 2 for "in my bucket" gave a reserve the
+            # same standing as a primary - and one theme overlap (worth 2) was
+            # then enough to push a curated pick out of its own stall. Measured
+            # before this change: energy and financial each served only 3 of their
+            # 6 primaries, the rest displaced by reserves. The curated six are the
+            # deliberate, reviewed, region-checked answer, so ranking may reorder
+            # WITHIN them but must never drop one in favour of a reserve or a
+            # borrowed listing. Reserves and borrows compete only for slots the
+            # primaries do not fill.
+            own_primary = (r in own) and not r.get("reserve")
+            base = 1000 if own_primary else (2 if r in own else 0)
             # Theme overlap is weighted below a problem-word hit but above the
             # home-bucket bonus, so what they HOLD outranks what sector they are
             # in without ever outranking what they actually said.

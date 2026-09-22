@@ -168,7 +168,45 @@ looks identical to working.
 the panel — but it never enters a prompt, and there is no per-language copy deck.
 **MEASURED:** all five Paris sessions carry `fr`, and no POC name is French; one came
 back in **German** because the model followed the company name. Treat the booth as
-English-only until this is built (212 static strings, 5 prompts).
+English-only until this is built (283 prose strings in `config.json` totalling
+~32k characters, plus 5 prompts totalling ~4.2k; see the translation checklist).
+
+### The title card reappears over a live game
+
+**Fixed 2026-09-22 (`290f056`), recorded because the failure mode is instructive.**
+The "Loco for CoCo" card was re-opened from the poll loop whenever
+`!haveVisitor() && firstLoad`, and *both* of those guards read fields off server
+state (`ST.visitor.first_name`, `ST.updated_at`). A single failed or partial
+`/api/state` poll mid-visit therefore satisfied them and the attract screen
+covered a live game — observed at the postbox on 5/4. It is now a one-way latch
+(`titleDone`) that also closes on first sight of any non-attract stage.
+**If you ever see it again**, it means state is being wiped rather than merely
+dropped: check `/tmp/l4c.log` for `/api/state` errors, and do NOT reload — the
+latch survives a poll failure but not an F5.
+
+### The page slides downwards as CoCo answers
+
+**Fixed 2026-09-22 (`290f056`).** `#bubble .msg` reserved ~2.6 lines but was
+allowed to grow to ~5, and `fitCanvas()` caches the chrome budget from the
+bubble's *measured* height, so a longer reply re-fitted the whole board under the
+visitor. The box is now a fixed six lines. Six, not the four it looks like:
+measured at the 1056px rail the bubble wraps at 99 chars/line, and across 62 real
+replies the median is 252 chars but the maximum is 531, with 14 of 62 over 400 —
+a four-line box silently scrolls the tail off about a quarter of what CoCo says.
+**If you retune `font-size` or `line-height` on the bubble, the height follows
+automatically** (it is `calc(1.55em * 6)`), but if you make replies longer you
+must re-measure: anything past ~590 characters starts scrolling again.
+The map cannot be cropped by this — width is solved from leftover height at a
+fixed 22:15 aspect — but it does get smaller on small screens (1366x768:
+768→637px). At 1920x1080 it is unchanged, already at its 1056px cap.
+
+### CoCo has no voice inside a location
+
+**Fixed 2026-09-22 (`290f056`).** The bubble used to be hidden along with the
+work tray whenever a POV location opened (`#wrap.povfocus`), to buy the interior
+~150px. Only the tray drops now. If an interior ever looks crushed, that is
+`sizePovCard()` honouring the panel's floor first by design — the room takes a
+tighter crop rather than the CONFIRM button scrolling out of reach.
 
 ---
 

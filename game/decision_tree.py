@@ -583,9 +583,22 @@ if _reuse:
       % (len(_reuse),
          ', '.join(q(t) for t, _n in
                    sorted(_titles.items(), key=lambda kv: -kv[1])[:2])))
-w('- A listing is only offerable if Snowflake reports it as importable. That is '
-  'stricter than being visible and not by-request, so the flag is checked '
-  'directly rather than inferred.')
+w('- A listing is offerable if the catalogue still carries it, it is offered in '
+  'the EVENT\u2019s region, and a visitor can obtain it directly - not by-request '
+  'and not discover-only. It is deliberately NOT judged on whether this account '
+  'could import it: that flag answers \u201ccan THIS account attach it\u201d, and '
+  'every booth account is in one region while the three events are in three, so '
+  'using it would reject listings the visitor can attach perfectly well.')
+_bo = (mkt.get('bucket_only') or {})
+_bo_n = len(_bo.get(_profile) or []) if isinstance(_bo, dict) else len(_bo)
+w('- A stall widens its pool by borrowing from other industries when a listing '
+  'matches what the visitor typed, which is right for data that travels - weather, '
+  'boundaries, addresses, population, company registrations - and wrong for '
+  'sector-specific reference data. %d listings are protected from that for this '
+  'venue and are offered in their own stall only.' % _bo_n)
+w('- The curated six always win their own stall. Ranking changes the ORDER a '
+  'visitor sees them in, and borrowed listings compete only for slots the six do '
+  'not fill.')
 _noind = [ind_label(k) for k in order()
           if not ((mkt.get('pinned') or {}).get(k))]
 if _noind:

@@ -82,17 +82,29 @@ always populates, so it was permanently true and *Clear visitor* looked broken.
 **Confirm:** an idle booth should now read **Visitor: none**.
 
 ### Costs run away
-**MEASURED 2026-09-22 — the guardrail was decorative.** `LOCO4COCO_RM` carried a
-100-credit quota with `notify_triggers` and `suspend_at` **both null**, so nothing
-would ever have fired. Cause: `CREATE RESOURCE MONITOR IF NOT EXISTS` skips a monitor
-an earlier deploy already made, and the follow-up `ALTER` set only the quota. Worse,
-**Snowflake silently drops `DO NOTIFY` triggers when there are no notify users**, and
-these accounts often have a user with no email — so a notify-only monitor is guaranteed
-to do nothing on them.
-**Confirm:** `SHOW RESOURCE MONITORS` must show a non-null `suspend_at`.
-**Do:** now fixed to suspend at 100%. Watch `game/cost.jsonl` during the event.
+**Nothing caps the booth, deliberately.** There is no resource monitor, no credit
+quota, and no idle shutdown, because each of those ends the activation in public
+rather than saving money worth having.
+**MEASURED:** the booth warehouse used **0.78 credits in 14 days**, against **64
+credits for Cortex Code Desktop** over the same period. The booth is not where an
+account gets into trouble.
+**Confirm:** `SHOW WAREHOUSES LIKE 'LOCO4COCO_WH'` must report `resource_monitor` as
+`null`.
+**Do:** watch `game/cost.jsonl` and `sql_statements/03-event-health.sql`. Do **not**
+add a `DO SUSPEND` trigger. This was got wrong twice — first a monitor whose notify
+triggers Snowflake silently dropped, because a pool account's user has no email, so it
+looked like a guardrail while doing nothing; then a suspend trigger, which would have
+cut the stand off mid-visit. If a shared account needs a ceiling, put it on a different
+warehouse.
 
----
+### The stand is dead when someone walks up
+**Fixed 2026-09-22.** The server used to shut itself down after 45 minutes idle, and
+45 minutes of quiet at a stand is an ordinary lunchtime — so the booth could be dead
+with nobody watching the terminal to notice.
+**Confirm:** `server.idle_shutdown_minutes` should be `0`.
+**Do:** if the process has genuinely died, restart it. The warehouse's own 60s
+auto-suspend is fine and unrelated — it auto-resumes, which costs latency on the first
+call, not availability.
 
 ## The things that look fine and are not
 
@@ -124,12 +136,25 @@ except `manufacturing/reserve`, both by-request. Stalls borrow across industries
 **every curated pick is visitor-facing.** Never fix an unobtainable listing by demoting
 it — delete it.
 
-### bucket_only protects London only
-**MEASURED:** 12 of 12 entries exist in the UK profile, **0 of 12 in Paris or Berlin**,
-so at two of the three events nothing is protected from cross-bucket borrowing. It is a
-flat list of global names and can only cover the profile it was written for.
-**Confirm:** `assert_listing_slots.py` now reports coverage per profile.
-**Status:** open curation gap.
+### A visitor is offered data from the wrong sector
+A stall widens its pool by **borrowing** listings from other industries when they score
+well on what the visitor typed. That is right for data that travels — weather,
+boundaries, addresses, population, company registrations, industry classifications — and
+wrong for sector-specific reference data. The config's example is real: scoring alone
+once offered PubMed biomedical papers to a council holding policy PDFs, because both
+matched on "population".
+`marketplace.bucket_only` is the guard, and it is now **keyed by market profile**.
+**MEASURED:** it used to be a flat list of twelve London names, so Paris and Berlin had
+no protection at all while the config read as though they were covered. With the new
+entries removed, Paris borrows a financial macro dataset into manufacturing and Berlin
+leaks 8 protected listings across stalls once realistic visitor text is in play.
+**Confirm:** `scripts/assert_listing_slots.py`. It fails if a protected listing appears
+outside its own bucket, and fails if any profile has no protection at all.
+**Do:** when you curate a new city, add its sector-specific listings to
+`marketplace.bucket_only.<profile>`. It cannot be derived from the data — 37 London
+listings sit in exactly one industry and only 11 are protected, so it is a judgement:
+protect market and reference data that would be nonsense in another sector, leave the
+things that genuinely travel.
 
 ### The lists are being read from a stale committed copy
 The booth reads context from Snowflake and falls back to a bundle, then to markdown,

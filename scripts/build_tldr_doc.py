@@ -32,7 +32,7 @@ python3 game/server.py
 Register for your event account at https://go.dataops.live/emea-swt/register first, then create a connection with snow connection add and call it MYBOOTH.
 H2:Bootstrap handles the awkward parts for you
 * It converts your connection to key-pair auth, which is what stops macOS asking for your keychain password during a visit.
-* It deploys the booth objects, the warehouse, and the resource monitor.
+* It deploys the booth objects and the warehouse, and makes sure no credit limit is attached to it - nothing should ever be able to suspend the booth mid-visit.
 * It points game/config.json at whichever account you were given.
 * It checks that the model the booth talks to actually answers, and falls back if it does not.
 * It runs a smoke test, so a broken account fails here rather than in front of someone.
@@ -58,7 +58,7 @@ H2:If something breaks
 * The stall shows the wrong city's datasets. You skipped load_context.py, or Apply was not pressed.
 * Replies are slow, around twenty seconds each. The model the booth is configured for has stopped working and it has fallen back to the slow path. The admin panel will say so.
 * macOS keeps asking for a password. Run check_auth_safety.py and fix what it names.
-* The server disappeared. It shuts itself down after 45 minutes with no activity. Start it again.
+* The server disappeared. It no longer stops itself on idle, so this means the process died or the laptop slept. Start it again.
 H2:Restarting
 Use the Restart server button in the admin panel. There is no need to find the process.
 """

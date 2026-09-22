@@ -108,4 +108,7 @@ Total CoCo wait is about 58s of the 300s budget, down from 144.5s before tuning.
 - **Delivery is a QR to a presigned stage document, not an email.** The booth keeps
   nothing on the laptop and sends no email; the visitor scans the QR on screen and the
   document lands on their own phone.
-- **The server stops itself after 45 minutes idle**, so a forgotten laptop cannot run all night.
+- **Nothing can stop the booth mid-event.** No resource monitor, no credit cap, and no
+  idle shutdown - each of those ends the activation in public rather than saving money
+  worth having. Measured: the booth warehouse used 0.78 credits in 14 days against 64
+  for Cortex Code Desktop. Cost is observed via `game/cost.jsonl`, not enforced.

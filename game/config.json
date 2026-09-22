@@ -4,7 +4,8 @@
     "host": "127.0.0.1",
     "port": 4747,
     "poll_ms": 400,
-    "idle_shutdown_minutes": 45
+    "_idle_shutdown_comment": "0 = never shut down, which is the right default for a booth. This was 45, and 45 minutes of quiet at a stand is an ordinary lunchtime - the failure mode was a dead stand when the next visitor walked up, with nobody watching the terminal to notice. Cost is not a reason to keep it: the warehouse auto-suspends after 60s on its own, and the booth warehouse measured 0.78 credits in 14 days. Set a number of minutes if you specifically want an unattended laptop to stop itself.",
+    "idle_shutdown_minutes": 0
   },
   "event": {
     "venue": "london",

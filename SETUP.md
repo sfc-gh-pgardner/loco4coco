@@ -198,8 +198,8 @@ pure friction, and invites committing someone else's account identifier.
 
 ## Step 5: deploy the Snowflake objects
 
-One command builds the database, schema, `SESSIONS` and `TURNS` tables, stage, warehouse
-and resource monitor. Look before you leap:
+One command builds the database, schema, `SESSIONS` and `TURNS` tables, stage and
+warehouse. Look before you leap:
 
 ```bash
 python3 deploy/bootstrap.py -c MYBOOTH --plan-only
@@ -209,22 +209,32 @@ python3 deploy/bootstrap.py -c MYBOOTH
 It also patches `game/config.json` to point at your account and runs the smoke test, so
 the account is proven rather than assumed.
 
-The resource monitor is created with a **quota of 25 credits and a suspend trigger**.
+**There is deliberately no resource monitor, and nothing that can stop the game.**
+The post-hook's job is the opposite of creating one: it detaches any monitor left by an
+earlier deploy and reads the warehouse back to prove nothing is bound.
 
-> **An empty notify list is expected here, and the monitor is a ceiling rather than a
-> guard.** A pool-assigned account's user usually has no email address at all, so
-> `NOTIFY_USERS` cannot be set — it fails outright with "User ... does not have an
-> associated email address" — and the post-hook falls back to a monitor with no
-> recipients. There is deliberately **no suspend trigger**, so nothing will ever
-> interrupt a visitor.
+> **Why there is no cap.** The booth runs all day with a queue in front of it. A credit
+> limit that trips does not save money in any meaningful sense — it ends the activation,
+> in public, mid-visit, with a stranger watching. That is a far worse outcome than the
+> compute it would have saved.
 >
-> Be clear-eyed about what that means: the monitor will not warn you and will not stop
-> anything. It is a recorded quota, nothing more. In practice it does not matter —
-> measured on an event account, the booth warehouse used **0.78 credits in 14 days**
-> against **64 credits for Cortex Code Desktop** over the same period, so a 100-credit
-> warehouse quota is far beyond anything a booth can reach. Real cost visibility is
-> `game/cost.jsonl` and `SNOWFLAKE.ACCOUNT_USAGE.METERING_HISTORY`, and the line that
-> actually moves is Cortex Code Desktop during setup, not the booth.
+> And the compute is not the problem. Measured on an event account, the booth warehouse
+> used **0.78 credits in 14 days**, against **64 credits for Cortex Code Desktop** over
+> the same period. The line that moves is Cortex Code during setup, not the booth.
+>
+> This was got wrong twice, in opposite directions, so it is worth stating plainly. A
+> monitor was first created with notify-only triggers — but a pool account's user
+> usually has no email address, `NOTIFY_USERS` fails outright with "User ... does not
+> have an associated email address", and **Snowflake silently drops notify triggers
+> when there are no notify users**. So it reported a quota, fired nothing, warned
+> nobody, and looked like a guardrail. A suspend trigger was then added to make it
+> real, which made it genuinely dangerous. Neither is wanted.
+>
+> Cost is observed, not enforced: `game/cost.jsonl` per model call,
+> `sql_statements/03-event-health.sql` per visit and per turn, and
+> `SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY` for credits. If you genuinely
+> need a cap on a shared account, put it on a **different** warehouse and leave
+> `LOCO4COCO_WH` alone.
 
 ## Step 6: load this city's datasets
 
@@ -373,7 +383,7 @@ eu-central-1 filters on an event account) and is in-region by construction.
 
 There is deliberately no call cap. Watch spend in `game/cost.jsonl`
 (`kind: marketplace_agentic`) and set `marketplace.agentic.enabled: false` to
-turn it off. Spend is watched **per account** - its own resource monitor plus the
+turn it off. Spend is watched **per account** - `game/cost.jsonl` plus the
 `cost.jsonl` on that laptop - and there is deliberately no cross-booth rollup:
 combine the per-account figures by hand if you want an event-wide total.
 
@@ -425,16 +435,28 @@ cost, and the single-session design would still need one service per stand.
 visitor. The first Cortex call in a fresh process takes 5 to 9s (it includes connection
 setup); after that it settles to 2 to 3.5s.
 
-## Cost guardrails
+## Cost: observed, never enforced
 
-- The resource monitor from Step 5 has a 100-credit quota and notifies at 75%, 90% and
-  100%. It does **not** suspend the warehouse - it only warns, so a busy booth is never cut
-  off mid-visit. Watch the notifications and `game/cost.jsonl`.
-- `game/cost.jsonl` records every model call locally: turn, transport, model, duration and
-  token counts. This is how you see spend per visitor.
-- The warehouse is X-Small with 60s auto-suspend. It only does logging, so it is near free.
-- The server stops itself after **45 minutes idle**, so a forgotten laptop cannot run all
-  night. Change `server.idle_shutdown_minutes`, or set `0` for a long event.
+**Nothing can stop the booth.** There is no resource monitor, no credit cap, and no idle
+shutdown. That is deliberate: every one of those ends the activation in public rather
+than saving money worth having.
+
+- **No resource monitor.** The post-hook asserts that none is bound to `LOCO4COCO_WH` and
+  reads the warehouse back to prove it. If you need a cap on a shared account, put it on a
+  different warehouse.
+- **No idle shutdown.** `server.idle_shutdown_minutes` is `0`. It was 45, and 45 minutes of
+  quiet at a stand is an ordinary lunchtime — the failure mode was a dead stand when the
+  next visitor walked up, with nobody watching the terminal to notice.
+- **The spend is not the problem.** Measured on an event account: the booth warehouse used
+  **0.78 credits in 14 days**, against **64 credits for Cortex Code Desktop** over the same
+  period. The line that moves is Cortex Code during setup, not the booth.
+- **What to watch instead.** `game/cost.jsonl` records every model call locally — turn,
+  transport, model, duration and token counts — which is how you see spend per visitor.
+  `sql_statements/03-event-health.sql` gives it per visit and per turn, and
+  `SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY` has the credits.
+- The warehouse is X-Small with 60s auto-suspend and auto-resume, so it parks itself
+  between visitors and comes back on its own. That is a latency question — the first call
+  after a park is slow — not a cap.
 
 ## Delivery: how the visitor actually gets their blueprint
 
@@ -596,11 +618,14 @@ not built. Until they exist, the query above *is* the handover.
    mid-visitor is worse than the dialog you were trying to remove.
 
 6. **The server vanished.** It idled out after 45 minutes.
-7. **Nobody got a monitor warning.** `monitor_notify_user` was empty, or the user has no
-   email address. On hands-on-lab / event accounts the login user often has no email, so
-   `NOTIFY_USERS` cannot be set - the deploy no longer aborts (the post-hook creates the
-   monitor without a notify list and prints a warning), but nobody is warned. For an
-   unattended event account, add a `DO SUSPEND` trigger by hand if you want a hard cap.
+7. **A visit was cut off, or the stand was dead when someone walked up.** Something is
+   capping or stopping the booth, and nothing in this project should be. Check that no
+   resource monitor is bound - `SHOW WAREHOUSES LIKE 'LOCO4COCO_WH'` must report
+   `resource_monitor` as `null` - and that `server.idle_shutdown_minutes` is `0`. Do
+   **not** add a `DO SUSPEND` trigger to get a hard cap: a booth that suspends mid-visit
+   is a worse failure than any overspend, and the booth warehouse measured 0.78 credits
+   in 14 days. If a shared account genuinely needs a ceiling, put it on a different
+   warehouse.
 
 ## If you change the fast model
 

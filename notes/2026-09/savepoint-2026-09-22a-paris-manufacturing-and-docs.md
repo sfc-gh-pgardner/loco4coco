@@ -89,15 +89,52 @@ the prior commit:
   expects every listing. Worth a decision: fix the tree, or scope the assertion
   to primaries.
 
+## Added later in the same session
+
+**Verified at the far end, not just in the table.** Switching the venue to Paris
+through `/api/admin/apply` and calling the real `load_marketplace('fr')` returns
+the six on-theme picks in positions one to six, with the reserves behind them. As
+the stall slices to six, that is what a Paris manufacturing visitor sees. Smoke
+test **PASS**, CoCo wait 42.1s of the 300s budget.
+
+**Setup guide Google Doc `102kpn7MXJFYcA9ZHoa6kCKoQe3EgK3Dtj8bwm9wF6bQ` patched
+and verified.** Seven passages, paragraph count unchanged at 322, bullets intact
+because bulleted items were patched by replacing the text inside the paragraph
+rather than the paragraph itself. Two were actively wrong, both inverting the
+event-region rule: the troubleshooting entry for an empty stall blamed
+`event.region` not matching the account's region, and the localisation TLDR said
+to set `event.region` to the account's real region. `audit/setup-doc-changes.md`
+records all seven.
+
+**A real trap found while checking the docs, not a doc problem.** Only `/admin`
+Apply clears `_market_cache`; nothing else does, and `load_context.py` does not.
+The documented order was Apply first, then load the datasets, which can leave the
+server serving the listings it read earlier for the rest of the process's life.
+Both the TL;DR and SETUP.md now say load first, Apply last, and say why. The
+TL;DR Google Doc was patched for this too and re-verified: 47 paragraphs, 10
+headings, 13 bullets, **0 diffs** against the regenerated in-repo body.
+
+Two further `event.operator` references survived the earlier sweep because they
+were phrased "type your name and stand" rather than naming the field. Grep for the
+phrasing, not just the identifier.
+
+Final gates: `check_doc_html_sync.py` PASS, `check_auth_safety.py` PASS, working
+tree clean.
+
+**One side effect worth knowing:** pressing Apply rewrites `game/config.json` with
+`ensure_ascii=False`, so escaped unicode such as `fran\u00e7ais` becomes literal
+`français`. Semantically identical, but it shows up as a diff for any operator who
+presses Apply.
+
 ## Next
 
-1. The setup guide Google Doc `102kpn7MXJFYcA9ZHoa6kCKoQe3EgK3Dtj8bwm9wF6bQ` —
-   the repo side is now correct but the Doc is not. `audit/setup-doc-changes.md`
-   holds the audit. There is no publisher script for this one, unlike the other
-   two, so it needs patching in place.
-2. Translation status.
-3. Post-event processes.
-4. Operator still wants to test `/admin` by hand.
+1. Translation status.
+2. Post-event processes.
+3. Operator still wants to test `/admin` by hand. Note that Apply, restart and the
+   venue switch were all exercised from the API this session and behaved, so what
+   remains is the panel itself.
+4. Decide what to do about `assert_decision_tree.py`: fix the tree to list reserves,
+   or scope the assertion to primaries. It has been failing for a while.
 
 ## Watch out
 

@@ -1,25 +1,29 @@
-"""Convert the connection the operator already made onto key-pair auth, in place.
+"""Create a separate booth connection on key-pair auth alongside the operator's own.
 
-WHY IN PLACE
+WHY A SEPARATE CONNECTION
 
-An earlier version of this created a second connection called BOOTH. That was
-wrong. The operator already sets up a connection in step 0 against their assigned
-DataOps account, Cortex Code is already pointed at it, and it is already selected
-in the connection picker. Adding a second name meant a hardcoded value in config,
-a name nobody recognised, and a picker that still had the OAuth connection
-selected - so the browser prompts continued.
+An earlier version converted the operator's connection in place.  That worked
+when connections.toml was only edited by this script, but Cortex Code's
+"Snowflake Managed Config" continuously manages the connection it is pointed
+at: it overwrites authenticator, injects tokens, and strips keys it does not
+recognise.  The result is that the operator's connection reverts from
+SNOWFLAKE_JWT back to OAuth within seconds, the snow CLI fails ("Private Key
+authentication requires authenticator set to SNOWFLAKE_JWT"), and the Python
+connector falls back to keychain prompts - silently undoing the conversion.
 
-So this rewrites that one connection: same name, same account, same user, key-pair
-instead of OAuth. Nothing downstream has to learn a new name, and the connection
-already selected in the picker stops prompting.
+The fix is to leave the operator's connection alone and create a new one called
+LOCO4COCO_BOOTH.  Cortex Code does not manage a connection it did not create,
+so LOCO4COCO_BOOTH stays on key-pair permanently.  bootstrap.py writes
+LOCO4COCO_BOOTH into game/config.json, so the game server, snow CLI calls, and
+cortex exec all use it.
 
 WHY AT ALL
 
 DataOps event accounts are handed out with `authenticator =
-oauth_authorization_code` and `client_store_temporary_credential = true`. The
+oauth_authorization_code` and `client_store_temporary_credential = true`.  The
 OAuth token is cached in the macOS keychain, so macOS asks permission once per
 process - about 3 per visitor, ~312 over a hundred-visitor day - and when the
-token expires the recovery path is a browser window. Key-pair auth has no token
+token expires the recovery path is a browser window.  Key-pair auth has no token
 to cache and nothing to expire.
 
 Usage:
@@ -38,12 +42,9 @@ HOME = pathlib.Path.home()
 TOML = HOME / ".snowflake" / "connections.toml"
 KEYDIR = HOME / ".snowflake" / "keys"
 BROWSERY = ("oauth", "externalbrowser", "sso")
-# Keys that only make sense for a browser/OAuth flow and must not survive the
-# conversion - leaving client_store_temporary_credential behind would keep the
-# keychain in the path.
-OAUTH_ONLY = ("client_store_temporary_credential", "token", "token_file_path",
-              "oauth_client_id", "oauth_client_secret", "oauth_redirect_uri",
-              "password")
+BOOTH_CONN = "LOCO4COCO_BOOTH"
+# Keys to copy from the source connection into the booth connection.
+COPY_KEYS = ("account", "user", "role", "warehouse")
 
 
 def sh(cmd, **kw):
@@ -81,34 +82,38 @@ def generate_key(name):
     return priv, body
 
 
-def rewrite_block(text, name, priv):
-    """Replace one connection's auth lines, leaving every other block alone."""
-    pat = re.compile(rf'^\[{re.escape(name)}\]\s*$', re.M)
+def append_booth_connection(text, src_conf, priv):
+    """Append a LOCO4COCO_BOOTH block to connections.toml.
+
+    If the block already exists, replace it. The source connection is left
+    untouched so Cortex Code can keep managing it.
+    """
+    # Remove existing booth block if present.
+    pat = re.compile(rf'^\[{re.escape(BOOTH_CONN)}\]\s*$', re.M)
     m = pat.search(text)
-    if not m:
-        sys.exit(f"connection [{name}] not found in {TOML}")
-    start = m.end()
-    nxt = re.search(r'^\[', text[start:], re.M)
-    end = start + (nxt.start() if nxt else len(text[start:]))
-    block, kept = text[start:end], []
-    for line in block.splitlines():
-        s = line.strip()
-        if not s:
-            continue
-        key = s.split("=", 1)[0].strip().lower()
-        if key in OAUTH_ONLY or key in ("authenticator", "private_key_file",
-                                        "private_key_path"):
-            continue
-        kept.append(line)
-    kept.append('authenticator = "SNOWFLAKE_JWT"')
-    kept.append(f'private_key_file = "{priv}"')
-    return text[:start] + "\n" + "\n".join(kept) + "\n\n" + text[end:]
+    if m:
+        start = m.start()
+        nxt = re.search(r'^\[', text[m.end():], re.M)
+        end = m.end() + (nxt.start() if nxt else len(text[m.end():]))
+        text = text[:start].rstrip("\n") + "\n" + text[end:].lstrip("\n")
+
+    # Build the new block from the source connection's identity fields.
+    lines = [f"\n[{BOOTH_CONN}]"]
+    for key in COPY_KEYS:
+        val = src_conf.get(key)
+        if val:
+            lines.append(f'{key} = "{val}"')
+    lines.append('authenticator = "SNOWFLAKE_JWT"')
+    lines.append(f'private_key_file = "{priv}"')
+    lines.append(f'private_key_path = "{priv}"')
+
+    return text.rstrip("\n") + "\n" + "\n".join(lines) + "\n"
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--connection", "-c", required=True,
-                    help="the connection you created in step 0; converted in place")
+                    help="the operator's connection from step 0; left untouched")
     # Registering a public key needs an authenticated session, and if the
     # connection being converted is the OAuth one that costs a prompt. --via lets
     # you borrow a connection on the same account that does not prompt.
@@ -124,9 +129,12 @@ def main():
         sys.exit(f"connection {a.connection} not found in {TOML}. "
                  f"Known: {', '.join(k for k, v in conf.items() if isinstance(v, dict))}")
 
-    auth = str(src.get("authenticator") or "password").lower()
-    if not any(t in auth for t in BROWSERY) and src.get("private_key_file"):
-        print(f"[{a.connection}] is already on key-pair auth - nothing to do.")
+    # If booth connection already exists and works, skip.
+    booth = conf.get(BOOTH_CONN)
+    if (isinstance(booth, dict)
+            and "snowflake_jwt" in str(booth.get("authenticator") or "").lower()
+            and booth.get("private_key_file")):
+        print(f"[{BOOTH_CONN}] already exists with key-pair auth - nothing to do.")
         return 0
 
     print(f"1. generating a key for {a.connection}")
@@ -144,24 +152,25 @@ def main():
     cur.close()
     cn.close()
 
-    print(f"3. converting [{a.connection}] to SNOWFLAKE_JWT, in place")
+    print(f"3. creating [{BOOTH_CONN}] alongside [{a.connection}]")
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     backup = TOML.with_suffix(f".toml.bak-{stamp}")
     shutil.copy2(TOML, backup)
-    TOML.write_text(rewrite_block(TOML.read_text(), a.connection, priv))
-    print(f"   {a.connection} now uses key-pair; backup at {backup.name}")
+    TOML.write_text(append_booth_connection(TOML.read_text(), src, priv))
+    print(f"   [{BOOTH_CONN}] added; [{a.connection}] left untouched")
+    print(f"   backup at {backup.name}")
 
-    print(f"4. verifying, with no keychain and no browser in the path")
-    cn2 = sc.connect(connection_name=a.connection)
+    print(f"4. verifying {BOOTH_CONN} with no keychain and no browser in the path")
+    cn2 = sc.connect(connection_name=BOOTH_CONN)
     c2 = cn2.cursor()
     c2.execute("SELECT CURRENT_USER(), CURRENT_ACCOUNT(), CURRENT_REGION()")
     print(f"   connected as {c2.fetchone()}")
     c2.close()
     cn2.close()
 
-    print(f"\nDone. {a.connection} keeps its name, so Cortex Code, the connection "
-          f"picker and game/config.json all keep working.")
-    print("If Cortex Code is open, restart it so it picks up the change.")
+    print(f"\nDone. The game uses [{BOOTH_CONN}] (key-pair, no prompts).")
+    print(f"[{a.connection}] is untouched - Cortex Code keeps managing it.")
+    print(f"bootstrap.py will write {BOOTH_CONN} into game/config.json automatically.")
     return 0
 
 

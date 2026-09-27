@@ -202,16 +202,18 @@ def step_keypair(conn, skip):
     Key-pair auth has no token to cache, so it never touches the keychain. This
     runs it automatically rather than leaving it as a step an operator can skip.
 
-    It converts the connection from step 0 in place rather than creating a second
-    one. An earlier version created a connection called BOOTH; that left the
-    operator's own connection still selected in the Cortex Code picker, still on
-    OAuth, so the browser prompts carried on regardless.
+    It creates a separate LOCO4COCO_BOOTH connection rather than converting the
+    operator's connection in place.  An in-place conversion was tried first, but
+    Cortex Code's "Snowflake Managed Config" continuously rewrites the connection
+    it manages, reverting SNOWFLAKE_JWT back to OAuth.  A separate connection
+    that Cortex Code does not manage stays on key-pair permanently.
 
     It cannot be made completely invisible: registering a public key needs an
     authenticated session first, and on a fresh laptop the only credential
     available is OAuth. So a couple of prompts before this point are structural.
     What this guarantees is that none happen once the doors open.
     """
+    BOOTH_CONN = "LOCO4COCO_BOOTH"
     if skip:
         print("\n[7/9] Key-pair auth: SKIPPED (--skip-keypair)")
         print("   The booth will keep using the keychain: expect ~3 macOS "
@@ -237,8 +239,8 @@ def step_keypair(conn, skip):
         print("   Most likely cause: this account does not permit "
               "ALTER USER ... SET RSA_PUBLIC_KEY.")
         return conn
-    print(f"   {conn} converted and verified - no keychain from here on.")
-    print(f"   Keep using -c {conn}: the name has not changed.")
+    print(f"   {BOOTH_CONN} created alongside {conn} - no keychain from here on.")
+    print(f"   The game will use {BOOTH_CONN}; {conn} is untouched for Cortex Code.")
     # Prove it, rather than assume it. The booth being on key-pair is not enough:
     # the CLI default and Cortex Code hold their own connection names, and either
     # can open a browser mid-event.
@@ -248,7 +250,7 @@ def step_keypair(conn, skip):
         r2 = run([sys.executable, audit])
         if r2.returncode:
             print("   ! something can still prompt - see the audit above")
-    return conn
+    return BOOTH_CONN
 
 
 def main():

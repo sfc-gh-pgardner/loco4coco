@@ -37,6 +37,27 @@ import threading
 import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _snow_binary():
+    """Resolve the snow CLI the same way server.snow_bin does: config, PATH, then
+    beside this python (where pip installs it, often off the default macOS PATH).
+    This layer is a fallback that degrades to the committed bundle, but it should
+    still find snow on a fresh laptop rather than silently never using Snowflake."""
+    import shutil
+    import sys
+    try:
+        with open(os.path.join(HERE, "config.json")) as f:
+            b = (json.load(f).get("snowflake") or {}).get("snow_binary")
+    except Exception:                                             # noqa: BLE001
+        b = None
+    if b and os.path.isabs(b) and os.path.exists(b):
+        return b
+    name = b or "snow"
+    if shutil.which(name):
+        return name
+    sib = os.path.join(os.path.dirname(sys.executable), "snow")
+    return sib if os.path.exists(sib) else name
 PLUGIN_ROOT = os.path.dirname(HERE)
 REFS = os.path.join(PLUGIN_ROOT, "skills", "loco4coco", "references")
 BUNDLE_PATH = os.path.join(REFS, "context-bundle.json")
@@ -169,7 +190,7 @@ def _from_snowflake(conn, timeout=25):
                     FROM LOCO4COCO.BOOTH.ROUTES)
     ) AS CTX
     """
-    cmd = ["snow", "sql", "-q", sql, "--format", "json",
+    cmd = [_snow_binary(), "sql", "-q", sql, "--format", "json",
            "--enable-templating", "NONE"]
     if conn:
         cmd += ["-c", conn]

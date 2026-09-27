@@ -30,6 +30,7 @@ import json
 import os
 import posixpath
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -2037,7 +2038,8 @@ def snow_sql(cfg, sql):
     """Run one statement via the snow CLI. Avoids adding a connector
     dependency to what is otherwise a stdlib server."""
     conn = (cfg.get("snowflake") or {}).get("connection_name")
-    cmd = ["snow", "sql", "-q", sql, "--format", "json"]
+    binary = (cfg.get("snowflake") or {}).get("snow_binary") or "snow"
+    cmd = [binary, "sql", "-q", sql, "--format", "json"]
     if conn:
         cmd += ["-c", conn]
     try:
@@ -2058,7 +2060,8 @@ def stage_and_presign(cfg, local_path):
     if not stage or not local_path:
         return "", "no stage configured"
     conn = (cfg.get("snowflake") or {}).get("connection_name")
-    cmd = ["snow", "stage", "copy", local_path, stage, "--overwrite"]
+    binary = (cfg.get("snowflake") or {}).get("snow_binary") or "snow"
+    cmd = [binary, "stage", "copy", local_path, stage, "--overwrite"]
     if conn:
         cmd += ["-c", conn]
     try:
@@ -3364,6 +3367,13 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:                                    # noqa: BLE001
             add("word_library", False, f"pip install python-docx ({e})")
 
+        snow_bin = (cfg.get("snowflake") or {}).get("snow_binary") or "snow"
+        snow_path = shutil.which(snow_bin)
+        add("snow_cli", bool(snow_path),
+            snow_path or f"{snow_bin!r} not on PATH - pip install snowflake-cli, "
+            f"then add the bin/ dir to PATH or set snowflake.snow_binary "
+            f"in config.json to the absolute path")
+
         stage = d.get("stage") or ""
         add("stage_configured", bool(stage), stage or "delivery.stage is empty")
         if stage:
@@ -3415,6 +3425,17 @@ def main():
     print(f"  account   : {cfg['snowflake']['connection_name']}")
     print(f"  transport : {(cfg.get('delivery') or {}).get('transport')}")
     print(f"  guides    : {len(load_guides())} primary forks loaded")
+    snow_bin = (cfg.get("snowflake") or {}).get("snow_binary") or "snow"
+    snow_path = shutil.which(snow_bin)
+    if snow_path:
+        print(f"  snow CLI  : {snow_path}")
+    else:
+        print(f"  snow CLI  : *** NOT FOUND ({snow_bin!r} is not on PATH) ***")
+        print(f"              Blueprint delivery will fail at the end of every visit.")
+        print(f"              Fix: pip install snowflake-cli, then either add the bin/")
+        print(f"              directory to PATH or set snowflake.snow_binary in config.json")
+        print(f"              to the absolute path (try: python3 -c")
+        print(f"              \"import shutil; print(shutil.which('snow'))\")")
     # No stand field to check any more. Rows are attributed by account, which is
     # resolved in the warm thread and needs nothing from the operator.
     # Warm the model so the first real visitor does not pay cold-start latency.

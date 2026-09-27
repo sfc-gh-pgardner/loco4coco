@@ -46,7 +46,9 @@
     "connection_name": "Frankfurt_L4C",
     "database": "LOCO4COCO",
     "schema": "BOOTH",
-    "sessions_table": "SESSIONS"
+    "sessions_table": "SESSIONS",
+    "snow_binary": "snow",
+    "_snow_binary_comment": "Path to the Snowflake CLI. Same idea as coco.binary: pip installs snow into the Python bin/ directory, which is often not on the default macOS PATH. If 'snow' is not found at startup, the banner says so and names the fix. Set an absolute path here if the binary is installed but not on PATH."
   },
   "coco": {
     "_comment": "Each message spawns `cortex exec`. Deliberately UNCAPPED - no max-turns, no effort floor, history left on. Cost is managed by observation (see cost_log) not by throttling the visitor.",

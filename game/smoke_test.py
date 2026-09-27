@@ -4,6 +4,8 @@ import json, os, re, subprocess, sys, time, urllib.request
 
 BASE = "http://127.0.0.1:4747"
 GAME = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, GAME)
+from context import _snow_binary  # noqa: E402  # resolve snow even when off PATH
 STATE = os.path.join(GAME, "state.json")
 
 
@@ -144,7 +146,7 @@ conn, db, sch = sfc["connection_name"], sfc["database"], sfc["schema"]
 
 def count(table, where):
     q = f"SELECT COUNT(*) AS N FROM {db}.{sch}.{table} WHERE {where}"
-    r = subprocess.run(["snow", "sql", "-q", q, "--format", "json", "-c", conn],
+    r = subprocess.run([_snow_binary(), "sql", "-q", q, "--format", "json", "-c", conn],
                        capture_output=True, text=True, timeout=120)
     if r.returncode != 0:
         return -1

@@ -4,9 +4,14 @@ One call proves availability, not latency: the first call on a cold warehouse is
 dominated by resume time. Three reps, report each and the median.
 """
 import json
+import os
 import statistics
 import subprocess
+import sys
 import time
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "game"))
+from context import _snow_binary  # noqa: E402  # resolve snow even when off PATH
 
 CANDIDATES = [
     "llama3.3-70b",
@@ -35,7 +40,7 @@ for m in CANDIDATES:
     for _ in range(REPS):
         t0 = time.time()
         p = subprocess.run(
-            ["snow", "sql", "-q",
+            [_snow_binary(), "sql", "-q",
              f"SELECT SNOWFLAKE.CORTEX.COMPLETE('{m}', $${PROMPT}$$) AS r",
              "--format", "json", "--enable-templating", "NONE"],
             capture_output=True, text=True, timeout=240)

@@ -35,6 +35,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PLUGIN = os.path.dirname(HERE)
+sys.path.insert(0, os.path.join(PLUGIN, "game"))
+from context import _snow_binary  # noqa: E402  # resolve snow even when off PATH
 OUT = os.path.join(PLUGIN, "skills", "loco4coco", "references", "marketplace-index.md")
 BASE = "https://app.snowflake.com/marketplace/listing/"
 VERIFIED_ON = "2026-08-06"
@@ -158,7 +160,7 @@ CURATED = {
 
 
 def show_listings(connection):
-    cmd = ["snow", "sql", "-q", "SHOW AVAILABLE LISTINGS",
+    cmd = [_snow_binary(), "sql", "-q", "SHOW AVAILABLE LISTINGS",
            "--format", "json", "-c", connection]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
     if r.returncode != 0:

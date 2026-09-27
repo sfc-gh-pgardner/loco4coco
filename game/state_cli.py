@@ -30,6 +30,7 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+from context import _snow_binary  # noqa: E402  # resolve snow even when off PATH
 from server import (BLANK_STATE, load_config, purge_temp_artifacts, read_state,  # noqa: E402
                     write_state)
 
@@ -64,7 +65,7 @@ def purge_rows(cfg):
     db, sch = sf.get("database"), sf.get("schema")
     conn = sf.get("connection_name")
     sql = f"DELETE FROM {db}.{sch}.SESSIONS; DELETE FROM {db}.{sch}.TURNS;"
-    cmd = ["snow", "sql", "-q", sql]
+    cmd = [_snow_binary(), "sql", "-q", sql]
     if conn:
         cmd += ["-c", conn]
     try:

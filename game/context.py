@@ -56,8 +56,19 @@ def _snow_binary():
     name = b or "snow"
     if shutil.which(name):
         return name
-    sib = os.path.join(os.path.dirname(sys.executable), "snow")
-    return sib if os.path.exists(sib) else name
+    # Off-PATH spots pip installs snow into (fresh-laptop case): beside this
+    # python, the sysconfig scripts dir, then the user-local bin. Keep this list
+    # in parity with server.snow_bin / deploy/snowcli.snow_bin.
+    cands = [os.path.join(os.path.dirname(sys.executable), "snow")]
+    try:
+        import sysconfig
+        sp = sysconfig.get_path("scripts")
+        if sp:
+            cands.append(os.path.join(sp, "snow"))
+    except Exception:                                             # noqa: BLE001
+        pass
+    cands.append(os.path.expanduser("~/.local/bin/snow"))
+    return next((c for c in cands if os.path.exists(c)), name)
 PLUGIN_ROOT = os.path.dirname(HERE)
 REFS = os.path.join(PLUGIN_ROOT, "skills", "loco4coco", "references")
 BUNDLE_PATH = os.path.join(REFS, "context-bundle.json")

@@ -14,6 +14,9 @@ import subprocess
 import sys
 import time
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from context import _snow_binary  # noqa: E402  # resolve snow even when off PATH
+
 
 def _default_conn():
     here = os.path.dirname(os.path.abspath(__file__))
@@ -57,7 +60,7 @@ JSON_PROMPT = (
 def run(model, prompt):
     q = f"SELECT SNOWFLAKE.CORTEX.COMPLETE('{model}', $${prompt}$$) AS R"
     t0 = time.time()
-    p = subprocess.run(["snow", "sql", "-c", CONN, "--format", "json", "-q", q],
+    p = subprocess.run([_snow_binary(), "sql", "-c", CONN, "--format", "json", "-q", q],
                        capture_output=True, text=True, timeout=120)
     secs = round(time.time() - t0, 1)
     if p.returncode != 0:
@@ -74,7 +77,7 @@ def run(model, prompt):
 # Measure snow-sql CLI baseline so we can isolate model time.
 base, _, _ = run("_baseline_", "x")  # will error but times the CLI round-trip
 b2 = time.time()
-subprocess.run(["snow", "sql", "-c", CONN, "--format", "json", "-q", "SELECT 1 AS R"],
+subprocess.run([_snow_binary(), "sql", "-c", CONN, "--format", "json", "-q", "SELECT 1 AS R"],
                capture_output=True, text=True, timeout=60)
 baseline = round(time.time() - b2, 1)
 print(f"snow-sql baseline (SELECT 1): ~{baseline}s  [subtract to approx model time]\n")

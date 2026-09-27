@@ -49,6 +49,8 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "game"))
+from context import _snow_binary  # noqa: E402  # resolve snow even when off PATH
 JSON_PATH = os.path.join(ROOT, "skills", "loco4coco", "references", "marketplace.json")
 
 # The EVENT's region per profile - see the module docstring.
@@ -66,7 +68,7 @@ def pull_catalogue(conn):
            '"is_ready_for_import", "is_monetized", "is_by_request", '
            '"discover_only", "is_limited_trial" '
            'FROM TABLE(RESULT_SCAN(LAST_QUERY_ID(-1)))')
-    cmd = ["snow", "sql", "--connection", conn, "--enable-templating", "NONE",
+    cmd = [_snow_binary(), "sql", "--connection", conn, "--enable-templating", "NONE",
            "--format", "json", "-q", sql]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     if r.returncode != 0:

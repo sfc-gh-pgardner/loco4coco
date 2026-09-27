@@ -393,8 +393,22 @@ if __name__ == "__main__":
     if "--bundle" in sys.argv:
         print("wrote bundle:", write_bundle())
     elif "--status" in sys.argv:
-        print(json.dumps(status(
-            conn=(os.environ.get("LOCO_CONNECTION") or "PG_LONDON")), indent=1))
+        # Resolve the connection the same way the booth does: env override, then
+        # game/config.json. Never hardcode a personal connection - a fresh laptop
+        # does not have it. The shipped placeholder MYBOOTH means "use the CLI
+        # default" until bootstrap writes the real one.
+        _conn = os.environ.get("LOCO_CONNECTION")
+        if not _conn:
+            try:
+                with open(os.path.join(os.path.dirname(__file__),
+                                       "config.json")) as _f:
+                    _conn = (json.load(_f).get("snowflake") or {}).get(
+                        "connection_name")
+            except Exception:                                     # noqa: BLE001
+                _conn = None
+        if _conn == "MYBOOTH":
+            _conn = None
+        print(json.dumps(status(conn=_conn), indent=1))
     else:
         q = " ".join(a for a in sys.argv[1:] if not a.startswith("-")) \
             or "invoices piling up"

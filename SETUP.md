@@ -165,18 +165,18 @@ python3 scripts/setup_keypair.py --connection MYBOOTH
 ```
 
 Use the same connection name you created in Step 0. It generates an RSA key under
-`~/.snowflake/keys/` (0600), registers the public half on your event user, and rewrites that
-connection to use `SNOWFLAKE_JWT` — **in place, keeping the name**. `connections.toml` is
-backed up first, so it is reversible. `deploy/bootstrap.py` also runs this same
-step automatically (it is on by default, and skips itself if you have already
-converted), so key-pair auth is part of setup either way — running it here first
-just means even the deploy is prompt-free.
+`~/.snowflake/keys/` (0600), registers the public half on your event user, and creates a
+**separate `LOCO4COCO_BOOTH` connection** on `SNOWFLAKE_JWT` — leaving your original
+connection untouched. `deploy/bootstrap.py` runs this same step automatically (on by
+default, and it skips itself if `LOCO4COCO_BOOTH` already exists) and writes
+`LOCO4COCO_BOOTH` into `game/config.json`, so the booth uses it for `snow` (`-c`),
+`cortex exec` (`-c`) and the warm agent (which passes the connection per request).
 
-Converting in place rather than creating a second connection is deliberate. Cortex Code's
-connection picker holds its own selection, and a new connection name would leave your
-original one still selected and still on OAuth — so the browser prompts would carry on.
-Keeping the name means the picker, `game/config.json` and every `-c` you have already typed
-all keep working.
+Creating a separate connection rather than converting in place is deliberate. Cortex Code
+continuously **manages the connection it is pointed at** — it rewrites `connections.toml`
+and reverts `SNOWFLAKE_JWT` back to OAuth within seconds. A connection Cortex Code did not
+create is left alone, so `LOCO4COCO_BOOTH` stays on key-pair permanently. Your original
+connection keeps working for chatting with Cortex Code; the booth never uses it.
 
 You may still see two or three prompts before the swap. That is expected and harmless —
 what matters is that none of them can happen once the doors open.
@@ -652,10 +652,11 @@ not built. Until they exist, the query above *is* the handover.
    ```
 
    That generates an unencrypted RSA key under `~/.snowflake/keys/` (0600), registers the
-   public half on your event user with `ALTER USER`, and rewrites that connection to
-   `SNOWFLAKE_JWT` in place, dropping `client_store_temporary_credential`.
-   `connections.toml` is backed up first. The key is unencrypted deliberately — a passphrase
-   would just reintroduce a prompt, and the booth has to run unattended.
+   public half on your event user with `ALTER USER`, and creates a separate
+   `LOCO4COCO_BOOTH` connection on `SNOWFLAKE_JWT` (leaving your original alone, because
+   Cortex Code would otherwise revert an in-place conversion back to OAuth). The key is
+   unencrypted deliberately — a passphrase would just reintroduce a prompt, and the booth
+   has to run unattended.
 
    The connection keeps its name, so nothing downstream changes: the same `-c` works, the
    Cortex Code picker keeps its selection, and `game/config.json` already holds that name.

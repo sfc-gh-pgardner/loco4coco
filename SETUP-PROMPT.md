@@ -44,15 +44,16 @@ you genuinely cannot determine a value:
    for my approval before deploying for real.
 
 6. After I approve, run the real deploy: `python3 deploy/bootstrap.py -c <conn>`.
-   As well as creating the Snowflake objects, this converts my connection to
-   key-pair auth (SNOWFLAKE_JWT) in place — that is what stops the macOS keychain
-   from interrupting a visit with a password prompt, so it is part of setup, not
-   optional. Do NOT pass --skip-keypair. When it finishes, confirm the connection
-   landed on key-pair: `snow connection list` should show authenticator
-   SNOWFLAKE_JWT with a private_key_file, and there will be a timestamped
-   connections.toml backup. Tell me the result. If the conversion failed, say so
-   but do NOT stop — the booth still works on OAuth, you will just get occasional
-   keychain prompts.
+   As well as creating the Snowflake objects, this creates a separate key-pair
+   connection `LOCO4COCO_BOOTH` (SNOWFLAKE_JWT) and points the booth at it — that
+   is what stops the macOS keychain from interrupting a visit, so it is part of
+   setup, not optional. It creates a SEPARATE connection (not an in-place convert)
+   because Cortex Code reverts a connection it manages back to OAuth; it never
+   touches my original connection. Do NOT pass --skip-keypair. When it finishes,
+   confirm `snow connection list` shows LOCO4COCO_BOOTH on authenticator
+   SNOWFLAKE_JWT with a private_key_file, and that game/config.json
+   snowflake.connection_name is LOCO4COCO_BOOTH. Tell me the result. If it failed,
+   say so but do NOT stop — the booth still works, you will just get keychain prompts.
 
 7. Set event.venue in game/config.json to my event (london, paris or berlin).
    Do not set event.marketplace_region, event.city or event.language by hand —

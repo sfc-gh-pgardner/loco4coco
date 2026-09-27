@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Smoke test: drive one full visitor through the API and assert the invariants."""
-import json, os, re, subprocess, sys, time, urllib.request
+import json, os, re, shutil, subprocess, sys, time, urllib.request
 
 BASE = "http://127.0.0.1:4747"
 GAME = os.path.dirname(os.path.abspath(__file__))
@@ -34,6 +34,20 @@ def wait(label, limit=180):
 LEAK = re.compile(r"(the user wants|as CoCo|plain English|no bullet|mcp__|"
                   r"create_draft|gmail|toolset|booth)", re.I)
 fails, timings = [], {}
+
+# Fresh-laptop guard: on a brand-new machine `pip install snowflake-cli` puts the
+# snow binary beside python, which is NOT on the default shell PATH. _snow_binary()
+# must resolve it there; a bare "snow" that is not on PATH would fail at the first
+# Snowflake call during setup - the exact critical failure this test guards. This
+# runs in the real install environment (smoke_test runs during bootstrap), so it
+# needs no PATH-stripping gymnastics: it just asks whether snow resolves here.
+_snow = _snow_binary()
+if _snow == "snow" and shutil.which("snow") is None:
+    fails.append("snow CLI does not resolve: off PATH and no fallback found - run "
+                 "`pip install snowflake-cli`, or set snowflake.snow_binary in "
+                 "config.json to the snow absolute path")
+else:
+    print(f"snow cli      : {_snow}")
 
 post("/api/reset")
 r = post("/api/intake", {"first_name": "Sarah", "company": "Lloyds Bank",

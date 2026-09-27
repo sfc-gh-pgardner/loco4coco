@@ -31,6 +31,8 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+from snowcli import snow_bin      # resolve snow even when it is off PATH  # noqa: E402
 ROOT = os.path.dirname(HERE)
 REFS = os.path.join(ROOT, "skills", "loco4coco", "references")
 GAME = os.path.join(ROOT, "game")
@@ -235,7 +237,7 @@ def run_sql(conn, statements, dry=False):
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(joined)
-        cmd = ["snow", "sql", "-f", path, "--enable-templating", "NONE"]
+        cmd = [snow_bin(), "sql", "-f", path, "--enable-templating", "NONE"]
         if conn:
             cmd += ["-c", conn]
         p = subprocess.run(cmd, capture_output=True, text=True, timeout=900)

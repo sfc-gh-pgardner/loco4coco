@@ -33,6 +33,8 @@ PLUGIN = os.path.dirname(HERE)
 GAME = os.path.join(PLUGIN, "game")
 MANIFEST = os.path.join(HERE, "manifest.yml")
 
+from snowcli import snow_bin      # resolve snow even when it is off PATH
+
 
 def run(cmd, **kw):
     print(f"\n$ {' '.join(cmd)}")
@@ -40,7 +42,7 @@ def run(cmd, **kw):
 
 
 def sql(conn, statement, quiet=False):
-    cmd = ["snow", "sql", "-q", statement, "--format", "json", "-c", conn]
+    cmd = [snow_bin(), "sql", "-q", statement, "--format", "json", "-c", conn]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
     if r.returncode != 0:
         return None, (r.stderr or r.stdout or "").strip()[:400]
@@ -106,10 +108,10 @@ def step2_archive_v1(conn, vals):
 
 def step_plan(conn, target, plan_only):
     print("\n[3/8] Creating the DCM project object")
-    run(["snow", "dcm", "create", "--if-not-exists", "--target", target, "-c", conn],
+    run([snow_bin(), "dcm", "create", "--if-not-exists", "--target", target, "-c", conn],
         cwd=HERE)
     print("\n[4/8] Planning (nothing is applied yet)")
-    r = run(["snow", "dcm", "plan", "--target", target, "-c", conn], cwd=HERE)
+    r = run([snow_bin(), "dcm", "plan", "--target", target, "-c", conn], cwd=HERE)
     if r.returncode != 0:
         sys.exit("\nPlan failed. Fix the definitions before deploying.")
     if plan_only:
@@ -119,7 +121,7 @@ def step_plan(conn, target, plan_only):
 
 def step_deploy(conn, target, alias):
     print("\n[5/8] Deploying")
-    r = run(["snow", "dcm", "deploy", "--target", target, "-c", conn,
+    r = run([snow_bin(), "dcm", "deploy", "--target", target, "-c", conn,
              "--alias", alias], cwd=HERE)
     if r.returncode != 0:
         sys.exit("\nDeploy failed.")
@@ -135,7 +137,7 @@ def step_post_hook(conn, vals):
     reasoning and the two ways this was previously got wrong.
     """
     print("\n[6/8] Making sure nothing can suspend the warehouse")
-    cmd = ["snow", "sql", "-f", os.path.join(HERE, "hooks", "post_hook.sql"),
+    cmd = [snow_bin(), "sql", "-f", os.path.join(HERE, "hooks", "post_hook.sql"),
            "--enable-templating", "JINJA", "-c", conn, "--format", "json"]
     cmd += ["-D", f"wh={vals['wh']}"]
     r = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
@@ -165,6 +167,7 @@ def step_config(conn, vals):
     with open(path, encoding="utf-8") as f:
         cfg = json.load(f)
     cfg["snowflake"]["connection_name"] = conn
+    cfg["snowflake"]["snow_binary"] = snow_bin()
     cfg["snowflake"]["database"] = vals["db"]
     cfg["snowflake"]["schema"] = vals["schema"]
     cfg["event"]["city"] = vals["city"]

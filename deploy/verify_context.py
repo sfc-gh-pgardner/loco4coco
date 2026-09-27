@@ -49,6 +49,7 @@ sys.path.insert(0, os.path.join(ROOT, "game"))
 sys.path.insert(0, HERE)
 
 import context as ctx  # noqa: E402
+from snowcli import snow_bin  # noqa: E402  # resolve snow even when off PATH
 
 FAILS, WARNS, NOTES = [], [], []
 
@@ -264,7 +265,7 @@ def check_listings_live(data, conn):
            '"is_ready_for_import" AS R, "regions" AS RG '
            'FROM TABLE(RESULT_SCAN(LAST_QUERY_ID())) '
            'WHERE "global_name" IN (%s)' % lit)
-    cmd = ["snow", "sql", "-q", sql, "--format", "json",
+    cmd = [snow_bin(), "sql", "-q", sql, "--format", "json",
            "--enable-templating", "NONE"]
     if conn:
         cmd += ["-c", conn]

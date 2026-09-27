@@ -383,7 +383,7 @@ Other keys you may still set directly:
 |---|---|
 | `event.venue` | **Primary toggle** (above). Overwrites city/language/region and sets the marketplace profile. Leave unset to hand-configure the three fields below. |
 | `event.city`, `event.language`, `event.marketplace_region` | Only used directly if `event.venue` is unset or unknown. A venue overwrites them. |
-| `snowflake.connection_name` | Your connection (bootstrap normally sets this) |
+| `snowflake.connection_name` | Your connection. Ships as the placeholder `MYBOOTH`; bootstrap rewrites it to yours. A stale value here is the classic postbox failure - keep your real value local (bootstrap sets it) and never commit it. |
 
 **Note the models are region-specific, in availability and in speed.** The default
 `coco.complete_model` and `qa.model` are both **`openai-gpt-5.4`**, with
@@ -529,6 +529,14 @@ reachable, and - the one that matters - a real file staged and
 presigned end to end. `"ok": true` means the QR handover works, which means no visitor
 can leave with nothing. If `presign_works` fails, the stand is not ready: check the
 connection name in `game/config.json` and that the deploy created the stage.
+
+The most common cause is a stale `snowflake.connection_name`. The repo ships it as
+the placeholder `MYBOOTH`; `bootstrap.py` rewrites it to your connection. If it is
+left as `MYBOOTH`, or points at an old/expired account, every Snowflake call - and
+so the postbox - fails (you will see `JWT token is invalid` or `connection ... not
+found`). The server now tests the connection at startup and prints a loud
+`connection preflight` line, and the admin panel shows a connection row, so a wrong
+connection surfaces before the doors open rather than at the postbox.
 
 If `segno` is not installed the QR degrades to a plain link rather than breaking, but
 install it - a link nobody can type is not a handover.

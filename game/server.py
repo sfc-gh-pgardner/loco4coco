@@ -478,6 +478,53 @@ def account_name(cfg):
 PREFLIGHT = {"checked": False, "model": None, "tried": [], "note": ""}
 
 
+CONN_PREFLIGHT = {"checked": False, "ok": None, "name": "", "detail": ""}
+
+
+def preflight_connection(cfg):
+    """Prove the configured connection actually authenticates, at startup.
+
+    The postbox stages the visitor's .docx with `snow stage copy -c <name>` and
+    presigns it, all against snowflake.connection_name. If that name is stale,
+    someone else's, or still the shipped placeholder, every Snowflake call fails
+    - but the only visible symptom is an error at the postbox with a visitor
+    watching. So we check once, here, and say so loudly. Warn only: the booth
+    still starts, because a booth that refuses to open is worse than one whose
+    delivery leg needs a fix before the doors do.
+
+    Tested via the `snow` CLI (snow_sql), NOT the Python connector, because that
+    is the exact path the postbox uses: a connection can authenticate via the CLI
+    but not via sc.connect() when its connections.toml has no private_key_file,
+    and testing the connector would then false-warn on a booth that delivers fine.
+    """
+    name = (cfg.get("snowflake") or {}).get("connection_name") or ""
+    CONN_PREFLIGHT.update({"checked": True, "name": name})
+    if not name or name == "MYBOOTH":
+        CONN_PREFLIGHT.update({"ok": False,
+            "detail": "connection_name is still the placeholder MYBOOTH; run "
+                      "python3 deploy/bootstrap.py -c <your-connection>"})
+        print("[loco4coco] *** snowflake.connection_name is not set for this "
+              "laptop (still 'MYBOOTH'). The postbox cannot deliver. ***")
+        print("[loco4coco] *** Fix: python3 deploy/bootstrap.py -c <your-connection> "
+              "(or set snowflake.connection_name in game/config.json). ***")
+        return False
+    rows, err = snow_sql(cfg, "SELECT CURRENT_USER() AS U, CURRENT_ACCOUNT() AS A")
+    if err or not rows:
+        CONN_PREFLIGHT.update({"ok": False, "detail": (err or "no rows")[:160]})
+        print(f"[loco4coco] *** connection '{name}' cannot authenticate: "
+              f"{(err or 'no rows')[:120]} ***")
+        print("[loco4coco] *** The postbox will fail to stage/deliver. Fix the "
+              "connection (python3 deploy/bootstrap.py -c <your-connection>) "
+              "before opening. ***")
+        return False
+    row = rows[0] if isinstance(rows, list) else rows
+    user = row.get("U") or row.get("u") or ""
+    acct = row.get("A") or row.get("a") or ""
+    CONN_PREFLIGHT.update({"ok": True, "detail": f"{user} @ {acct}"})
+    print(f"[loco4coco] connection preflight: {name} ok ({user} @ {acct})")
+    return True
+
+
 def preflight_complete_model(cfg):
     """Prove the configured COMPLETE model answers; swap to a fallback if not.
 
@@ -3014,6 +3061,12 @@ class Handler(BaseHTTPRequestHandler):
             "model_verified": PREFLIGHT.get("model") or "",
             "model_note": PREFLIGHT.get("note") or "",
             "model_rejected": "; ".join(PREFLIGHT.get("tried") or []),
+            # Whether the configured connection actually authenticated at
+            # startup. A stale or placeholder connection_name is the postbox
+            # failure: it only shows at delivery, with a visitor watching.
+            "connection_checked": CONN_PREFLIGHT.get("checked"),
+            "connection_ok": CONN_PREFLIGHT.get("ok"),
+            "connection_note": CONN_PREFLIGHT.get("detail") or "",
             "warm_agent": warm,
             "industries_on_stall": stall,
             "context_source": source,
@@ -3462,9 +3515,9 @@ def main():
     # fallback covered for it. Better to find out here than in front of someone.
     def _warm_conn():
         try:
-            sf_conn(cfg)
-        except Exception:                                        # noqa: BLE001
-            pass
+            preflight_connection(cfg)
+        except Exception as e:                                    # noqa: BLE001
+            print(f"[loco4coco] connection preflight skipped: {str(e)[:120]}")
         try:
             preflight_complete_model(cfg)
         except Exception as e:                                    # noqa: BLE001

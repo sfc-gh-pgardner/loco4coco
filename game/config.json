@@ -43,7 +43,8 @@
     }
   },
   "snowflake": {
-    "connection_name": "Frankfurt_L4C",
+    "_connection_name_comment": "Placeholder. bootstrap.py sets this to YOUR snow connection (step_config). It is the connection the postbox uses for `snow stage copy` and GET_PRESIGNED_URL, so a stale or someone-else's value here is the classic postbox failure. Never commit a real connection name: the repo ships MYBOOTH on purpose and scripts/check_config_portable.py enforces it.",
+    "connection_name": "MYBOOTH",
     "database": "LOCO4COCO",
     "schema": "BOOTH",
     "sessions_table": "SESSIONS"

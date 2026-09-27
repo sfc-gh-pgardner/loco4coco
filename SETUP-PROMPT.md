@@ -56,9 +56,12 @@ you genuinely cannot determine a value:
 
 7. Set event.venue in game/config.json to my event (london, paris or berlin).
    Do not set event.marketplace_region, event.city or event.language by hand —
-   the venue resolves all three. bootstrap already wrote snowflake.connection_name,
-   so leave it. There is no operator or stand field to ask me for;
-   SESSIONS.SE_OPERATOR is stamped with the account automatically.
+   the venue resolves all three. The repo ships snowflake.connection_name as the
+   placeholder MYBOOTH; bootstrap should have rewritten it to my connection, so
+   confirm it is NOT still "MYBOOTH" — a placeholder or someone-else's connection
+   here is exactly what makes the postbox fail mid-visit. There is no operator or
+   stand field to ask me for; SESSIONS.SE_OPERATOR is stamped with the account
+   automatically.
 
 8. Load the shared context: python3 deploy/load_context.py --connection <conn>
 
@@ -70,6 +73,13 @@ you genuinely cannot determine a value:
    unavailable on this version of Cortex Code, that is NOT a setup failure:
    every turn falls back to cortex exec and the booth still works, just more
    slowly. Report which of the two you saw, and do not try to fix it.
+
+11. Prove the postbox actually delivers — a wrong connection only shows there,
+   with a visitor watching. Check http://127.0.0.1:4747/api/delivery/check
+   returns "ok": true (it stages and presigns a throwaway file, the exact path a
+   visitor's document takes), or run one full test visit and confirm the QR opens
+   on a phone. If the startup log printed a connection-preflight warning, or the
+   check is not ok, the connection is wrong — re-run bootstrap with the right -c.
 
 Then tell me, in a short list: which connection and region you used, what you
 created in Snowflake, anything you changed in a file, anything you could not

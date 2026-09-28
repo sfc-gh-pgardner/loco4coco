@@ -526,6 +526,40 @@ def preflight_connection(cfg):
     return True
 
 
+def booth_auth_method(cfg):
+    """The CoCo-revert canary. Cortex Code continuously rewrites connections.toml
+    for the connection it is pointed at, and can flip an in-place key-pair back to
+    OAuth - which opens a browser mid-visit. The booth deliberately uses a SEPARATE
+    connection CoCo does not manage, so this should read as key-pair. Returns
+    (method, safe, detail); safe is True/False/None (None = cannot judge, e.g. the
+    MYBOOTH placeholder before bootstrap). Reads the local toml only - no round trip."""
+    name = coco_connection() or ""
+    if not name:
+        return ("", None, "no booth connection configured")
+    try:
+        import pathlib
+        import tomllib
+        p = pathlib.Path.home() / ".snowflake" / "connections.toml"
+        conns = tomllib.loads(p.read_text()) if p.exists() else {}
+    except Exception as e:                                        # noqa: BLE001
+        return ("", None, f"could not read connections.toml ({e})")
+    c = conns.get(name)
+    if not isinstance(c, dict):
+        return ("", None, f"{name} not found in connections.toml (placeholder?)")
+    auth = str(c.get("authenticator") or "").lower()
+    haskey = bool(c.get("private_key_file") or c.get("private_key_path"))
+    if any(t in auth for t in ("oauth", "externalbrowser", "sso")):
+        return ("browser/OAuth", False,
+                f"{name} is {auth} - will prompt mid-event; re-run deploy/bootstrap.py")
+    if "jwt" in auth or haskey:
+        return ("key-pair", True,
+                f"{name} on SNOWFLAKE_JWT" if haskey
+                else f"{name} JWT but no private_key_file set")
+    if c.get("password"):
+        return ("password", True, f"{name} on password (no browser prompt)")
+    return (auth or "unknown", None, f"{name} authenticator={auth or 'unset'}")
+
+
 def preflight_complete_model(cfg):
     """Prove the configured COMPLETE model answers; swap to a fallback if not.
 
@@ -3471,6 +3505,12 @@ class Handler(BaseHTTPRequestHandler):
             resolved if snow_findable(cfg) else
             f"{resolved!r} not found - pip install snowflake-cli, or set "
             f"snowflake.snow_binary in config.json to the absolute path")
+
+        # CoCo-revert canary: the booth connection must stay key-pair so no browser
+        # or keychain prompt interrupts a visitor. Unknown (placeholder) does not
+        # block; only an actively browsery connection is a fail.
+        method, safe, detail = booth_auth_method(cfg)
+        add("booth_auth", safe is not False, detail or method)
 
         stage = d.get("stage") or ""
         add("stage_configured", bool(stage), stage or "delivery.stage is empty")

@@ -75,6 +75,7 @@
       <dt>Datasets loaded</dt><dd id="s-rows">&mdash;</dd>
       <dt>Lists read from</dt><dd id="s-source">&mdash;</dd>
       <dt>Connection</dt><dd id="s-conn">&mdash;</dd>
+      <dt>Connection authenticated</dt><dd id="s-conn-ok">&mdash;</dd>
       <dt>Industries on stall</dt><dd id="s-stall">&mdash;</dd>
       <dt>Reply model</dt><dd id="s-model">&mdash;</dd>
       <dt>Review model</dt><dd id="s-qa">&mdash;</dd>
@@ -91,6 +92,19 @@
       re-run <code>deploy/load_context.py</code>. If &ldquo;lists read from&rdquo; says
       <code>bundle</code> or <code>markdown</code> rather than <code>snowflake</code>,
       the account read failed and you are on a committed copy that may be out of date.</p>
+  </div>
+
+  <div class="card">
+    <h2>Setup check</h2>
+    <div class="actions">
+      <button class="primary" id="setupcheck">Run setup check</button>
+    </div>
+    <dl id="setup-results"></dl>
+    <p class="note">Run this before doors open. It proves the delivery chain end to
+      end: the snow CLI resolves, the stage is reachable, a document can be staged and
+      presigned, and the booth connection is on key-pair &mdash; so no password or
+      browser prompt interrupts a visitor. Read-only; the only side effect is a tiny
+      probe file staged and presigned.</p>
   </div>
 
   <div class="card">
@@ -150,6 +164,14 @@ function paint(s) {
   src.textContent = s.context_source || '—';
   src.className = s.context_source === 'snowflake' ? 'ok' : 'bad';
   $('s-conn').textContent = s.connection || '—';
+  // Whether that connection actually authenticated at startup (not just its name).
+  // A green name with a dead connection is the postbox failure, visible only at
+  // delivery with a visitor watching.
+  const co = $('s-conn-ok');
+  if (!s.connection_checked) { co.textContent = 'not yet checked'; co.className = 'idle'; }
+  else if (s.connection_ok === true) { co.textContent = 'yes — ' + (s.connection_note || 'authenticated'); co.className = 'ok'; }
+  else if (s.connection_ok === false) { co.textContent = 'NO — ' + (s.connection_note || 'did not authenticate'); co.className = 'bad'; }
+  else { co.textContent = 'checking…'; co.className = 'idle'; }
   $('s-stall').textContent = s.industries_on_stall == null
     ? 'unavailable' : s.industries_on_stall;
   $('s-model').textContent = s.complete_model || '—';
@@ -234,6 +256,26 @@ $('restart').onclick = async () => {
       if (tries > 30) { clearInterval(poll); say('Did not come back — check the terminal.', true); }
     }
   }, 1000);
+};
+
+$('setupcheck').onclick = async () => {
+  const box = $('setup-results');
+  box.innerHTML = '<dt>running…</dt><dd class="idle">staging a probe document</dd>';
+  say('');
+  try {
+    const r = await fetch('/api/delivery/check', { cache: 'no-store' });
+    const j = await r.json();
+    box.innerHTML = '';
+    (j.checks || []).forEach(c => {
+      const dt = document.createElement('dt'); dt.textContent = c.check;
+      const dd = document.createElement('dd');
+      dd.textContent = (c.ok ? 'ok' : 'FAIL') + (c.detail ? ' — ' + c.detail : '');
+      dd.className = c.ok ? 'ok' : 'bad';
+      box.appendChild(dt); box.appendChild(dd);
+    });
+    say(j.ok ? 'Setup check passed — the delivery chain is live.'
+             : 'Setup check found a problem — see the rows above.', !j.ok);
+  } catch (e) { box.innerHTML = ''; say('Could not run the setup check.', true); }
 };
 
 refresh();

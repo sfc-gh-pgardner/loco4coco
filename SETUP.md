@@ -438,15 +438,24 @@ the account is wired end to end.
 
 ### Before doors open, every day, at every stand
 
-Open <http://127.0.0.1:4747/admin> and read five lines:
+Open <http://127.0.0.1:4747/admin> and read six lines:
 
 | Line | Must say |
 |---|---|
 | Venue / City | the event you are actually at |
 | Datasets loaded | **88–100**, of which 48 are the six-per-stall a visitor sees; the rest are the fallback pool and its size differs per city (London 92, Paris 97, Berlin 91). `0` means Step 6 never ran and you will serve the wrong city's data |
 | Lists read from | **snowflake**. `bundle` or `markdown` means the account read failed and you are on a committed copy |
+| Connection authenticated | **yes — user @ account**, in green. The booth tests the connection at startup, so a stale, wrong, or placeholder (`MYBOOTH`) one shows here rather than failing at the postbox with a visitor watching. A brief `checking…` at boot is normal — the test runs in the background |
 | Model proven | **yes, followed by a model name**, in green. Amber `FELL BACK to …` is fine — something answered. Red `NO USABLE MODEL` is the only version of this line that should stop you |
 | Warm agent | `ready` is ideal. `off` or `not running (falls back, still works)` is **also fine**, and shows in grey rather than red on purpose: the booth drops to a slower path and the visitor sees no difference |
+
+Then press **Setup check** in the admin panel: it proves the delivery chain end to
+end in one click — the snow CLI resolves, the stage is reachable, a document stages
+and presigns, and the booth connection is still on key-pair so no browser or keychain
+prompt interrupts a visit. Every row should be green before the doors open; a red
+`booth_auth` row means the connection has been reverted off key-pair (fix it with the
+key-pair step above). It is read-only — the only side effect is a tiny probe file
+staged and presigned.
 
 Then run **one throwaway visitor all the way through**. The first inference call on a cold
 warehouse takes around 56s against roughly 4s afterwards, and you do not want a stranger

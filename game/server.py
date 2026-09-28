@@ -1321,7 +1321,7 @@ def refresh_live_listings(cfg, force=False):
     """Pull the real Marketplace catalogue once, then serve every visitor from memory.
 
     No private preview needed: SHOW AVAILABLE LISTINGS piped through RESULT_SCAN
-    is enough. Measured on PG_LONDON: 4327 listings, 799 available in
+    is enough. Measured on a London-region account: 4327 listings, 799 available in
     AWS_EU_WEST_2, 188 of those importable. One query per server start rather
     than one per visitor, so the stall stays instant.
 
@@ -1474,7 +1474,7 @@ def listings_for(cfg, industry, session_id=None, state=None):
                      checked.
 
     "Agentic search on the Snowflake Marketplace" (PrPr) was verified working
-    on PG_LONDON on 2026-08-23 via both Snowsight's Discover tab AND
+    on a London-region account on 2026-08-23 via both Snowsight's Discover tab AND
     `cortex exec` calling the same marketplace-search skill from the CLI -
     the latter is what Tier 0 actually calls. It never blocks a visitor: if
     it hasn't finished, errored, or `marketplace.agentic.enabled` is false,

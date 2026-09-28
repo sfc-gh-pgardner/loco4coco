@@ -195,7 +195,7 @@ print("blueprint keys :", sorted(k for k, v in bp.items() if v))
 
 # --- Tier 0 (agentic marketplace), fired at intake -------------------------
 # Tier 0 is OPTIONAL and OFF by default (marketplace.agentic.enabled=false):
-# measured 70-110s+ on PG_LONDON, too slow and variable to beat a real visitor.
+# measured 70-110s+ on a London-region account, too slow and variable to beat a real visitor.
 # Only assert it fired when it is actually enabled; otherwise confirm it stayed
 # dormant. Either way the tier chain does not depend on it (see the fallback
 # check below).

@@ -183,8 +183,17 @@ function paint(s) {
     mo.textContent = 'not yet checked';
     mo.style.color = '';
   } else if (!s.model_verified) {
-    mo.textContent = 'NO USABLE MODEL — ' + (s.model_rejected || '');
-    mo.style.color = '#ff6b6b';
+    // Two different situations wear the same "no verified model" hat. If models
+    // were actually reached and none worked, that is a hard stop (red). If the
+    // connection could not even open the in-process path, COMPLETE just falls back
+    // to cortex exec — slower, not broken — so say that in amber, not red.
+    if (s.model_rejected) {
+      mo.textContent = 'NO USABLE MODEL — ' + s.model_rejected;
+      mo.style.color = '#ff6b6b';
+    } else {
+      mo.textContent = s.model_note || 'fast path unavailable; using cortex exec';
+      mo.style.color = '#ffa94d';
+    }
   } else if (s.model_verified !== s.complete_model) {
     mo.textContent = 'FELL BACK to ' + s.model_verified + ' — ' + (s.model_note || '');
     mo.style.color = '#ffa94d';

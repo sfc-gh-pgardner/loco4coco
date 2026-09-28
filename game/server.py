@@ -579,9 +579,38 @@ def preflight_complete_model(cfg):
     chain = [want] + [m for m in (c.get("complete_model_fallbacks") or [])
                       if m != want]
     tried = []
+
+    # Open the connection once, before touching any model. A connection that will
+    # not open fails identically for every model, so probing the whole chain just
+    # reprints the same error N times and makes one connection problem look like N
+    # dead models. Report it once, in plain words. The signature case on a personal
+    # connection: connections.toml has private_key_path set (the snow CLI's param)
+    # but not private_key_file (what the Python connector needs), which surfaces as
+    # the opaque "Expected bytes, RSAPrivateKey... got NoneType" from cryptography.
+    try:
+        conn = sf_conn(cfg)
+    except Exception as e:                                        # noqa: BLE001
+        msg = str(e).replace("\n", " ")
+        name = (cfg.get("snowflake") or {}).get("connection_name") or "(unset)"
+        if "Expected bytes" in msg and "NoneType" in msg:
+            note = (f"connection '{name}' will not open the in-process (Python "
+                    f"connector) path: its private key did not load. This connection "
+                    f"most likely has private_key_path set but not private_key_file - "
+                    f"the snow CLI reads the former, the connector needs the latter. "
+                    f"The CLI paths (delivery, cortex exec) are unaffected, so the "
+                    f"booth still answers via the slower exec path.")
+        else:
+            note = (f"connection '{name}' will not open the in-process path: "
+                    f"{msg[:140]}")
+        PREFLIGHT.update({"checked": True, "model": None, "tried": [], "note": note})
+        print(f"[loco4coco] *** model preflight: {note} ***")
+        print("[loco4coco] *** COMPLETE will use the cortex exec path "
+              "(~20s/turn); the booth still works. ***")
+        return None
+
     for mdl in chain:
         try:
-            cur = sf_conn(cfg).cursor()
+            cur = conn.cursor()
             try:
                 cur.execute("SELECT SNOWFLAKE.CORTEX.COMPLETE(%s, 'ping')",
                             (mdl,))

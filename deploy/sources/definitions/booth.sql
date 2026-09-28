@@ -5,9 +5,10 @@
 -- CREATE OR ALTER, so this file is the desired end state: removing a statement
 -- DROPS the object on the next deploy.
 --
--- Resource monitors are NOT a supported DEFINE entity, so LOCO4COCO_RM lives in
--- hooks/post_hook.sql instead. That is Snowflake's documented pattern for
--- unsupported object types.
+-- Resource monitors are NOT a supported DEFINE entity. This booth deliberately
+-- binds NONE: see hooks/post_hook.sql, which only UNSETs any monitor a previous
+-- deploy may have left on the warehouse and proves resource_monitor reads null.
+-- Nothing here can suspend a visit.
 
 -- ---------------------------------------------------------------- containers
 
@@ -18,7 +19,9 @@ DEFINE SCHEMA {{db}}.{{schema}}
   COMMENT = 'Visitor sessions, per-turn telemetry and generated blueprints.';
 
 -- ---------------------------------------------------------------- compute
--- X-Small, 60s auto-suspend. INITIALLY_SUSPENDED is immutable in DCM, which
+-- X-Small. Auto-suspend is set from manifest.yml (3600s, to hold the warehouse
+-- warm through the quiet spells a booth has between visitors so no visitor pays a
+-- ~56s cold start). INITIALLY_SUSPENDED is immutable in DCM, which
 -- suits the default-posture-off cost rule: the warehouse only runs when
 -- something actually needs it.
 --

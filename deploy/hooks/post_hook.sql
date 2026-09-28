@@ -46,7 +46,7 @@
 ALTER WAREHOUSE {{ wh }} UNSET RESOURCE_MONITOR;
 
 -- Proof, not assumption: resource_monitor must read null, and the warehouse must
--- be able to come back on its own after the 60s idle suspend.
+-- be able to come back on its own after its idle auto-suspend (3600s in manifest.yml).
 SHOW WAREHOUSES LIKE '{{ wh }}';
 SELECT "name", "resource_monitor", "auto_suspend", "auto_resume"
 FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()));

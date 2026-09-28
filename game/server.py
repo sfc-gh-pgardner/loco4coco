@@ -3654,10 +3654,14 @@ def main():
         except Exception as e:                                    # noqa: BLE001
             print(f"[loco4coco] model preflight skipped: {str(e)[:120]}")
     threading.Thread(target=_warm_conn, daemon=True).start()
-    # Idle watchdog: if nothing hits the server for this many minutes (no browser
-    # open, no test), it shuts itself down so it can never run for hours
-    # unattended. Set server.idle_shutdown_minutes to 0 to disable.
-    idle_min = (cfg.get("server") or {}).get("idle_shutdown_minutes", 45)
+    # Idle watchdog: OFF by default (0). A booth must never stop itself - a quiet
+    # lunchtime is not a reason to be dead when the next visitor walks up, and the
+    # warehouse auto-suspends on its own so an idle server costs nothing. The
+    # shipped config sets this to 0; keeping the CODE default 0 too means a
+    # stripped or hand-edited config can never silently reintroduce a mid-event
+    # self-shutdown. Set server.idle_shutdown_minutes to a number only if you want
+    # an unattended laptop to stop itself.
+    idle_min = (cfg.get("server") or {}).get("idle_shutdown_minutes", 0)
     if idle_min:
         def _watchdog():
             while True:

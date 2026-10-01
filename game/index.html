@@ -767,6 +767,136 @@ addEventListener('DOMContentLoaded',()=>{
   const b=$('bubble'); if(b) b.addEventListener('click',()=>{ nudgeUntil=0; });
 });
 
+const GameAudio=(()=>{
+  let ac=null,master=null,walking=false,windSrc=null,pulseTimer=null;
+  let phraseNodes=[];  // only the CURRENT phrase's live nodes; pruned each loop
+  const N=f=>440*Math.pow(2,(f-69)/12);
+  function init(){
+    if(ac) return ac;
+    try{ ac=new AudioContext(); master=ac.createGain(); master.connect(ac.destination); }
+    catch(e){ ac=null; } return ac;
+  }
+  function kill(n){ try{ n.stop?n.stop():n.disconnect(); }catch(e){} }
+  function startWalking(){
+    if(walking||!init()) return; walking=true;
+    // Arctic wind bed with sweeping filter
+    const buf=ac.createBuffer(1,ac.sampleRate*4,ac.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*0.12;
+    windSrc=ac.createBufferSource(); windSrc.buffer=buf; windSrc.loop=true;
+    const lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=350; lp.Q.value=0.7;
+    const gw=ac.createGain(); gw.gain.setValueAtTime(0,ac.currentTime);
+    gw.gain.linearRampToValueAtTime(0.09,ac.currentTime+0.3);
+    windSrc.connect(lp).connect(gw).connect(master); windSrc.start();
+    windSrc._gain=gw; windSrc._lp=lp;
+    // Polar wanderer — pentatonic melody + triangle bass + heartbeat pulse, looping
+    const dur=0.32;
+    const melody=[
+      67,69,72,null, 74,72,69,67,  64,null,67,69,  72,74,76,null,
+      74,72,null,69, 67,64,null,60, 62,64,67,69,    72,null,74,72,
+      69,67,64,null, 60,62,64,67,  69,null,72,74,   76,74,72,null,
+      69,67,64,62,   60,null,64,67, 69,72,74,null,  72,69,67,64];
+    const bass=[
+      48,null,null,null, null,null,null,null, 45,null,null,null, null,null,null,null,
+      43,null,null,null, null,null,null,null, 48,null,null,null, null,null,null,null,
+      45,null,null,null, null,null,null,null, 43,null,null,null, null,null,null,null,
+      48,null,null,null, null,null,null,null, 45,null,null,null, 48,null,null,null];
+    const total=melody.length*dur, pulseInt=dur*4;
+    function schedPhrase(){
+      if(!walking) return;
+      // Kill previous phrase's nodes before scheduling new ones
+      phraseNodes.forEach(kill); phraseNodes=[];
+      const t0=ac.currentTime+0.05;
+      // Sweep wind filter
+      lp.frequency.setValueAtTime(300,t0);
+      lp.frequency.linearRampToValueAtTime(500,t0+total*0.5);
+      lp.frequency.linearRampToValueAtTime(300,t0+total);
+      // Pad drone
+      [48,52,55].forEach(n=>{
+        const osc=ac.createOscillator(),g=ac.createGain();
+        osc.type='sine'; osc.frequency.value=N(n);
+        g.gain.setValueAtTime(0,t0);
+        g.gain.linearRampToValueAtTime(0.04,t0+1.5);
+        g.gain.setValueAtTime(0.04,t0+total-1.5);
+        g.gain.linearRampToValueAtTime(0,t0+total);
+        osc.connect(g).connect(master); osc.start(t0); osc.stop(t0+total+0.1);
+        phraseNodes.push(osc);
+      });
+      // Heartbeat pulse
+      for(let i=0;i<Math.floor(total/pulseInt);i++){
+        const osc=ac.createOscillator(),g=ac.createGain();
+        osc.type='sine'; osc.frequency.value=N(36);
+        const s=t0+i*pulseInt;
+        g.gain.setValueAtTime(0.06,s);
+        g.gain.exponentialRampToValueAtTime(0.001,s+pulseInt*0.7);
+        osc.connect(g).connect(master); osc.start(s); osc.stop(s+pulseInt);
+        phraseNodes.push(osc);
+      }
+      // Melody
+      melody.forEach((n,i)=>{
+        if(n===null) return;
+        const osc=ac.createOscillator(),g=ac.createGain();
+        osc.type='sine'; osc.frequency.value=N(n);
+        const s=t0+i*dur;
+        g.gain.setValueAtTime(0.065,s);
+        g.gain.exponentialRampToValueAtTime(0.001,s+dur*2.2);
+        osc.connect(g).connect(master); osc.start(s); osc.stop(s+dur*2.5);
+        phraseNodes.push(osc);
+      });
+      // Bass
+      bass.forEach((n,i)=>{
+        if(n===null) return;
+        const osc=ac.createOscillator(),g=ac.createGain();
+        osc.type='triangle'; osc.frequency.value=N(n);
+        const s=t0+i*dur;
+        g.gain.setValueAtTime(0.07,s);
+        g.gain.exponentialRampToValueAtTime(0.001,s+dur*6);
+        osc.connect(g).connect(master); osc.start(s); osc.stop(s+dur*7);
+        phraseNodes.push(osc);
+      });
+      pulseTimer=setTimeout(schedPhrase,total*1000-100);
+    }
+    schedPhrase();
+  }
+  function stopWalking(){
+    if(!walking) return; walking=false;
+    if(pulseTimer){ clearTimeout(pulseTimer); pulseTimer=null; }
+    if(windSrc){
+      try{ const g=windSrc._gain; g.gain.linearRampToValueAtTime(0,ac.currentTime+0.3);
+        setTimeout(()=>{ kill(windSrc); windSrc=null; },350);
+      }catch(e){ kill(windSrc); windSrc=null; }
+    }
+    phraseNodes.forEach(kill); phraseNodes=[];
+  }
+  function playLocationChime(){
+    if(!init()) return; const t=ac.currentTime;
+    [60,64,67,72].forEach((n,i)=>{
+      const osc=ac.createOscillator(),g=ac.createGain();
+      osc.type='sine'; osc.frequency.value=N(n);
+      const s=t+i*0.12;
+      g.gain.setValueAtTime(0.15,s);
+      g.gain.exponentialRampToValueAtTime(0.001,s+0.6);
+      osc.connect(g).connect(master); osc.start(s); osc.stop(s+0.7);
+    });
+  }
+  function playAchievement(){
+    if(!init()) return; const t=ac.currentTime;
+    [[60,64,67],[62,65,69],[64,67,72],[67,72,76]].forEach((ch,ci)=>{
+      ch.forEach(n=>{
+        const osc=ac.createOscillator(),g=ac.createGain();
+        osc.type='sawtooth'; osc.frequency.value=N(n);
+        const lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1200;
+        const s=t+ci*0.4;
+        g.gain.setValueAtTime(0.06,s); g.gain.setValueAtTime(0.06,s+0.3);
+        g.gain.exponentialRampToValueAtTime(0.001,s+(ci===3?1.5:0.38));
+        osc.connect(lp).connect(g).connect(master); osc.start(s); osc.stop(s+(ci===3?1.6:0.4));
+      });
+    });
+  }
+  function stopAll(){ stopWalking(); }
+  return {startWalking,stopWalking,playLocationChime,playAchievement,stopAll};
+})();
+
 const rng = seed => { let s=seed>>>0; return () => (s=(s*1664525+1013904223)>>>0)/4294967296; };
 const inb = (x,y) => x>=0 && y>=0 && x<COLS && y<ROWS;
 const walkable = (x,y) => inb(x,y) && ![4,5,6,7].includes(map[y][x]);
@@ -2157,7 +2287,7 @@ function setPhase(p){
     $('a-arctic').textContent=L().arctic||'Somewhere in the Arctic...';
     $('a-arcticsub').textContent=L().arctic_sub||'';
   }
-  if(p==='letter') paintLetter();
+  if(p==='letter'){ paintLetter(); GameAudio.playLocationChime(); }
   if(p==='line1'||p==='line2'){
     // These two used to speak through a bubble floating in the house while the
     // read-back that follows them spoke through CoCo's box, so the voice moved
@@ -2721,6 +2851,7 @@ function openPanel(id){
   // SEND button rather than a separate "post it" card.
   if(id==='postbox') return showBp();
   panelOpen=true; panelLoc=id; sel=new Set();
+  GameAudio.playLocationChime();
   inSceneLoc=null; inScenePhase=null; cancelAutoLeave();
   Object.keys(keys).forEach(k=>keys[k]=false);
   // POV locations get the drawn interior behind a low "desk" panel; others use
@@ -2984,6 +3115,7 @@ function closeBp(){
 let finishing=false;
 function finishVisit(){
   if(finishing) return; finishing=true;
+  GameAudio.stopAll(); GameAudio.playAchievement();
   $('ov-bp').classList.remove('on'); reopenLock=Date.now()+700;
   postingFlourish();
   setTimeout(showDoneSummary, POST_MS+260);
@@ -3811,7 +3943,9 @@ async function poll(){
   }catch(e){ showErr('state unavailable \u2014 is server.py running?'); }
 }
 
-function loop(){ tick++; stepMovement(); if(tick%2===0) stepType(); render();
+function loop(){ tick++; stepMovement();
+  if(blocking()||finishing) GameAudio.stopWalking(); else GameAudio.startWalking();
+  if(tick%2===0) stepType(); render();
   if(sceneActive) drawScene(sceneActive); requestAnimationFrame(loop); }
 
 // The board was previously sized once at load, so moving the window at the

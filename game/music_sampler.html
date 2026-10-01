@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Loco4CoCo – Music Sampler</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Courier New', monospace; background: #0a1628; color: #e0e8f0; padding: 24px; }
+  h1 { color: #29b5e8; margin-bottom: 8px; }
+  p.sub { color: #7a8a9a; margin-bottom: 32px; }
+  .cat { margin-bottom: 36px; }
+  .cat h2 { color: #f0a030; margin-bottom: 4px; }
+  .cat p { color: #7a8a9a; font-size: 13px; margin-bottom: 12px; }
+  .samples { display: flex; gap: 12px; flex-wrap: wrap; }
+  button {
+    padding: 12px 20px; border: 2px solid #29b5e8; border-radius: 8px;
+    background: #12253a; color: #e0e8f0; font-family: inherit;
+    font-size: 14px; cursor: pointer; transition: background 0.2s;
+  }
+  button:hover { background: #1a3550; }
+  button.playing { background: #29b5e8; color: #0a1628; }
+  .stop-btn { border-color: #e05050; color: #e05050; }
+  .stop-btn:hover { background: #3a1515; }
+</style>
+</head>
+<body>
+<h1>Music Sampler</h1>
+<p class="sub">All audio is procedurally generated in the browser — no files. Click to play, click Stop to end.</p>
+
+<div class="cat">
+  <h2>Walking Music — improved (longer, flowing)</h2>
+  <p>Arctic wind base + melody. ~20 seconds each, loops seamlessly in-game.</p>
+  <div class="samples">
+    <button onclick="play('walk-a')">A – Drifting pentatonic</button>
+    <button onclick="play('walk-b')">B – Glacial arpeggios</button>
+    <button onclick="play('walk-c')">C – Polar wanderer</button>
+    <button class="stop-btn" onclick="stopAll()">Stop</button>
+  </div>
+</div>
+
+<script>
+let ctx = null, activeNodes = [], activeBtn = null;
+
+function getCtx() {
+  if (!ctx) ctx = new AudioContext();
+  return ctx;
+}
+
+function stopAll() {
+  activeNodes.forEach(n => { try { n.stop ? n.stop() : n.disconnect(); } catch(e){} });
+  activeNodes = [];
+  if (activeBtn) { activeBtn.classList.remove('playing'); activeBtn = null; }
+}
+
+function play(id) {
+  stopAll();
+  const btn = event.target; btn.classList.add('playing'); activeBtn = btn;
+  const ac = getCtx();
+  const t = ac.currentTime;
+  const tracks = { 'walk-a': walkA, 'walk-b': walkB, 'walk-c': walkC };
+  tracks[id](ac, t);
+}
+
+function note(f) { return 440 * Math.pow(2, (f - 69) / 12); }
+
+// Shared: arctic wind bed
+function makeWind(ac, t, dur) {
+  const bufLen = ac.sampleRate * 4;
+  const buf = ac.createBuffer(1, bufLen, ac.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) data[i] = (Math.random() * 2 - 1) * 0.12;
+  const src = ac.createBufferSource();
+  src.buffer = buf; src.loop = true;
+  const lp = ac.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 350; lp.Q.value = 0.7;
+  // Slow sweep for movement
+  lp.frequency.setValueAtTime(300, t);
+  lp.frequency.linearRampToValueAtTime(500, t + dur * 0.5);
+  lp.frequency.linearRampToValueAtTime(300, t + dur);
+  const gw = ac.createGain(); gw.gain.value = 0.09;
+  src.connect(lp).connect(gw).connect(ac.destination);
+  src.start(t); src.stop(t + dur + 1);
+  activeNodes.push(src);
+}
+
+// Shared: soft pad drone
+function makePad(ac, t, notes, dur) {
+  notes.forEach(n => {
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = note(n);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.04, t + 1.5);
+    g.gain.setValueAtTime(0.04, t + dur - 1.5);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    osc.connect(g).connect(ac.destination);
+    osc.start(t); osc.stop(t + dur + 0.1);
+    activeNodes.push(osc);
+  });
+}
+
+// --- A: Drifting pentatonic ---
+// 8 bars of C pentatonic over wind + pad, unhurried and dreamy
+function walkA(ac, t) {
+  const dur = 0.38;
+  // 8-bar melody in C pentatonic (C D E G A), mixed rests (null)
+  const melody = [
+    60,null,64,67, 72,null,69,67,  64,null,60,62,  67,69,67,null,
+    72,null,74,72, 69,67,null,64,  60,62,64,null,  67,null,72,69,
+    64,67,69,72,  74,null,72,69,   67,64,null,60,  62,64,67,null,
+    69,72,74,null, 72,69,67,64,    60,null,62,64,  67,69,72,null
+  ];
+  const bass = [
+    48,null,null,null, 48,null,null,null, 43,null,null,null, 43,null,null,null,
+    45,null,null,null, 45,null,null,null, 48,null,null,null, 48,null,null,null,
+    43,null,null,null, 43,null,null,null, 45,null,null,null, 45,null,null,null,
+    48,null,null,null, 48,null,null,null, 43,null,null,null, 48,null,null,null
+  ];
+  const total = melody.length * dur;
+  makeWind(ac, t, total);
+  makePad(ac, t, [48, 55, 60], total);
+
+  melody.forEach((n, i) => {
+    if (n === null) return;
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = note(n);
+    const s = t + i * dur;
+    g.gain.setValueAtTime(0.07, s);
+    g.gain.exponentialRampToValueAtTime(0.001, s + dur * 1.8);
+    osc.connect(g).connect(ac.destination);
+    osc.start(s); osc.stop(s + dur * 2);
+    activeNodes.push(osc);
+  });
+  bass.forEach((n, i) => {
+    if (n === null) return;
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = note(n);
+    const s = t + i * dur;
+    g.gain.setValueAtTime(0.06, s);
+    g.gain.exponentialRampToValueAtTime(0.001, s + dur * 3);
+    osc.connect(g).connect(ac.destination);
+    osc.start(s); osc.stop(s + dur * 3.5);
+    activeNodes.push(osc);
+  });
+}
+
+// --- B: Glacial arpeggios ---
+// Slow broken chords over wind, very ambient — 8 chord changes
+function walkB(ac, t) {
+  const chords = [
+    [48,60,64,67], [48,60,64,69], [45,57,60,64], [45,57,60,67],
+    [43,55,59,62], [43,55,59,64], [48,60,64,67], [48,55,60,67]
+  ];
+  const arpDur = 0.35;  // time between arp notes
+  const chordDur = chords[0].length * arpDur + 1.2; // hold time per chord
+  const total = chords.length * chordDur;
+  makeWind(ac, t, total);
+
+  chords.forEach((ch, ci) => {
+    const cs = t + ci * chordDur;
+    ch.forEach((n, ni) => {
+      const osc = ac.createOscillator();
+      const g = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = note(n);
+      const s = cs + ni * arpDur;
+      g.gain.setValueAtTime(0, s);
+      g.gain.linearRampToValueAtTime(0.08, s + 0.08);
+      g.gain.exponentialRampToValueAtTime(0.001, s + chordDur * 0.8);
+      osc.connect(g).connect(ac.destination);
+      osc.start(s); osc.stop(s + chordDur);
+      activeNodes.push(osc);
+      // Harmonic shimmer
+      const osc2 = ac.createOscillator();
+      const g2 = ac.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.value = note(n) * 2.003;
+      g2.gain.setValueAtTime(0, s);
+      g2.gain.linearRampToValueAtTime(0.02, s + 0.15);
+      g2.gain.exponentialRampToValueAtTime(0.001, s + chordDur * 0.6);
+      osc2.connect(g2).connect(ac.destination);
+      osc2.start(s); osc2.stop(s + chordDur);
+      activeNodes.push(osc2);
+    });
+  });
+}
+
+// --- C: Polar wanderer ---
+// Wind + pentatonic melody (sine) + triangle bass + soft pulse, 8 bars
+function walkC(ac, t) {
+  const dur = 0.32;
+  const melody = [
+    67,69,72,null, 74,72,69,67,  64,null,67,69,  72,74,76,null,
+    74,72,null,69, 67,64,null,60, 62,64,67,69,    72,null,74,72,
+    69,67,64,null, 60,62,64,67,  69,null,72,74,   76,74,72,null,
+    69,67,64,62,   60,null,64,67, 69,72,74,null,  72,69,67,64
+  ];
+  const bass = [
+    48,null,null,null, null,null,null,null, 45,null,null,null, null,null,null,null,
+    43,null,null,null, null,null,null,null, 48,null,null,null, null,null,null,null,
+    45,null,null,null, null,null,null,null, 43,null,null,null, null,null,null,null,
+    48,null,null,null, null,null,null,null, 45,null,null,null, 48,null,null,null
+  ];
+  const total = melody.length * dur;
+  makeWind(ac, t, total);
+  makePad(ac, t, [48, 52, 55], total);
+
+  // Soft rhythmic pulse — heartbeat underneath
+  const pulseInt = dur * 4;
+  for (let i = 0; i < Math.floor(total / pulseInt); i++) {
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = note(36);
+    const s = t + i * pulseInt;
+    g.gain.setValueAtTime(0.06, s);
+    g.gain.exponentialRampToValueAtTime(0.001, s + pulseInt * 0.7);
+    osc.connect(g).connect(ac.destination);
+    osc.start(s); osc.stop(s + pulseInt);
+    activeNodes.push(osc);
+  }
+
+  melody.forEach((n, i) => {
+    if (n === null) return;
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = note(n);
+    const s = t + i * dur;
+    g.gain.setValueAtTime(0.065, s);
+    g.gain.exponentialRampToValueAtTime(0.001, s + dur * 2.2);
+    osc.connect(g).connect(ac.destination);
+    osc.start(s); osc.stop(s + dur * 2.5);
+    activeNodes.push(osc);
+  });
+  bass.forEach((n, i) => {
+    if (n === null) return;
+    const osc = ac.createOscillator();
+    const g = ac.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = note(n);
+    const s = t + i * dur;
+    g.gain.setValueAtTime(0.07, s);
+    g.gain.exponentialRampToValueAtTime(0.001, s + dur * 6);
+    osc.connect(g).connect(ac.destination);
+    osc.start(s); osc.stop(s + dur * 7);
+    activeNodes.push(osc);
+  });
+}
+</script>
+</body>
+</html>
